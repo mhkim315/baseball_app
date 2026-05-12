@@ -1,3 +1,5 @@
+const BASE = import.meta.env.BASE_URL;
+
 export default function Rules() {
   const rules = [
     { title: "이닝(회)", desc: "공격(초)·수비(말)가 한 바퀴 도는 단위예요. 공격측에서 아웃 세 개가 나오면 그 이닝은 끝나요." },
@@ -51,7 +53,7 @@ export default function Rules() {
             {gallery.map((item, i) => (
               <figure key={i} className="bg-card rounded-2xl border border-border overflow-hidden">
                 <img
-                  src={`/rules/${item.img}.jpg`}
+                  src={`${BASE}rules/${item.img}.jpg`}
                   alt={item.alt}
                   className="w-full h-auto"
                   loading="lazy"

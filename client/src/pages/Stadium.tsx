@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import StadiumMap from "@/components/StadiumMap";
 
+const BASE = import.meta.env.BASE_URL;
+
 const FOOD_MAP_IMAGES: Record<string, string> = {
   "1": "jamsil", "2": "gochuck", "3": "incheon", "4": "suwon",
   "5": "daejeon", "6": "daegu", "7": "gwangju", "8": "busan", "9": "changwon",
@@ -220,7 +222,7 @@ export default function Stadium() {
       fetchStadiumFoods(stadiumId),
       fetchStadiumEats(stadiumId),
       fetchStadiumSurroundings(stadiumId),
-      fetch("/data/food-layouts.json").then((r) => r.ok ? r.json() : null),
+      fetch(`${BASE}data/food-layouts.json`).then((r) => r.ok ? r.json() : null),
     ]).then(([brief, foodData, eatsData, surroundings, layouts]) => {
       if (brief) setStadium(brief);
       if (foodData) {
@@ -249,8 +251,8 @@ export default function Stadium() {
 
   const stadiumId = TEAM_STADIUM_MAP[selectedTeam];
   const team = TEAM_COLORS[selectedTeam];
-  const foodMapImage = stadiumId ? `/food-maps/${FOOD_MAP_IMAGES[stadiumId] || "jamsil"}.webp` : null;
-  const seatImage = stadiumId ? `/stadium-seats/${SEAT_IMAGES[stadiumId] || "jamsil"}.jpg` : null;
+  const foodMapImage = stadiumId ? `${BASE}food-maps/${FOOD_MAP_IMAGES[stadiumId] || "jamsil"}.webp` : null;
+  const seatImage = stadiumId ? `${BASE}stadium-seats/${SEAT_IMAGES[stadiumId] || "jamsil"}.jpg` : null;
 
   return (
     <div className="min-h-screen pb-20 md:pb-8">
