@@ -1,0 +1,5018 @@
+{
+  "version": 1,
+  "description": "Per stadium/floor/category display coordinates. Store metadata remains in food-places.json.",
+  "stadiums": {
+    "1": {
+      "floors": {
+        "1F": {
+          "all": {
+            "0": {
+              "leftPct": 14.7165,
+              "topPct": 40.1923,
+              "labelLeftPct": 21.2165,
+              "labelTopPct": 40.1923,
+              "labelDirection": "E"
+            },
+            "1": {
+              "leftPct": 14.0073,
+              "topPct": 44.1793,
+              "labelLeftPct": 20.5073,
+              "labelTopPct": 44.1793,
+              "labelDirection": "E"
+            },
+            "2": {
+              "leftPct": 14.0073,
+              "topPct": 48.1194,
+              "labelLeftPct": 20.5073,
+              "labelTopPct": 48.1194,
+              "labelDirection": "E"
+            },
+            "3": {
+              "leftPct": 14.0073,
+              "topPct": 51.4966,
+              "labelLeftPct": 20.5073,
+              "labelTopPct": 51.4966,
+              "labelDirection": "E"
+            },
+            "4": {
+              "leftPct": 15.0711,
+              "topPct": 58.251,
+              "labelLeftPct": 21.5711,
+              "labelTopPct": 58.251,
+              "labelDirection": "E"
+            },
+            "5": {
+              "leftPct": 15.7804,
+              "topPct": 61.253,
+              "labelLeftPct": 22.2804,
+              "labelTopPct": 61.253,
+              "labelDirection": "E"
+            },
+            "6": {
+              "leftPct": 16.6669,
+              "topPct": 64.4426,
+              "labelLeftPct": 23.1669,
+              "labelTopPct": 64.4426,
+              "labelDirection": "E"
+            },
+            "7": {
+              "leftPct": 18.2627,
+              "topPct": 67.679,
+              "labelLeftPct": 24.7627,
+              "labelTopPct": 67.679,
+              "labelDirection": "E"
+            },
+            "8": {
+              "leftPct": 19.6811,
+              "topPct": 70.1181,
+              "labelLeftPct": 26.1811,
+              "labelTopPct": 70.1181,
+              "labelDirection": "E"
+            },
+            "9": {
+              "leftPct": 51.4192,
+              "topPct": 6.376,
+              "labelLeftPct": 44.9192,
+              "labelTopPct": 6.376,
+              "labelDirection": "W"
+            },
+            "10": {
+              "leftPct": 55.1426,
+              "topPct": 6.0919,
+              "labelLeftPct": 49.6426,
+              "labelTopPct": 11.5919,
+              "labelDirection": "SW"
+            },
+            "11": {
+              "leftPct": 58.8661,
+              "topPct": 6.2795,
+              "labelLeftPct": 58.8661,
+              "labelTopPct": 12.7795,
+              "labelDirection": "S"
+            },
+            "12": {
+              "leftPct": 61.8803,
+              "topPct": 6.8424,
+              "labelLeftPct": 68.3803,
+              "labelTopPct": 6.8424,
+              "labelDirection": "E"
+            },
+            "13": {
+              "leftPct": 92.7318,
+              "topPct": 54.8738,
+              "labelLeftPct": 86.2318,
+              "labelTopPct": 54.8738,
+              "labelDirection": "W"
+            },
+            "14": {
+              "leftPct": 92.0226,
+              "topPct": 58.4855,
+              "labelLeftPct": 85.5226,
+              "labelTopPct": 58.4855,
+              "labelDirection": "W"
+            },
+            "15": {
+              "leftPct": 90.8701,
+              "topPct": 61.7689,
+              "labelLeftPct": 84.3701,
+              "labelTopPct": 61.7689,
+              "labelDirection": "W"
+            },
+            "16": {
+              "leftPct": 89.5402,
+              "topPct": 65.1461,
+              "labelLeftPct": 83.0402,
+              "labelTopPct": 65.1461,
+              "labelDirection": "W"
+            }
+          },
+          "categories": {
+            "korean": {
+              "0": {
+                "leftPct": 14.7165,
+                "topPct": 40.1923,
+                "labelLeftPct": 21.2165,
+                "labelTopPct": 40.1923,
+                "labelDirection": "E"
+              },
+              "4": {
+                "leftPct": 15.0711,
+                "topPct": 58.251,
+                "labelLeftPct": 21.5711,
+                "labelTopPct": 58.251,
+                "labelDirection": "E"
+              },
+              "8": {
+                "leftPct": 19.6811,
+                "topPct": 70.1181,
+                "labelLeftPct": 26.1811,
+                "labelTopPct": 70.1181,
+                "labelDirection": "E"
+              },
+              "12": {
+                "leftPct": 61.8803,
+                "topPct": 7.0603,
+                "labelLeftPct": 55.3803,
+                "labelTopPct": 7.0603,
+                "labelDirection": "W"
+              },
+              "15": {
+                "leftPct": 90.8701,
+                "topPct": 61.7689,
+                "labelLeftPct": 84.3701,
+                "labelTopPct": 61.7689,
+                "labelDirection": "W"
+              }
+            },
+            "chicken": {
+              "1": {
+                "leftPct": 14.0073,
+                "topPct": 44.1793,
+                "labelLeftPct": 20.5073,
+                "labelTopPct": 44.1793,
+                "labelDirection": "E"
+              },
+              "2": {
+                "leftPct": 14.0073,
+                "topPct": 48.1194,
+                "labelLeftPct": 20.5073,
+                "labelTopPct": 48.1194,
+                "labelDirection": "E"
+              },
+              "7": {
+                "leftPct": 18.2627,
+                "topPct": 67.679,
+                "labelLeftPct": 24.7627,
+                "labelTopPct": 67.679,
+                "labelDirection": "E"
+              },
+              "9": {
+                "leftPct": 51.4192,
+                "topPct": 6.4671,
+                "labelLeftPct": 44.9192,
+                "labelTopPct": 6.4671,
+                "labelDirection": "W"
+              },
+              "10": {
+                "leftPct": 55.1426,
+                "topPct": 6.0919,
+                "labelLeftPct": 55.1426,
+                "labelTopPct": 12.5919,
+                "labelDirection": "S"
+              },
+              "13": {
+                "leftPct": 92.7318,
+                "topPct": 54.8738,
+                "labelLeftPct": 86.2318,
+                "labelTopPct": 54.8738,
+                "labelDirection": "W"
+              },
+              "14": {
+                "leftPct": 92.0226,
+                "topPct": 58.4855,
+                "labelLeftPct": 85.5226,
+                "labelTopPct": 58.4855,
+                "labelDirection": "W"
+              }
+            },
+            "western": {
+              "3": {
+                "leftPct": 14.0073,
+                "topPct": 51.4966,
+                "labelLeftPct": 20.5073,
+                "labelTopPct": 51.4966,
+                "labelDirection": "E"
+              },
+              "5": {
+                "leftPct": 15.7804,
+                "topPct": 61.253,
+                "labelLeftPct": 22.2804,
+                "labelTopPct": 61.253,
+                "labelDirection": "E"
+              },
+              "11": {
+                "leftPct": 58.8661,
+                "topPct": 6.2795,
+                "labelLeftPct": 52.3661,
+                "labelTopPct": 6.2795,
+                "labelDirection": "W"
+              },
+              "16": {
+                "leftPct": 89.5402,
+                "topPct": 65.1461,
+                "labelLeftPct": 83.0402,
+                "labelTopPct": 65.1461,
+                "labelDirection": "W"
+              }
+            },
+            "cafe": {
+              "6": {
+                "leftPct": 16.6669,
+                "topPct": 64.4426,
+                "labelLeftPct": 23.1669,
+                "labelTopPct": 64.4426,
+                "labelDirection": "E"
+              }
+            }
+          }
+        },
+        "2F": {
+          "all": {
+            "17": {
+              "leftPct": 20.5677,
+              "topPct": 44.4813,
+              "labelLeftPct": 27.0677,
+              "labelTopPct": 44.4813,
+              "labelDirection": "E"
+            },
+            "18": {
+              "leftPct": 21.4542,
+              "topPct": 47.4832,
+              "labelLeftPct": 27.9542,
+              "labelTopPct": 47.4832,
+              "labelDirection": "E"
+            },
+            "19": {
+              "leftPct": 22.6953,
+              "topPct": 50.4852,
+              "labelLeftPct": 29.1953,
+              "labelTopPct": 50.4852,
+              "labelDirection": "E"
+            },
+            "20": {
+              "leftPct": 29.965,
+              "topPct": 61.1797,
+              "labelLeftPct": 36.465,
+              "labelTopPct": 61.1797,
+              "labelDirection": "E"
+            },
+            "21": {
+              "leftPct": 31.5607,
+              "topPct": 63.4312,
+              "labelLeftPct": 37.0607,
+              "labelTopPct": 68.9312,
+              "labelDirection": "SE"
+            },
+            "22": {
+              "leftPct": 14.7165,
+              "topPct": 49.1718,
+              "labelLeftPct": 14.7165,
+              "labelTopPct": 42.6718,
+              "labelDirection": "N"
+            },
+            "23": {
+              "leftPct": 10.1065,
+              "topPct": 55.551,
+              "labelLeftPct": 16.6065,
+              "labelTopPct": 55.551,
+              "labelDirection": "E"
+            },
+            "24": {
+              "leftPct": 10.9931,
+              "topPct": 58.9282,
+              "labelLeftPct": 17.4931,
+              "labelTopPct": 58.9282,
+              "labelDirection": "E"
+            },
+            "25": {
+              "leftPct": 22.518,
+              "topPct": 81.2553,
+              "labelLeftPct": 16.018,
+              "labelTopPct": 81.2553,
+              "labelDirection": "W"
+            },
+            "26": {
+              "leftPct": 24.6457,
+              "topPct": 83.3192,
+              "labelLeftPct": 19.1457,
+              "labelTopPct": 88.8192,
+              "labelDirection": "SW"
+            },
+            "27": {
+              "leftPct": 26.9507,
+              "topPct": 85.383,
+              "labelLeftPct": 33.4507,
+              "labelTopPct": 85.383,
+              "labelDirection": "E"
+            },
+            "28": {
+              "leftPct": 23.05,
+              "topPct": 75.6266,
+              "labelLeftPct": 29.55,
+              "labelTopPct": 75.6266,
+              "labelDirection": "E"
+            },
+            "29": {
+              "leftPct": 20.213,
+              "topPct": 72.437,
+              "labelLeftPct": 26.713,
+              "labelTopPct": 72.437,
+              "labelDirection": "E"
+            },
+            "30": {
+              "leftPct": 17.7307,
+              "topPct": 69.0598,
+              "labelLeftPct": 24.2307,
+              "labelTopPct": 69.0598,
+              "labelDirection": "E"
+            },
+            "31": {
+              "leftPct": 75.001,
+              "topPct": 82.8528,
+              "labelLeftPct": 68.501,
+              "labelTopPct": 82.8528,
+              "labelDirection": "W"
+            },
+            "32": {
+              "leftPct": 79.6971,
+              "topPct": 87.2648,
+              "labelLeftPct": 73.1971,
+              "labelTopPct": 87.2648,
+              "labelDirection": "W"
+            },
+            "33": {
+              "leftPct": 80.933,
+              "topPct": 84.0697,
+              "labelLeftPct": 86.433,
+              "labelTopPct": 89.5697,
+              "labelDirection": "SE"
+            },
+            "34": {
+              "leftPct": 88.1218,
+              "topPct": 74.5009,
+              "labelLeftPct": 81.6218,
+              "labelTopPct": 74.5009,
+              "labelDirection": "W"
+            },
+            "35": {
+              "leftPct": 91.3277,
+              "topPct": 73.6249,
+              "labelLeftPct": 91.3277,
+              "labelTopPct": 80.1249,
+              "labelDirection": "S"
+            },
+            "36": {
+              "leftPct": 94.3224,
+              "topPct": 72.5281,
+              "labelLeftPct": 94.3224,
+              "labelTopPct": 66.0281,
+              "labelDirection": "N"
+            },
+            "37": {
+              "leftPct": 86.7033,
+              "topPct": 68.8722,
+              "labelLeftPct": 80.2033,
+              "labelTopPct": 68.8722,
+              "labelDirection": "W"
+            },
+            "38": {
+              "leftPct": 85.2849,
+              "topPct": 58.553,
+              "labelLeftPct": 78.7849,
+              "labelTopPct": 58.553,
+              "labelDirection": "W"
+            },
+            "39": {
+              "leftPct": 85.8168,
+              "topPct": 45.2317,
+              "labelLeftPct": 79.3168,
+              "labelTopPct": 45.2317,
+              "labelDirection": "W"
+            },
+            "40": {
+              "leftPct": 85.1076,
+              "topPct": 48.4213,
+              "labelLeftPct": 78.6076,
+              "labelTopPct": 48.4213,
+              "labelDirection": "W"
+            },
+            "41": {
+              "leftPct": 83.8664,
+              "topPct": 51.2357,
+              "labelLeftPct": 77.3664,
+              "labelTopPct": 51.2357,
+              "labelDirection": "W"
+            },
+            "42": {
+              "leftPct": 78.9018,
+              "topPct": 61.5549,
+              "labelLeftPct": 72.4018,
+              "labelTopPct": 61.5549,
+              "labelDirection": "W"
+            },
+            "43": {
+              "leftPct": 77.306,
+              "topPct": 63.994,
+              "labelLeftPct": 70.806,
+              "labelTopPct": 63.994,
+              "labelDirection": "W"
+            }
+          },
+          "categories": {
+            "western": {
+              "17": {
+                "leftPct": 20.5677,
+                "topPct": 44.4813,
+                "labelLeftPct": 27.0677,
+                "labelTopPct": 44.4813,
+                "labelDirection": "E"
+              },
+              "23": {
+                "leftPct": 10.1065,
+                "topPct": 55.551,
+                "labelLeftPct": 16.6065,
+                "labelTopPct": 55.551,
+                "labelDirection": "E"
+              },
+              "25": {
+                "leftPct": 22.518,
+                "topPct": 81.2553,
+                "labelLeftPct": 29.018,
+                "labelTopPct": 81.2553,
+                "labelDirection": "E"
+              },
+              "28": {
+                "leftPct": 23.05,
+                "topPct": 75.6266,
+                "labelLeftPct": 29.55,
+                "labelTopPct": 75.6266,
+                "labelDirection": "E"
+              },
+              "33": {
+                "leftPct": 80.6749,
+                "topPct": 84.0697,
+                "labelLeftPct": 74.1749,
+                "labelTopPct": 84.0697,
+                "labelDirection": "W"
+              },
+              "39": {
+                "leftPct": 85.8168,
+                "topPct": 45.2317,
+                "labelLeftPct": 79.3168,
+                "labelTopPct": 45.2317,
+                "labelDirection": "W"
+              },
+              "40": {
+                "leftPct": 85.1076,
+                "topPct": 48.4213,
+                "labelLeftPct": 78.6076,
+                "labelTopPct": 48.4213,
+                "labelDirection": "W"
+              },
+              "42": {
+                "leftPct": 78.9018,
+                "topPct": 61.5549,
+                "labelLeftPct": 72.4018,
+                "labelTopPct": 61.5549,
+                "labelDirection": "W"
+              }
+            },
+            "cafe": {
+              "18": {
+                "leftPct": 21.4542,
+                "topPct": 47.4832,
+                "labelLeftPct": 27.9542,
+                "labelTopPct": 47.4832,
+                "labelDirection": "E"
+              },
+              "22": {
+                "leftPct": 14.7165,
+                "topPct": 49.1718,
+                "labelLeftPct": 20.2165,
+                "labelTopPct": 54.6718,
+                "labelDirection": "SE"
+              },
+              "29": {
+                "leftPct": 20.213,
+                "topPct": 72.437,
+                "labelLeftPct": 26.713,
+                "labelTopPct": 72.437,
+                "labelDirection": "E"
+              },
+              "36": {
+                "leftPct": 94.1502,
+                "topPct": 72.437,
+                "labelLeftPct": 87.6502,
+                "labelTopPct": 72.437,
+                "labelDirection": "W"
+              },
+              "38": {
+                "leftPct": 85.543,
+                "topPct": 58.4619,
+                "labelLeftPct": 79.043,
+                "labelTopPct": 58.4619,
+                "labelDirection": "W"
+              }
+            },
+            "korean": {
+              "19": {
+                "leftPct": 22.6953,
+                "topPct": 50.4852,
+                "labelLeftPct": 29.1953,
+                "labelTopPct": 50.4852,
+                "labelDirection": "E"
+              },
+              "20": {
+                "leftPct": 29.965,
+                "topPct": 61.1797,
+                "labelLeftPct": 36.465,
+                "labelTopPct": 61.1797,
+                "labelDirection": "E"
+              },
+              "27": {
+                "leftPct": 26.9507,
+                "topPct": 85.383,
+                "labelLeftPct": 33.4507,
+                "labelTopPct": 85.383,
+                "labelDirection": "E"
+              },
+              "30": {
+                "leftPct": 17.7307,
+                "topPct": 69.0598,
+                "labelLeftPct": 24.2307,
+                "labelTopPct": 69.0598,
+                "labelDirection": "E"
+              },
+              "35": {
+                "leftPct": 91.2247,
+                "topPct": 73.5159,
+                "labelLeftPct": 84.7247,
+                "labelTopPct": 73.5159,
+                "labelDirection": "W"
+              },
+              "37": {
+                "leftPct": 86.7033,
+                "topPct": 68.8722,
+                "labelLeftPct": 80.2033,
+                "labelTopPct": 68.8722,
+                "labelDirection": "W"
+              },
+              "41": {
+                "leftPct": 84.0385,
+                "topPct": 51.0535,
+                "labelLeftPct": 77.5385,
+                "labelTopPct": 51.0535,
+                "labelDirection": "W"
+              },
+              "43": {
+                "leftPct": 77.306,
+                "topPct": 63.994,
+                "labelLeftPct": 70.806,
+                "labelTopPct": 63.994,
+                "labelDirection": "W"
+              }
+            },
+            "chicken": {
+              "21": {
+                "leftPct": 31.5607,
+                "topPct": 63.4312,
+                "labelLeftPct": 38.0607,
+                "labelTopPct": 63.4312,
+                "labelDirection": "E"
+              },
+              "24": {
+                "leftPct": 10.9931,
+                "topPct": 58.9282,
+                "labelLeftPct": 17.4931,
+                "labelTopPct": 58.9282,
+                "labelDirection": "E"
+              },
+              "26": {
+                "leftPct": 24.6457,
+                "topPct": 83.3192,
+                "labelLeftPct": 31.1457,
+                "labelTopPct": 83.3192,
+                "labelDirection": "E"
+              },
+              "31": {
+                "leftPct": 75.001,
+                "topPct": 82.9439,
+                "labelLeftPct": 68.501,
+                "labelTopPct": 82.9439,
+                "labelDirection": "W"
+              },
+              "32": {
+                "leftPct": 79.5249,
+                "topPct": 87.1737,
+                "labelLeftPct": 73.0249,
+                "labelTopPct": 87.1737,
+                "labelDirection": "W"
+              },
+              "34": {
+                "leftPct": 88.1218,
+                "topPct": 74.5009,
+                "labelLeftPct": 81.6218,
+                "labelTopPct": 74.5009,
+                "labelDirection": "W"
+              }
+            }
+          }
+        },
+        "2.5F": {
+          "all": {
+            "44": {
+              "leftPct": 15.4257,
+              "topPct": 38.6649,
+              "labelLeftPct": 21.9257,
+              "labelTopPct": 38.6649,
+              "labelDirection": "E"
+            },
+            "45": {
+              "leftPct": 90.7814,
+              "topPct": 38.2897,
+              "labelLeftPct": 84.2814,
+              "labelTopPct": 38.2897,
+              "labelDirection": "W"
+            },
+            "46": {
+              "leftPct": 90.0722,
+              "topPct": 47.2956,
+              "labelLeftPct": 83.5722,
+              "labelTopPct": 47.2956,
+              "labelDirection": "W"
+            },
+            "47": {
+              "leftPct": 67.5541,
+              "topPct": 80.6924,
+              "labelLeftPct": 74.0541,
+              "labelTopPct": 80.6924,
+              "labelDirection": "E"
+            },
+            "48": {
+              "leftPct": 40.5147,
+              "topPct": 80.8332,
+              "labelLeftPct": 34.0147,
+              "labelTopPct": 80.8332,
+              "labelDirection": "W"
+            },
+            "49": {
+              "leftPct": 44.5042,
+              "topPct": 81.8182,
+              "labelLeftPct": 51.0042,
+              "labelTopPct": 81.8182,
+              "labelDirection": "E"
+            }
+          },
+          "categories": {
+            "chicken": {
+              "44": {
+                "leftPct": 15.4257,
+                "topPct": 38.6649,
+                "labelLeftPct": 21.9257,
+                "labelTopPct": 38.6649,
+                "labelDirection": "E"
+              },
+              "45": {
+                "leftPct": 90.7814,
+                "topPct": 38.2897,
+                "labelLeftPct": 84.2814,
+                "labelTopPct": 38.2897,
+                "labelDirection": "W"
+              }
+            },
+            "korean": {
+              "46": {
+                "leftPct": 90.0722,
+                "topPct": 47.2956,
+                "labelLeftPct": 83.5722,
+                "labelTopPct": 47.2956,
+                "labelDirection": "W"
+              },
+              "48": {
+                "leftPct": 40.5147,
+                "topPct": 80.8332,
+                "labelLeftPct": 34.0147,
+                "labelTopPct": 80.8332,
+                "labelDirection": "W"
+              },
+              "49": {
+                "leftPct": 44.5042,
+                "topPct": 81.8182,
+                "labelLeftPct": 51.0042,
+                "labelTopPct": 81.8182,
+                "labelDirection": "E"
+              }
+            },
+            "western": {
+              "47": {
+                "leftPct": 67.5541,
+                "topPct": 80.6924,
+                "labelLeftPct": 61.0541,
+                "labelTopPct": 80.6924,
+                "labelDirection": "W"
+              }
+            }
+          }
+        },
+        "3F": {
+          "all": {
+            "50": {
+              "leftPct": 89.1856,
+              "topPct": 63.8064,
+              "labelLeftPct": 82.6856,
+              "labelTopPct": 63.8064,
+              "labelDirection": "W"
+            },
+            "51": {
+              "leftPct": 17.5534,
+              "topPct": 64.9321,
+              "labelLeftPct": 24.0534,
+              "labelTopPct": 64.9321,
+              "labelDirection": "E"
+            },
+            "52": {
+              "leftPct": 20.0357,
+              "topPct": 52.9243,
+              "labelLeftPct": 26.5357,
+              "labelTopPct": 52.9243,
+              "labelDirection": "E"
+            },
+            "53": {
+              "leftPct": 85.8168,
+              "topPct": 53.4871,
+              "labelLeftPct": 79.3168,
+              "labelTopPct": 53.4871,
+              "labelDirection": "W"
+            },
+            "54": {
+              "leftPct": 60.8164,
+              "topPct": 78.0188,
+              "labelLeftPct": 67.3164,
+              "labelTopPct": 78.0188,
+              "labelDirection": "E"
+            },
+            "55": {
+              "leftPct": 45.5706,
+              "topPct": 77.8367,
+              "labelLeftPct": 39.0706,
+              "labelTopPct": 77.8367,
+              "labelDirection": "W"
+            }
+          },
+          "categories": {
+            "western": {
+              "50": {
+                "leftPct": 89.1856,
+                "topPct": 63.8064,
+                "labelLeftPct": 82.6856,
+                "labelTopPct": 63.8064,
+                "labelDirection": "W"
+              },
+              "51": {
+                "leftPct": 17.5534,
+                "topPct": 64.9321,
+                "labelLeftPct": 24.0534,
+                "labelTopPct": 64.9321,
+                "labelDirection": "E"
+              }
+            },
+            "cafe": {
+              "52": {
+                "leftPct": 20.0357,
+                "topPct": 52.9243,
+                "labelLeftPct": 26.5357,
+                "labelTopPct": 52.9243,
+                "labelDirection": "E"
+              }
+            },
+            "korean": {
+              "53": {
+                "leftPct": 85.8168,
+                "topPct": 53.4871,
+                "labelLeftPct": 79.3168,
+                "labelTopPct": 53.4871,
+                "labelDirection": "W"
+              },
+              "55": {
+                "leftPct": 45.6567,
+                "topPct": 78.0188,
+                "labelLeftPct": 52.1567,
+                "labelTopPct": 78.0188,
+                "labelDirection": "E"
+              }
+            },
+            "chicken": {
+              "54": {
+                "leftPct": 60.8164,
+                "topPct": 78.0188,
+                "labelLeftPct": 54.3164,
+                "labelTopPct": 78.0188,
+                "labelDirection": "W"
+              }
+            }
+          }
+        },
+        "4F": {
+          "all": {
+            "56": {
+              "leftPct": 14.5392,
+              "topPct": 40.1659,
+              "labelLeftPct": 21.0392,
+              "labelTopPct": 40.1659,
+              "labelDirection": "E"
+            },
+            "57": {
+              "leftPct": 49.6461,
+              "topPct": 89.8391,
+              "labelLeftPct": 43.1461,
+              "labelTopPct": 89.8391,
+              "labelDirection": "W"
+            },
+            "58": {
+              "leftPct": 53.1922,
+              "topPct": 89.6983,
+              "labelLeftPct": 59.6922,
+              "labelTopPct": 89.6983,
+              "labelDirection": "E"
+            },
+            "59": {
+              "leftPct": 92.7318,
+              "topPct": 44.6689,
+              "labelLeftPct": 86.2318,
+              "labelTopPct": 44.6689,
+              "labelDirection": "W"
+            }
+          },
+          "categories": {
+            "chicken": {
+              "56": {
+                "leftPct": 14.5392,
+                "topPct": 40.1659,
+                "labelLeftPct": 21.0392,
+                "labelTopPct": 40.1659,
+                "labelDirection": "E"
+              }
+            },
+            "korean": {
+              "57": {
+                "leftPct": 49.6461,
+                "topPct": 90.0212,
+                "labelLeftPct": 43.1461,
+                "labelTopPct": 90.0212,
+                "labelDirection": "W"
+              },
+              "58": {
+                "leftPct": 53.1922,
+                "topPct": 89.6983,
+                "labelLeftPct": 59.6922,
+                "labelTopPct": 89.6983,
+                "labelDirection": "E"
+              },
+              "59": {
+                "leftPct": 92.7318,
+                "topPct": 44.6689,
+                "labelLeftPct": 86.2318,
+                "labelTopPct": 44.6689,
+                "labelDirection": "W"
+              }
+            }
+          }
+        }
+      }
+    },
+    "2": {
+      "floors": {
+        "2F": {
+          "all": {
+            "0": {
+              "leftPct": 85.7503,
+              "topPct": 61.5212,
+              "labelLeftPct": 85.7503,
+              "labelTopPct": 68.0212,
+              "labelDirection": "S"
+            },
+            "1": {
+              "leftPct": 82.6739,
+              "topPct": 65.119,
+              "labelLeftPct": 82.6739,
+              "labelTopPct": 58.619,
+              "labelDirection": "N"
+            },
+            "2": {
+              "leftPct": 74.0813,
+              "topPct": 73.8683,
+              "labelLeftPct": 67.5813,
+              "labelTopPct": 73.8683,
+              "labelDirection": "W"
+            },
+            "3": {
+              "leftPct": 70.7928,
+              "topPct": 76.6485,
+              "labelLeftPct": 77.2928,
+              "labelTopPct": 76.6485,
+              "labelDirection": "E"
+            },
+            "4": {
+              "leftPct": 64.8522,
+              "topPct": 80.001,
+              "labelLeftPct": 71.3522,
+              "labelTopPct": 80.001,
+              "labelDirection": "E"
+            },
+            "5": {
+              "leftPct": 58.5934,
+              "topPct": 81.4729,
+              "labelLeftPct": 52.0934,
+              "labelTopPct": 81.4729,
+              "labelDirection": "W"
+            },
+            "6": {
+              "leftPct": 32.0731,
+              "topPct": 78.1203,
+              "labelLeftPct": 25.5731,
+              "labelTopPct": 78.1203,
+              "labelDirection": "W"
+            },
+            "7": {
+              "leftPct": 25.9203,
+              "topPct": 73.5413,
+              "labelLeftPct": 32.4203,
+              "labelTopPct": 73.5413,
+              "labelDirection": "E"
+            },
+            "8": {
+              "leftPct": 19.0593,
+              "topPct": 66.5777,
+              "labelLeftPct": 19.0593,
+              "labelTopPct": 60.0777,
+              "labelDirection": "N"
+            },
+            "9": {
+              "leftPct": 14.9939,
+              "topPct": 61.8482,
+              "labelLeftPct": 14.9939,
+              "labelTopPct": 68.3482,
+              "labelDirection": "S"
+            },
+            "10": {
+              "leftPct": 78.1456,
+              "topPct": 61.9406,
+              "labelLeftPct": 71.6456,
+              "labelTopPct": 61.9406,
+              "labelDirection": "W"
+            },
+            "11": {
+              "leftPct": 75.9512,
+              "topPct": 64.4389,
+              "labelLeftPct": 69.4512,
+              "labelTopPct": 64.4389,
+              "labelDirection": "W"
+            },
+            "12": {
+              "leftPct": 73.1962,
+              "topPct": 67.4597,
+              "labelLeftPct": 66.6962,
+              "labelTopPct": 67.4597,
+              "labelDirection": "W"
+            },
+            "13": {
+              "leftPct": 71.0746,
+              "topPct": 70.5255,
+              "labelLeftPct": 64.5746,
+              "labelTopPct": 70.5255,
+              "labelDirection": "W"
+            },
+            "14": {
+              "leftPct": 21.2163,
+              "topPct": 61.327,
+              "labelLeftPct": 27.7163,
+              "labelTopPct": 61.327,
+              "labelDirection": "E"
+            },
+            "15": {
+              "leftPct": 24.0451,
+              "topPct": 64.734,
+              "labelLeftPct": 30.5451,
+              "labelTopPct": 64.734,
+              "labelDirection": "E"
+            },
+            "16": {
+              "leftPct": 26.6972,
+              "topPct": 67.7322,
+              "labelLeftPct": 33.1972,
+              "labelTopPct": 67.7322,
+              "labelDirection": "E"
+            },
+            "17": {
+              "leftPct": 29.7028,
+              "topPct": 70.8667,
+              "labelLeftPct": 36.2028,
+              "labelTopPct": 70.8667,
+              "labelDirection": "E"
+            }
+          },
+          "categories": {
+            "western": {
+              "0": {
+                "leftPct": 85.7503,
+                "topPct": 61.5212,
+                "labelLeftPct": 80.2503,
+                "labelTopPct": 67.0212,
+                "labelDirection": "SW"
+              },
+              "5": {
+                "leftPct": 58.5934,
+                "topPct": 81.4729,
+                "labelLeftPct": 52.0934,
+                "labelTopPct": 81.4729,
+                "labelDirection": "W"
+              },
+              "9": {
+                "leftPct": 14.9939,
+                "topPct": 61.8482,
+                "labelLeftPct": 21.4939,
+                "labelTopPct": 61.8482,
+                "labelDirection": "E"
+              },
+              "10": {
+                "leftPct": 78.3235,
+                "topPct": 61.8721,
+                "labelLeftPct": 71.8235,
+                "labelTopPct": 61.8721,
+                "labelDirection": "W"
+              }
+            },
+            "chicken": {
+              "1": {
+                "leftPct": 82.6739,
+                "topPct": 65.119,
+                "labelLeftPct": 76.1739,
+                "labelTopPct": 65.119,
+                "labelDirection": "W"
+              },
+              "4": {
+                "leftPct": 64.8522,
+                "topPct": 80.001,
+                "labelLeftPct": 58.3522,
+                "labelTopPct": 80.001,
+                "labelDirection": "W"
+              },
+              "8": {
+                "leftPct": 19.2372,
+                "topPct": 66.5091,
+                "labelLeftPct": 24.7372,
+                "labelTopPct": 61.0091,
+                "labelDirection": "NE"
+              },
+              "13": {
+                "leftPct": 71.0746,
+                "topPct": 70.5941,
+                "labelLeftPct": 64.5746,
+                "labelTopPct": 70.5941,
+                "labelDirection": "W"
+              },
+              "16": {
+                "leftPct": 26.6972,
+                "topPct": 67.7322,
+                "labelLeftPct": 33.1972,
+                "labelTopPct": 67.7322,
+                "labelDirection": "E"
+              }
+            },
+            "korean": {
+              "2": {
+                "leftPct": 74.0813,
+                "topPct": 73.8683,
+                "labelLeftPct": 67.5813,
+                "labelTopPct": 73.8683,
+                "labelDirection": "W"
+              },
+              "3": {
+                "leftPct": 70.7928,
+                "topPct": 76.6485,
+                "labelLeftPct": 64.2928,
+                "labelTopPct": 76.6485,
+                "labelDirection": "W"
+              },
+              "7": {
+                "leftPct": 25.9203,
+                "topPct": 73.5413,
+                "labelLeftPct": 32.4203,
+                "labelTopPct": 73.5413,
+                "labelDirection": "E"
+              },
+              "11": {
+                "leftPct": 75.8482,
+                "topPct": 64.5977,
+                "labelLeftPct": 69.3482,
+                "labelTopPct": 64.5977,
+                "labelDirection": "W"
+              },
+              "15": {
+                "leftPct": 24.0451,
+                "topPct": 64.734,
+                "labelLeftPct": 30.5451,
+                "labelTopPct": 64.734,
+                "labelDirection": "E"
+              },
+              "17": {
+                "leftPct": 29.7028,
+                "topPct": 70.8667,
+                "labelLeftPct": 36.2028,
+                "labelTopPct": 70.8667,
+                "labelDirection": "E"
+              }
+            },
+            "cafe": {
+              "6": {
+                "leftPct": 32.0731,
+                "topPct": 78.1203,
+                "labelLeftPct": 38.5731,
+                "labelTopPct": 78.1203,
+                "labelDirection": "E"
+              },
+              "12": {
+                "leftPct": 73.1962,
+                "topPct": 67.4597,
+                "labelLeftPct": 66.6962,
+                "labelTopPct": 67.4597,
+                "labelDirection": "W"
+              },
+              "14": {
+                "leftPct": 21.2163,
+                "topPct": 61.327,
+                "labelLeftPct": 27.7163,
+                "labelTopPct": 61.327,
+                "labelDirection": "E"
+              }
+            }
+          }
+        },
+        "4F": {
+          "all": {
+            "18": {
+              "leftPct": 73.7266,
+              "topPct": 78.0897,
+              "labelLeftPct": 68.2266,
+              "labelTopPct": 72.5897,
+              "labelDirection": "NW"
+            },
+            "19": {
+              "leftPct": 69.3956,
+              "topPct": 82.3152,
+              "labelLeftPct": 62.8956,
+              "labelTopPct": 82.3152,
+              "labelDirection": "W"
+            },
+            "20": {
+              "leftPct": 64.1793,
+              "topPct": 85.0401,
+              "labelLeftPct": 70.6793,
+              "labelTopPct": 85.0401,
+              "labelDirection": "E"
+            },
+            "21": {
+              "leftPct": 52.1225,
+              "topPct": 87.442,
+              "labelLeftPct": 57.6225,
+              "labelTopPct": 92.942,
+              "labelDirection": "SE"
+            },
+            "22": {
+              "leftPct": 47.667,
+              "topPct": 87.2785,
+              "labelLeftPct": 47.667,
+              "labelTopPct": 93.7785,
+              "labelDirection": "S"
+            },
+            "23": {
+              "leftPct": 38.0136,
+              "topPct": 86.5418,
+              "labelLeftPct": 32.5136,
+              "labelTopPct": 92.0418,
+              "labelDirection": "SW"
+            },
+            "24": {
+              "leftPct": 34.3008,
+              "topPct": 85.0707,
+              "labelLeftPct": 39.8008,
+              "labelTopPct": 79.5707,
+              "labelDirection": "NE"
+            },
+            "25": {
+              "leftPct": 30.9404,
+              "topPct": 83.1321,
+              "labelLeftPct": 25.4404,
+              "labelTopPct": 77.6321,
+              "labelDirection": "NW"
+            },
+            "36": {
+              "leftPct": 70.1906,
+              "topPct": 8.8583,
+              "labelLeftPct": 70.1906,
+              "labelTopPct": 15.3583,
+              "labelDirection": "S"
+            },
+            "37": {
+              "leftPct": 66.4777,
+              "topPct": 7.7681,
+              "labelLeftPct": 60.9777,
+              "labelTopPct": 13.2681,
+              "labelDirection": "SW"
+            },
+            "38": {
+              "leftPct": 32.3548,
+              "topPct": 8.3132,
+              "labelLeftPct": 38.8548,
+              "labelTopPct": 8.3132,
+              "labelDirection": "E"
+            }
+          },
+          "categories": {
+            "korean": {
+              "18": {
+                "leftPct": 73.7266,
+                "topPct": 78.0897,
+                "labelLeftPct": 67.2266,
+                "labelTopPct": 78.0897,
+                "labelDirection": "W"
+              },
+              "23": {
+                "leftPct": 37.8357,
+                "topPct": 86.1303,
+                "labelLeftPct": 44.3357,
+                "labelTopPct": 86.1303,
+                "labelDirection": "E"
+              },
+              "24": {
+                "leftPct": 34.3008,
+                "topPct": 85.0707,
+                "labelLeftPct": 27.8008,
+                "labelTopPct": 85.0707,
+                "labelDirection": "W"
+              },
+              "38": {
+                "leftPct": 32.3548,
+                "topPct": 8.3132,
+                "labelLeftPct": 38.8548,
+                "labelTopPct": 8.3132,
+                "labelDirection": "E"
+              }
+            },
+            "cafe": {
+              "19": {
+                "leftPct": 69.3066,
+                "topPct": 82.1781,
+                "labelLeftPct": 62.8066,
+                "labelTopPct": 82.1781,
+                "labelDirection": "W"
+              }
+            },
+            "western": {
+              "20": {
+                "leftPct": 64.1793,
+                "topPct": 84.9715,
+                "labelLeftPct": 70.6793,
+                "labelTopPct": 84.9715,
+                "labelDirection": "E"
+              },
+              "22": {
+                "leftPct": 47.667,
+                "topPct": 87.2785,
+                "labelLeftPct": 41.167,
+                "labelTopPct": 87.2785,
+                "labelDirection": "W"
+              }
+            },
+            "chicken": {
+              "21": {
+                "leftPct": 52.1225,
+                "topPct": 87.442,
+                "labelLeftPct": 58.6225,
+                "labelTopPct": 87.442,
+                "labelDirection": "E"
+              },
+              "25": {
+                "leftPct": 30.9404,
+                "topPct": 83.1321,
+                "labelLeftPct": 37.4404,
+                "labelTopPct": 83.1321,
+                "labelDirection": "E"
+              },
+              "36": {
+                "leftPct": 70.1906,
+                "topPct": 8.8583,
+                "labelLeftPct": 64.6906,
+                "labelTopPct": 14.3583,
+                "labelDirection": "SW"
+              },
+              "37": {
+                "leftPct": 66.4777,
+                "topPct": 7.7681,
+                "labelLeftPct": 59.9777,
+                "labelTopPct": 7.7681,
+                "labelDirection": "W"
+              }
+            }
+          }
+        },
+        "3F": {
+          "all": {
+            "26": {
+              "leftPct": 79.2793,
+              "topPct": 16.5481,
+              "labelLeftPct": 79.2793,
+              "labelTopPct": 23.0481,
+              "labelDirection": "S"
+            },
+            "27": {
+              "leftPct": 76.2018,
+              "topPct": 14.8548,
+              "labelLeftPct": 70.7018,
+              "labelTopPct": 20.3548,
+              "labelDirection": "SW"
+            },
+            "28": {
+              "leftPct": 72.6658,
+              "topPct": 13.4919,
+              "labelLeftPct": 72.6658,
+              "labelTopPct": 6.9919,
+              "labelDirection": "N"
+            },
+            "29": {
+              "leftPct": 40.311,
+              "topPct": 9.9486,
+              "labelLeftPct": 45.811,
+              "labelTopPct": 4.4486,
+              "labelDirection": "NE"
+            },
+            "30": {
+              "leftPct": 36.7749,
+              "topPct": 10.63,
+              "labelLeftPct": 31.2749,
+              "labelTopPct": 16.13,
+              "labelDirection": "SW"
+            },
+            "31": {
+              "leftPct": 33.4157,
+              "topPct": 11.3114,
+              "labelLeftPct": 27.9157,
+              "labelTopPct": 5.8114,
+              "labelDirection": "NW"
+            },
+            "32": {
+              "leftPct": 28.8188,
+              "topPct": 12.8105,
+              "labelLeftPct": 23.3188,
+              "labelTopPct": 18.3105,
+              "labelDirection": "SW"
+            },
+            "33": {
+              "leftPct": 55.8696,
+              "topPct": 9.4035,
+              "labelLeftPct": 61.3696,
+              "labelTopPct": 14.9035,
+              "labelDirection": "SE"
+            },
+            "34": {
+              "leftPct": 50.3887,
+              "topPct": 9.1309,
+              "labelLeftPct": 50.3887,
+              "labelTopPct": 15.6309,
+              "labelDirection": "S"
+            },
+            "35": {
+              "leftPct": 45.2614,
+              "topPct": 9.2672,
+              "labelLeftPct": 39.7614,
+              "labelTopPct": 14.7672,
+              "labelDirection": "SW"
+            }
+          },
+          "categories": {
+            "cafe": {
+              "26": {
+                "leftPct": 79.2793,
+                "topPct": 16.5481,
+                "labelLeftPct": 72.7793,
+                "labelTopPct": 16.5481,
+                "labelDirection": "W"
+              },
+              "29": {
+                "leftPct": 40.311,
+                "topPct": 9.9486,
+                "labelLeftPct": 46.811,
+                "labelTopPct": 9.9486,
+                "labelDirection": "E"
+              }
+            },
+            "chicken": {
+              "27": {
+                "leftPct": 76.2018,
+                "topPct": 14.8548,
+                "labelLeftPct": 70.7018,
+                "labelTopPct": 20.3548,
+                "labelDirection": "SW"
+              },
+              "28": {
+                "leftPct": 72.6658,
+                "topPct": 13.4919,
+                "labelLeftPct": 66.1658,
+                "labelTopPct": 13.4919,
+                "labelDirection": "W"
+              },
+              "33": {
+                "leftPct": 55.7806,
+                "topPct": 9.4035,
+                "labelLeftPct": 49.2806,
+                "labelTopPct": 9.4035,
+                "labelDirection": "W"
+              }
+            },
+            "western": {
+              "30": {
+                "leftPct": 36.7749,
+                "topPct": 10.63,
+                "labelLeftPct": 42.2749,
+                "labelTopPct": 16.13,
+                "labelDirection": "SE"
+              },
+              "31": {
+                "leftPct": 33.4157,
+                "topPct": 11.3114,
+                "labelLeftPct": 33.4157,
+                "labelTopPct": 17.8114,
+                "labelDirection": "S"
+              },
+              "32": {
+                "leftPct": 28.8188,
+                "topPct": 12.8105,
+                "labelLeftPct": 23.3188,
+                "labelTopPct": 18.3105,
+                "labelDirection": "SW"
+              },
+              "34": {
+                "leftPct": 50.3887,
+                "topPct": 9.1309,
+                "labelLeftPct": 56.8887,
+                "labelTopPct": 9.1309,
+                "labelDirection": "E"
+              }
+            },
+            "korean": {
+              "35": {
+                "leftPct": 45.2614,
+                "topPct": 9.2672,
+                "labelLeftPct": 51.7614,
+                "labelTopPct": 9.2672,
+                "labelDirection": "E"
+              }
+            }
+          }
+        }
+      }
+    },
+    "3": {
+      "floors": {
+        "1F": {
+          "all": {
+            "0": {
+              "leftPct": 88.7649,
+              "topPct": 51.1054,
+              "labelLeftPct": 83.2649,
+              "labelTopPct": 45.6054,
+              "labelDirection": "NW"
+            },
+            "1": {
+              "leftPct": 82.3761,
+              "topPct": 70.364,
+              "labelLeftPct": 75.8761,
+              "labelTopPct": 70.364,
+              "labelDirection": "W"
+            },
+            "2": {
+              "leftPct": 69.8107,
+              "topPct": 86.0262,
+              "labelLeftPct": 64.3107,
+              "labelTopPct": 91.5262,
+              "labelDirection": "SW"
+            },
+            "3": {
+              "leftPct": 71.5549,
+              "topPct": 84.7282,
+              "labelLeftPct": 66.0549,
+              "labelTopPct": 79.2282,
+              "labelDirection": "NW"
+            },
+            "4": {
+              "leftPct": 91.6137,
+              "topPct": 54.5915,
+              "labelLeftPct": 91.6137,
+              "labelTopPct": 48.0915,
+              "labelDirection": "N"
+            },
+            "5": {
+              "leftPct": 80.9245,
+              "topPct": 80.7851,
+              "labelLeftPct": 80.9245,
+              "labelTopPct": 87.2851,
+              "labelDirection": "S"
+            },
+            "6": {
+              "leftPct": 86.2031,
+              "topPct": 63.6044,
+              "labelLeftPct": 80.7031,
+              "labelTopPct": 58.1044,
+              "labelDirection": "NW"
+            },
+            "7": {
+              "leftPct": 84.3155,
+              "topPct": 65.9692,
+              "labelLeftPct": 77.8155,
+              "labelTopPct": 65.9692,
+              "labelDirection": "W"
+            },
+            "8": {
+              "leftPct": 27.4783,
+              "topPct": 86.6372,
+              "labelLeftPct": 21.9783,
+              "labelTopPct": 92.1372,
+              "labelDirection": "SW"
+            },
+            "9": {
+              "leftPct": 21.9357,
+              "topPct": 77.2645,
+              "labelLeftPct": 16.4357,
+              "labelTopPct": 82.7645,
+              "labelDirection": "SW"
+            },
+            "10": {
+              "leftPct": 17.9767,
+              "topPct": 71.0681,
+              "labelLeftPct": 24.4767,
+              "labelTopPct": 71.0681,
+              "labelDirection": "E"
+            },
+            "11": {
+              "leftPct": 14.5456,
+              "topPct": 65.4351,
+              "labelLeftPct": 21.0456,
+              "labelTopPct": 65.4351,
+              "labelDirection": "E"
+            },
+            "12": {
+              "leftPct": 12.962,
+              "topPct": 62.4778,
+              "labelLeftPct": 19.462,
+              "labelTopPct": 62.4778,
+              "labelDirection": "E"
+            },
+            "13": {
+              "leftPct": 40.5257,
+              "topPct": 71.9132,
+              "labelLeftPct": 46.0257,
+              "labelTopPct": 66.4132,
+              "labelDirection": "NE"
+            },
+            "14": {
+              "leftPct": 7.4194,
+              "topPct": 42.903,
+              "labelLeftPct": 13.9194,
+              "labelTopPct": 42.903,
+              "labelDirection": "E"
+            }
+          },
+          "categories": {
+            "western": {
+              "0": {
+                "leftPct": 88.7649,
+                "topPct": 51.1054,
+                "labelLeftPct": 82.2649,
+                "labelTopPct": 51.1054,
+                "labelDirection": "W"
+              }
+            },
+            "korean": {
+              "1": {
+                "leftPct": 82.3761,
+                "topPct": 70.364,
+                "labelLeftPct": 75.8761,
+                "labelTopPct": 70.364,
+                "labelDirection": "W"
+              },
+              "2": {
+                "leftPct": 70.4992,
+                "topPct": 85.2915,
+                "labelLeftPct": 63.9992,
+                "labelTopPct": 85.2915,
+                "labelDirection": "W"
+              },
+              "9": {
+                "leftPct": 21.9357,
+                "topPct": 77.2645,
+                "labelLeftPct": 28.4357,
+                "labelTopPct": 77.2645,
+                "labelDirection": "E"
+              },
+              "11": {
+                "leftPct": 14.5456,
+                "topPct": 65.4351,
+                "labelLeftPct": 21.0456,
+                "labelTopPct": 65.4351,
+                "labelDirection": "E"
+              },
+              "14": {
+                "leftPct": 7.4194,
+                "topPct": 42.903,
+                "labelLeftPct": 13.9194,
+                "labelTopPct": 42.903,
+                "labelDirection": "E"
+              }
+            },
+            "cafe": {
+              "3": {
+                "leftPct": 71.5549,
+                "topPct": 84.7282,
+                "labelLeftPct": 65.0549,
+                "labelTopPct": 84.7282,
+                "labelDirection": "W"
+              },
+              "4": {
+                "leftPct": 91.6137,
+                "topPct": 54.5915,
+                "labelLeftPct": 85.1137,
+                "labelTopPct": 54.5915,
+                "labelDirection": "W"
+              },
+              "5": {
+                "leftPct": 80.9245,
+                "topPct": 80.7851,
+                "labelLeftPct": 74.4245,
+                "labelTopPct": 80.7851,
+                "labelDirection": "W"
+              },
+              "7": {
+                "leftPct": 84.4876,
+                "topPct": 66.061,
+                "labelLeftPct": 77.9876,
+                "labelTopPct": 66.061,
+                "labelDirection": "W"
+              },
+              "10": {
+                "leftPct": 17.9767,
+                "topPct": 71.0681,
+                "labelLeftPct": 23.4767,
+                "labelTopPct": 65.5681,
+                "labelDirection": "NE"
+              },
+              "13": {
+                "leftPct": 39.7511,
+                "topPct": 71.9131,
+                "labelLeftPct": 46.2511,
+                "labelTopPct": 71.9131,
+                "labelDirection": "E"
+              }
+            },
+            "chicken": {
+              "6": {
+                "leftPct": 86.2892,
+                "topPct": 63.5126,
+                "labelLeftPct": 79.7892,
+                "labelTopPct": 63.5126,
+                "labelDirection": "W"
+              },
+              "8": {
+                "leftPct": 27.4783,
+                "topPct": 86.6372,
+                "labelLeftPct": 33.9783,
+                "labelTopPct": 86.6372,
+                "labelDirection": "E"
+              },
+              "12": {
+                "leftPct": 12.962,
+                "topPct": 62.4778,
+                "labelLeftPct": 19.462,
+                "labelTopPct": 62.4778,
+                "labelDirection": "E"
+              }
+            }
+          }
+        },
+        "4F": {
+          "all": {
+            "15": {
+              "leftPct": 86.8421,
+              "topPct": 65.9449,
+              "labelLeftPct": 80.3421,
+              "labelTopPct": 65.9449,
+              "labelDirection": "W"
+            },
+            "16": {
+              "leftPct": 76.1717,
+              "topPct": 81.3304,
+              "labelLeftPct": 69.6717,
+              "labelTopPct": 81.3304,
+              "labelDirection": "W"
+            },
+            "17": {
+              "leftPct": 23.6097,
+              "topPct": 81.3304,
+              "labelLeftPct": 30.1097,
+              "labelTopPct": 81.3304,
+              "labelDirection": "E"
+            },
+            "18": {
+              "leftPct": 18.8673,
+              "topPct": 75.5667,
+              "labelLeftPct": 25.3673,
+              "labelTopPct": 75.5667,
+              "labelDirection": "E"
+            }
+          },
+          "categories": {
+            "korean": {
+              "15": {
+                "leftPct": 86.8421,
+                "topPct": 65.9449,
+                "labelLeftPct": 80.3421,
+                "labelTopPct": 65.9449,
+                "labelDirection": "W"
+              },
+              "17": {
+                "leftPct": 23.6097,
+                "topPct": 81.3304,
+                "labelLeftPct": 30.1097,
+                "labelTopPct": 81.3304,
+                "labelDirection": "E"
+              }
+            },
+            "western": {
+              "16": {
+                "leftPct": 76.1717,
+                "topPct": 81.3304,
+                "labelLeftPct": 69.6717,
+                "labelTopPct": 81.3304,
+                "labelDirection": "W"
+              },
+              "18": {
+                "leftPct": 18.8673,
+                "topPct": 75.5667,
+                "labelLeftPct": 25.3673,
+                "labelTopPct": 75.5667,
+                "labelDirection": "E"
+              }
+            }
+          }
+        },
+        "2F": {
+          "all": {
+            "19": {
+              "leftPct": 93.8028,
+              "topPct": 62.6856,
+              "labelLeftPct": 87.3028,
+              "labelTopPct": 62.6856,
+              "labelDirection": "W"
+            },
+            "20": {
+              "leftPct": 85.1679,
+              "topPct": 65.9644,
+              "labelLeftPct": 78.6679,
+              "labelTopPct": 65.9644,
+              "labelDirection": "W"
+            },
+            "21": {
+              "leftPct": 78.1764,
+              "topPct": 77.0032,
+              "labelLeftPct": 83.6764,
+              "labelTopPct": 82.5032,
+              "labelDirection": "SE"
+            },
+            "22": {
+              "leftPct": 74.4591,
+              "topPct": 82.1739,
+              "labelLeftPct": 67.9591,
+              "labelTopPct": 82.1739,
+              "labelDirection": "W"
+            },
+            "23": {
+              "leftPct": 81.0458,
+              "topPct": 72.1928,
+              "labelLeftPct": 74.5458,
+              "labelTopPct": 72.1928,
+              "labelDirection": "W"
+            },
+            "24": {
+              "leftPct": 83.591,
+              "topPct": 69.3073,
+              "labelLeftPct": 89.091,
+              "labelTopPct": 74.8073,
+              "labelDirection": "SE"
+            },
+            "25": {
+              "leftPct": 92.2899,
+              "topPct": 50.8953,
+              "labelLeftPct": 86.7899,
+              "labelTopPct": 45.3953,
+              "labelDirection": "NW"
+            },
+            "26": {
+              "leftPct": 92.5214,
+              "topPct": 47.181,
+              "labelLeftPct": 87.0214,
+              "labelTopPct": 41.681,
+              "labelDirection": "NW"
+            },
+            "27": {
+              "leftPct": 95.8216,
+              "topPct": 56.3558,
+              "labelLeftPct": 89.3216,
+              "labelTopPct": 56.3558,
+              "labelDirection": "W"
+            },
+            "28": {
+              "leftPct": 91.9838,
+              "topPct": 54.4963,
+              "labelLeftPct": 86.4838,
+              "labelTopPct": 48.9963,
+              "labelDirection": "NW"
+            },
+            "29": {
+              "leftPct": 68.6628,
+              "topPct": 86.6724,
+              "labelLeftPct": 74.1628,
+              "labelTopPct": 92.1724,
+              "labelDirection": "SE"
+            },
+            "30": {
+              "leftPct": 10.568,
+              "topPct": 58.2756,
+              "labelLeftPct": 17.068,
+              "labelTopPct": 58.2756,
+              "labelDirection": "E"
+            },
+            "31": {
+              "leftPct": 18.7355,
+              "topPct": 71.9117,
+              "labelLeftPct": 25.2355,
+              "labelTopPct": 71.9117,
+              "labelDirection": "E"
+            },
+            "32": {
+              "leftPct": 31.382,
+              "topPct": 85.2666,
+              "labelLeftPct": 25.882,
+              "labelTopPct": 90.7666,
+              "labelDirection": "SW"
+            },
+            "33": {
+              "leftPct": 95.3921,
+              "topPct": 52.3938,
+              "labelLeftPct": 95.3921,
+              "labelTopPct": 45.8938,
+              "labelDirection": "N"
+            },
+            "34": {
+              "leftPct": 27.2983,
+              "topPct": 8.6983,
+              "labelLeftPct": 20.7983,
+              "labelTopPct": 8.6983,
+              "labelDirection": "W"
+            },
+            "35": {
+              "leftPct": 38.7591,
+              "topPct": 3.778,
+              "labelLeftPct": 44.2591,
+              "labelTopPct": 9.278,
+              "labelDirection": "SE"
+            },
+            "36": {
+              "leftPct": 64.4473,
+              "topPct": 4.4966,
+              "labelLeftPct": 57.9473,
+              "labelTopPct": 4.4966,
+              "labelDirection": "W"
+            },
+            "37": {
+              "leftPct": 66.4233,
+              "topPct": 5.7461,
+              "labelLeftPct": 72.9233,
+              "labelTopPct": 5.7461,
+              "labelDirection": "E"
+            },
+            "38": {
+              "leftPct": 76.1717,
+              "topPct": 10.5258,
+              "labelLeftPct": 69.6717,
+              "labelTopPct": 10.5258,
+              "labelDirection": "W"
+            },
+            "39": {
+              "leftPct": 81.0458,
+              "topPct": 14.6026,
+              "labelLeftPct": 86.5458,
+              "labelTopPct": 9.1026,
+              "labelDirection": "NE"
+            },
+            "40": {
+              "leftPct": 82.2314,
+              "topPct": 16.2895,
+              "labelLeftPct": 75.7314,
+              "labelTopPct": 16.2895,
+              "labelDirection": "W"
+            },
+            "41": {
+              "leftPct": 83.6805,
+              "topPct": 18.3982,
+              "labelLeftPct": 78.1805,
+              "labelTopPct": 23.8982,
+              "labelDirection": "SW"
+            },
+            "42": {
+              "leftPct": 35.0706,
+              "topPct": 4.5122,
+              "labelLeftPct": 35.0706,
+              "labelTopPct": 11.0122,
+              "labelDirection": "S"
+            }
+          },
+          "categories": {
+            "chicken": {
+              "19": {
+                "leftPct": 93.8028,
+                "topPct": 62.6856,
+                "labelLeftPct": 88.3028,
+                "labelTopPct": 57.1856,
+                "labelDirection": "NW"
+              },
+              "20": {
+                "leftPct": 85.2402,
+                "topPct": 65.9644,
+                "labelLeftPct": 78.7402,
+                "labelTopPct": 65.9644,
+                "labelDirection": "W"
+              },
+              "24": {
+                "leftPct": 83.591,
+                "topPct": 69.3073,
+                "labelLeftPct": 77.091,
+                "labelTopPct": 69.3073,
+                "labelDirection": "W"
+              },
+              "27": {
+                "leftPct": 95.8216,
+                "topPct": 56.3558,
+                "labelLeftPct": 90.3216,
+                "labelTopPct": 50.8558,
+                "labelDirection": "NW"
+              },
+              "29": {
+                "leftPct": 68.6628,
+                "topPct": 86.6724,
+                "labelLeftPct": 63.1628,
+                "labelTopPct": 81.1724,
+                "labelDirection": "NW"
+              },
+              "30": {
+                "leftPct": 10.568,
+                "topPct": 58.2756,
+                "labelLeftPct": 17.068,
+                "labelTopPct": 58.2756,
+                "labelDirection": "E"
+              },
+              "32": {
+                "leftPct": 31.382,
+                "topPct": 85.2666,
+                "labelLeftPct": 37.882,
+                "labelTopPct": 85.2666,
+                "labelDirection": "E"
+              },
+              "37": {
+                "leftPct": 66.4233,
+                "topPct": 5.7461,
+                "labelLeftPct": 60.9233,
+                "labelTopPct": 11.2461,
+                "labelDirection": "SW"
+              },
+              "38": {
+                "leftPct": 76.1717,
+                "topPct": 10.5258,
+                "labelLeftPct": 76.1717,
+                "labelTopPct": 17.0258,
+                "labelDirection": "S"
+              }
+            },
+            "korean": {
+              "21": {
+                "leftPct": 78.2794,
+                "topPct": 77.1131,
+                "labelLeftPct": 72.7794,
+                "labelTopPct": 71.6131,
+                "labelDirection": "NW"
+              },
+              "22": {
+                "leftPct": 74.6758,
+                "topPct": 82.1739,
+                "labelLeftPct": 68.1758,
+                "labelTopPct": 82.1739,
+                "labelDirection": "W"
+              },
+              "28": {
+                "leftPct": 91.9838,
+                "topPct": 54.4963,
+                "labelLeftPct": 85.4838,
+                "labelTopPct": 54.4963,
+                "labelDirection": "W"
+              },
+              "31": {
+                "leftPct": 18.7355,
+                "topPct": 71.9117,
+                "labelLeftPct": 25.2355,
+                "labelTopPct": 71.9117,
+                "labelDirection": "E"
+              },
+              "35": {
+                "leftPct": 38.7591,
+                "topPct": 3.778,
+                "labelLeftPct": 38.7591,
+                "labelTopPct": 10.278,
+                "labelDirection": "S"
+              },
+              "36": {
+                "leftPct": 64.4473,
+                "topPct": 4.4966,
+                "labelLeftPct": 58.9473,
+                "labelTopPct": 9.9966,
+                "labelDirection": "SW"
+              },
+              "39": {
+                "leftPct": 81.0458,
+                "topPct": 14.6026,
+                "labelLeftPct": 74.5458,
+                "labelTopPct": 14.6026,
+                "labelDirection": "W"
+              },
+              "41": {
+                "leftPct": 83.6805,
+                "topPct": 18.3982,
+                "labelLeftPct": 78.1805,
+                "labelTopPct": 23.8982,
+                "labelDirection": "SW"
+              },
+              "42": {
+                "leftPct": 35.0706,
+                "topPct": 4.5122,
+                "labelLeftPct": 29.5706,
+                "labelTopPct": 10.0122,
+                "labelDirection": "SW"
+              }
+            },
+            "western": {
+              "23": {
+                "leftPct": 81.0458,
+                "topPct": 72.1928,
+                "labelLeftPct": 74.5458,
+                "labelTopPct": 72.1928,
+                "labelDirection": "W"
+              },
+              "26": {
+                "leftPct": 92.5214,
+                "topPct": 47.181,
+                "labelLeftPct": 86.0214,
+                "labelTopPct": 47.181,
+                "labelDirection": "W"
+              }
+            },
+            "cafe": {
+              "25": {
+                "leftPct": 92.2899,
+                "topPct": 50.8953,
+                "labelLeftPct": 86.7899,
+                "labelTopPct": 45.3953,
+                "labelDirection": "NW"
+              },
+              "33": {
+                "leftPct": 95.3921,
+                "topPct": 52.3938,
+                "labelLeftPct": 89.8921,
+                "labelTopPct": 57.8938,
+                "labelDirection": "SW"
+              },
+              "34": {
+                "leftPct": 27.2983,
+                "topPct": 8.6983,
+                "labelLeftPct": 33.7983,
+                "labelTopPct": 8.6983,
+                "labelDirection": "E"
+              },
+              "40": {
+                "leftPct": 82.2314,
+                "topPct": 16.2895,
+                "labelLeftPct": 75.7314,
+                "labelTopPct": 16.2895,
+                "labelDirection": "W"
+              }
+            }
+          }
+        }
+      }
+    },
+    "4": {
+      "floors": {
+        "2F": {
+          "all": {
+            "0": {
+              "leftPct": 64.5329,
+              "topPct": 80.9192,
+              "labelLeftPct": 71.0329,
+              "labelTopPct": 80.9192,
+              "labelDirection": "E"
+            },
+            "1": {
+              "leftPct": 62.0577,
+              "topPct": 83.1759,
+              "labelLeftPct": 68.5577,
+              "labelTopPct": 83.1759,
+              "labelDirection": "E"
+            },
+            "2": {
+              "leftPct": 59.052,
+              "topPct": 85.2714,
+              "labelLeftPct": 64.552,
+              "labelTopPct": 90.7714,
+              "labelDirection": "SE"
+            },
+            "3": {
+              "leftPct": 55.5171,
+              "topPct": 86.7907,
+              "labelLeftPct": 62.0171,
+              "labelTopPct": 86.7907,
+              "labelDirection": "E"
+            },
+            "4": {
+              "leftPct": 51.2727,
+              "topPct": 87.6893,
+              "labelLeftPct": 56.7727,
+              "labelTopPct": 93.1893,
+              "labelDirection": "SE"
+            },
+            "5": {
+              "leftPct": 46.288,
+              "topPct": 87.7579,
+              "labelLeftPct": 46.288,
+              "labelTopPct": 94.2579,
+              "labelDirection": "S"
+            },
+            "6": {
+              "leftPct": 42.363,
+              "topPct": 86.8874,
+              "labelLeftPct": 36.863,
+              "labelTopPct": 92.3874,
+              "labelDirection": "SW"
+            },
+            "7": {
+              "leftPct": 38.2216,
+              "topPct": 85.5279,
+              "labelLeftPct": 31.7216,
+              "labelTopPct": 85.5279,
+              "labelDirection": "W"
+            },
+            "8": {
+              "leftPct": 35.3278,
+              "topPct": 83.5332,
+              "labelLeftPct": 28.8278,
+              "labelTopPct": 83.5332,
+              "labelDirection": "W"
+            },
+            "9": {
+              "leftPct": 32.7096,
+              "topPct": 81.0844,
+              "labelLeftPct": 26.2096,
+              "labelTopPct": 81.0844,
+              "labelDirection": "W"
+            },
+            "10": {
+              "leftPct": 61.1736,
+              "topPct": 79.4685,
+              "labelLeftPct": 67.6736,
+              "labelTopPct": 79.4685,
+              "labelDirection": "E"
+            },
+            "11": {
+              "leftPct": 58.5216,
+              "topPct": 81.4028,
+              "labelLeftPct": 58.5216,
+              "labelTopPct": 74.9028,
+              "labelDirection": "N"
+            },
+            "12": {
+              "leftPct": 55.516,
+              "topPct": 82.8535,
+              "labelLeftPct": 61.016,
+              "labelTopPct": 77.3535,
+              "labelDirection": "NE"
+            },
+            "13": {
+              "leftPct": 40.1306,
+              "topPct": 83.2122,
+              "labelLeftPct": 40.1306,
+              "labelTopPct": 76.7122,
+              "labelDirection": "N"
+            },
+            "14": {
+              "leftPct": 37.4821,
+              "topPct": 81.7252,
+              "labelLeftPct": 31.9821,
+              "labelTopPct": 87.2252,
+              "labelDirection": "SW"
+            },
+            "15": {
+              "leftPct": 35.0069,
+              "topPct": 79.4685,
+              "labelLeftPct": 41.5069,
+              "labelTopPct": 79.4685,
+              "labelDirection": "E"
+            },
+            "16": {
+              "leftPct": 71.605,
+              "topPct": 69.7969,
+              "labelLeftPct": 77.105,
+              "labelTopPct": 64.2969,
+              "labelDirection": "NE"
+            },
+            "17": {
+              "leftPct": 69.1297,
+              "topPct": 73.9879,
+              "labelLeftPct": 75.6297,
+              "labelTopPct": 73.9879,
+              "labelDirection": "E"
+            },
+            "18": {
+              "leftPct": 68.7773,
+              "topPct": 68.3179,
+              "labelLeftPct": 68.7773,
+              "labelTopPct": 61.8179,
+              "labelDirection": "N"
+            },
+            "19": {
+              "leftPct": 65.9473,
+              "topPct": 72.0536,
+              "labelLeftPct": 72.4473,
+              "labelTopPct": 72.0536,
+              "labelDirection": "E"
+            },
+            "20": {
+              "leftPct": 65.4169,
+              "topPct": 66.7342,
+              "labelLeftPct": 59.9169,
+              "labelTopPct": 61.2342,
+              "labelDirection": "NW"
+            },
+            "21": {
+              "leftPct": 62.7649,
+              "topPct": 70.6028,
+              "labelLeftPct": 56.2649,
+              "labelTopPct": 70.6028,
+              "labelDirection": "W"
+            },
+            "22": {
+              "leftPct": 27.4044,
+              "topPct": 73.9879,
+              "labelLeftPct": 20.9044,
+              "labelTopPct": 73.9879,
+              "labelDirection": "W"
+            },
+            "23": {
+              "leftPct": 25.2827,
+              "topPct": 70.9252,
+              "labelLeftPct": 18.7827,
+              "labelTopPct": 70.9252,
+              "labelDirection": "W"
+            },
+            "24": {
+              "leftPct": 26.4507,
+              "topPct": 66.2869,
+              "labelLeftPct": 26.4507,
+              "labelTopPct": 59.7869,
+              "labelDirection": "N"
+            },
+            "25": {
+              "leftPct": 28.5724,
+              "topPct": 69.2192,
+              "labelLeftPct": 23.0724,
+              "labelTopPct": 63.7192,
+              "labelDirection": "NW"
+            },
+            "26": {
+              "leftPct": 31.1568,
+              "topPct": 72.4809,
+              "labelLeftPct": 37.6568,
+              "labelTopPct": 72.4809,
+              "labelDirection": "E"
+            },
+            "27": {
+              "leftPct": 33.9461,
+              "topPct": 70.2804,
+              "labelLeftPct": 39.4461,
+              "labelTopPct": 64.7804,
+              "labelDirection": "NE"
+            },
+            "28": {
+              "leftPct": 31.8244,
+              "topPct": 67.7013,
+              "labelLeftPct": 37.3244,
+              "labelTopPct": 62.2013,
+              "labelDirection": "NE"
+            },
+            "36": {
+              "leftPct": 81.8595,
+              "topPct": 27.5641,
+              "labelLeftPct": 75.3595,
+              "labelTopPct": 27.5641,
+              "labelDirection": "W"
+            }
+          },
+          "categories": {
+            "korean": {
+              "0": {
+                "leftPct": 64.5329,
+                "topPct": 80.9192,
+                "labelLeftPct": 71.0329,
+                "labelTopPct": 80.9192,
+                "labelDirection": "E"
+              },
+              "2": {
+                "leftPct": 59.052,
+                "topPct": 85.2714,
+                "labelLeftPct": 65.552,
+                "labelTopPct": 85.2714,
+                "labelDirection": "E"
+              },
+              "4": {
+                "leftPct": 51.2727,
+                "topPct": 87.6893,
+                "labelLeftPct": 56.7727,
+                "labelTopPct": 93.1893,
+                "labelDirection": "SE"
+              },
+              "6": {
+                "leftPct": 42.363,
+                "topPct": 86.8874,
+                "labelLeftPct": 42.363,
+                "labelTopPct": 93.3874,
+                "labelDirection": "S"
+              },
+              "7": {
+                "leftPct": 38.3661,
+                "topPct": 85.5938,
+                "labelLeftPct": 31.8661,
+                "labelTopPct": 85.5938,
+                "labelDirection": "W"
+              },
+              "10": {
+                "leftPct": 61.1736,
+                "topPct": 79.4685,
+                "labelLeftPct": 55.6736,
+                "labelTopPct": 73.9685,
+                "labelDirection": "NW"
+              },
+              "12": {
+                "leftPct": 55.516,
+                "topPct": 82.8535,
+                "labelLeftPct": 50.016,
+                "labelTopPct": 77.3535,
+                "labelDirection": "NW"
+              },
+              "13": {
+                "leftPct": 40.4196,
+                "topPct": 83.2781,
+                "labelLeftPct": 34.9196,
+                "labelTopPct": 77.7781,
+                "labelDirection": "NW"
+              },
+              "16": {
+                "leftPct": 71.605,
+                "topPct": 69.7969,
+                "labelLeftPct": 78.105,
+                "labelTopPct": 69.7969,
+                "labelDirection": "E"
+              },
+              "24": {
+                "leftPct": 26.4507,
+                "topPct": 66.2869,
+                "labelLeftPct": 19.9507,
+                "labelTopPct": 66.2869,
+                "labelDirection": "W"
+              },
+              "25": {
+                "leftPct": 28.5724,
+                "topPct": 69.2851,
+                "labelLeftPct": 22.0724,
+                "labelTopPct": 69.2851,
+                "labelDirection": "W"
+              },
+              "28": {
+                "leftPct": 31.8244,
+                "topPct": 67.7013,
+                "labelLeftPct": 38.3244,
+                "labelTopPct": 67.7013,
+                "labelDirection": "E"
+              }
+            },
+            "chicken": {
+              "1": {
+                "leftPct": 62.0577,
+                "topPct": 83.1759,
+                "labelLeftPct": 68.5577,
+                "labelTopPct": 83.1759,
+                "labelDirection": "E"
+              },
+              "8": {
+                "leftPct": 35.2555,
+                "topPct": 83.5991,
+                "labelLeftPct": 28.7555,
+                "labelTopPct": 83.5991,
+                "labelDirection": "W"
+              },
+              "14": {
+                "leftPct": 37.4821,
+                "topPct": 81.7252,
+                "labelLeftPct": 42.9821,
+                "labelTopPct": 76.2252,
+                "labelDirection": "NE"
+              },
+              "23": {
+                "leftPct": 25.2827,
+                "topPct": 70.9252,
+                "labelLeftPct": 25.2827,
+                "labelTopPct": 64.4252,
+                "labelDirection": "N"
+              }
+            },
+            "western": {
+              "3": {
+                "leftPct": 55.3726,
+                "topPct": 86.8565,
+                "labelLeftPct": 48.8726,
+                "labelTopPct": 86.8565,
+                "labelDirection": "W"
+              },
+              "18": {
+                "leftPct": 68.7773,
+                "topPct": 68.3179,
+                "labelLeftPct": 75.2773,
+                "labelTopPct": 68.3179,
+                "labelDirection": "E"
+              },
+              "19": {
+                "leftPct": 65.9473,
+                "topPct": 72.0536,
+                "labelLeftPct": 72.4473,
+                "labelTopPct": 72.0536,
+                "labelDirection": "E"
+              },
+              "20": {
+                "leftPct": 65.5613,
+                "topPct": 66.8001,
+                "labelLeftPct": 59.0613,
+                "labelTopPct": 66.8001,
+                "labelDirection": "W"
+              },
+              "26": {
+                "leftPct": 31.0123,
+                "topPct": 72.2833,
+                "labelLeftPct": 37.5123,
+                "labelTopPct": 72.2833,
+                "labelDirection": "E"
+              }
+            },
+            "cafe": {
+              "5": {
+                "leftPct": 46.3603,
+                "topPct": 87.8238,
+                "labelLeftPct": 39.8603,
+                "labelTopPct": 87.8238,
+                "labelDirection": "W"
+              },
+              "9": {
+                "leftPct": 32.7096,
+                "topPct": 81.0844,
+                "labelLeftPct": 26.2096,
+                "labelTopPct": 81.0844,
+                "labelDirection": "W"
+              },
+              "11": {
+                "leftPct": 58.5216,
+                "topPct": 81.4028,
+                "labelLeftPct": 65.0216,
+                "labelTopPct": 81.4028,
+                "labelDirection": "E"
+              },
+              "15": {
+                "leftPct": 35.0069,
+                "topPct": 79.4685,
+                "labelLeftPct": 41.5069,
+                "labelTopPct": 79.4685,
+                "labelDirection": "E"
+              },
+              "17": {
+                "leftPct": 69.1297,
+                "topPct": 73.9879,
+                "labelLeftPct": 75.6297,
+                "labelTopPct": 73.9879,
+                "labelDirection": "E"
+              },
+              "21": {
+                "leftPct": 62.7649,
+                "topPct": 70.6028,
+                "labelLeftPct": 69.2649,
+                "labelTopPct": 70.6028,
+                "labelDirection": "E"
+              },
+              "22": {
+                "leftPct": 27.3322,
+                "topPct": 74.0538,
+                "labelLeftPct": 20.8322,
+                "labelTopPct": 74.0538,
+                "labelDirection": "W"
+              },
+              "27": {
+                "leftPct": 33.8016,
+                "topPct": 70.2804,
+                "labelLeftPct": 40.3016,
+                "labelTopPct": 70.2804,
+                "labelDirection": "E"
+              },
+              "36": {
+                "leftPct": 81.8595,
+                "topPct": 27.5641,
+                "labelLeftPct": 75.3595,
+                "labelTopPct": 27.5641,
+                "labelDirection": "W"
+              }
+            }
+          }
+        },
+        "5F": {
+          "all": {
+            "29": {
+              "leftPct": 90.1692,
+              "topPct": 53.1939,
+              "labelLeftPct": 84.6692,
+              "labelTopPct": 47.6939,
+              "labelDirection": "NW"
+            },
+            "30": {
+              "leftPct": 89.1084,
+              "topPct": 55.773,
+              "labelLeftPct": 82.6084,
+              "labelTopPct": 55.773,
+              "labelDirection": "W"
+            },
+            "31": {
+              "leftPct": 79.5611,
+              "topPct": 68.1849,
+              "labelLeftPct": 73.0611,
+              "labelTopPct": 68.1849,
+              "labelDirection": "W"
+            },
+            "32": {
+              "leftPct": 78.0063,
+              "topPct": 71.6062,
+              "labelLeftPct": 71.5063,
+              "labelTopPct": 71.6062,
+              "labelDirection": "W"
+            },
+            "33": {
+              "leftPct": 75.8482,
+              "topPct": 75.1162,
+              "labelLeftPct": 69.3482,
+              "labelTopPct": 75.1162,
+              "labelDirection": "W"
+            },
+            "34": {
+              "leftPct": 10.0777,
+              "topPct": 57.2237,
+              "labelLeftPct": 16.5777,
+              "labelTopPct": 57.2237,
+              "labelDirection": "E"
+            },
+            "35": {
+              "leftPct": 12.553,
+              "topPct": 60.6088,
+              "labelLeftPct": 19.053,
+              "labelTopPct": 60.6088,
+              "labelDirection": "E"
+            }
+          },
+          "categories": {
+            "korean": {
+              "29": {
+                "leftPct": 90.1692,
+                "topPct": 53.1939,
+                "labelLeftPct": 84.6692,
+                "labelTopPct": 47.6939,
+                "labelDirection": "NW"
+              },
+              "30": {
+                "leftPct": 89.1084,
+                "topPct": 55.773,
+                "labelLeftPct": 82.6084,
+                "labelTopPct": 55.773,
+                "labelDirection": "W"
+              }
+            },
+            "western": {
+              "31": {
+                "leftPct": 79.5611,
+                "topPct": 68.119,
+                "labelLeftPct": 73.0611,
+                "labelTopPct": 68.119,
+                "labelDirection": "W"
+              }
+            },
+            "cafe": {
+              "32": {
+                "leftPct": 77.8618,
+                "topPct": 71.6062,
+                "labelLeftPct": 71.3618,
+                "labelTopPct": 71.6062,
+                "labelDirection": "W"
+              },
+              "33": {
+                "leftPct": 75.8482,
+                "topPct": 75.1162,
+                "labelLeftPct": 69.3482,
+                "labelTopPct": 75.1162,
+                "labelDirection": "W"
+              },
+              "34": {
+                "leftPct": 10.0777,
+                "topPct": 57.2237,
+                "labelLeftPct": 16.5777,
+                "labelTopPct": 57.2237,
+                "labelDirection": "E"
+              },
+              "35": {
+                "leftPct": 12.553,
+                "topPct": 60.6088,
+                "labelLeftPct": 19.053,
+                "labelTopPct": 60.6088,
+                "labelDirection": "E"
+              }
+            }
+          }
+        }
+      }
+    },
+    "5": {
+      "floors": {
+        "1F": {
+          "all": {
+            "0": {
+              "leftPct": 44.0603,
+              "topPct": 86.9356,
+              "labelLeftPct": 44.0603,
+              "labelTopPct": 93.4356,
+              "labelDirection": "S"
+            },
+            "1": {
+              "leftPct": 41.09,
+              "topPct": 86.4279,
+              "labelLeftPct": 35.59,
+              "labelTopPct": 91.9279,
+              "labelDirection": "SW"
+            },
+            "2": {
+              "leftPct": 38.1893,
+              "topPct": 85.6064,
+              "labelLeftPct": 31.6893,
+              "labelTopPct": 85.6064,
+              "labelDirection": "W"
+            },
+            "3": {
+              "leftPct": 32.5316,
+              "topPct": 82.5037,
+              "labelLeftPct": 26.0316,
+              "labelTopPct": 82.5037,
+              "labelDirection": "W"
+            },
+            "4": {
+              "leftPct": 54.632,
+              "topPct": 85.8884,
+              "labelLeftPct": 61.132,
+              "labelTopPct": 85.8884,
+              "labelDirection": "E"
+            },
+            "5": {
+              "leftPct": 62.5881,
+              "topPct": 83.0089,
+              "labelLeftPct": 69.0881,
+              "labelTopPct": 83.0089,
+              "labelDirection": "E"
+            },
+            "6": {
+              "leftPct": 69.9441,
+              "topPct": 78.3891,
+              "labelLeftPct": 76.4441,
+              "labelTopPct": 78.3891,
+              "labelDirection": "E"
+            },
+            "7": {
+              "leftPct": 72.6658,
+              "topPct": 75.4521,
+              "labelLeftPct": 79.1658,
+              "labelTopPct": 75.4521,
+              "labelDirection": "E"
+            },
+            "8": {
+              "leftPct": 79.2075,
+              "topPct": 67.8364,
+              "labelLeftPct": 72.7075,
+              "labelTopPct": 67.8364,
+              "labelDirection": "W"
+            },
+            "9": {
+              "leftPct": 86.4564,
+              "topPct": 52.7459,
+              "labelLeftPct": 79.9564,
+              "labelTopPct": 52.7459,
+              "labelDirection": "W"
+            },
+            "10": {
+              "leftPct": 86.0305,
+              "topPct": 42.4506,
+              "labelLeftPct": 79.5305,
+              "labelTopPct": 42.4506,
+              "labelDirection": "W"
+            },
+            "11": {
+              "leftPct": 81.8595,
+              "topPct": 63.4644,
+              "labelLeftPct": 75.3595,
+              "labelTopPct": 63.4644,
+              "labelDirection": "W"
+            },
+            "12": {
+              "leftPct": 83.0971,
+              "topPct": 60.6437,
+              "labelLeftPct": 76.5971,
+              "labelTopPct": 60.6437,
+              "labelDirection": "W"
+            },
+            "13": {
+              "leftPct": 18.0703,
+              "topPct": 68.7425,
+              "labelLeftPct": 24.5703,
+              "labelTopPct": 68.7425,
+              "labelDirection": "E"
+            },
+            "14": {
+              "leftPct": 13.9674,
+              "topPct": 62.1951,
+              "labelLeftPct": 20.4674,
+              "labelTopPct": 62.1951,
+              "labelDirection": "E"
+            },
+            "15": {
+              "leftPct": 9.7241,
+              "topPct": 53.4511,
+              "labelLeftPct": 16.2241,
+              "labelTopPct": 53.4511,
+              "labelDirection": "E"
+            },
+            "16": {
+              "leftPct": 11.1386,
+              "topPct": 56.1307,
+              "labelLeftPct": 17.6386,
+              "labelTopPct": 56.1307,
+              "labelDirection": "E"
+            },
+            "17": {
+              "leftPct": 9.0169,
+              "topPct": 45.6943,
+              "labelLeftPct": 15.5169,
+              "labelTopPct": 45.6943,
+              "labelDirection": "E"
+            },
+            "18": {
+              "leftPct": 4.8101,
+              "topPct": 35.1487,
+              "labelLeftPct": 11.3101,
+              "labelTopPct": 35.1487,
+              "labelDirection": "E"
+            },
+            "23": {
+              "leftPct": 4.704,
+              "topPct": 37.6026,
+              "labelLeftPct": 11.204,
+              "labelTopPct": 37.6026,
+              "labelDirection": "E"
+            },
+            "26": {
+              "leftPct": 27.5812,
+              "topPct": 78.4137,
+              "labelLeftPct": 21.0812,
+              "labelTopPct": 78.4137,
+              "labelDirection": "W"
+            }
+          },
+          "categories": {
+            "chicken": {
+              "0": {
+                "leftPct": 44.0603,
+                "topPct": 86.9356,
+                "labelLeftPct": 50.5603,
+                "labelTopPct": 86.9356,
+                "labelDirection": "E"
+              },
+              "1": {
+                "leftPct": 41.09,
+                "topPct": 86.4279,
+                "labelLeftPct": 34.59,
+                "labelTopPct": 86.4279,
+                "labelDirection": "W"
+              },
+              "6": {
+                "leftPct": 69.9441,
+                "topPct": 78.3891,
+                "labelLeftPct": 63.4441,
+                "labelTopPct": 78.3891,
+                "labelDirection": "W"
+              },
+              "11": {
+                "leftPct": 81.8595,
+                "topPct": 63.4644,
+                "labelLeftPct": 75.3595,
+                "labelTopPct": 63.4644,
+                "labelDirection": "W"
+              },
+              "12": {
+                "leftPct": 83.0971,
+                "topPct": 60.6437,
+                "labelLeftPct": 76.5971,
+                "labelTopPct": 60.6437,
+                "labelDirection": "W"
+              },
+              "13": {
+                "leftPct": 18.0703,
+                "topPct": 68.7425,
+                "labelLeftPct": 24.5703,
+                "labelTopPct": 68.7425,
+                "labelDirection": "E"
+              }
+            },
+            "korean": {
+              "2": {
+                "leftPct": 38.1893,
+                "topPct": 85.6064,
+                "labelLeftPct": 44.6893,
+                "labelTopPct": 85.6064,
+                "labelDirection": "E"
+              },
+              "7": {
+                "leftPct": 72.6658,
+                "topPct": 75.4521,
+                "labelLeftPct": 66.1658,
+                "labelTopPct": 75.4521,
+                "labelDirection": "W"
+              },
+              "8": {
+                "leftPct": 79.2075,
+                "topPct": 67.8364,
+                "labelLeftPct": 72.7075,
+                "labelTopPct": 67.8364,
+                "labelDirection": "W"
+              },
+              "17": {
+                "leftPct": 9.0169,
+                "topPct": 45.6943,
+                "labelLeftPct": 15.5169,
+                "labelTopPct": 45.6943,
+                "labelDirection": "E"
+              },
+              "18": {
+                "leftPct": 4.8101,
+                "topPct": 35.1487,
+                "labelLeftPct": 11.3101,
+                "labelTopPct": 35.1487,
+                "labelDirection": "E"
+              },
+              "26": {
+                "leftPct": 27.5812,
+                "topPct": 78.4137,
+                "labelLeftPct": 34.0812,
+                "labelTopPct": 78.4137,
+                "labelDirection": "E"
+              }
+            },
+            "cafe": {
+              "3": {
+                "leftPct": 32.5316,
+                "topPct": 82.5037,
+                "labelLeftPct": 39.0316,
+                "labelTopPct": 82.5037,
+                "labelDirection": "E"
+              },
+              "5": {
+                "leftPct": 62.5881,
+                "topPct": 82.9268,
+                "labelLeftPct": 69.0881,
+                "labelTopPct": 82.9268,
+                "labelDirection": "E"
+              },
+              "10": {
+                "leftPct": 86.1028,
+                "topPct": 42.4506,
+                "labelLeftPct": 79.6028,
+                "labelTopPct": 42.4506,
+                "labelDirection": "W"
+              },
+              "14": {
+                "leftPct": 13.9674,
+                "topPct": 62.1951,
+                "labelLeftPct": 20.4674,
+                "labelTopPct": 62.1951,
+                "labelDirection": "E"
+              },
+              "16": {
+                "leftPct": 11.1386,
+                "topPct": 56.1307,
+                "labelLeftPct": 17.6386,
+                "labelTopPct": 56.1307,
+                "labelDirection": "E"
+              },
+              "23": {
+                "leftPct": 4.704,
+                "topPct": 37.6026,
+                "labelLeftPct": 11.204,
+                "labelTopPct": 37.6026,
+                "labelDirection": "E"
+              }
+            },
+            "western": {
+              "4": {
+                "leftPct": 54.632,
+                "topPct": 85.8884,
+                "labelLeftPct": 48.132,
+                "labelTopPct": 85.8884,
+                "labelDirection": "W"
+              },
+              "9": {
+                "leftPct": 86.4564,
+                "topPct": 52.7459,
+                "labelLeftPct": 79.9564,
+                "labelTopPct": 52.7459,
+                "labelDirection": "W"
+              },
+              "15": {
+                "leftPct": 9.7241,
+                "topPct": 53.4511,
+                "labelLeftPct": 16.2241,
+                "labelTopPct": 53.4511,
+                "labelDirection": "E"
+              }
+            }
+          }
+        },
+        "2F": {
+          "all": {
+            "19": {
+              "leftPct": 7.4257,
+              "topPct": 40.7582,
+              "labelLeftPct": 13.9257,
+              "labelTopPct": 40.7582,
+              "labelDirection": "E"
+            },
+            "20": {
+              "leftPct": 7.7082,
+              "topPct": 37.9987,
+              "labelLeftPct": 14.2082,
+              "labelTopPct": 37.9987,
+              "labelDirection": "E"
+            },
+            "21": {
+              "leftPct": 7.9561,
+              "topPct": 35.258,
+              "labelLeftPct": 14.4561,
+              "labelTopPct": 35.258,
+              "labelDirection": "E"
+            },
+            "22": {
+              "leftPct": 4.0676,
+              "topPct": 43.3567,
+              "labelLeftPct": 9.5676,
+              "labelTopPct": 48.8567,
+              "labelDirection": "SE"
+            },
+            "24": {
+              "leftPct": 7.0378,
+              "topPct": 43.3567,
+              "labelLeftPct": 13.5378,
+              "labelTopPct": 43.3567,
+              "labelDirection": "E"
+            },
+            "25": {
+              "leftPct": 4.4919,
+              "topPct": 40.4797,
+              "labelLeftPct": 9.9919,
+              "labelTopPct": 45.9797,
+              "labelDirection": "SE"
+            },
+            "27": {
+              "leftPct": 90.346,
+              "topPct": 43.7199,
+              "labelLeftPct": 83.846,
+              "labelTopPct": 43.7199,
+              "labelDirection": "W"
+            },
+            "28": {
+              "leftPct": 67.8225,
+              "topPct": 83.8893,
+              "labelLeftPct": 61.3225,
+              "labelTopPct": 83.8893,
+              "labelDirection": "W"
+            },
+            "29": {
+              "leftPct": 29.526,
+              "topPct": 84.3371,
+              "labelLeftPct": 36.026,
+              "labelTopPct": 84.3371,
+              "labelDirection": "E"
+            }
+          },
+          "categories": {
+            "korean": {
+              "19": {
+                "leftPct": 7.4257,
+                "topPct": 40.7582,
+                "labelLeftPct": 13.9257,
+                "labelTopPct": 40.7582,
+                "labelDirection": "E"
+              },
+              "20": {
+                "leftPct": 7.7804,
+                "topPct": 37.9411,
+                "labelLeftPct": 14.2804,
+                "labelTopPct": 37.9411,
+                "labelDirection": "E"
+              },
+              "24": {
+                "leftPct": 7.0378,
+                "topPct": 43.3567,
+                "labelLeftPct": 13.5378,
+                "labelTopPct": 43.3567,
+                "labelDirection": "E"
+              },
+              "25": {
+                "leftPct": 4.4919,
+                "topPct": 40.4797,
+                "labelLeftPct": 4.4919,
+                "labelTopPct": 33.9797,
+                "labelDirection": "N"
+              }
+            },
+            "western": {
+              "21": {
+                "leftPct": 7.9561,
+                "topPct": 35.258,
+                "labelLeftPct": 14.4561,
+                "labelTopPct": 35.258,
+                "labelDirection": "E"
+              },
+              "27": {
+                "leftPct": 90.346,
+                "topPct": 43.7199,
+                "labelLeftPct": 83.846,
+                "labelTopPct": 43.7199,
+                "labelDirection": "W"
+              }
+            },
+            "cafe": {
+              "22": {
+                "leftPct": 4.0676,
+                "topPct": 43.3567,
+                "labelLeftPct": 10.5676,
+                "labelTopPct": 43.3567,
+                "labelDirection": "E"
+              }
+            },
+            "chicken": {
+              "28": {
+                "leftPct": 67.8225,
+                "topPct": 83.8893,
+                "labelLeftPct": 61.3225,
+                "labelTopPct": 83.8893,
+                "labelDirection": "W"
+              },
+              "29": {
+                "leftPct": 29.526,
+                "topPct": 84.3371,
+                "labelLeftPct": 36.026,
+                "labelTopPct": 84.3371,
+                "labelDirection": "E"
+              }
+            }
+          }
+        }
+      }
+    },
+    "6": {
+      "floors": {
+        "2F": {
+          "all": {
+            "0": {
+              "leftPct": 29.6099,
+              "topPct": 10.479,
+              "labelLeftPct": 23.1099,
+              "labelTopPct": 10.479,
+              "labelDirection": "W"
+            },
+            "1": {
+              "leftPct": 27.305,
+              "topPct": 12.784,
+              "labelLeftPct": 33.805,
+              "labelTopPct": 12.784,
+              "labelDirection": "E"
+            },
+            "2": {
+              "leftPct": 60.3723,
+              "topPct": 3.2538,
+              "labelLeftPct": 60.3723,
+              "labelTopPct": 9.7538,
+              "labelDirection": "S"
+            },
+            "3": {
+              "leftPct": 62.7101,
+              "topPct": 5.2928,
+              "labelLeftPct": 69.2101,
+              "labelTopPct": 5.2928,
+              "labelDirection": "E"
+            },
+            "4": {
+              "leftPct": 42.0213,
+              "topPct": 3.4311,
+              "labelLeftPct": 35.5213,
+              "labelTopPct": 3.4311,
+              "labelDirection": "W"
+            },
+            "5": {
+              "leftPct": 39.539,
+              "topPct": 5.1599,
+              "labelLeftPct": 46.039,
+              "labelTopPct": 5.1599,
+              "labelDirection": "E"
+            },
+            "6": {
+              "leftPct": 30.3191,
+              "topPct": 14.3797,
+              "labelLeftPct": 23.8191,
+              "labelTopPct": 14.3797,
+              "labelDirection": "W"
+            },
+            "7": {
+              "leftPct": 28.1915,
+              "topPct": 16.5074,
+              "labelLeftPct": 34.6915,
+              "labelTopPct": 16.5074,
+              "labelDirection": "E"
+            },
+            "8": {
+              "leftPct": 41.844,
+              "topPct": 97.7574,
+              "labelLeftPct": 35.344,
+              "labelTopPct": 97.7574,
+              "labelDirection": "W"
+            },
+            "9": {
+              "leftPct": 48.0496,
+              "topPct": 97.9347,
+              "labelLeftPct": 42.5496,
+              "labelTopPct": 92.4347,
+              "labelDirection": "NW"
+            },
+            "10": {
+              "leftPct": 54.344,
+              "topPct": 97.846,
+              "labelLeftPct": 54.344,
+              "labelTopPct": 91.346,
+              "labelDirection": "N"
+            },
+            "11": {
+              "leftPct": 60.195,
+              "topPct": 97.0481,
+              "labelLeftPct": 65.695,
+              "labelTopPct": 91.5481,
+              "labelDirection": "NE"
+            },
+            "12": {
+              "leftPct": 10.9929,
+              "topPct": 45.2751,
+              "labelLeftPct": 17.4929,
+              "labelTopPct": 45.2751,
+              "labelDirection": "E"
+            },
+            "13": {
+              "leftPct": 11.9517,
+              "topPct": 30.0827,
+              "labelLeftPct": 11.9517,
+              "labelTopPct": 36.5827,
+              "labelDirection": "S"
+            },
+            "14": {
+              "leftPct": 14.0071,
+              "topPct": 27.8992,
+              "labelLeftPct": 19.5071,
+              "labelTopPct": 33.3992,
+              "labelDirection": "SE"
+            },
+            "15": {
+              "leftPct": 32.4468,
+              "topPct": 7.7308,
+              "labelLeftPct": 38.9468,
+              "labelTopPct": 7.7308,
+              "labelDirection": "E"
+            },
+            "16": {
+              "leftPct": 16.2234,
+              "topPct": 25.7716,
+              "labelLeftPct": 22.7234,
+              "labelTopPct": 25.7716,
+              "labelDirection": "E"
+            },
+            "17": {
+              "leftPct": 18.617,
+              "topPct": 23.7325,
+              "labelLeftPct": 12.117,
+              "labelTopPct": 23.7325,
+              "labelDirection": "W"
+            }
+          },
+          "categories": {
+            "cafe": {
+              "0": {
+                "leftPct": 29.6099,
+                "topPct": 10.479,
+                "labelLeftPct": 36.1099,
+                "labelTopPct": 10.479,
+                "labelDirection": "E"
+              },
+              "3": {
+                "leftPct": 62.8546,
+                "topPct": 5.2928,
+                "labelLeftPct": 69.3546,
+                "labelTopPct": 5.2928,
+                "labelDirection": "E"
+              },
+              "4": {
+                "leftPct": 42.0213,
+                "topPct": 3.4311,
+                "labelLeftPct": 35.5213,
+                "labelTopPct": 3.4311,
+                "labelDirection": "W"
+              },
+              "5": {
+                "leftPct": 39.539,
+                "topPct": 5.1599,
+                "labelLeftPct": 46.039,
+                "labelTopPct": 5.1599,
+                "labelDirection": "E"
+              },
+              "6": {
+                "leftPct": 30.3191,
+                "topPct": 14.3797,
+                "labelLeftPct": 23.8191,
+                "labelTopPct": 14.3797,
+                "labelDirection": "W"
+              },
+              "7": {
+                "leftPct": 28.1915,
+                "topPct": 16.5074,
+                "labelLeftPct": 34.6915,
+                "labelTopPct": 16.5074,
+                "labelDirection": "E"
+              },
+              "9": {
+                "leftPct": 48.0496,
+                "topPct": 97.9347,
+                "labelLeftPct": 48.0496,
+                "labelTopPct": 91.4347,
+                "labelDirection": "N"
+              },
+              "15": {
+                "leftPct": 32.4468,
+                "topPct": 7.7308,
+                "labelLeftPct": 25.9468,
+                "labelTopPct": 7.7308,
+                "labelDirection": "W"
+              }
+            },
+            "chicken": {
+              "1": {
+                "leftPct": 27.305,
+                "topPct": 12.784,
+                "labelLeftPct": 33.805,
+                "labelTopPct": 12.784,
+                "labelDirection": "E"
+              }
+            },
+            "korean": {
+              "2": {
+                "leftPct": 60.3723,
+                "topPct": 3.2538,
+                "labelLeftPct": 60.3723,
+                "labelTopPct": 9.7538,
+                "labelDirection": "S"
+              },
+              "10": {
+                "leftPct": 54.344,
+                "topPct": 97.846,
+                "labelLeftPct": 54.344,
+                "labelTopPct": 91.346,
+                "labelDirection": "N"
+              },
+              "13": {
+                "leftPct": 11.8072,
+                "topPct": 29.9382,
+                "labelLeftPct": 17.3072,
+                "labelTopPct": 35.4382,
+                "labelDirection": "SE"
+              },
+              "14": {
+                "leftPct": 14.0071,
+                "topPct": 27.8992,
+                "labelLeftPct": 20.5071,
+                "labelTopPct": 27.8992,
+                "labelDirection": "E"
+              },
+              "16": {
+                "leftPct": 16.2234,
+                "topPct": 25.8438,
+                "labelLeftPct": 16.2234,
+                "labelTopPct": 19.3438,
+                "labelDirection": "N"
+              },
+              "17": {
+                "leftPct": 18.617,
+                "topPct": 23.7325,
+                "labelLeftPct": 25.117,
+                "labelTopPct": 23.7325,
+                "labelDirection": "E"
+              }
+            },
+            "western": {
+              "8": {
+                "leftPct": 41.844,
+                "topPct": 97.7574,
+                "labelLeftPct": 41.844,
+                "labelTopPct": 91.2574,
+                "labelDirection": "N"
+              },
+              "11": {
+                "leftPct": 60.195,
+                "topPct": 97.0481,
+                "labelLeftPct": 65.695,
+                "labelTopPct": 91.5481,
+                "labelDirection": "NE"
+              },
+              "12": {
+                "leftPct": 10.9929,
+                "topPct": 45.2751,
+                "labelLeftPct": 17.4929,
+                "labelTopPct": 45.2751,
+                "labelDirection": "E"
+              }
+            }
+          }
+        },
+        "3F": {
+          "all": {
+            "18": {
+              "leftPct": 32.8014,
+              "topPct": 75.6386,
+              "labelLeftPct": 39.3014,
+              "labelTopPct": 75.6386,
+              "labelDirection": "E"
+            },
+            "19": {
+              "leftPct": 24.4681,
+              "topPct": 73.4666,
+              "labelLeftPct": 30.9681,
+              "labelTopPct": 73.4666,
+              "labelDirection": "E"
+            },
+            "20": {
+              "leftPct": 10.6383,
+              "topPct": 61.2769,
+              "labelLeftPct": 16.1383,
+              "labelTopPct": 55.7769,
+              "labelDirection": "NE"
+            },
+            "21": {
+              "leftPct": 12.5887,
+              "topPct": 63.2272,
+              "labelLeftPct": 12.5887,
+              "labelTopPct": 69.7272,
+              "labelDirection": "S"
+            },
+            "22": {
+              "leftPct": 18.617,
+              "topPct": 64.2911,
+              "labelLeftPct": 24.117,
+              "labelTopPct": 58.7911,
+              "labelDirection": "NE"
+            },
+            "23": {
+              "leftPct": 21.4539,
+              "topPct": 66.4187,
+              "labelLeftPct": 27.9539,
+              "labelTopPct": 66.4187,
+              "labelDirection": "E"
+            },
+            "24": {
+              "leftPct": 26.6844,
+              "topPct": 75.2396,
+              "labelLeftPct": 21.1844,
+              "labelTopPct": 80.7396,
+              "labelDirection": "SW"
+            },
+            "25": {
+              "leftPct": 28.9894,
+              "topPct": 76.6581,
+              "labelLeftPct": 28.9894,
+              "labelTopPct": 83.1581,
+              "labelDirection": "S"
+            },
+            "26": {
+              "leftPct": 34.9291,
+              "topPct": 77.4116,
+              "labelLeftPct": 40.4291,
+              "labelTopPct": 82.9116,
+              "labelDirection": "SE"
+            },
+            "27": {
+              "leftPct": 82.9787,
+              "topPct": 70.3194,
+              "labelLeftPct": 76.4787,
+              "labelTopPct": 70.3194,
+              "labelDirection": "W"
+            },
+            "28": {
+              "leftPct": 67.7305,
+              "topPct": 78.4755,
+              "labelLeftPct": 67.7305,
+              "labelTopPct": 84.9755,
+              "labelDirection": "S"
+            },
+            "29": {
+              "leftPct": 70.5674,
+              "topPct": 76.3921,
+              "labelLeftPct": 77.0674,
+              "labelTopPct": 76.3921,
+              "labelDirection": "E"
+            },
+            "30": {
+              "leftPct": 9.9291,
+              "topPct": 54.6723,
+              "labelLeftPct": 9.9291,
+              "labelTopPct": 48.1723,
+              "labelDirection": "N"
+            },
+            "31": {
+              "leftPct": 91.4894,
+              "topPct": 41.463,
+              "labelLeftPct": 84.9894,
+              "labelTopPct": 41.463,
+              "labelDirection": "W"
+            },
+            "32": {
+              "leftPct": 91.4894,
+              "topPct": 45.6297,
+              "labelLeftPct": 84.9894,
+              "labelTopPct": 45.6297,
+              "labelDirection": "W"
+            }
+          },
+          "categories": {
+            "korean": {
+              "18": {
+                "leftPct": 32.8014,
+                "topPct": 75.6386,
+                "labelLeftPct": 38.3014,
+                "labelTopPct": 70.1386,
+                "labelDirection": "NE"
+              },
+              "20": {
+                "leftPct": 10.6383,
+                "topPct": 61.2769,
+                "labelLeftPct": 10.6383,
+                "labelTopPct": 54.7769,
+                "labelDirection": "N"
+              },
+              "22": {
+                "leftPct": 18.617,
+                "topPct": 64.1881,
+                "labelLeftPct": 24.117,
+                "labelTopPct": 58.6881,
+                "labelDirection": "NE"
+              },
+              "23": {
+                "leftPct": 21.4539,
+                "topPct": 66.4187,
+                "labelLeftPct": 27.9539,
+                "labelTopPct": 66.4187,
+                "labelDirection": "E"
+              },
+              "25": {
+                "leftPct": 28.9894,
+                "topPct": 76.6581,
+                "labelLeftPct": 22.4894,
+                "labelTopPct": 76.6581,
+                "labelDirection": "W"
+              },
+              "26": {
+                "leftPct": 34.9291,
+                "topPct": 77.4116,
+                "labelLeftPct": 29.4291,
+                "labelTopPct": 82.9116,
+                "labelDirection": "SW"
+              },
+              "28": {
+                "leftPct": 67.7305,
+                "topPct": 78.4755,
+                "labelLeftPct": 61.2305,
+                "labelTopPct": 78.4755,
+                "labelDirection": "W"
+              }
+            },
+            "chicken": {
+              "19": {
+                "leftPct": 24.4681,
+                "topPct": 73.4666,
+                "labelLeftPct": 30.9681,
+                "labelTopPct": 73.4666,
+                "labelDirection": "E"
+              },
+              "27": {
+                "leftPct": 82.9787,
+                "topPct": 70.3194,
+                "labelLeftPct": 76.4787,
+                "labelTopPct": 70.3194,
+                "labelDirection": "W"
+              },
+              "30": {
+                "leftPct": 9.9291,
+                "topPct": 54.6723,
+                "labelLeftPct": 16.4291,
+                "labelTopPct": 54.6723,
+                "labelDirection": "E"
+              }
+            },
+            "cafe": {
+              "21": {
+                "leftPct": 12.5887,
+                "topPct": 63.2272,
+                "labelLeftPct": 19.0887,
+                "labelTopPct": 63.2272,
+                "labelDirection": "E"
+              },
+              "24": {
+                "leftPct": 26.6844,
+                "topPct": 75.2396,
+                "labelLeftPct": 33.1844,
+                "labelTopPct": 75.2396,
+                "labelDirection": "E"
+              },
+              "29": {
+                "leftPct": 70.5674,
+                "topPct": 76.3921,
+                "labelLeftPct": 64.0674,
+                "labelTopPct": 76.3921,
+                "labelDirection": "W"
+              },
+              "32": {
+                "leftPct": 91.4894,
+                "topPct": 45.6297,
+                "labelLeftPct": 84.9894,
+                "labelTopPct": 45.6297,
+                "labelDirection": "W"
+              }
+            },
+            "western": {
+              "31": {
+                "leftPct": 91.4894,
+                "topPct": 41.463,
+                "labelLeftPct": 84.9894,
+                "labelTopPct": 41.463,
+                "labelDirection": "W"
+              }
+            }
+          }
+        },
+        "5F": {
+          "all": {
+            "33": {
+              "leftPct": 47.7693,
+              "topPct": 90.2376,
+              "labelLeftPct": 41.2693,
+              "labelTopPct": 90.2376,
+              "labelDirection": "W"
+            },
+            "34": {
+              "leftPct": 54.9645,
+              "topPct": 90.3992,
+              "labelLeftPct": 61.4645,
+              "labelTopPct": 90.3992,
+              "labelDirection": "E"
+            },
+            "35": {
+              "leftPct": 70.922,
+              "topPct": 83.0854,
+              "labelLeftPct": 77.422,
+              "labelTopPct": 83.0854,
+              "labelDirection": "E"
+            },
+            "36": {
+              "leftPct": 78.9007,
+              "topPct": 76.9384,
+              "labelLeftPct": 72.4007,
+              "labelTopPct": 76.9384,
+              "labelDirection": "W"
+            },
+            "37": {
+              "leftPct": 30.1418,
+              "topPct": 83.6173,
+              "labelLeftPct": 23.6418,
+              "labelTopPct": 83.6173,
+              "labelDirection": "W"
+            },
+            "38": {
+              "leftPct": 22.1631,
+              "topPct": 77.4116,
+              "labelLeftPct": 28.6631,
+              "labelTopPct": 77.4116,
+              "labelDirection": "E"
+            }
+          },
+          "categories": {
+            "cafe": {
+              "33": {
+                "leftPct": 47.8723,
+                "topPct": 90.4435,
+                "labelLeftPct": 54.3723,
+                "labelTopPct": 90.4435,
+                "labelDirection": "E"
+              },
+              "35": {
+                "leftPct": 70.922,
+                "topPct": 83.0854,
+                "labelLeftPct": 64.422,
+                "labelTopPct": 83.0854,
+                "labelDirection": "W"
+              }
+            },
+            "korean": {
+              "34": {
+                "leftPct": 54.9645,
+                "topPct": 90.3992,
+                "labelLeftPct": 61.4645,
+                "labelTopPct": 90.3992,
+                "labelDirection": "E"
+              },
+              "36": {
+                "leftPct": 78.9007,
+                "topPct": 76.8354,
+                "labelLeftPct": 72.4007,
+                "labelTopPct": 76.8354,
+                "labelDirection": "W"
+              },
+              "37": {
+                "leftPct": 30.1418,
+                "topPct": 83.6173,
+                "labelLeftPct": 36.6418,
+                "labelTopPct": 83.6173,
+                "labelDirection": "E"
+              }
+            },
+            "chicken": {
+              "38": {
+                "leftPct": 22.1631,
+                "topPct": 77.4116,
+                "labelLeftPct": 28.6631,
+                "labelTopPct": 77.4116,
+                "labelDirection": "E"
+              }
+            }
+          }
+        }
+      }
+    },
+    "7": {
+      "floors": {
+        "3F": {
+          "all": {
+            "0": {
+              "leftPct": 18.7946,
+              "topPct": 58.2456,
+              "labelLeftPct": 25.2946,
+              "labelTopPct": 58.2456,
+              "labelDirection": "E"
+            },
+            "1": {
+              "leftPct": 34.5749,
+              "topPct": 79.4837,
+              "labelLeftPct": 41.0749,
+              "labelTopPct": 79.4837,
+              "labelDirection": "E"
+            },
+            "2": {
+              "leftPct": 86.526,
+              "topPct": 49.2195,
+              "labelLeftPct": 81.026,
+              "labelTopPct": 43.7195,
+              "labelDirection": "NW"
+            },
+            "3": {
+              "leftPct": 32.0926,
+              "topPct": 77.0059,
+              "labelLeftPct": 38.5926,
+              "labelTopPct": 77.0059,
+              "labelDirection": "E"
+            },
+            "4": {
+              "leftPct": 30.1423,
+              "topPct": 74.9264,
+              "labelLeftPct": 35.6423,
+              "labelTopPct": 69.4264,
+              "labelDirection": "NE"
+            },
+            "5": {
+              "leftPct": 27.8373,
+              "topPct": 72.0504,
+              "labelLeftPct": 33.3373,
+              "labelTopPct": 66.5504,
+              "labelDirection": "NE"
+            },
+            "6": {
+              "leftPct": 66.4903,
+              "topPct": 77.8909,
+              "labelLeftPct": 72.9903,
+              "labelTopPct": 77.8909,
+              "labelDirection": "E"
+            },
+            "7": {
+              "leftPct": 68.618,
+              "topPct": 75.5901,
+              "labelLeftPct": 75.118,
+              "labelTopPct": 75.5901,
+              "labelDirection": "E"
+            },
+            "8": {
+              "leftPct": 70.923,
+              "topPct": 73.4663,
+              "labelLeftPct": 70.923,
+              "labelTopPct": 66.9663,
+              "labelDirection": "N"
+            },
+            "9": {
+              "leftPct": 82.2706,
+              "topPct": 57.0068,
+              "labelLeftPct": 75.7706,
+              "labelTopPct": 57.0068,
+              "labelDirection": "W"
+            },
+            "10": {
+              "leftPct": 88.4764,
+              "topPct": 44.9719,
+              "labelLeftPct": 82.9764,
+              "labelTopPct": 39.4719,
+              "labelDirection": "NW"
+            },
+            "11": {
+              "leftPct": 83.6891,
+              "topPct": 54.352,
+              "labelLeftPct": 77.1891,
+              "labelTopPct": 54.352,
+              "labelDirection": "W"
+            },
+            "12": {
+              "leftPct": 17.0215,
+              "topPct": 55.2369,
+              "labelLeftPct": 23.5215,
+              "labelTopPct": 55.2369,
+              "labelDirection": "E"
+            },
+            "13": {
+              "leftPct": 15.6917,
+              "topPct": 52.2724,
+              "labelLeftPct": 22.1917,
+              "labelTopPct": 52.2724,
+              "labelDirection": "E"
+            },
+            "14": {
+              "leftPct": 14.0073,
+              "topPct": 48.9982,
+              "labelLeftPct": 20.5073,
+              "labelTopPct": 48.9982,
+              "labelDirection": "E"
+            }
+          },
+          "categories": {
+            "chicken": {
+              "0": {
+                "leftPct": 18.7946,
+                "topPct": 58.2456,
+                "labelLeftPct": 25.2946,
+                "labelTopPct": 58.2456,
+                "labelDirection": "E"
+              },
+              "1": {
+                "leftPct": 34.5749,
+                "topPct": 79.4837,
+                "labelLeftPct": 41.0749,
+                "labelTopPct": 79.4837,
+                "labelDirection": "E"
+              },
+              "2": {
+                "leftPct": 86.526,
+                "topPct": 49.2195,
+                "labelLeftPct": 80.026,
+                "labelTopPct": 49.2195,
+                "labelDirection": "W"
+              },
+              "3": {
+                "leftPct": 32.0926,
+                "topPct": 77.0059,
+                "labelLeftPct": 25.5926,
+                "labelTopPct": 77.0059,
+                "labelDirection": "W"
+              }
+            },
+            "korean": {
+              "4": {
+                "leftPct": 30.1423,
+                "topPct": 74.9264,
+                "labelLeftPct": 36.6423,
+                "labelTopPct": 74.9264,
+                "labelDirection": "E"
+              },
+              "8": {
+                "leftPct": 70.923,
+                "topPct": 73.4663,
+                "labelLeftPct": 64.423,
+                "labelTopPct": 73.4663,
+                "labelDirection": "W"
+              },
+              "14": {
+                "leftPct": 14.0073,
+                "topPct": 48.9982,
+                "labelLeftPct": 20.5073,
+                "labelTopPct": 48.9982,
+                "labelDirection": "E"
+              }
+            },
+            "cafe": {
+              "5": {
+                "leftPct": 27.8373,
+                "topPct": 72.0504,
+                "labelLeftPct": 34.3373,
+                "labelTopPct": 72.0504,
+                "labelDirection": "E"
+              },
+              "10": {
+                "leftPct": 88.4764,
+                "topPct": 44.9719,
+                "labelLeftPct": 81.9764,
+                "labelTopPct": 44.9719,
+                "labelDirection": "W"
+              },
+              "11": {
+                "leftPct": 83.6891,
+                "topPct": 54.352,
+                "labelLeftPct": 77.1891,
+                "labelTopPct": 54.352,
+                "labelDirection": "W"
+              },
+              "12": {
+                "leftPct": 17.0215,
+                "topPct": 55.2369,
+                "labelLeftPct": 23.5215,
+                "labelTopPct": 55.2369,
+                "labelDirection": "E"
+              }
+            },
+            "western": {
+              "6": {
+                "leftPct": 66.4903,
+                "topPct": 77.8909,
+                "labelLeftPct": 59.9903,
+                "labelTopPct": 77.8909,
+                "labelDirection": "W"
+              },
+              "7": {
+                "leftPct": 68.618,
+                "topPct": 75.5901,
+                "labelLeftPct": 75.118,
+                "labelTopPct": 75.5901,
+                "labelDirection": "E"
+              },
+              "9": {
+                "leftPct": 82.2706,
+                "topPct": 57.0068,
+                "labelLeftPct": 75.7706,
+                "labelTopPct": 57.0068,
+                "labelDirection": "W"
+              },
+              "13": {
+                "leftPct": 15.6917,
+                "topPct": 52.2724,
+                "labelLeftPct": 22.1917,
+                "labelTopPct": 52.2724,
+                "labelDirection": "E"
+              }
+            }
+          }
+        },
+        "4F": {
+          "all": {
+            "15": {
+              "leftPct": 91.4906,
+              "topPct": 45.1931,
+              "labelLeftPct": 85.9906,
+              "labelTopPct": 39.6931,
+              "labelDirection": "NW"
+            },
+            "16": {
+              "leftPct": 92.9091,
+              "topPct": 42.0959,
+              "labelLeftPct": 87.4091,
+              "labelTopPct": 36.5959,
+              "labelDirection": "NW"
+            },
+            "17": {
+              "leftPct": 90.0722,
+              "topPct": 48.4673,
+              "labelLeftPct": 83.5722,
+              "labelTopPct": 48.4673,
+              "labelDirection": "W"
+            },
+            "18": {
+              "leftPct": 9.9292,
+              "topPct": 47.6266,
+              "labelLeftPct": 15.4292,
+              "labelTopPct": 42.1266,
+              "labelDirection": "NE"
+            },
+            "19": {
+              "leftPct": 11.4363,
+              "topPct": 50.5026,
+              "labelLeftPct": 16.9363,
+              "labelTopPct": 45.0026,
+              "labelDirection": "NE"
+            },
+            "20": {
+              "leftPct": 13.1208,
+              "topPct": 53.5113,
+              "labelLeftPct": 19.6208,
+              "labelTopPct": 53.5113,
+              "labelDirection": "E"
+            },
+            "21": {
+              "leftPct": 14.3619,
+              "topPct": 55.9449,
+              "labelLeftPct": 20.8619,
+              "labelTopPct": 55.9449,
+              "labelDirection": "E"
+            },
+            "22": {
+              "leftPct": 88.831,
+              "topPct": 51.3875,
+              "labelLeftPct": 82.331,
+              "labelTopPct": 51.3875,
+              "labelDirection": "W"
+            }
+          },
+          "categories": {
+            "chicken": {
+              "15": {
+                "leftPct": 91.4906,
+                "topPct": 45.1931,
+                "labelLeftPct": 84.9906,
+                "labelTopPct": 45.1931,
+                "labelDirection": "W"
+              },
+              "19": {
+                "leftPct": 11.4363,
+                "topPct": 50.5026,
+                "labelLeftPct": 17.9363,
+                "labelTopPct": 50.5026,
+                "labelDirection": "E"
+              }
+            },
+            "western": {
+              "16": {
+                "leftPct": 92.9091,
+                "topPct": 42.0959,
+                "labelLeftPct": 86.4091,
+                "labelTopPct": 42.0959,
+                "labelDirection": "W"
+              },
+              "21": {
+                "leftPct": 14.3619,
+                "topPct": 55.9449,
+                "labelLeftPct": 20.8619,
+                "labelTopPct": 55.9449,
+                "labelDirection": "E"
+              },
+              "22": {
+                "leftPct": 88.831,
+                "topPct": 51.3875,
+                "labelLeftPct": 82.331,
+                "labelTopPct": 51.3875,
+                "labelDirection": "W"
+              }
+            },
+            "korean": {
+              "17": {
+                "leftPct": 90.0722,
+                "topPct": 48.4673,
+                "labelLeftPct": 83.5722,
+                "labelTopPct": 48.4673,
+                "labelDirection": "W"
+              },
+              "18": {
+                "leftPct": 9.9292,
+                "topPct": 47.6266,
+                "labelLeftPct": 16.4292,
+                "labelTopPct": 47.6266,
+                "labelDirection": "E"
+              },
+              "20": {
+                "leftPct": 13.1208,
+                "topPct": 53.5113,
+                "labelLeftPct": 19.6208,
+                "labelTopPct": 53.5113,
+                "labelDirection": "E"
+              }
+            }
+          }
+        },
+        "1F": {
+          "all": {
+            "23": {
+              "leftPct": 83.8664,
+              "topPct": 60.4579,
+              "labelLeftPct": 77.3664,
+              "labelTopPct": 60.4579,
+              "labelDirection": "W"
+            }
+          },
+          "categories": {
+            "cafe": {
+              "23": {
+                "leftPct": 83.8664,
+                "topPct": 60.4579,
+                "labelLeftPct": 77.3664,
+                "labelTopPct": 60.4579,
+                "labelDirection": "W"
+              }
+            }
+          }
+        },
+        "5F": {
+          "all": {
+            "24": {
+              "leftPct": 59.3093,
+              "topPct": 90.8549,
+              "labelLeftPct": 52.8093,
+              "labelTopPct": 90.8549,
+              "labelDirection": "W"
+            },
+            "25": {
+              "leftPct": 72.696,
+              "topPct": 79.8377,
+              "labelLeftPct": 66.196,
+              "labelTopPct": 79.8377,
+              "labelDirection": "W"
+            },
+            "26": {
+              "leftPct": 27.66,
+              "topPct": 82.1385,
+              "labelLeftPct": 34.16,
+              "labelTopPct": 82.1385,
+              "labelDirection": "E"
+            }
+          },
+          "categories": {
+            "chicken": {
+              "24": {
+                "leftPct": 59.3093,
+                "topPct": 90.8549,
+                "labelLeftPct": 52.8093,
+                "labelTopPct": 90.8549,
+                "labelDirection": "W"
+              }
+            },
+            "western": {
+              "25": {
+                "leftPct": 72.696,
+                "topPct": 79.8377,
+                "labelLeftPct": 66.196,
+                "labelTopPct": 79.8377,
+                "labelDirection": "W"
+              }
+            },
+            "korean": {
+              "26": {
+                "leftPct": 27.66,
+                "topPct": 82.1385,
+                "labelLeftPct": 34.16,
+                "labelTopPct": 82.1385,
+                "labelDirection": "E"
+              }
+            }
+          }
+        }
+      }
+    },
+    "8": {
+      "floors": {
+        "1F": {
+          "all": {
+            "0": {
+              "leftPct": 55.8724,
+              "topPct": 94.8686,
+              "labelLeftPct": 55.8724,
+              "labelTopPct": 88.3686,
+              "labelDirection": "N"
+            },
+            "1": {
+              "leftPct": 43.8538,
+              "topPct": 94.9857,
+              "labelLeftPct": 38.3538,
+              "labelTopPct": 89.4857,
+              "labelDirection": "NW"
+            }
+          },
+          "categories": {
+            "cafe": {
+              "0": {
+                "leftPct": 55.8724,
+                "topPct": 94.8686,
+                "labelLeftPct": 55.8724,
+                "labelTopPct": 88.3686,
+                "labelDirection": "N"
+              }
+            },
+            "chicken": {
+              "1": {
+                "leftPct": 43.8538,
+                "topPct": 94.9857,
+                "labelLeftPct": 43.8538,
+                "labelTopPct": 88.4857,
+                "labelDirection": "N"
+              }
+            }
+          }
+        },
+        "2F": {
+          "all": {
+            "2": {
+              "leftPct": 15.2296,
+              "topPct": 58.1224,
+              "labelLeftPct": 21.7296,
+              "labelTopPct": 58.1224,
+              "labelDirection": "E"
+            },
+            "3": {
+              "leftPct": 18.8994,
+              "topPct": 64.3704,
+              "labelLeftPct": 25.3994,
+              "labelTopPct": 64.3704,
+              "labelDirection": "E"
+            },
+            "4": {
+              "leftPct": 11.9268,
+              "topPct": 44.8454,
+              "labelLeftPct": 18.4268,
+              "labelTopPct": 44.8454,
+              "labelDirection": "E"
+            },
+            "5": {
+              "leftPct": 85.0471,
+              "topPct": 58.8644,
+              "labelLeftPct": 78.5471,
+              "labelTopPct": 58.8644,
+              "labelDirection": "W"
+            },
+            "6": {
+              "leftPct": 87.8912,
+              "topPct": 49.1019,
+              "labelLeftPct": 82.3912,
+              "labelTopPct": 43.6019,
+              "labelDirection": "NW"
+            },
+            "7": {
+              "leftPct": 87.8912,
+              "topPct": 44.4939,
+              "labelLeftPct": 82.3912,
+              "labelTopPct": 38.9939,
+              "labelDirection": "NW"
+            },
+            "8": {
+              "leftPct": 81.1938,
+              "topPct": 64.9562,
+              "labelLeftPct": 74.6938,
+              "labelTopPct": 64.9562,
+              "labelDirection": "W"
+            },
+            "9": {
+              "leftPct": 36.1473,
+              "topPct": 11.8871,
+              "labelLeftPct": 42.6473,
+              "labelTopPct": 11.8871,
+              "labelDirection": "E"
+            },
+            "10": {
+              "leftPct": 76.1479,
+              "topPct": 18.1351,
+              "labelLeftPct": 69.6479,
+              "labelTopPct": 18.1351,
+              "labelDirection": "W"
+            },
+            "11": {
+              "leftPct": 69.3588,
+              "topPct": 13.6053,
+              "labelLeftPct": 63.8588,
+              "labelTopPct": 8.1053,
+              "labelDirection": "NW"
+            },
+            "12": {
+              "leftPct": 86.7902,
+              "topPct": 54.7251,
+              "labelLeftPct": 80.2902,
+              "labelTopPct": 54.7251,
+              "labelDirection": "W"
+            },
+            "13": {
+              "leftPct": 87.6159,
+              "topPct": 51.7573,
+              "labelLeftPct": 82.1159,
+              "labelTopPct": 46.2573,
+              "labelDirection": "NW"
+            }
+          },
+          "categories": {
+            "korean": {
+              "2": {
+                "leftPct": 15.2296,
+                "topPct": 58.1224,
+                "labelLeftPct": 21.7296,
+                "labelTopPct": 58.1224,
+                "labelDirection": "E"
+              },
+              "4": {
+                "leftPct": 11.9268,
+                "topPct": 44.8454,
+                "labelLeftPct": 18.4268,
+                "labelTopPct": 44.8454,
+                "labelDirection": "E"
+              },
+              "5": {
+                "leftPct": 85.0471,
+                "topPct": 58.8644,
+                "labelLeftPct": 78.5471,
+                "labelTopPct": 58.8644,
+                "labelDirection": "W"
+              },
+              "6": {
+                "leftPct": 87.8912,
+                "topPct": 49.1019,
+                "labelLeftPct": 81.3912,
+                "labelTopPct": 49.1019,
+                "labelDirection": "W"
+              },
+              "9": {
+                "leftPct": 36.1473,
+                "topPct": 11.8871,
+                "labelLeftPct": 42.6473,
+                "labelTopPct": 11.8871,
+                "labelDirection": "E"
+              },
+              "10": {
+                "leftPct": 76.1479,
+                "topPct": 18.1351,
+                "labelLeftPct": 69.6479,
+                "labelTopPct": 18.1351,
+                "labelDirection": "W"
+              },
+              "11": {
+                "leftPct": 69.3588,
+                "topPct": 13.6053,
+                "labelLeftPct": 63.8588,
+                "labelTopPct": 8.1053,
+                "labelDirection": "NW"
+              }
+            },
+            "chicken": {
+              "3": {
+                "leftPct": 18.8994,
+                "topPct": 64.3704,
+                "labelLeftPct": 25.3994,
+                "labelTopPct": 64.3704,
+                "labelDirection": "E"
+              },
+              "7": {
+                "leftPct": 87.8912,
+                "topPct": 44.4939,
+                "labelLeftPct": 81.3912,
+                "labelTopPct": 44.4939,
+                "labelDirection": "W"
+              }
+            },
+            "cafe": {
+              "8": {
+                "leftPct": 81.1938,
+                "topPct": 64.9562,
+                "labelLeftPct": 74.6938,
+                "labelTopPct": 64.9562,
+                "labelDirection": "W"
+              },
+              "12": {
+                "leftPct": 86.7902,
+                "topPct": 54.7251,
+                "labelLeftPct": 80.2902,
+                "labelTopPct": 54.7251,
+                "labelDirection": "W"
+              }
+            },
+            "western": {
+              "13": {
+                "leftPct": 87.6159,
+                "topPct": 51.7573,
+                "labelLeftPct": 81.1159,
+                "labelTopPct": 51.7573,
+                "labelDirection": "W"
+              }
+            }
+          }
+        },
+        "3F": {
+          "all": {
+            "14": {
+              "leftPct": 69.3588,
+              "topPct": 80.5762,
+              "labelLeftPct": 74.8588,
+              "labelTopPct": 86.0762,
+              "labelDirection": "SE"
+            },
+            "15": {
+              "leftPct": 31.9271,
+              "topPct": 80.5762,
+              "labelLeftPct": 37.4271,
+              "labelTopPct": 75.0762,
+              "labelDirection": "NE"
+            },
+            "16": {
+              "leftPct": 72.5698,
+              "topPct": 79.1704,
+              "labelLeftPct": 72.5698,
+              "labelTopPct": 72.6704,
+              "labelDirection": "N"
+            },
+            "17": {
+              "leftPct": 60.4596,
+              "topPct": 83.7003,
+              "labelLeftPct": 54.9596,
+              "labelTopPct": 78.2003,
+              "labelDirection": "NW"
+            },
+            "18": {
+              "leftPct": 56.5673,
+              "topPct": 84.4978,
+              "labelLeftPct": 51.0673,
+              "labelTopPct": 89.9978,
+              "labelDirection": "SW"
+            },
+            "19": {
+              "leftPct": 66.423,
+              "topPct": 81.6696,
+              "labelLeftPct": 66.423,
+              "labelTopPct": 75.1696,
+              "labelDirection": "N"
+            },
+            "20": {
+              "leftPct": 28.6243,
+              "topPct": 79.3266,
+              "labelLeftPct": 28.6243,
+              "labelTopPct": 72.8266,
+              "labelDirection": "N"
+            },
+            "21": {
+              "leftPct": 25.3215,
+              "topPct": 76.8665,
+              "labelLeftPct": 19.8215,
+              "labelTopPct": 71.3665,
+              "labelDirection": "NW"
+            },
+            "22": {
+              "leftPct": 75.5974,
+              "topPct": 76.7103,
+              "labelLeftPct": 81.0974,
+              "labelTopPct": 82.2103,
+              "labelDirection": "SE"
+            },
+            "23": {
+              "leftPct": 52.5891,
+              "topPct": 84.6823,
+              "labelLeftPct": 46.0891,
+              "labelTopPct": 84.6823,
+              "labelDirection": "W"
+            },
+            "24": {
+              "leftPct": 63.8541,
+              "topPct": 82.3335,
+              "labelLeftPct": 63.8541,
+              "labelTopPct": 88.8335,
+              "labelDirection": "S"
+            },
+            "25": {
+              "leftPct": 79.4507,
+              "topPct": 73.1177,
+              "labelLeftPct": 79.4507,
+              "labelTopPct": 66.6177,
+              "labelDirection": "N"
+            }
+          },
+          "categories": {
+            "chicken": {
+              "14": {
+                "leftPct": 69.3588,
+                "topPct": 80.5762,
+                "labelLeftPct": 62.8588,
+                "labelTopPct": 80.5762,
+                "labelDirection": "W"
+              },
+              "15": {
+                "leftPct": 31.9271,
+                "topPct": 80.5762,
+                "labelLeftPct": 38.4271,
+                "labelTopPct": 80.5762,
+                "labelDirection": "E"
+              },
+              "22": {
+                "leftPct": 75.5974,
+                "topPct": 76.7103,
+                "labelLeftPct": 70.0974,
+                "labelTopPct": 71.2103,
+                "labelDirection": "NW"
+              }
+            },
+            "cafe": {
+              "16": {
+                "leftPct": 72.5698,
+                "topPct": 79.1704,
+                "labelLeftPct": 67.0698,
+                "labelTopPct": 73.6704,
+                "labelDirection": "NW"
+              },
+              "23": {
+                "leftPct": 52.6613,
+                "topPct": 84.5593,
+                "labelLeftPct": 46.1613,
+                "labelTopPct": 84.5593,
+                "labelDirection": "W"
+              },
+              "24": {
+                "leftPct": 63.8541,
+                "topPct": 82.3335,
+                "labelLeftPct": 70.3541,
+                "labelTopPct": 82.3335,
+                "labelDirection": "E"
+              },
+              "25": {
+                "leftPct": 79.4507,
+                "topPct": 73.1177,
+                "labelLeftPct": 73.9507,
+                "labelTopPct": 67.6177,
+                "labelDirection": "NW"
+              }
+            },
+            "korean": {
+              "17": {
+                "leftPct": 60.4596,
+                "topPct": 83.7003,
+                "labelLeftPct": 53.9596,
+                "labelTopPct": 83.7003,
+                "labelDirection": "W"
+              },
+              "19": {
+                "leftPct": 66.423,
+                "topPct": 81.6696,
+                "labelLeftPct": 66.423,
+                "labelTopPct": 75.1696,
+                "labelDirection": "N"
+              },
+              "21": {
+                "leftPct": 25.3215,
+                "topPct": 76.8665,
+                "labelLeftPct": 31.8215,
+                "labelTopPct": 76.8665,
+                "labelDirection": "E"
+              }
+            },
+            "western": {
+              "18": {
+                "leftPct": 56.4228,
+                "topPct": 84.5593,
+                "labelLeftPct": 62.9228,
+                "labelTopPct": 84.5593,
+                "labelDirection": "E"
+              },
+              "20": {
+                "leftPct": 28.6243,
+                "topPct": 79.3266,
+                "labelLeftPct": 35.1243,
+                "labelTopPct": 79.3266,
+                "labelDirection": "E"
+              }
+            }
+          }
+        },
+        "4F": {
+          "all": {
+            "26": {
+              "leftPct": 40.3676,
+              "topPct": 85.7699,
+              "labelLeftPct": 40.3676,
+              "labelTopPct": 79.2699,
+              "labelDirection": "N"
+            }
+          },
+          "categories": {
+            "korean": {
+              "26": {
+                "leftPct": 40.3676,
+                "topPct": 85.7699,
+                "labelLeftPct": 40.3676,
+                "labelTopPct": 79.2699,
+                "labelDirection": "N"
+              }
+            }
+          }
+        }
+      }
+    },
+    "9": {
+      "floors": {
+        "1F": {
+          "all": {
+            "0": {
+              "leftPct": 64.008,
+              "topPct": 78.6014,
+              "labelLeftPct": 58.508,
+              "labelTopPct": 73.1014,
+              "labelDirection": "NW"
+            },
+            "1": {
+              "leftPct": 71.4549,
+              "topPct": 71.4724,
+              "labelLeftPct": 65.9549,
+              "labelTopPct": 65.9724,
+              "labelDirection": "NW"
+            },
+            "2": {
+              "leftPct": 33.8657,
+              "topPct": 4.3274,
+              "labelLeftPct": 27.3657,
+              "labelTopPct": 4.3274,
+              "labelDirection": "W"
+            },
+            "3": {
+              "leftPct": 31.3834,
+              "topPct": 6.1925,
+              "labelLeftPct": 37.8834,
+              "labelTopPct": 6.1925,
+              "labelDirection": "E"
+            },
+            "4": {
+              "leftPct": 28.9011,
+              "topPct": 8.3063,
+              "labelLeftPct": 22.4011,
+              "labelTopPct": 8.3063,
+              "labelDirection": "W"
+            },
+            "5": {
+              "leftPct": 26.5961,
+              "topPct": 10.4616,
+              "labelLeftPct": 33.0961,
+              "labelTopPct": 10.4616,
+              "labelDirection": "E"
+            },
+            "6": {
+              "leftPct": 24.4684,
+              "topPct": 12.4926,
+              "labelLeftPct": 17.9684,
+              "labelTopPct": 12.4926,
+              "labelDirection": "W"
+            },
+            "7": {
+              "leftPct": 22.1634,
+              "topPct": 14.4406,
+              "labelLeftPct": 28.6634,
+              "labelTopPct": 14.4406,
+              "labelDirection": "E"
+            },
+            "8": {
+              "leftPct": 14.3619,
+              "topPct": 21.238,
+              "labelLeftPct": 20.8619,
+              "labelTopPct": 21.238,
+              "labelDirection": "E"
+            },
+            "9": {
+              "leftPct": 11.4363,
+              "topPct": 57.6704,
+              "labelLeftPct": 17.9363,
+              "labelTopPct": 57.6704,
+              "labelDirection": "E"
+            },
+            "10": {
+              "leftPct": 11.7909,
+              "topPct": 68.1152,
+              "labelLeftPct": 18.2909,
+              "labelTopPct": 68.1152,
+              "labelDirection": "E"
+            },
+            "11": {
+              "leftPct": 23.7592,
+              "topPct": 80.6323,
+              "labelLeftPct": 17.2592,
+              "labelTopPct": 80.6323,
+              "labelDirection": "W"
+            },
+            "12": {
+              "leftPct": 25.8869,
+              "topPct": 86.1034,
+              "labelLeftPct": 19.3869,
+              "labelTopPct": 86.1034,
+              "labelDirection": "W"
+            },
+            "13": {
+              "leftPct": 28.1919,
+              "topPct": 88.0514,
+              "labelLeftPct": 33.6919,
+              "labelTopPct": 82.5514,
+              "labelDirection": "NE"
+            },
+            "14": {
+              "leftPct": 28.9011,
+              "topPct": 92.2791,
+              "labelLeftPct": 22.4011,
+              "labelTopPct": 92.2791,
+              "labelDirection": "W"
+            },
+            "15": {
+              "leftPct": 31.2061,
+              "topPct": 93.6054,
+              "labelLeftPct": 37.7061,
+              "labelTopPct": 93.6054,
+              "labelDirection": "E"
+            },
+            "16": {
+              "leftPct": 39.2572,
+              "topPct": 90.896,
+              "labelLeftPct": 44.7572,
+              "labelTopPct": 85.396,
+              "labelDirection": "NE"
+            },
+            "17": {
+              "leftPct": 43.1744,
+              "topPct": 91.4087,
+              "labelLeftPct": 49.6744,
+              "labelTopPct": 91.4087,
+              "labelDirection": "E"
+            },
+            "18": {
+              "leftPct": 93.2637,
+              "topPct": 50.5,
+              "labelLeftPct": 86.7637,
+              "labelTopPct": 50.5,
+              "labelDirection": "W"
+            },
+            "19": {
+              "leftPct": 92.9091,
+              "topPct": 44.0341,
+              "labelLeftPct": 86.4091,
+              "labelTopPct": 44.0341,
+              "labelDirection": "W"
+            },
+            "20": {
+              "leftPct": 92.7318,
+              "topPct": 40.3868,
+              "labelLeftPct": 86.2318,
+              "labelTopPct": 40.3868,
+              "labelDirection": "W"
+            },
+            "21": {
+              "leftPct": 92.1999,
+              "topPct": 36.9052,
+              "labelLeftPct": 85.6999,
+              "labelTopPct": 36.9052,
+              "labelDirection": "W"
+            },
+            "22": {
+              "leftPct": 79.4337,
+              "topPct": 60.2816,
+              "labelLeftPct": 72.9337,
+              "labelTopPct": 60.2816,
+              "labelDirection": "W"
+            },
+            "23": {
+              "leftPct": 68.2634,
+              "topPct": 74.7053,
+              "labelLeftPct": 74.7634,
+              "labelTopPct": 74.7053,
+              "labelDirection": "E"
+            }
+          },
+          "categories": {
+            "cafe": {
+              "0": {
+                "leftPct": 64.008,
+                "topPct": 78.6014,
+                "labelLeftPct": 57.508,
+                "labelTopPct": 78.6014,
+                "labelDirection": "W"
+              },
+              "4": {
+                "leftPct": 28.9011,
+                "topPct": 8.3063,
+                "labelLeftPct": 35.4011,
+                "labelTopPct": 8.3063,
+                "labelDirection": "E"
+              },
+              "7": {
+                "leftPct": 22.1634,
+                "topPct": 14.4406,
+                "labelLeftPct": 28.6634,
+                "labelTopPct": 14.4406,
+                "labelDirection": "E"
+              },
+              "9": {
+                "leftPct": 11.4363,
+                "topPct": 57.6704,
+                "labelLeftPct": 17.9363,
+                "labelTopPct": 57.6704,
+                "labelDirection": "E"
+              },
+              "11": {
+                "leftPct": 23.7592,
+                "topPct": 80.6323,
+                "labelLeftPct": 30.2592,
+                "labelTopPct": 80.6323,
+                "labelDirection": "E"
+              },
+              "22": {
+                "leftPct": 79.4337,
+                "topPct": 60.2816,
+                "labelLeftPct": 72.9337,
+                "labelTopPct": 60.2816,
+                "labelDirection": "W"
+              },
+              "23": {
+                "leftPct": 68.2634,
+                "topPct": 74.7053,
+                "labelLeftPct": 62.7634,
+                "labelTopPct": 69.2053,
+                "labelDirection": "NW"
+              }
+            },
+            "korean": {
+              "1": {
+                "leftPct": 71.4549,
+                "topPct": 71.4724,
+                "labelLeftPct": 64.9549,
+                "labelTopPct": 71.4724,
+                "labelDirection": "W"
+              },
+              "5": {
+                "leftPct": 26.5961,
+                "topPct": 10.4616,
+                "labelLeftPct": 33.0961,
+                "labelTopPct": 10.4616,
+                "labelDirection": "E"
+              },
+              "8": {
+                "leftPct": 14.3619,
+                "topPct": 21.238,
+                "labelLeftPct": 20.8619,
+                "labelTopPct": 21.238,
+                "labelDirection": "E"
+              },
+              "12": {
+                "leftPct": 25.8869,
+                "topPct": 86.1034,
+                "labelLeftPct": 19.3869,
+                "labelTopPct": 86.1034,
+                "labelDirection": "W"
+              },
+              "13": {
+                "leftPct": 28.1919,
+                "topPct": 88.0514,
+                "labelLeftPct": 34.6919,
+                "labelTopPct": 88.0514,
+                "labelDirection": "E"
+              },
+              "15": {
+                "leftPct": 31.2061,
+                "topPct": 93.6054,
+                "labelLeftPct": 37.7061,
+                "labelTopPct": 93.6054,
+                "labelDirection": "E"
+              },
+              "20": {
+                "leftPct": 92.7318,
+                "topPct": 40.3868,
+                "labelLeftPct": 86.2318,
+                "labelTopPct": 40.3868,
+                "labelDirection": "W"
+              }
+            },
+            "chicken": {
+              "2": {
+                "leftPct": 33.8657,
+                "topPct": 4.3274,
+                "labelLeftPct": 40.3657,
+                "labelTopPct": 4.3274,
+                "labelDirection": "E"
+              },
+              "6": {
+                "leftPct": 24.4684,
+                "topPct": 12.4926,
+                "labelLeftPct": 30.9684,
+                "labelTopPct": 12.4926,
+                "labelDirection": "E"
+              },
+              "14": {
+                "leftPct": 28.9011,
+                "topPct": 92.2791,
+                "labelLeftPct": 22.4011,
+                "labelTopPct": 92.2791,
+                "labelDirection": "W"
+              },
+              "16": {
+                "leftPct": 39.1849,
+                "topPct": 90.8284,
+                "labelLeftPct": 39.1849,
+                "labelTopPct": 84.3284,
+                "labelDirection": "N"
+              },
+              "17": {
+                "leftPct": 43.1744,
+                "topPct": 91.4087,
+                "labelLeftPct": 49.6744,
+                "labelTopPct": 91.4087,
+                "labelDirection": "E"
+              },
+              "18": {
+                "leftPct": 93.2637,
+                "topPct": 50.2973,
+                "labelLeftPct": 86.7637,
+                "labelTopPct": 50.2973,
+                "labelDirection": "W"
+              }
+            },
+            "western": {
+              "3": {
+                "leftPct": 31.3834,
+                "topPct": 6.1925,
+                "labelLeftPct": 37.8834,
+                "labelTopPct": 6.1925,
+                "labelDirection": "E"
+              },
+              "10": {
+                "leftPct": 11.7909,
+                "topPct": 68.1152,
+                "labelLeftPct": 18.2909,
+                "labelTopPct": 68.1152,
+                "labelDirection": "E"
+              },
+              "19": {
+                "leftPct": 92.9091,
+                "topPct": 44.0341,
+                "labelLeftPct": 86.4091,
+                "labelTopPct": 44.0341,
+                "labelDirection": "W"
+              },
+              "21": {
+                "leftPct": 92.1999,
+                "topPct": 36.9052,
+                "labelLeftPct": 85.6999,
+                "labelTopPct": 36.9052,
+                "labelDirection": "W"
+              }
+            }
+          }
+        },
+        "2F": {
+          "all": {
+            "24": {
+              "leftPct": 8.6881,
+              "topPct": 58.9553,
+              "labelLeftPct": 15.1881,
+              "labelTopPct": 58.9553,
+              "labelDirection": "E"
+            },
+            "25": {
+              "leftPct": 18.2627,
+              "topPct": 79.0159,
+              "labelLeftPct": 24.7627,
+              "labelTopPct": 79.0159,
+              "labelDirection": "E"
+            },
+            "26": {
+              "leftPct": 77.306,
+              "topPct": 80.0106,
+              "labelLeftPct": 70.806,
+              "labelTopPct": 80.0106,
+              "labelDirection": "W"
+            },
+            "27": {
+              "leftPct": 46.0999,
+              "topPct": 93.1909,
+              "labelLeftPct": 39.5999,
+              "labelTopPct": 93.1909,
+              "labelDirection": "W"
+            }
+          },
+          "categories": {
+            "cafe": {
+              "24": {
+                "leftPct": 8.6881,
+                "topPct": 58.9553,
+                "labelLeftPct": 15.1881,
+                "labelTopPct": 58.9553,
+                "labelDirection": "E"
+              }
+            },
+            "korean": {
+              "25": {
+                "leftPct": 18.2627,
+                "topPct": 79.0159,
+                "labelLeftPct": 24.7627,
+                "labelTopPct": 79.0159,
+                "labelDirection": "E"
+              },
+              "27": {
+                "leftPct": 46.0999,
+                "topPct": 93.1909,
+                "labelLeftPct": 52.5999,
+                "labelTopPct": 93.1909,
+                "labelDirection": "E"
+              }
+            },
+            "chicken": {
+              "26": {
+                "leftPct": 77.306,
+                "topPct": 80.0106,
+                "labelLeftPct": 70.806,
+                "labelTopPct": 80.0106,
+                "labelDirection": "W"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
