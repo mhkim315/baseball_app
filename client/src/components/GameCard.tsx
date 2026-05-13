@@ -39,6 +39,7 @@ export default function GameCard({
   const hasResult = status === "finished" && homeScore !== undefined && awayScore !== undefined && !cancelled;
   const homeWon = hasResult ? homeScore! > awayScore! : null;
   const awayWon = hasResult ? awayScore! > homeScore! : null;
+  const showScore = (status === "finished" || ((homeScore || 0) + (awayScore || 0) > 0)) && homeScore !== undefined && awayScore !== undefined;
 
   const cardStyle: React.CSSProperties = {
     borderLeft: `3px solid ${home.primary}`,
@@ -91,7 +92,7 @@ export default function GameCard({
         <div className="flex flex-col items-center gap-1 px-4">
           {cancelled ? (
             <span className="text-sm font-medium text-muted-foreground line-through">취소</span>
-          ) : status === "finished" || status === "live" ? (
+          ) : showScore ? (
             <div className="flex items-center gap-3">
               <span className={`text-2xl font-bold ${hasResult && !awayWon ? "text-muted-foreground/50" : ""}`}>{awayScore}</span>
               <span className="text-sm text-muted-foreground">:</span>
@@ -100,7 +101,7 @@ export default function GameCard({
           ) : (
             <span className="text-sm font-medium text-muted-foreground">VS</span>
           )}
-          {status === "live" && (
+          {status === "live" && (awayScore || 0) + (homeScore || 0) > 0 && (
             <span className="text-[10px] font-medium text-destructive animate-pulse">
               LIVE
             </span>
