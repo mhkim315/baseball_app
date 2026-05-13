@@ -100,6 +100,9 @@ export default function Home() {
           setEnhancedGames([]);
         }
         setLoading(false);
+      }).catch(() => {
+        setEnhancedGames([]);
+        setLoading(false);
       });
     } else {
       // Past/future dates: use schedule + dailyScores
@@ -140,6 +143,9 @@ export default function Home() {
           };
         });
         setEnhancedGames(games);
+        setLoading(false);
+      }).catch(() => {
+        setEnhancedGames([]);
         setLoading(false);
       });
     }

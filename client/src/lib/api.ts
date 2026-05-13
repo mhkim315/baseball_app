@@ -133,10 +133,13 @@ export interface GameDetail {
   etcRecords?: { how: string; result: string; desc?: string }[];
 }
 
-// Generic fetch helper
+// Generic fetch helper (8s timeout)
 async function apiFetch<T>(path: string): Promise<T | null> {
   try {
-    const res = await fetch(`${API_BASE}${path}`);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(`${API_BASE}${path}`, { signal: controller.signal });
+    clearTimeout(timer);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (error) {
