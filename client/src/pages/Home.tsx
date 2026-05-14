@@ -63,6 +63,7 @@ export default function Home() {
     const dateStr = formatDateStr(selectedDate);
     setLoading(true);
     setError(false);
+    let cancelled = false;
 
     const todayView = isToday(selectedDate);
 
@@ -72,6 +73,7 @@ export default function Home() {
         fetchTodayGames(),
         fetchDailyScores(dateStr),
       ]).then(([gamesData, scoresData]) => {
+        if (cancelled) return;
         const scoreEntries: ScoreEntry[] = scoresData?.games || [];
         if (gamesData?.games) {
           const games: EnhancedGame[] = gamesData.games.map((g: TodayGame) => {
@@ -100,6 +102,7 @@ export default function Home() {
         }
         setLoading(false);
       }).catch(() => {
+        if (cancelled) return;
         setEnhancedGames([]);
         setError(true);
         setLoading(false);
@@ -120,6 +123,7 @@ export default function Home() {
         fetchDailyScores(dateStr),
         fetchTodayGames(),
       ]).then(([scheduleGames, scoresData, todayData]) => {
+        if (cancelled) return;
         const dayGames = scheduleGames.filter((g: ScheduleGame) => g.date === dateStr);
         const scoreEntries: ScoreEntry[] = scoresData?.games || [];
         const isFuture = dateStr > formatDateStr(new Date());
@@ -161,14 +165,20 @@ export default function Home() {
         setEnhancedGames(games);
         setLoading(false);
       }).catch(() => {
+        if (cancelled) return;
         setEnhancedGames([]);
         setError(true);
         setLoading(false);
       });
     }
+
+    return () => { cancelled = true; };
   }, [selectedDate]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const cleanup = load();
+    return cleanup;
+  }, [load]);
 
   return (
     <div className="min-h-screen pb-20 md:pb-8">

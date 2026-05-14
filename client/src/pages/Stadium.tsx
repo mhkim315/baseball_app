@@ -222,6 +222,7 @@ export default function Stadium() {
 
     setLoading(true);
     setError(false);
+    let cancelled = false;
 
     Promise.all([
       fetchStadiumBrief(stadiumId),
@@ -230,6 +231,7 @@ export default function Stadium() {
       fetchStadiumSurroundings(stadiumId),
       fetch(`${BASE}data/food-layouts.json`).then((r) => r.ok ? r.json() : null),
     ]).then(([brief, foodData, eatsData, surroundings, layouts]) => {
+      if (cancelled) return;
       if (brief) {
         // Patch API data with local corrections (name, capacity)
         const local = STADIUM_BRIEFS[stadiumId];
@@ -252,10 +254,15 @@ export default function Stadium() {
       }
       if (layouts) setFoodLayouts(layouts);
       setLoading(false);
-    }).catch(() => { setError(true); setLoading(false); });
+    }).catch(() => { if (!cancelled) { setError(true); setLoading(false); } });
+
+    return () => { cancelled = true; };
   }, [selectedTeam]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const cleanup = load();
+    return cleanup;
+  }, [load]);
 
   useEffect(() => {
     setFocusedSpot(undefined);
