@@ -37,7 +37,11 @@
       "Bash(cp \"/c/Users/user/Pictures/character/LG/LG_default.png\" \"/c/Users/user/Documents/baseball_app/client/public/team-characters/lg.png\")",
       "Bash(cp \"/c/Users/user/Pictures/character/KT/KT_default.png\" \"/c/Users/user/Documents/baseball_app/client/public/team-characters/kt.png\")",
       "Bash(cp \"/c/Users/user/Pictures/character/SSG/SSG_default.png\" \"/c/Users/user/Documents/baseball_app/client/public/team-characters/ssg.png\")",
-      "Bash(cp \"/c/Users/user/Pictures/character/NC/NC_default.png\" \"/c/Users/user/Documents/baseball_app/client/public/team-characters/nc.png\")"
+      "Bash(cp \"/c/Users/user/Pictures/character/NC/NC_default.png\" \"/c/Users/user/Documents/baseball_app/client/public/team-characters/nc.png\")",
+      "Bash(magick --version)",
+      "Bash(pnpm approve-builds *)",
+      "Bash(pnpm rebuild *)",
+      "Bash(node *)"
     ]
   }
 }

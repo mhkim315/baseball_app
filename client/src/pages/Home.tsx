@@ -121,6 +121,7 @@ export default function Home() {
       ]).then(([scheduleGames, scoresData]) => {
         const dayGames = scheduleGames.filter((g: ScheduleGame) => g.date === dateStr);
         const scoreEntries: ScoreEntry[] = scoresData?.games || [];
+        const isFuture = dateStr > formatDateStr(new Date());
 
         const games: EnhancedGame[] = dayGames.map((g: ScheduleGame) => {
           const homeId = TEAM_NAME_TO_ID[g.home] || "";
@@ -136,7 +137,7 @@ export default function Home() {
             awayTeam: awayId,
             time: g.time || "18:30",
             venue: g.venue || "",
-            status: score ? "finished" : ((g.status || "scheduled") as "scheduled" | "live" | "finished"),
+            status: score && !isFuture ? "finished" : "scheduled",
             homeScore: score ? score.homeScore : undefined,
             awayScore: score ? score.awayScore : undefined,
             winPitcher: score?.winPitcher,
