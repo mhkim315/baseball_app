@@ -374,7 +374,7 @@ export default function GameDetailPage() {
               {detail.etcRecords.map((r, i) => (
                 <div key={i} className="text-sm flex items-start gap-2">
                   <span className="text-xs font-medium text-muted-foreground whitespace-nowrap mt-0.5 bg-accent rounded px-1.5 py-0.5">{r.result}</span>
-                  <span>{r.how}{r.desc ? ` (${r.desc})` : ""}</span>
+                  <span className="break-words min-w-0">{r.how}{r.desc ? ` (${r.desc})` : ""}</span>
                 </div>
               ))}
             </div>
