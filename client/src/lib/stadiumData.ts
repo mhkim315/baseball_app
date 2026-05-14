@@ -48,7 +48,7 @@ export const STADIUM_BRIEFS: Record<string, StadiumBrief> = {
     transit: { subway: "수인분당선 수원시청역 2번 출구 도보 10분", bus: "2007, 621, 7770, 310, 991" },
   },
   "5": {
-    id: "5", name: "한화생명이글스파크", location: "대전 중구", capacity: "17,000석",
+    id: "5", name: "한화생명볼파크", location: "대전 중구", capacity: "17,000석",
     homeTeams: "한화 이글스",
     ticket: { purchase: "티켓링크", price: "9,000원(외야)~50,000원(프리미엄)" },
     parking: { fee: "무료(보문산 주차장)", note: "경기장 주변 주차 가능. 보문산 주차장 도보 10분" },

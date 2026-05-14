@@ -75,7 +75,7 @@ const TICKET_POLICY: Record<string, TeamTicketPolicy> = {
     ],
   },
   한화: {
-    name: "한화 이글스", color: "#FF6600", venue: "대전한화생명볼파크", platform: "티켓링크 / 한화이글스 홈페이지 / 이글콕 앱",
+    name: "한화 이글스", color: "#FF6600", venue: "한화생명볼파크", platform: "티켓링크 / 한화이글스 홈페이지 / 이글콕 앱",
     tiers: [
       { id: "season", name: "시즌권", dDay: null, time: null, maxTickets: null, seats: "본인 지정석", note: "별도 예매 불필요" },
       { id: "general", name: "일반", dDay: -7, time: "11:00", maxTickets: 4, seats: "전 좌석", note: "5단계 구간 요금제" },
