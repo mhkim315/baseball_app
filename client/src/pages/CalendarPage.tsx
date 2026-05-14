@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useLocation } from "wouter";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { TEAM_COLORS, TEAM_LIST } from "@/lib/teamColors";
 import { fetchScheduleByMonth, fetchAllDailyScores, type ScheduleGame } from "@/lib/api";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ErrorRetry } from "@/components/ErrorRetry";
-import { TEAM_NAME_TO_ID } from "@shared/constants";
+import { TEAM_NAME_TO_ID, TEAM_ID_TO_CODE } from "@shared/constants";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -30,6 +31,7 @@ function teamShortName(teamId: string): string {
 }
 
 export default function CalendarPage() {
+  const [, setLocation] = useLocation();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedTeam, setSelectedTeam] = useState<string>(() => {
     try {
@@ -193,9 +195,11 @@ export default function CalendarPage() {
                 if (day === null) return <div key={`empty-${index}`} className="min-h-[72px]" />;
 
                 const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
                 const dayGames = gamesByDate.get(dateStr) || [];
                 const dayScores = scoresByDate[dateStr] || [];
                 const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+                const isFuture = dateStr > todayStr;
                 const isDH = dayGames.length > 1;
                 const dayLabels: string[] = dayGames.map((game) => {
                   const s = dayScores.find((sc) => sc.away === game.away && sc.home === game.home);
@@ -212,6 +216,8 @@ export default function CalendarPage() {
                 const dayBg = hasWin && !hasLoss ? "bg-blue-500/10" : hasLoss && !hasWin ? "bg-red-400/10" : "";
                 const hasHome = dayGames.some((game) => game.home === teamName);
 
+                const isClickable = !isFuture && dayGames.length > 0;
+
                 return (
                   <div
                     key={day}
@@ -219,7 +225,17 @@ export default function CalendarPage() {
                       isToday ? "bg-foreground/10 ring-1 ring-foreground/20" : ""
                     } ${
                       !isToday && dayGames.length > 0 ? "hover:bg-accent" : ""
-                    }`}
+                    } ${isClickable ? "cursor-pointer" : ""}`}
+                    onClick={isClickable ? () => {
+                      const game = dayGames[0];
+                      const homeId = TEAM_NAME_TO_ID[game.home];
+                      const awayId = TEAM_NAME_TO_ID[game.away];
+                      const homeCode = TEAM_ID_TO_CODE[homeId || ""];
+                      const awayCode = TEAM_ID_TO_CODE[awayId || ""];
+                      if (homeCode && awayCode) {
+                        setLocation(`/game/${dateStr.replace(/-/g, "")}-${awayCode}${homeCode}-0`);
+                      }
+                    } : undefined}
                   >
                     <div className={`rounded-xl border border-border ${dayBg || "bg-card"}`} style={hasHome && teamColor ? { borderLeft: `3px solid ${teamColor.primary}` } : undefined}>
                     {/* Day number */}
