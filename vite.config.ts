@@ -204,7 +204,7 @@ function vitePluginStorageProxy(): Plugin {
   };
 }
 
-const base = '/baseball_app/';
+const base = '/';
 
 const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy(), VitePWA({
   base,

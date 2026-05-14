@@ -38,7 +38,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
-          <Router base="/baseball_app">
+          <Router>
             <Toaster />
             <Header />
             <AppRoutes />
