@@ -169,7 +169,7 @@ export default function GameDetailPage() {
           <div className="flex items-center justify-between">
             <div className="flex flex-col items-center gap-2">
               <TeamBadge teamId={detail.awayTeam} size="lg" emotion={awayEmotion} />
-              <span className="text-sm font-medium">{away?.name}</span>
+              <span className="text-sm font-medium" style={{ color: away.primary }}>{away?.name}</span>
               <span className="text-xs text-muted-foreground">
                 {detail.starters?.away?.name || "-"}
               </span>
@@ -197,7 +197,7 @@ export default function GameDetailPage() {
             </div>
             <div className="flex flex-col items-center gap-2">
               <TeamBadge teamId={detail.homeTeam} size="lg" emotion={homeEmotion} />
-              <span className="text-sm font-medium">{home?.name}</span>
+              <span className="text-sm font-medium" style={{ color: home.primary }}>{home?.name}</span>
               <span className="text-xs text-muted-foreground">
                 {detail.starters?.home?.name || "-"}
               </span>
@@ -226,7 +226,7 @@ export default function GameDetailPage() {
               </thead>
               <tbody>
                 <tr className="border-b border-border">
-                  <td className="py-1.5 pr-2 text-left font-medium">{away?.shortName}</td>
+                  <td className="py-1.5 pr-2 text-left font-medium" style={{ color: away.primary }}>{away?.shortName}</td>
                   {Array.from({ length: maxInn }).map((_, i) => (
                     <td key={i} className="py-1.5 px-1.5">{innData.away[i] != null ? innData.away[i] : '-'}</td>
                   ))}
@@ -235,7 +235,7 @@ export default function GameDetailPage() {
                   <td className="py-1.5 px-1.5">{rheb.away.e ?? '-'}</td>
                 </tr>
                 <tr>
-                  <td className="py-1.5 pr-2 text-left font-medium">{home?.shortName}</td>
+                  <td className="py-1.5 pr-2 text-left font-medium" style={{ color: home.primary }}>{home?.shortName}</td>
                   {Array.from({ length: maxInn }).map((_, i) => (
                     <td key={i} className="py-1.5 px-1.5">{innData.home[i] != null ? innData.home[i] : '-'}</td>
                   ))}
@@ -256,14 +256,14 @@ export default function GameDetailPage() {
               <TeamBadge teamId={detail.awayTeam} size="sm" emotion={awayEmotion} />
               <div>
                 <p className="text-sm font-medium">{detail.starters?.away?.name || "미정"}</p>
-                <p className="text-xs text-muted-foreground">{away?.shortName}</p>
+                <p className="text-xs" style={{ color: away.primary }}>{away?.shortName}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-accent/30 rounded-xl p-3">
               <TeamBadge teamId={detail.homeTeam} size="sm" emotion={homeEmotion} />
               <div>
                 <p className="text-sm font-medium">{detail.starters?.home?.name || "미정"}</p>
-                <p className="text-xs text-muted-foreground">{home?.shortName}</p>
+                <p className="text-xs" style={{ color: home.primary }}>{home?.shortName}</p>
               </div>
             </div>
           </div>
@@ -336,7 +336,7 @@ export default function GameDetailPage() {
               <div className="bg-card rounded-2xl border border-border p-4">
                 <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border">
                   <TeamBadge teamId={detail.awayTeam} size="sm" emotion={awayEmotion} />
-                  <span className="text-sm font-semibold">{away?.shortName}</span>
+                  <span className="text-sm font-semibold" style={{ color: away.primary }}>{away?.shortName}</span>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   {awayLineup.map((player: LineupPlayer) => (
@@ -355,7 +355,7 @@ export default function GameDetailPage() {
               <div className="bg-card rounded-2xl border border-border p-4">
                 <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border">
                   <TeamBadge teamId={detail.homeTeam} size="sm" emotion={homeEmotion} />
-                  <span className="text-sm font-semibold">{home?.shortName}</span>
+                  <span className="text-sm font-semibold" style={{ color: home.primary }}>{home?.shortName}</span>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   {homeLineup.map((player: LineupPlayer) => (
