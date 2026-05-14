@@ -73,6 +73,7 @@ export default function GameCard({
         {/* 원정팀 */}
         <div className="flex flex-col items-center gap-2 flex-1">
           <TeamBadge teamId={awayTeam} size="md" emotion={awayEmotion} />
+          <span className="text-xs font-medium">{away.shortName}</span>
           {hasResult && winPitcher ? (
             <span className="text-xs text-muted-foreground">
               {isDraw ? `무: ${winPitcher}` : awayWon ? `승: ${winPitcher}` : `패: ${losePitcher ?? ""}`}
@@ -107,6 +108,7 @@ export default function GameCard({
         {/* 홈팀 */}
         <div className="flex flex-col items-center gap-2 flex-1">
           <TeamBadge teamId={homeTeam} size="md" emotion={homeEmotion} />
+          <span className="text-xs font-medium">{home.shortName}</span>
           {hasResult && winPitcher ? (
             <span className="text-xs text-muted-foreground">
               {isDraw ? `무: ${winPitcher}` : homeWon ? `승: ${winPitcher}` : `패: ${losePitcher ?? ""}`}
