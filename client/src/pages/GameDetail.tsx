@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useParams } from "wouter";
 import { ChevronLeft } from "lucide-react";
 import { TEAM_COLORS } from "@/lib/teamColors";
-import { fetchGameDetail, fetchDailyScores, type GameDetail, type ScoreEntry, type LineupPlayer } from "@/lib/api";
+import { fetchGameDetail, fetchDailyScores, fetchStandingsJson, fetchAllDailyScores, type GameDetail, type ScoreEntry, type LineupPlayer, type StandingRow } from "@/lib/api";
 import { TeamBadge } from "@/components/TeamBadge";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ErrorRetry } from "@/components/ErrorRetry";
@@ -36,6 +36,11 @@ export default function GameDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [scoreFallback, setScoreFallback] = useState<ScoreEntry | null>(null);
+  const [previewData, setPreviewData] = useState<{
+    homeRecord: string; awayRecord: string;
+    homeRank: number; awayRank: number;
+    homeRecent: ("승"|"패"|"무")[]; awayRecent: ("승"|"패"|"무")[];
+  } | null>(null);
 
   const load = useCallback(() => {
     if (!gameId) return;
@@ -79,6 +84,60 @@ export default function GameDetailPage() {
     const cleanup = load();
     return cleanup;
   }, [load]);
+
+  // Fetch standings + recent games for preview card
+  useEffect(() => {
+    if (!detail) return;
+    const homeName = TEAM_COLORS[detail.homeTeam]?.shortName;
+    const awayName = TEAM_COLORS[detail.awayTeam]?.shortName;
+    if (!homeName || !awayName) return;
+    let cancelled = false;
+
+    Promise.all([
+      fetchStandingsJson(),
+      fetchAllDailyScores(),
+    ]).then(([standings, allScores]) => {
+      if (cancelled || !standings?.rows || !allScores?.dates) return;
+
+      const homeStanding = standings.rows.find((r) => r.teamName === homeName);
+      const awayStanding = standings.rows.find((r) => r.teamName === awayName);
+      if (!homeStanding || !awayStanding) return;
+
+      // Compute recent 5 games for each team
+      const dates = Object.keys(allScores.dates).sort().reverse();
+      const homeRecent: ("승"|"패"|"무")[] = [];
+      const awayRecent: ("승"|"패"|"무")[] = [];
+
+      for (const date of dates) {
+        if (homeRecent.length >= 5 && awayRecent.length >= 5) break;
+        const games = allScores.dates[date];
+        for (const g of games) {
+          if (homeRecent.length < 5 && g.away === homeName && !g.cancelled) {
+            homeRecent.push(g.awayScore > g.homeScore ? "승" : g.awayScore < g.homeScore ? "패" : "무");
+          }
+          if (homeRecent.length < 5 && g.home === homeName && !g.cancelled) {
+            homeRecent.push(g.homeScore > g.awayScore ? "승" : g.homeScore < g.awayScore ? "패" : "무");
+          }
+          if (awayRecent.length < 5 && g.away === awayName && !g.cancelled) {
+            awayRecent.push(g.awayScore > g.homeScore ? "승" : g.awayScore < g.homeScore ? "패" : "무");
+          }
+          if (awayRecent.length < 5 && g.home === awayName && !g.cancelled) {
+            awayRecent.push(g.homeScore > g.awayScore ? "승" : g.homeScore < g.awayScore ? "패" : "무");
+          }
+          if (homeRecent.length >= 5 && awayRecent.length >= 5) break;
+        }
+      }
+
+      setPreviewData({
+        homeRecord: homeStanding.wlt, awayRecord: awayStanding.wlt,
+        homeRank: homeStanding.rank, awayRank: awayStanding.rank,
+        homeRecent: homeRecent.slice(0, 5),
+        awayRecent: awayRecent.slice(0, 5),
+      });
+    }).catch(() => {});
+
+    return () => { cancelled = true; };
+  }, [detail]);
 
   if (loading) {
     return (
@@ -245,6 +304,47 @@ export default function GameDetailPage() {
                 </tr>
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Preview card: standings + recent 5 games */}
+        {previewData && (
+          <div className="bg-card rounded-2xl border border-border p-4 mt-3">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-col items-center gap-1 flex-1">
+                <span className="text-xs text-muted-foreground">{previewData.awayRank}위</span>
+                <span className="text-sm font-semibold" style={{ color: away.primary }}>{away?.shortName}</span>
+                <span className="text-xs text-muted-foreground">{previewData.awayRecord}</span>
+              </div>
+              <div className="flex flex-col items-center gap-1 px-3">
+                <span className="text-[10px] text-muted-foreground">시즌 성적</span>
+                <span className="text-[10px] text-muted-foreground">VS</span>
+              </div>
+              <div className="flex flex-col items-center gap-1 flex-1">
+                <span className="text-xs text-muted-foreground">{previewData.homeRank}위</span>
+                <span className="text-sm font-semibold" style={{ color: home.primary }}>{home?.shortName}</span>
+                <span className="text-xs text-muted-foreground">{previewData.homeRecord}</span>
+              </div>
+            </div>
+            <div className="border-t border-border pt-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex gap-1">
+                  {previewData.awayRecent.map((r, i) => (
+                    <span key={i} className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${
+                      r === "승" ? "bg-blue-500 text-white" : r === "패" ? "bg-red-500 text-white" : "bg-muted text-muted-foreground"
+                    }`}>{r === "무" ? "무" : r}</span>
+                  ))}
+                </div>
+                <span className="text-[10px] text-muted-foreground">최근 5경기</span>
+                <div className="flex gap-1">
+                  {previewData.homeRecent.map((r, i) => (
+                    <span key={i} className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${
+                      r === "승" ? "bg-blue-500 text-white" : r === "패" ? "bg-red-500 text-white" : "bg-muted text-muted-foreground"
+                    }`}>{r === "무" ? "무" : r}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
