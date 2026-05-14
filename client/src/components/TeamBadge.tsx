@@ -5,6 +5,7 @@ import { config } from "@/lib/config";
 interface TeamBadgeProps {
   teamId: string;
   size?: "sm" | "md" | "lg";
+  emotion?: "default" | "determined" | "sad" | "joyful";
   className?: string;
 }
 
@@ -20,12 +21,12 @@ const textSizes: Record<string, string> = {
   lg: "text-sm",
 };
 
-export function TeamBadge({ teamId, size = "md", className = "" }: TeamBadgeProps) {
+export function TeamBadge({ teamId, size = "md", emotion = "default", className = "" }: TeamBadgeProps) {
   const team = TEAM_COLORS[teamId];
   const [imgFailed, setImgFailed] = useState(false);
   if (!team) return null;
 
-  const imgSrc = `${config.baseUrl}team-characters/${teamId}.png`;
+  const imgSrc = `${config.baseUrl}team-characters/${teamId}_${emotion}.png`;
 
   return (
     <div

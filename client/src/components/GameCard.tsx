@@ -43,6 +43,9 @@ export default function GameCard({
   const isDraw = hasResult ? homeScore === awayScore : null;
   const showScore = (status === "finished" || ((homeScore || 0) + (awayScore || 0) > 0)) && homeScore !== undefined && awayScore !== undefined;
 
+  const awayEmotion = status === "scheduled" ? "determined" : awayWon === true ? "joyful" : awayWon === false && !isDraw ? "sad" : "default" as const;
+  const homeEmotion = status === "scheduled" ? "determined" : homeWon === true ? "joyful" : homeWon === false && !isDraw ? "sad" : "default" as const;
+
   const cardStyle: React.CSSProperties = {
     borderLeft: `3px solid ${home.primary}`,
   };
@@ -69,7 +72,7 @@ export default function GameCard({
       <div className="flex items-center justify-between">
         {/* 원정팀 */}
         <div className="flex flex-col items-center gap-2 flex-1">
-          <TeamBadge teamId={awayTeam} size="md" />
+          <TeamBadge teamId={awayTeam} size="md" emotion={awayEmotion} />
           {hasResult && winPitcher ? (
             <span className="text-xs text-muted-foreground">
               {isDraw ? `무: ${winPitcher}` : awayWon ? `승: ${winPitcher}` : `패: ${losePitcher ?? ""}`}
@@ -103,7 +106,7 @@ export default function GameCard({
 
         {/* 홈팀 */}
         <div className="flex flex-col items-center gap-2 flex-1">
-          <TeamBadge teamId={homeTeam} size="md" />
+          <TeamBadge teamId={homeTeam} size="md" emotion={homeEmotion} />
           {hasResult && winPitcher ? (
             <span className="text-xs text-muted-foreground">
               {isDraw ? `무: ${winPitcher}` : homeWon ? `승: ${winPitcher}` : `패: ${losePitcher ?? ""}`}

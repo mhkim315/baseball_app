@@ -128,11 +128,19 @@ export default function GameDetailPage() {
   const homeLineup = detail.lineup?.home || [];
   const awayLineup = detail.lineup?.away || [];
   const hasLineup = homeLineup.length > 0 && awayLineup.length > 0;
-  const isFinished = detail.gameInfo?.status === "finished";
+  const isFuture = detail.date > new Date().toISOString().slice(0, 10);
+  const isFinished = !isFuture && detail.gameInfo?.status === "finished";
   const isLive = detail.gameInfo?.status === "live";
-  const statusLabel = isFinished ? "경기 종료" : isLive ? "경기 중" : "경기 전";
-  const showLineupStatus = !isFinished && !isLive;
+  const statusLabel = isFinished ? "경기 종료" : isLive ? "경기 중" : isFuture ? "경기 예정" : "경기 전";
+  const isBeforeGame = !isFinished && !isLive;
+  const showLineupStatus = isBeforeGame;
   const lineupConfirmed = detail.lineupConfirmed ?? false;
+  const gs = detail.score;
+  const awayWin = isFinished && gs ? gs.away > gs.home : null;
+  const homeWin = isFinished && gs ? gs.home > gs.away : null;
+  const isDraw = isFinished && gs ? gs.away === gs.home : false;
+  const awayEmotion: "default" | "determined" | "sad" | "joyful" = isBeforeGame ? "determined" : awayWin ? "joyful" : isFinished && !isDraw ? "sad" : "default";
+  const homeEmotion: "default" | "determined" | "sad" | "joyful" = isBeforeGame ? "determined" : homeWin ? "joyful" : isFinished && !isDraw ? "sad" : "default";
 
   const scoreBoard = detail.scoreBoard;
   const rheb = scoreBoard?.rheb;
@@ -158,7 +166,7 @@ export default function GameDetailPage() {
         <div className="bg-card rounded-2xl border border-border p-6">
           <div className="flex items-center justify-between">
             <div className="flex flex-col items-center gap-2">
-              <TeamBadge teamId={detail.awayTeam} size="lg" />
+              <TeamBadge teamId={detail.awayTeam} size="lg" emotion={awayEmotion} />
               <span className="text-sm font-medium">{away?.name}</span>
               <span className="text-xs text-muted-foreground">
                 {detail.starters?.away?.name || "-"}
@@ -184,7 +192,7 @@ export default function GameDetailPage() {
               </span>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <TeamBadge teamId={detail.homeTeam} size="lg" />
+              <TeamBadge teamId={detail.homeTeam} size="lg" emotion={homeEmotion} />
               <span className="text-sm font-medium">{home?.name}</span>
               <span className="text-xs text-muted-foreground">
                 {detail.starters?.home?.name || "-"}
@@ -241,14 +249,14 @@ export default function GameDetailPage() {
           <h3 className="text-sm font-semibold mb-3">선발투수</h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center gap-2 bg-accent/30 rounded-xl p-3">
-              <TeamBadge teamId={detail.awayTeam} size="sm" />
+              <TeamBadge teamId={detail.awayTeam} size="sm" emotion={awayEmotion} />
               <div>
                 <p className="text-sm font-medium">{detail.starters?.away?.name || "미정"}</p>
                 <p className="text-xs text-muted-foreground">{away?.shortName}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-accent/30 rounded-xl p-3">
-              <TeamBadge teamId={detail.homeTeam} size="sm" />
+              <TeamBadge teamId={detail.homeTeam} size="sm" emotion={homeEmotion} />
               <div>
                 <p className="text-sm font-medium">{detail.starters?.home?.name || "미정"}</p>
                 <p className="text-xs text-muted-foreground">{home?.shortName}</p>
@@ -323,7 +331,7 @@ export default function GameDetailPage() {
               {/* Away lineup */}
               <div className="bg-card rounded-2xl border border-border p-4">
                 <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border">
-                  <TeamBadge teamId={detail.awayTeam} size="sm" />
+                  <TeamBadge teamId={detail.awayTeam} size="sm" emotion={awayEmotion} />
                   <span className="text-sm font-semibold">{away?.shortName}</span>
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -342,7 +350,7 @@ export default function GameDetailPage() {
               {/* Home lineup */}
               <div className="bg-card rounded-2xl border border-border p-4">
                 <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border">
-                  <TeamBadge teamId={detail.homeTeam} size="sm" />
+                  <TeamBadge teamId={detail.homeTeam} size="sm" emotion={homeEmotion} />
                   <span className="text-sm font-semibold">{home?.shortName}</span>
                 </div>
                 <div className="flex flex-col gap-1.5">

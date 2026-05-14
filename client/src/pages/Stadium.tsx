@@ -683,9 +683,6 @@ export default function Stadium() {
                       <InfoCard icon={Navigation} label="버스" value={stadium.transit.bus} />
                     </div>
                   )}
-                  <div className="bg-card rounded-2xl border border-border p-5">
-                    <InfoCard icon={Car} label="주차 안내" value={`${stadium.parking.fee}\n${stadium.parking.note}`} />
-                  </div>
                 </div>
               )}
 
