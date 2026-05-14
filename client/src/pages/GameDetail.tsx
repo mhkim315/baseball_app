@@ -3,35 +3,9 @@ import { useLocation, useParams } from "wouter";
 import { ChevronLeft } from "lucide-react";
 import { TEAM_COLORS } from "@/lib/teamColors";
 import { fetchGameDetail, fetchDailyScores, type GameDetail, type ScoreEntry, type LineupPlayer } from "@/lib/api";
+import { TeamBadge } from "@/components/TeamBadge";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ErrorRetry } from "@/components/ErrorRetry";
-
-interface TeamBadgeProps {
-  teamId: string;
-  size?: "sm" | "md" | "lg";
-}
-
-function TeamBadge({ teamId, size = "md" }: TeamBadgeProps) {
-  const team = TEAM_COLORS[teamId];
-  if (!team) return null;
-  const sizeClasses = {
-    sm: "w-8 h-8 text-[9px]",
-    md: "w-12 h-12 text-xs",
-    lg: "w-16 h-16 text-sm",
-  };
-  return (
-    <div
-      className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-bold border-2`}
-      style={{
-        backgroundColor: team.primary,
-        color: team.secondary,
-        borderColor: team.tertiary === "#FFFFFF" ? team.primary : team.tertiary,
-      }}
-    >
-      {team.shortName}
-    </div>
-  );
-}
 
 const POSITION_LABELS: Record<string, string> = {
   "1": "1B", "2": "2B", "3": "3B",

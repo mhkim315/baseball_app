@@ -9,6 +9,7 @@ import { MapPin, UtensilsCrossed, Car, Train, Store,
   Ticket, Users, Phone, Navigation,
 } from "lucide-react";
 import StadiumMap from "@/components/StadiumMap";
+import { TeamBadge } from "@/components/TeamBadge";
 import { config } from "@/lib/config";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ErrorRetry } from "@/components/ErrorRetry";
@@ -302,16 +303,7 @@ export default function Stadium() {
             {stadium && team && (
               <div className="bg-card rounded-2xl border border-border p-5 mt-3">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold border-2"
-                    style={{
-                      backgroundColor: team.primary,
-                      color: team.secondary,
-                      borderColor: team.tertiary === "#FFFFFF" ? team.primary : team.tertiary,
-                    }}
-                  >
-                    {team.shortName}
-                  </div>
+                  <TeamBadge teamId={selectedTeam} size="md" />
                   <div>
                     <h3 className="font-semibold text-base">{stadium.name}</h3>
                     <p className="text-xs text-muted-foreground mt-0.5">{stadium.location} · {stadium.capacity}</p>

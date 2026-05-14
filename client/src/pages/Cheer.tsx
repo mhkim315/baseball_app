@@ -3,6 +3,7 @@ import { TEAM_COLORS, TEAM_LIST } from "@/lib/teamColors";
 import { fetchCheeringSongs, fetchCheeringPlayers, fetchTodayGames, fetchGameDetail, fetchDailyScores, type CheerSection, type PlayerCheer, type TodayGame, type ScoreEntry } from "@/lib/api";
 import { Music, ExternalLink, User, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { config } from "@/lib/config";
+import { TeamBadge } from "@/components/TeamBadge";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ErrorRetry } from "@/components/ErrorRetry";
 import { TEAM_NAME_TO_ID, TEAM_ID_TO_CODE as TEAM_TO_CODE } from "@shared/constants";
@@ -166,16 +167,7 @@ export default function Cheer() {
         {team && (
           <div className="bg-card rounded-2xl border border-border p-5 mt-3">
             <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold border-2"
-                style={{
-                  backgroundColor: team.primary,
-                  color: team.secondary,
-                  borderColor: team.tertiary === "#FFFFFF" ? team.primary : team.tertiary,
-                }}
-              >
-                {team.shortName}
-              </div>
+              <TeamBadge teamId={selectedTeam} size="md" />
               <div>
                 <h3 className="font-semibold text-base">{team.name}</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">

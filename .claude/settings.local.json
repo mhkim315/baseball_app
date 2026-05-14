@@ -31,7 +31,13 @@
       "WebFetch(domain:m.cafe.naver.com)",
       "WebFetch(domain:en.wikipedia.org)",
       "WebFetch(domain:ko.wikipedia.org)",
-      "Bash(pnpm install *)"
+      "Bash(pnpm install *)",
+      "Bash(file *)",
+      "Bash(cp \"/c/Users/user/Pictures/character/DOOSAN/DOOSAN_default.png\" \"/c/Users/user/Documents/baseball_app/client/public/team-characters/doosan.png\")",
+      "Bash(cp \"/c/Users/user/Pictures/character/LG/LG_default.png\" \"/c/Users/user/Documents/baseball_app/client/public/team-characters/lg.png\")",
+      "Bash(cp \"/c/Users/user/Pictures/character/KT/KT_default.png\" \"/c/Users/user/Documents/baseball_app/client/public/team-characters/kt.png\")",
+      "Bash(cp \"/c/Users/user/Pictures/character/SSG/SSG_default.png\" \"/c/Users/user/Documents/baseball_app/client/public/team-characters/ssg.png\")",
+      "Bash(cp \"/c/Users/user/Pictures/character/NC/NC_default.png\" \"/c/Users/user/Documents/baseball_app/client/public/team-characters/nc.png\")"
     ]
   }
 }

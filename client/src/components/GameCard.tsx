@@ -1,4 +1,5 @@
 import { TEAM_COLORS } from "@/lib/teamColors";
+import { TeamBadge } from "@/components/TeamBadge";
 
 interface GameCardProps {
   homeTeam: string;
@@ -68,16 +69,7 @@ export default function GameCard({
       <div className="flex items-center justify-between">
         {/* 원정팀 */}
         <div className="flex flex-col items-center gap-2 flex-1">
-          <div
-            className="w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold border-2"
-            style={{
-              backgroundColor: away.primary,
-              color: away.secondary,
-              borderColor: away.tertiary === "#FFFFFF" ? away.primary : away.tertiary,
-            }}
-          >
-            {away.shortName}
-          </div>
+          <TeamBadge teamId={awayTeam} size="md" />
           {hasResult && winPitcher ? (
             <span className="text-xs text-muted-foreground">
               {isDraw ? `무: ${winPitcher}` : awayWon ? `승: ${winPitcher}` : `패: ${losePitcher ?? ""}`}
@@ -111,16 +103,7 @@ export default function GameCard({
 
         {/* 홈팀 */}
         <div className="flex flex-col items-center gap-2 flex-1">
-          <div
-            className="w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold border-2"
-            style={{
-              backgroundColor: home.primary,
-              color: home.secondary,
-              borderColor: home.tertiary === "#FFFFFF" ? home.primary : home.tertiary,
-            }}
-          >
-            {home.shortName}
-          </div>
+          <TeamBadge teamId={homeTeam} size="md" />
           {hasResult && winPitcher ? (
             <span className="text-xs text-muted-foreground">
               {isDraw ? `무: ${winPitcher}` : homeWon ? `승: ${winPitcher}` : `패: ${losePitcher ?? ""}`}
