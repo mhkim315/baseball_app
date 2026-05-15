@@ -88,8 +88,12 @@ export default function Home() {
             const rawStatus = g.status as "scheduled" | "live" | "finished";
             const hasAnyScore = (g.score != null && (g.score.away > 0 || g.score.home > 0)) || (score != null && !score.cancelled && (score.awayScore > 0 || score.homeScore > 0));
             // API may not update status to "live" for in-progress games;
-            // treat "scheduled" + score data as live for today
-            const gameStatus = rawStatus === "scheduled" && hasAnyScore && todayView ? "live" : rawStatus || "scheduled";
+            // treat "scheduled" + score data as live for today (only after game time)
+            const [h, m] = (g.time || "18:30").split(":").map(Number);
+            const startTime = new Date(selectedDate);
+            startTime.setHours(h, m, 0, 0);
+            const hasStarted = new Date() >= startTime;
+            const gameStatus = rawStatus === "scheduled" && hasAnyScore && todayView && hasStarted ? "live" : rawStatus || "scheduled";
             return {
               id: g.id,
               homeTeam: g.home.id,
