@@ -43,6 +43,13 @@ export default function GameCard({
   const isDraw = hasResult ? homeScore === awayScore : null;
   const showScore = (status === "finished" || status === "live" || ((homeScore || 0) + (awayScore || 0) > 0)) && homeScore !== undefined && awayScore !== undefined;
 
+  const statusLabel = cancelled ? "취소" : status === "finished" ? "경기 종료" : status === "live" ? "경기 중" : "경기 전";
+  const statusBadgeClass = cancelled
+    ? "text-muted-foreground"
+    : status === "live"
+    ? "text-destructive animate-pulse"
+    : "text-muted-foreground";
+
   const awayEmotion = status === "scheduled" ? "determined" : awayWon === true ? "joyful" : isDraw || cancelled ? "neutral" : awayWon === false ? "sad" : "default" as const;
   const homeEmotion = status === "scheduled" ? "determined" : homeWon === true ? "joyful" : isDraw || cancelled ? "neutral" : homeWon === false ? "sad" : "default" as const;
 
@@ -87,21 +94,15 @@ export default function GameCard({
 
         {/* 스코어 또는 VS */}
         <div className="flex flex-col items-center gap-1 px-4">
-          {cancelled ? (
-            <span className="text-sm font-medium text-muted-foreground line-through">취소</span>
-          ) : showScore ? (
+          <span className={`text-[10px] font-medium ${statusBadgeClass}`}>{statusLabel}</span>
+          {showScore ? (
             <div className="flex items-center gap-3">
               <span className={`text-2xl font-bold ${hasResult && !awayWon && !isDraw ? "text-muted-foreground/50" : ""}`}>{awayScore}</span>
               <span className="text-sm text-muted-foreground">:</span>
               <span className={`text-2xl font-bold ${hasResult && !homeWon && !isDraw ? "text-muted-foreground/50" : ""}`}>{homeScore}</span>
             </div>
           ) : (
-            <span className="text-sm font-medium text-muted-foreground">VS</span>
-          )}
-          {status === "live" && (
-            <span className="text-[10px] font-medium text-destructive animate-pulse">
-              경기 중
-            </span>
+            <span className={`text-sm font-medium ${cancelled ? "text-muted-foreground line-through" : "text-muted-foreground"}`}>VS</span>
           )}
         </div>
 
