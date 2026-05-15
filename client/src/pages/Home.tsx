@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import DateSelector from "@/components/DateSelector";
 import GameCard from "@/components/GameCard";
-import { fetchTodayGames, fetchDailyScores, fetchScheduleByMonth, type TodayGame, type ScoreEntry, type ScheduleGame } from "@/lib/api";
+import { fetchTodayGames, fetchDailyScores, fetchScheduleByMonth, fetchGameDetail, type TodayGame, type ScoreEntry, type ScheduleGame } from "@/lib/api";
 import { TEAM_COLORS } from "@/lib/teamColors";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ErrorRetry } from "@/components/ErrorRetry";
@@ -137,8 +137,8 @@ export default function Home() {
         const pitcherMap = new Map<string, { away?: string; home?: string }>();
         for (const ng of todayData?.nextGames ?? []) {
           pitcherMap.set(`${ng.away.id}-${ng.home.id}`, {
-            away: ng.away.starter?.name,
-            home: ng.home.starter?.name,
+            away: ng.away.starter?.name !== "미정" ? ng.away.starter?.name : undefined,
+            home: ng.home.starter?.name !== "미정" ? ng.home.starter?.name : undefined,
           });
         }
 
@@ -168,6 +168,29 @@ export default function Home() {
           };
         });
         setEnhancedGames(games);
+
+        // Fallback: fetch game-detail for games missing pitcher data
+        const gamesNeedingPitchers = games.filter(
+          (g) => !g.homePitcher || !g.awayPitcher
+        );
+        if (gamesNeedingPitchers.length > 0) {
+          Promise.all(
+            gamesNeedingPitchers.map((g) => fetchGameDetail(g.id).catch(() => null))
+          ).then((results) => {
+            if (cancelled) return;
+            const updated = games.map((g) => {
+              const detail = results.find((r) => r?.gameId === g.id);
+              if (!detail?.starters) return g;
+              return {
+                ...g,
+                homePitcher: g.homePitcher || (detail.starters?.home?.name || undefined),
+                awayPitcher: g.awayPitcher || (detail.starters?.away?.name || undefined),
+              };
+            });
+            setEnhancedGames(updated);
+          }).catch(() => {});
+        }
+
         setLoading(false);
       }).catch(() => {
         if (cancelled) return;
