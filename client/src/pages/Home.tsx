@@ -86,7 +86,7 @@ export default function Home() {
               (s) => s.away === TEAM_COLORS[g.away.id]?.shortName && s.home === TEAM_COLORS[g.home.id]?.shortName
             );
             const rawStatus = g.status as "scheduled" | "live" | "finished";
-            const hasAnyScore = (g.score != null && (g.score.away > 0 || g.score.home > 0)) || (score != null && !score.cancelled);
+            const hasAnyScore = (g.score != null && (g.score.away > 0 || g.score.home > 0)) || (score != null && !score.cancelled && (score.awayScore > 0 || score.homeScore > 0));
             // API may not update status to "live" for in-progress games;
             // treat "scheduled" + score data as live for today
             const gameStatus = rawStatus === "scheduled" && hasAnyScore && todayView ? "live" : rawStatus || "scheduled";
