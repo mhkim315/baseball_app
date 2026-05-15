@@ -38,7 +38,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
-          <Router>
+          <Router base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <Toaster />
             <Header />
             <AppRoutes />

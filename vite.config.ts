@@ -204,7 +204,7 @@ function vitePluginStorageProxy(): Plugin {
   };
 }
 
-const base = '/';
+const base = process.env.BASE_PATH || '/';
 
 const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy(), VitePWA({
   base,
