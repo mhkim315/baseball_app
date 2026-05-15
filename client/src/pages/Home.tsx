@@ -80,13 +80,18 @@ export default function Home() {
             const score = scoreEntries.find(
               (s) => s.away === TEAM_COLORS[g.away.id]?.shortName && s.home === TEAM_COLORS[g.home.id]?.shortName
             );
+            const rawStatus = g.status as "scheduled" | "live" | "finished";
+            const hasAnyScore = g.score != null || (score != null && !score.cancelled);
+            // API may not update status to "live" for in-progress games;
+            // treat "scheduled" + score data as live for today
+            const gameStatus = rawStatus === "scheduled" && hasAnyScore && todayView ? "live" : rawStatus || "scheduled";
             return {
               id: g.id,
               homeTeam: g.home.id,
               awayTeam: g.away.id,
               time: g.time || "18:30",
               venue: g.venue || "",
-              status: (g.status as "scheduled" | "live" | "finished") || "scheduled",
+              status: gameStatus,
               homeScore: g.score?.home ?? score?.homeScore,
               awayScore: g.score?.away ?? score?.awayScore,
               homePitcher: g.home.starter?.name,
