@@ -53,19 +53,17 @@ export default function GameDetailPage() {
       if (cancelled) return;
       if (data) {
         setDetail(data);
-        if (data.gameInfo?.status === "finished") {
-          // Always fetch daily scores for finished games to detect cancellation
-          const dateStr = `${gameId.slice(0, 4)}-${gameId.slice(4, 6)}-${gameId.slice(6, 8)}`;
-          fetchDailyScores(dateStr).then((scores) => {
-            if (cancelled || !scores?.games) return;
-            const homeName = TEAM_COLORS[data.homeTeam]?.shortName || "";
-            const awayName = TEAM_COLORS[data.awayTeam]?.shortName || "";
-            const match = scores.games.find(
-              (s) => s.home === homeName && s.away === awayName
-            );
-            if (match) setScoreFallback(match);
-          });
-        }
+        // Always fetch daily scores for score/status fallback
+        const dateStr = `${gameId.slice(0, 4)}-${gameId.slice(4, 6)}-${gameId.slice(6, 8)}`;
+        fetchDailyScores(dateStr).then((scores) => {
+          if (cancelled || !scores?.games) return;
+          const homeName = TEAM_COLORS[data.homeTeam]?.shortName || "";
+          const awayName = TEAM_COLORS[data.awayTeam]?.shortName || "";
+          const match = scores.games.find(
+            (s) => s.home === homeName && s.away === awayName
+          );
+          if (match) setScoreFallback(match);
+        });
       } else {
         setError(true);
       }
@@ -189,15 +187,34 @@ export default function GameDetailPage() {
   const homeLineup = detail.lineup?.home || [];
   const awayLineup = detail.lineup?.away || [];
   const hasLineup = homeLineup.length > 0 && awayLineup.length > 0;
-  const isFuture = detail.date > new Date().toISOString().slice(0, 10);
+  // Combine score from detail + dailyScores fallback
+  const gameScore = detail.score ?? (scoreFallback ? { away: scoreFallback.awayScore, home: scoreFallback.homeScore } : null);
+
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const isFuture = detail.date > todayStr;
+  const isToday = detail.date === todayStr;
   const isCancelled = detail.gameInfo?.status === "cancelled" || scoreFallback?.cancelled === true || detail.etcRecords?.some(r => r.how?.includes("취소") || r.result?.includes("취소")) === true;
-  const isFinished = !isFuture && !isCancelled && detail.gameInfo?.status === "finished";
-  const isLive = detail.gameInfo?.status === "live";
+
+  const hasScoreData = gameScore !== null;
+  const hasFinishedSignals = !!detail.scoreBoard || (detail.pitchingResult && detail.pitchingResult.length > 0) || (detail.etcRecords && detail.etcRecords.length > 0);
+  const isGameActive = hasScoreData || hasFinishedSignals;
+
+  const isFinished = !isCancelled && !isFuture && (
+    detail.gameInfo?.status === "finished" ||
+    (isGameActive && !isToday)
+  );
+
+  const isLive = !isCancelled && !isFinished && (
+    detail.gameInfo?.status === "live" ||
+    (isGameActive && isToday)
+  );
+
   const statusLabel = isCancelled ? "취소" : isFinished ? "경기 종료" : isLive ? "경기 중" : isFuture ? "경기 예정" : "경기 전";
   const isBeforeGame = !isFinished && !isLive && !isCancelled;
   const showLineupStatus = isBeforeGame;
   const lineupConfirmed = isFuture ? false : (detail.lineupConfirmed ?? false);
-  const gs = detail.score;
+  const gs = gameScore;
   const awayWin = isFinished && gs ? gs.away > gs.home : null;
   const homeWin = isFinished && gs ? gs.home > gs.away : null;
   const isDraw = isFinished && gs ? gs.away === gs.home : false;
@@ -238,11 +255,17 @@ export default function GameDetailPage() {
               <span className="text-xs text-muted-foreground">{detail.gameInfo?.time || "18:30"}</span>
               {isCancelled ? (
                 <span className="text-lg font-bold text-muted-foreground line-through">취소</span>
-              ) : detail.score ? (
+              ) : gameScore ? (
                 <div className="flex items-center gap-3">
-                  <span className={`text-2xl font-bold ${isFinished && detail.score.away > detail.score.home ? "" : ""}`}>{detail.score.away}</span>
+                  <span className={`text-2xl font-bold ${isFinished && gameScore.away > gameScore.home ? "" : ""}`}>{gameScore.away}</span>
                   <span className="text-sm text-muted-foreground">:</span>
-                  <span className={`text-2xl font-bold ${isFinished && detail.score.home > detail.score.away ? "" : ""}`}>{detail.score.home}</span>
+                  <span className={`text-2xl font-bold ${isFinished && gameScore.home > gameScore.away ? "" : ""}`}>{gameScore.home}</span>
+                </div>
+              ) : isLive ? (
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl font-bold">0</span>
+                  <span className="text-sm text-muted-foreground">:</span>
+                  <span className="text-2xl font-bold">0</span>
                 </div>
               ) : (
                 <span className="text-lg font-bold text-muted-foreground">VS</span>

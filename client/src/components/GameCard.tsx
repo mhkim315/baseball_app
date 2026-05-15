@@ -41,7 +41,7 @@ export default function GameCard({
   const homeWon = hasResult ? homeScore! > awayScore! : null;
   const awayWon = hasResult ? awayScore! > homeScore! : null;
   const isDraw = hasResult ? homeScore === awayScore : null;
-  const showScore = (status === "finished" || ((homeScore || 0) + (awayScore || 0) > 0)) && homeScore !== undefined && awayScore !== undefined;
+  const showScore = (status === "finished" || status === "live" || ((homeScore || 0) + (awayScore || 0) > 0)) && homeScore !== undefined && awayScore !== undefined;
 
   const awayEmotion = status === "scheduled" ? "determined" : awayWon === true ? "joyful" : isDraw || cancelled ? "neutral" : awayWon === false ? "sad" : "default" as const;
   const homeEmotion = status === "scheduled" ? "determined" : homeWon === true ? "joyful" : isDraw || cancelled ? "neutral" : homeWon === false ? "sad" : "default" as const;
@@ -98,7 +98,7 @@ export default function GameCard({
           ) : (
             <span className="text-sm font-medium text-muted-foreground">VS</span>
           )}
-          {status === "live" && (awayScore || 0) + (homeScore || 0) > 0 && (
+          {status === "live" && (
             <span className="text-[10px] font-medium text-destructive animate-pulse">
               경기 중
             </span>
