@@ -188,6 +188,7 @@ export default function GameDetailScreen() {
     detail.gameInfo?.status === "live" || (isGameActive && isToday)
   );
   const isBeforeGame = !isFinished && !isLive && !isCancelled;
+  const showLineupStatus = isBeforeGame;
   const lineupConfirmed = isFuture ? false : (detail.lineupConfirmed ?? false);
   const statusLabel = isCancelled ? "취소" : isFinished ? "경기 종료" : isLive ? "경기 중" : "경기 전";
   const gs = gameScore;

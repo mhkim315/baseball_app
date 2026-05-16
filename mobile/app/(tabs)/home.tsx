@@ -1,20 +1,29 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, Pressable, LayoutAnimation, Platform, UIManager } from "react-native";
 import { useRouter } from "expo-router";
 import DateStrip from "@/components/DateStrip";
 import GameCard from "@/components/GameCard";
+import TeamExpander from "@/components/TeamExpander";
+import CalendarGrid from "@/components/CalendarGrid";
 import {
   fetchTodayGames,
   fetchDailyScores,
   fetchScheduleByMonth,
   fetchGameDetail,
+  fetchAllDailyScores,
   type TodayGame,
   type ScoreEntry,
   type ScheduleGame,
 } from "@/lib/api";
-import { TEAM_COLORS } from "@shared/teamColors";
+import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID, TEAM_ID_TO_CODE } from "@shared/constants";
+import { getMyTeam } from "@/lib/db";
 import { theme } from "@/lib/theme";
+
+// Enable LayoutAnimation on Android
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 function formatDateStr(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -49,7 +58,21 @@ export default function HomeScreen() {
   const [games, setGames] = useState<EnhancedGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [myTeam, setMyTeamState] = useState<string | null>(null);
+  const [displayTeam, setDisplayTeam] = useState<string | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calGames, setCalGames] = useState<ScheduleGame[]>([]);
+  const [calScores, setCalScores] = useState<Record<string, { away: string; home: string; awayScore: number; homeScore: number; outcome?: string | null; cancelled?: boolean }[]>>({});
+  const [calLoading, setCalLoading] = useState(false);
   const scheduleCache = useRef<{ month: number; games: ScheduleGame[] } | null>(null);
+  const [calYear, setCalYear] = useState(new Date().getFullYear());
+  const [calMonth, setCalMonth] = useState(new Date().getMonth());
+
+  useEffect(() => {
+    getMyTeam().then(setMyTeamState);
+  }, []);
+
+  const activeTeam = displayTeam || myTeam;
 
   const load = useCallback(() => {
     const dateStr = formatDateStr(selectedDate);
@@ -75,12 +98,11 @@ export default function HomeScreen() {
               (s) => s.away === TEAM_COLORS[g.away.id]?.shortName && s.home === TEAM_COLORS[g.home.id]?.shortName
             );
             const rawStatus = g.status as "scheduled" | "live" | "finished";
-            const hasAnyScore = g.score != null || (score != null && !score.cancelled);
             const [h, m] = (g.time || "18:30").split(":").map(Number);
             const startTime = new Date(selectedDate);
             startTime.setHours(h, m, 0, 0);
             const hasStarted = new Date() >= startTime;
-            const gameStatus = rawStatus === "scheduled" && hasAnyScore && todayView && hasStarted ? "live" : rawStatus || "scheduled";
+            const gameStatus = rawStatus === "scheduled" && g.score != null && todayView && hasStarted ? "live" : rawStatus || "scheduled";
             return {
               id: g.id,
               homeTeam: g.home.id,
@@ -201,23 +223,55 @@ export default function HomeScreen() {
     return cleanup;
   }, [load]);
 
-  const renderGame = ({ item }: { item: EnhancedGame }) => (
-    <GameCard
-      homeTeam={item.homeTeam}
-      awayTeam={item.awayTeam}
-      time={item.time}
-      stadium={item.venue}
-      status={item.status}
-      homeScore={item.homeScore}
-      awayScore={item.awayScore}
-      homePitcher={item.homePitcher}
-      awayPitcher={item.awayPitcher}
-      winPitcher={item.winPitcher}
-      losePitcher={item.losePitcher}
-      cancelled={item.cancelled}
-      onClick={() => router.push(`/game/${item.id}`)}
-    />
-  );
+  // Fetch calendar data when opened or month changes
+  useEffect(() => {
+    if (!calendarOpen) return;
+    let cancelled = false;
+    setCalLoading(true);
+    const month = calMonth + 1;
+    Promise.all([
+      fetchScheduleByMonth(month),
+      fetchAllDailyScores(),
+    ]).then(([schedule, scores]) => {
+      if (cancelled) return;
+      if (schedule?.games) setCalGames(schedule.games);
+      if (scores?.dates) setCalScores(scores.dates);
+      setCalLoading(false);
+    }).catch(() => { if (!cancelled) setCalLoading(false); });
+    return () => { cancelled = true; };
+  }, [calendarOpen, calMonth]);
+
+  // Sort: my team games first
+  const sortedGames = [...games].sort((a, b) => {
+    if (activeTeam) {
+      const aIsMyTeam = a.homeTeam === activeTeam || a.awayTeam === activeTeam ? 0 : 1;
+      const bIsMyTeam = b.homeTeam === activeTeam || b.awayTeam === activeTeam ? 0 : 1;
+      if (aIsMyTeam !== bIsMyTeam) return aIsMyTeam - bIsMyTeam;
+    }
+    return 0;
+  });
+
+  const renderGame = ({ item }: { item: EnhancedGame }) => {
+    const isMyTeamGame = activeTeam && (item.homeTeam === activeTeam || item.awayTeam === activeTeam);
+    return (
+      <GameCard
+        homeTeam={item.homeTeam}
+        awayTeam={item.awayTeam}
+        time={item.time}
+        stadium={item.venue}
+        status={item.status}
+        homeScore={item.homeScore}
+        awayScore={item.awayScore}
+        homePitcher={item.homePitcher}
+        awayPitcher={item.awayPitcher}
+        winPitcher={item.winPitcher}
+        losePitcher={item.losePitcher}
+        cancelled={item.cancelled}
+        highlighted={!!isMyTeamGame}
+        onClick={() => router.push(`/game/${item.id}`)}
+      />
+    );
+  };
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
@@ -235,8 +289,18 @@ export default function HomeScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>⚾ fullcount.kr</Text>
-        <Text style={styles.subtitle}>오늘의 야구, 라인업부터 응원가까지</Text>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.title}>⚾ fullcount.kr</Text>
+            <Text style={styles.subtitle}>오늘의 야구</Text>
+          </View>
+          {myTeam && (
+            <TeamExpander
+              currentTeamId={activeTeam || myTeam}
+              onSelectTeam={setDisplayTeam}
+            />
+          )}
+        </View>
       </View>
 
       {/* Date strip */}
@@ -245,6 +309,30 @@ export default function HomeScreen() {
         onDateChange={setSelectedDate}
       />
 
+      {/* Calendar toggle */}
+      <Pressable style={styles.calToggle} onPress={() => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setCalendarOpen(!calendarOpen);
+      }}>
+        <Text style={styles.calToggleText}>
+          {calendarOpen ? "캘린더 접기 ▲" : "캘린더 보기 ▼"}
+        </Text>
+      </Pressable>
+      {calendarOpen && (
+        <View style={styles.calWrapper}>
+          <CalendarGrid
+            year={calYear}
+            month={calMonth}
+            games={calGames}
+            scores={calScores}
+            loading={calLoading}
+            selectedTeam={activeTeam}
+            onSelectDate={(d) => { setSelectedDate(d); setCalendarOpen(false); }}
+            onMonthChange={(y, m) => { setCalYear(y); setCalMonth(m); }}
+          />
+        </View>
+      )}
+
       {/* Game list */}
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -252,7 +340,7 @@ export default function HomeScreen() {
         </View>
       ) : (
         <FlatList
-          data={error ? [] : games}
+          data={error ? [] : sortedGames}
           renderItem={renderGame}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
@@ -274,6 +362,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 12,
   },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
   title: {
     fontSize: 24,
     fontWeight: "bold",
@@ -283,6 +376,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: theme.mutedForeground,
     marginTop: 4,
+  },
+  calToggle: {
+    paddingHorizontal: 20,
+    paddingVertical: 6,
+  },
+  calToggleText: {
+    fontSize: 12,
+    color: theme.mutedForeground,
+  },
+  calWrapper: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
   loadingContainer: {
     flex: 1,
@@ -305,12 +410,5 @@ const styles = StyleSheet.create({
   errorText: {
     color: theme.destructive,
     fontSize: 14,
-  },
-  hint: {
-    position: "absolute",
-    bottom: 90,
-    alignSelf: "center",
-    color: theme.mutedForeground,
-    fontSize: 11,
   },
 });
