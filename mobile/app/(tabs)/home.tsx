@@ -3,7 +3,6 @@ import { View, Text, FlatList, StyleSheet, ActivityIndicator, Pressable, LayoutA
 import { useRouter } from "expo-router";
 import DateStrip from "@/components/DateStrip";
 import GameCard from "@/components/GameCard";
-import TeamExpander from "@/components/TeamExpander";
 import CalendarGrid from "@/components/CalendarGrid";
 import {
   fetchTodayGames,
@@ -351,12 +350,6 @@ export default function HomeScreen() {
             <Pressable onPress={() => router.push("/my")} style={styles.myBtn} hitSlop={8}>
               <Text style={styles.myBtnText}>MY</Text>
             </Pressable>
-            {myTeam && (
-              <TeamExpander
-                currentTeamId={activeTeam || myTeam}
-                onSelectTeam={setDisplayTeam}
-              />
-            )}
           </View>
         </View>
       </View>
@@ -387,6 +380,7 @@ export default function HomeScreen() {
           selectedTeam={activeTeam}
           onSelectDate={(d) => { setSelectedDate(d); setCalendarOpen(false); }}
           onMonthChange={(y, m) => { setCalYear(y); setCalMonth(m); }}
+          onTeamChange={setDisplayTeam}
         />
       </View>
 

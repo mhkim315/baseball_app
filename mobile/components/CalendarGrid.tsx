@@ -1,5 +1,7 @@
-import { View, Text, Pressable, StyleSheet, ActivityIndicator } from "react-native";
+import { useState } from "react";
+import { View, Text, Pressable, Modal, StyleSheet, ActivityIndicator } from "react-native";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
+import { TeamBadge } from "@/components/TeamBadge";
 import type { ScheduleGame } from "@/lib/api";
 import { theme } from "@/lib/theme";
 
@@ -32,7 +34,7 @@ function getCellBg(hasResult: boolean): string | undefined {
 }
 
 export default function CalendarGrid({
-  year: propYear, month: propMonth, games, scores, loading, selectedTeam, onSelectDate, onMonthChange,
+  year: propYear, month: propMonth, games, scores, loading, selectedTeam, onSelectDate, onMonthChange, onTeamChange,
 }: {
   year: number; month: number;
   games: ScheduleGame[];
@@ -41,7 +43,9 @@ export default function CalendarGrid({
   selectedTeam: string | null;
   onSelectDate: (d: Date) => void;
   onMonthChange: (year: number, month: number) => void;
+  onTeamChange?: (teamId: string | null) => void;
 }) {
+  const [teamPickerOpen, setTeamPickerOpen] = useState(false);
   const teamName = teamShortName(selectedTeam || "");
   const teamColor = TEAM_COLORS[selectedTeam || ""];
 
@@ -90,6 +94,19 @@ export default function CalendarGrid({
           <Text style={styles.monthArrow}>›</Text>
         </Pressable>
       </View>
+
+      {/* Team selector */}
+      <Pressable style={styles.teamSelector} onPress={() => setTeamPickerOpen(true)}>
+        {selectedTeam ? (
+          <TeamBadge teamId={selectedTeam} size="sm" />
+        ) : (
+          <Text style={styles.teamSelectorIcon}>⚾</Text>
+        )}
+        <Text style={[styles.teamSelectorName, selectedTeam && { color: TEAM_COLORS[selectedTeam]?.primary }]}>
+          {selectedTeam ? TEAM_COLORS[selectedTeam]?.shortName : "전체"}
+        </Text>
+        <Text style={styles.teamSelectorArrow}>▼</Text>
+      </Pressable>
 
       {/* Legend */}
       {selectedTeam && (
@@ -250,6 +267,32 @@ export default function CalendarGrid({
           </View>
         </View>
       )}
+
+      {/* Team picker modal */}
+      <Modal visible={teamPickerOpen} transparent animationType="fade" onRequestClose={() => setTeamPickerOpen(false)}>
+        <Pressable style={styles.overlay} onPress={() => setTeamPickerOpen(false)}>
+          <View style={styles.pickerModal}>
+            <Text style={styles.pickerTitle}>팀 선택</Text>
+            <Pressable
+              style={[styles.pickerRow, !selectedTeam && styles.pickerRowActive]}
+              onPress={() => { onTeamChange?.(null); setTeamPickerOpen(false); }}
+            >
+              <Text style={styles.pickerAllIcon}>⚾</Text>
+              <Text style={styles.pickerAllName}>전체</Text>
+            </Pressable>
+            {TEAM_LIST.map((t) => (
+              <Pressable
+                key={t.id}
+                style={[styles.pickerRow, t.id === selectedTeam && styles.pickerRowActive]}
+                onPress={() => { onTeamChange?.(t.id); setTeamPickerOpen(false); }}
+              >
+                <TeamBadge teamId={t.id} size="md" />
+                <Text style={[styles.pickerTeamName, { color: t.primary }]}>{t.name}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -263,6 +306,35 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     paddingVertical: 6, gap: 24,
   },
+  // Team selector
+  teamSelector: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 6, marginBottom: 8, paddingVertical: 6,
+    borderRadius: 10, backgroundColor: theme.secondary,
+  },
+  teamSelectorIcon: { fontSize: 16 },
+  teamSelectorName: { fontSize: 13, fontWeight: "600", color: theme.foreground },
+  teamSelectorArrow: { fontSize: 8, color: theme.mutedForeground },
+  overlay: {
+    flex: 1, backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center", alignItems: "center", padding: 16,
+  },
+  pickerModal: {
+    backgroundColor: theme.card, borderRadius: 20, padding: 14,
+    width: "100%", maxWidth: 320,
+  },
+  pickerTitle: {
+    fontSize: 14, fontWeight: "600", color: theme.foreground,
+    textAlign: "center", marginBottom: 8,
+  },
+  pickerRow: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    paddingVertical: 6, paddingHorizontal: 10, borderRadius: 10,
+  },
+  pickerRowActive: { backgroundColor: theme.secondary },
+  pickerTeamName: { fontSize: 14, flex: 1 },
+  pickerAllIcon: { fontSize: 24, width: 32, textAlign: "center" },
+  pickerAllName: { fontSize: 14, color: theme.foreground, fontWeight: "500" },
   monthBtn: { padding: 8, borderRadius: 20 },
   monthArrow: { fontSize: 22, color: "#888", fontWeight: "300", lineHeight: 24 },
   monthTitle: { fontSize: 18, fontWeight: "600", color: "#444", minWidth: 130, textAlign: "center", letterSpacing: 1 },
