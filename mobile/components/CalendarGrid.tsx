@@ -34,13 +34,14 @@ function getCellBg(hasResult: boolean): string | undefined {
 }
 
 export default function CalendarGrid({
-  year: propYear, month: propMonth, games, scores, loading, selectedTeam, onSelectDate, onMonthChange, onTeamChange,
+  year: propYear, month: propMonth, games, scores, loading, selectedTeam, myTeam, onSelectDate, onMonthChange, onTeamChange,
 }: {
   year: number; month: number;
   games: ScheduleGame[];
   scores: Record<string, CalendarScore[]>;
   loading: boolean;
   selectedTeam: string | null;
+  myTeam?: string | null;
   onSelectDate: (d: Date) => void;
   onMonthChange: (year: number, month: number) => void;
   onTeamChange?: (teamId: string | null) => void;
@@ -97,11 +98,6 @@ export default function CalendarGrid({
         </View>
 
         <Pressable style={styles.teamSelector} onPress={() => setTeamPickerOpen(true)}>
-          {selectedTeam ? (
-            <TeamBadge teamId={selectedTeam} size="sm" />
-          ) : (
-            <Text style={styles.teamSelectorIcon}>⚾</Text>
-          )}
           <Text style={[styles.teamSelectorName, selectedTeam && { color: TEAM_COLORS[selectedTeam]?.primary }]}>
             {selectedTeam ? TEAM_COLORS[selectedTeam]?.shortName : "전체"}
           </Text>
@@ -282,6 +278,11 @@ export default function CalendarGrid({
               >
                 <TeamBadge teamId={t.id} size="md" />
                 <Text style={[styles.pickerTeamName, { color: t.primary }]}>{t.name}</Text>
+                {t.id === myTeam && (
+                  <View style={[styles.myBadge, { backgroundColor: t.primary }]}>
+                    <Text style={styles.myBadgeText}>MY</Text>
+                  </View>
+                )}
               </Pressable>
             ))}
           </View>
@@ -309,7 +310,6 @@ const styles = StyleSheet.create({
     gap: 4, paddingVertical: 4, paddingHorizontal: 10,
     borderRadius: 10, backgroundColor: theme.secondary,
   },
-  teamSelectorIcon: { fontSize: 16 },
   teamSelectorName: { fontSize: 13, fontWeight: "600", color: theme.foreground },
   teamSelectorArrow: { fontSize: 8, color: theme.mutedForeground },
   overlay: {
@@ -330,6 +330,16 @@ const styles = StyleSheet.create({
   },
   pickerRowActive: { backgroundColor: theme.secondary },
   pickerTeamName: { fontSize: 14, flex: 1 },
+  myBadge: {
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  myBadgeText: {
+    fontSize: 10,
+    color: "#fff",
+    fontWeight: "700",
+  },
   monthBtn: { padding: 8, borderRadius: 20 },
   monthArrow: { fontSize: 22, color: "#888", fontWeight: "300", lineHeight: 24 },
   monthTitle: { fontSize: 18, fontWeight: "600", color: "#444", minWidth: 130, textAlign: "center", letterSpacing: 1 },

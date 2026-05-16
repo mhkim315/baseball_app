@@ -75,7 +75,7 @@ function getLabelPositionStyle(direction: string, labelLeft: number, labelTop: n
 
 function estimateHalfWidth(text?: string): number {
   if (!text) return 0;
-  let w = 8; // paddingHorizontal 4px each side
+  let w = 4; // paddingHorizontal 2px each side
   for (const ch of text) {
     w += ch.charCodeAt(0) > 127 ? 9 : 5.5;
   }
@@ -154,6 +154,7 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
   const [parking, setParking] = useState<SurroundingSpot[]>([]);
   const [transitSpots, setTransitSpots] = useState<SurroundingSpot[]>([]);
   const [nearby, setNearby] = useState<EatsSpot[]>([]);
+  const [stadiumSpot, setStadiumSpot] = useState<SurroundingSpot | null>(null);
   const [surroundingsCenter, setSurroundingsCenter] = useState<number[]>([127, 37.5]);
   const [surroundingsZoom, setSurroundingsZoom] = useState(14.5);
   const [eatsCenter, setEatsCenter] = useState<number[]>([127, 37.5]);
@@ -167,6 +168,7 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
   const [selectedShop, setSelectedShop] = useState("");
 
   const load = useCallback(() => {
+    let cancelled = false;
     const stadiumId = TEAM_STADIUM_MAP[selectedTeam];
     if (!stadiumId) return;
 
@@ -180,6 +182,7 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
       fetchStadiumSurroundings(stadiumId),
       fetch(`${IMAGE_BASE}/data/food-layouts.json`).then((r) => r.ok ? r.json() : null),
     ]).then(([brief, foodData, eatsData, surroundings, layouts]) => {
+      if (cancelled) return;
       const local = STADIUM_BRIEFS[stadiumId];
       setStadium(convertStadiumBrief(brief, local));
       if (foodData) {
@@ -192,7 +195,9 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
         if (eatsData.center) setEatsCenter(eatsData.center);
       }
       if (surroundings) {
-        setParking(surroundings.spots.filter((s) => s.kind === "parking"));
+        const stadium = surroundings.spots.find((s) => s.kind === "stadium" || s.kind === "ballpark") || null;
+        setStadiumSpot(stadium);
+        setParking(surroundings.spots.filter((s) => s.kind === "parking" || s.kind === "stadium"));
         setTransitSpots(surroundings.spots.filter((s) => s.kind === "transit" || s.kind === "bus" || s.kind === "stadium"));
         if (surroundings.center) setSurroundingsCenter(surroundings.center);
         if (surroundings.zoom) setSurroundingsZoom(surroundings.zoom);
@@ -200,6 +205,7 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
       if (layouts) setFoodLayouts(layouts);
       setLoading(false);
     }).catch(() => {
+      if (cancelled) return;
       const sid = TEAM_STADIUM_MAP[selectedTeam];
       setStadium(STADIUM_BRIEFS[sid] || null);
       setFoods([]);
@@ -209,9 +215,10 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
       setError(false);
       setLoading(false);
     });
+    return () => { cancelled = true; };
   }, [selectedTeam]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { const cleanup = load(); return cleanup; }, [load]);
 
   useEffect(() => { setFocusedSpot(undefined); }, [activeTab]);
 
@@ -308,7 +315,7 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
                 focusedSpot={focusedSpot}
                 setFocusedSpot={setFocusedSpot}
                 surroundingsCenter={surroundingsCenter}
-                surroundingsZoom={surroundingsZoom}
+                surroundingsZoom={Math.max(surroundingsZoom - 1, 10)}
               />
             )}
             {activeTab === "transport" && (
@@ -318,12 +325,13 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
                 focusedSpot={focusedSpot}
                 setFocusedSpot={setFocusedSpot}
                 surroundingsCenter={surroundingsCenter}
-                surroundingsZoom={surroundingsZoom}
+                surroundingsZoom={Math.max(surroundingsZoom - 1, 10)}
               />
             )}
             {activeTab === "nearby" && (
               <NearbyTab
                 nearby={nearby}
+                stadiumSpot={stadiumSpot}
                 focusedSpot={focusedSpot}
                 setFocusedSpot={setFocusedSpot}
                 eatsCenter={eatsCenter}
@@ -340,6 +348,7 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
 function InfoTab({ stadiumId, brief, teamColor, selectedTeam }: {
   stadiumId: string; brief: StadiumBrief | null; teamColor: typeof TEAM_COLORS[string] | undefined; selectedTeam: string;
 }) {
+  const [ticketExpanded, setTicketExpanded] = useState(false);
   const ticketPolicy = getTicketPolicy(selectedTeam);
   const seatSlug = SEAT_IMAGES[stadiumId];
 
@@ -397,25 +406,32 @@ function InfoTab({ stadiumId, brief, teamColor, selectedTeam }: {
       {/* Ticket policy */}
       {ticketPolicy && (
         <View style={styles.infoCard}>
-          <Text style={styles.sectionTitle}>📋 예매 일정 ({ticketPolicy.name})</Text>
-          {ticketPolicy.tiers.map((tier, i) => (
-            <View key={i} style={styles.tierBlock}>
-              <View style={styles.tierRow}>
-                <Text style={styles.tierName}>{tier.name}</Text>
-                <Text style={styles.tierDetail}>
-                  {tier.dDay != null ? `D-${Math.abs(tier.dDay)}` : "현장판매"}
-                  {tier.time ? ` ${tier.time}` : ""}
-                </Text>
-              </View>
-              <View style={styles.tierMeta}>
-                {tier.seats && <Text style={styles.tierMetaText}>좌석: {tier.seats}</Text>}
-                {tier.maxTickets != null && <Text style={styles.tierMetaText}>최대 {tier.maxTickets}매</Text>}
-              </View>
-              {tier.note && <Text style={styles.tierNote}>{tier.note}</Text>}
-            </View>
-          ))}
-          {ticketPolicy.platform && (
-            <Text style={styles.ticketNote}>예매처: {ticketPolicy.platform}</Text>
+          <Pressable onPress={() => setTicketExpanded(!ticketExpanded)} style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>📋 예매 일정 ({ticketPolicy.name})</Text>
+            <Text style={styles.sectionArrow}>{ticketExpanded ? "▲" : "▼"}</Text>
+          </Pressable>
+          {ticketExpanded && (
+            <>
+              {ticketPolicy.tiers.map((tier, i) => (
+                <View key={i} style={styles.tierBlock}>
+                  <View style={styles.tierRow}>
+                    <Text style={styles.tierName}>{tier.name}</Text>
+                    <Text style={styles.tierDetail}>
+                      {tier.dDay != null ? `D-${Math.abs(tier.dDay)}` : "현장판매"}
+                      {tier.time ? ` ${tier.time}` : ""}
+                    </Text>
+                  </View>
+                  <View style={styles.tierMeta}>
+                    {tier.seats && <Text style={styles.tierMetaText}>좌석: {tier.seats}</Text>}
+                    {tier.maxTickets != null && <Text style={styles.tierMetaText}>최대 {tier.maxTickets}매</Text>}
+                  </View>
+                  {tier.note && <Text style={styles.tierNote}>{tier.note}</Text>}
+                </View>
+              ))}
+              {ticketPolicy.platform && (
+                <Text style={styles.ticketNote}>예매처: {ticketPolicy.platform}</Text>
+              )}
+            </>
           )}
         </View>
       )}
@@ -472,7 +488,7 @@ function FoodTab({ stadiumId, foods, foodFloor, setFoodFloor, foodCategory, setF
                 <Pressable
                   key={cat}
                   onPress={() => { setFoodCategory(cat); setSelectedShop(""); }}
-                  style={[styles.catChip, isActive && catInfo?.color ? { backgroundColor: catInfo.color } : styles.catChipInactive]}
+                  style={[styles.catChip, isActive ? { backgroundColor: catInfo?.color || theme.foreground } : styles.catChipInactive]}
                 >
                   <Text style={[styles.catChipText, isActive ? styles.catChipTextActive : styles.catChipTextInactive]}>
                     {catInfo?.label || cat}
@@ -526,7 +542,7 @@ function FoodTab({ stadiumId, foods, foodFloor, setFoodFloor, foodCategory, setF
                           backgroundColor: catColor,
                           borderWidth: 1.5, borderColor: "#fff",
                           transform: [{ translateX: -5 }, { translateY: -5 }],
-                          zIndex: 10,
+                          zIndex: isSelected ? 20 : 10,
                         }}
                       />
                       {/* Label */}
@@ -535,12 +551,12 @@ function FoodTab({ stadiumId, foods, foodFloor, setFoodFloor, foodCategory, setF
                         style={{
                           position: "absolute",
                           ...getLabelPositionStyle(coords.direction, coords.labelLeft, coords.labelTop, food.shop),
-                          paddingHorizontal: 4, paddingVertical: 1,
-                          borderRadius: 3,
+                          paddingHorizontal: 2, paddingVertical: 0,
+                          borderRadius: 4,
                           backgroundColor: isSelected ? catColor : "rgba(255,255,255,0.92)",
-                          borderWidth: isSelected ? 1.5 : 1,
-                          borderColor: isSelected ? catColor : "rgba(0,0,0,0.15)",
-                          zIndex: 10,
+                          borderWidth: isSelected ? 1.5 : 0.5,
+                          borderColor: isSelected ? catColor : catColor + "30",
+                          zIndex: isSelected ? 20 : 10,
                         }}
                       >
                         <Text style={{ fontSize: 9, fontWeight: "500", color: isSelected ? "#fff" : "#222", textAlign: isRightAnchor(coords.direction) ? "right" : "left" }} numberOfLines={1}>
@@ -710,21 +726,26 @@ function TransportTab({ brief, transitSpots, focusedSpot, setFocusedSpot, surrou
 }
 
 /* ====== Nearby Tab ====== */
-function NearbyTab({ nearby, focusedSpot, setFocusedSpot, eatsCenter }: {
+function NearbyTab({ nearby, stadiumSpot, focusedSpot, setFocusedSpot, eatsCenter }: {
   nearby: EatsSpot[];
+  stadiumSpot: SurroundingSpot | null;
   focusedSpot: string | undefined; setFocusedSpot: (s: string | undefined) => void;
   eatsCenter: number[];
 }) {
+  const mapSpots = [
+    ...(stadiumSpot ? [stadiumSpot] : []),
+    ...nearby.map((r, i) => ({
+      id: String(i), lng: r.lng, lat: r.lat, name: r.name,
+      description: `${r.cat} · ${r.address}`, kind: "parking",
+    })),
+  ];
   return (
     <View style={styles.tabContent}>
       {nearby.length > 0 && (
         <StadiumMapView
-          spots={nearby.map((r, i) => ({
-            id: String(i), lng: r.lng, lat: r.lat, name: r.name,
-            description: `${r.cat} · ${r.address}`, kind: "parking",
-          }))}
+          spots={mapSpots}
           center={eatsCenter}
-          zoom={14}
+          zoom={13}
           focusedSpotId={focusedSpot}
           onPinClick={(spotId) => setFocusedSpot(spotId)}
         />
@@ -799,7 +820,11 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 6, alignItems: "flex-start" },
   infoLabel: { fontSize: 13, color: theme.mutedForeground, width: 70 },
   infoValue: { fontSize: 13, color: theme.foreground, flex: 1, textAlign: "right" },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: theme.foreground, marginBottom: 8 },
+  sectionTitle: { fontSize: 15, fontWeight: "700", color: theme.foreground, flex: 1 },
+  sectionHeader: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+  },
+  sectionArrow: { fontSize: 10, color: theme.mutedForeground, marginLeft: 8 },
 
   // Image card
   imageCard: { backgroundColor: theme.card, borderRadius: 16, borderWidth: 1, borderColor: theme.border, overflow: "hidden" },

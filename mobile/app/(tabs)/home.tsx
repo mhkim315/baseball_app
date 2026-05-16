@@ -378,6 +378,7 @@ export default function HomeScreen() {
           scores={calScores}
           loading={false}
           selectedTeam={displayTeam || myTeam}
+          myTeam={myTeam}
           onSelectDate={(d) => { setSelectedDate(d); setCalendarOpen(false); }}
           onMonthChange={(y, m) => { setCalYear(y); setCalMonth(m); }}
           onTeamChange={setDisplayTeam}

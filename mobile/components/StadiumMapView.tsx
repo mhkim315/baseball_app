@@ -99,6 +99,7 @@ body{margin:0;padding:0}#map{width:100%;height:100vh}
 .maplibregl-popup-content{font-family:-apple-system,sans-serif;padding:10px 12px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.12)}
 .maplibregl-popup-content h4{margin:0 0 4px;font-size:13px;font-weight:600}
 .maplibregl-popup-content p{margin:0;font-size:12px;color:#666}
+.maplibregl-ctrl-attrib{display:none!important}
 </style></head><body>
 <div id="map"></div>
 <script>

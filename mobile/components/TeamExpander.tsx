@@ -25,7 +25,6 @@ export default function TeamExpander({ currentTeamId, onSelectTeam }: TeamExpand
   return (
     <View>
       <Pressable style={styles.trigger} onPress={() => setOpen(true)}>
-        <TeamBadge teamId={currentTeamId} size="sm" />
         <Text style={[styles.teamName, { color: currentTeam?.primary }]}>
           {currentTeam?.shortName || ""}
         </Text>
