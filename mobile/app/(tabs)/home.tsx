@@ -343,13 +343,21 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerRow}>
-          <Text style={styles.title}>홈</Text>
-          {myTeam && (
-            <TeamExpander
-              currentTeamId={activeTeam || myTeam}
-              onSelectTeam={setDisplayTeam}
-            />
-          )}
+          <View style={styles.logoRow}>
+            <Text style={styles.logoIcon}>⚾</Text>
+            <Text style={styles.title}>풀카운트</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <Pressable onPress={() => router.push("/my")} style={styles.myBtn} hitSlop={8}>
+              <Text style={styles.myBtnText}>MY</Text>
+            </Pressable>
+            {myTeam && (
+              <TeamExpander
+                currentTeamId={activeTeam || myTeam}
+                onSelectTeam={setDisplayTeam}
+              />
+            )}
+          </View>
         </View>
       </View>
 
@@ -415,6 +423,30 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  myBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: theme.foreground,
+  },
+  myBtnText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: theme.background,
+  },
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  logoIcon: {
+    fontSize: 22,
   },
   title: {
     fontSize: 24,

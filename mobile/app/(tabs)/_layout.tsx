@@ -8,6 +8,7 @@ function TabIcon({ label, focused }: { label: string; focused: boolean }) {
     구장: "🏟️",
     다이어리: "📖",
     응원: "🎵",
+    순위: "📊",
     MY: "👤",
   };
   return (
@@ -46,7 +47,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="stadium"
         options={{
-          title: "구장",
+          title: "구장 안내",
           tabBarIcon: ({ focused }) => <TabIcon label="구장" focused={focused} />,
         }}
       />
@@ -65,10 +66,18 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="rank"
+        options={{
+          title: "순위",
+          tabBarIcon: ({ focused }) => <TabIcon label="순위" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
         name="my"
         options={{
           title: "MY",
           tabBarIcon: ({ focused }) => <TabIcon label="MY" focused={focused} />,
+          href: null,
         }}
       />
     </Tabs>

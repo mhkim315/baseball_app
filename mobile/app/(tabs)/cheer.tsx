@@ -151,7 +151,7 @@ export default function CheerScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.pageTitle}>응원가</Text>
+        <Text style={styles.pageTitle}>응원</Text>
         {myTeam && (
           <TeamExpander
             currentTeamId={activeTeam}

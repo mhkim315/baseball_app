@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, Pressable, Modal, StyleSheet } from "react-native";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TeamBadge } from "@/components/TeamBadge";
+import { getMyTeam } from "@/lib/db";
 import { theme } from "@/lib/theme";
 
 interface TeamExpanderProps {
@@ -11,7 +12,10 @@ interface TeamExpanderProps {
 
 export default function TeamExpander({ currentTeamId, onSelectTeam }: TeamExpanderProps) {
   const [open, setOpen] = useState(false);
+  const [myTeam, setMyTeam] = useState<string | null>(null);
   const currentTeam = TEAM_COLORS[currentTeamId];
+
+  useEffect(() => { getMyTeam().then(setMyTeam); }, []);
 
   const handleSelect = (teamId: string) => {
     onSelectTeam(teamId);
@@ -49,8 +53,10 @@ export default function TeamExpander({ currentTeamId, onSelectTeam }: TeamExpand
                 ]}>
                   {team.name}
                 </Text>
-                {team.id === currentTeamId && (
-                  <Text style={styles.checkMark}>✓</Text>
+                {team.id === myTeam && (
+                  <View style={[styles.myBadge, { backgroundColor: team.primary }]}>
+                    <Text style={styles.myBadgeText}>MY</Text>
+                  </View>
                 )}
               </Pressable>
             ))}
@@ -89,30 +95,29 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.6)",
     justifyContent: "center",
     alignItems: "center",
-    padding: 32,
+    padding: 16,
   },
   dropdown: {
     backgroundColor: theme.card,
     borderRadius: 20,
-    padding: 20,
+    padding: 14,
     width: "100%",
     maxWidth: 320,
   },
   dropdownTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "600",
     color: theme.foreground,
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 8,
   },
   teamRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    marginBottom: 4,
+    gap: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 10,
   },
   teamRowActive: {
     backgroundColor: theme.secondary,
@@ -121,17 +126,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     flex: 1,
   },
-  checkMark: {
-    fontSize: 16,
-    color: theme.foreground,
+  myBadge: {
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  myBadgeText: {
+    fontSize: 10,
+    color: "#fff",
     fontWeight: "700",
   },
   dropdownHint: {
-    fontSize: 11,
+    fontSize: 10,
     color: theme.mutedForeground,
     textAlign: "center",
-    marginTop: 12,
-    paddingTop: 12,
+    marginTop: 6,
+    paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: theme.border,
   },

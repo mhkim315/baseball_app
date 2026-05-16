@@ -1,0 +1,283 @@
+import { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, ActivityIndicator, Pressable, StyleSheet } from "react-native";
+import { TEAM_COLORS } from "@shared/teamColors";
+import { TEAM_NAME_TO_ID } from "@shared/constants";
+import { fetchStandingsJson, type StandingRow } from "@/lib/api";
+import { getMyTeam } from "@/lib/db";
+import { theme } from "@/lib/theme";
+
+function parseWLT(wlt: string): { wins: number; draws: number; losses: number } {
+  const m = wlt.match(/(\d+)승(\d+)무(\d+)패/);
+  if (!m) return { wins: 0, draws: 0, losses: 0 };
+  return { wins: parseInt(m[1]), draws: parseInt(m[2]), losses: parseInt(m[3]) };
+}
+
+function formatDate(isoStr: string): string {
+  try {
+    const d = new Date(isoStr);
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+  } catch {
+    return isoStr;
+  }
+}
+
+function streakColor(streak: string): string {
+  if (streak.includes("승")) return "#2563eb";
+  if (streak.includes("무")) return "#d97706";
+  return "#ef4444";
+}
+
+export default function RankScreen() {
+  const [standings, setStandings] = useState<StandingRow[]>([]);
+  const [fetchedAt, setFetchedAt] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [myTeam, setMyTeam] = useState<string | null>(null);
+
+  useEffect(() => {
+    getMyTeam().then(setMyTeam);
+  }, []);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    fetchStandingsJson().then((data) => {
+      if (data) {
+        setStandings(data.rows);
+        setFetchedAt(data.fetchedAt);
+      } else {
+        setError(true);
+      }
+      setLoading(false);
+    }).catch(() => {
+      setError(true);
+      setLoading(false);
+    });
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>순위</Text>
+        <Text style={styles.headerSub}>2026 KBO 리그</Text>
+      </View>
+
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={theme.primary} />
+        </View>
+      ) : error ? (
+        <View style={styles.center}>
+          <Text style={styles.errorText}>데이터를 불러올 수 없습니다</Text>
+          <Pressable onPress={load} style={styles.retryBtn}>
+            <Text style={styles.retryText}>재시도</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.table}>
+            {/* Header row */}
+            <View style={styles.tableHeader}>
+              <Text style={[styles.cell, styles.colRank]}>#</Text>
+              <Text style={[styles.cell, styles.colTeam]}>팀</Text>
+              <Text style={[styles.cell, styles.colNum]}>승</Text>
+              <Text style={[styles.cell, styles.colNum]}>무</Text>
+              <Text style={[styles.cell, styles.colNum]}>패</Text>
+              <Text style={[styles.cell, styles.colRate]}>승률</Text>
+              <Text style={[styles.cell, styles.colGb]}>차</Text>
+              <Text style={[styles.cell, styles.colStreak]}>연속</Text>
+            </View>
+
+            {/* Data rows */}
+            {standings.map((row, idx) => {
+              const teamId = TEAM_NAME_TO_ID[row.teamName];
+              const team = teamId ? TEAM_COLORS[teamId] : null;
+              const { wins, draws, losses } = parseWLT(row.wlt);
+              const top5 = idx < 5;
+              const isMyTeam = myTeam && teamId === myTeam;
+
+              return (
+                <View key={`${row.teamName}-${idx}`} style={[styles.tableRow, isMyTeam && team && { backgroundColor: team.primary + "20" }]}>
+                  <Text style={[styles.cell, styles.colRank, top5 ? styles.rankBold : styles.rankMuted]}>
+                    {row.rank}
+                  </Text>
+                  <View style={[styles.colTeam, styles.teamCell]}>
+                    <Text style={styles.teamName} numberOfLines={1}>
+                      {team?.shortName || row.teamName}
+                    </Text>
+                  </View>
+                  <Text style={[styles.cell, styles.colNum]}>{wins}</Text>
+                  <Text style={[styles.cell, styles.colNum]}>{draws}</Text>
+                  <Text style={[styles.cell, styles.colNum]}>{losses}</Text>
+                  <Text style={[styles.cell, styles.colRate, styles.rateText]}>
+                    {row.winRate != null ? row.winRate.toFixed(3).slice(1) : "-"}
+                  </Text>
+                  <Text style={[styles.cell, styles.colGb, styles.gbText]}>
+                    {row.gamesBehind == null || row.gamesBehind === 0 ? "-" : row.gamesBehind.toFixed(1)}
+                  </Text>
+                  <Text style={[styles.cell, styles.colStreak, { color: streakColor(row.streak) }]}>
+                    {row.streak}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+
+          {fetchedAt && (
+            <Text style={styles.footer}>{formatDate(fetchedAt)} 기준</Text>
+          )}
+        </ScrollView>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.background,
+  },
+  header: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: theme.foreground,
+  },
+  headerSub: {
+    fontSize: 13,
+    color: theme.mutedForeground,
+    marginTop: 4,
+  },
+
+  // States
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  errorText: {
+    color: theme.mutedForeground,
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  retryBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: theme.foreground,
+    borderRadius: 20,
+  },
+  retryText: {
+    color: theme.background,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  // Scroll
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+
+  // Table
+  table: {
+    backgroundColor: theme.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: theme.border,
+    overflow: "hidden",
+  },
+  tableHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: theme.muted,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+  },
+  tableRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+  },
+
+  // Cells
+  cell: {
+    fontSize: 13,
+    color: theme.foreground,
+  },
+  colRank: {
+    width: 32,
+    textAlign: "center",
+  },
+  colTeam: {
+    flex: 1,
+  },
+  colNum: {
+    width: 36,
+    textAlign: "center",
+  },
+  colRate: {
+    width: 48,
+    textAlign: "center",
+  },
+  colGb: {
+    width: 40,
+    textAlign: "center",
+  },
+  colStreak: {
+    width: 48,
+    textAlign: "center",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  // Rank styles
+  rankBold: {
+    fontWeight: "700",
+    color: theme.foreground,
+  },
+  rankMuted: {
+    color: theme.mutedForeground,
+  },
+
+  // Team cell
+  teamCell: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  teamName: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: theme.foreground,
+  },
+
+  // Rate
+  rateText: {
+    fontWeight: "600",
+  },
+
+  // GB
+  gbText: {
+    fontSize: 12,
+    color: theme.mutedForeground,
+  },
+
+  // Footer
+  footer: {
+    textAlign: "center",
+    fontSize: 12,
+    color: theme.mutedForeground,
+    marginTop: 16,
+  },
+});

@@ -289,6 +289,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 12,
   },
+
+  // Tabs
+  tabRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+    marginHorizontal: 20,
+    marginBottom: 8,
+  },
+  tab: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  tabActive: {
+    borderBottomWidth: 2,
+    borderBottomColor: theme.foreground,
+  },
+  tabText: {
+    fontSize: 14,
+    color: theme.mutedForeground,
+    fontWeight: "500",
+  },
+  tabTextActive: {
+    color: theme.foreground,
+    fontWeight: "700",
+  },
+  comingSoon: {
+    color: theme.mutedForeground,
+    fontSize: 14,
+    textAlign: "center",
+    paddingVertical: 32,
+  },
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
