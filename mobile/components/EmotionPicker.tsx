@@ -1,20 +1,31 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
+import { TeamBadge } from "@/components/TeamBadge";
 import { theme } from "@/lib/theme";
 
-const EMOTIONS = [
-  { id: "excited", emoji: "😆", label: "신나" },
-  { id: "happy", emoji: "🤩", label: "최고" },
-  { id: "neutral", emoji: "😐", label: "보통" },
-  { id: "sad", emoji: "😢", label: "아쉬워" },
-  { id: "angry", emoji: "😤", label: "화나" },
+export type EmotionId = "excited" | "happy" | "neutral" | "sad" | "angry";
+
+// Maps our emotion IDs to TeamBadge character emotions
+const EMOTIONS: { id: EmotionId; character: "joyful" | "determined" | "neutral" | "sad"; label: string }[] = [
+  { id: "excited", character: "joyful", label: "신나" },
+  { id: "happy", character: "joyful", label: "최고" },
+  { id: "neutral", character: "neutral", label: "보통" },
+  { id: "sad", character: "sad", label: "아쉬워" },
+  { id: "angry", character: "determined", label: "화나" },
 ];
+
+// Lookup: emotion ID → character name for TeamBadge
+export const EMOTION_CHARACTER: Record<string, "joyful" | "determined" | "neutral" | "sad"> = {};
+for (const e of EMOTIONS) {
+  EMOTION_CHARACTER[e.id] = e.character;
+}
 
 interface EmotionPickerProps {
   value: string | null;
   onChange: (emotion: string) => void;
+  teamId: string;
 }
 
-export default function EmotionPicker({ value, onChange }: EmotionPickerProps) {
+export default function EmotionPicker({ value, onChange, teamId }: EmotionPickerProps) {
   return (
     <View style={styles.container}>
       <View style={styles.row}>
@@ -27,9 +38,11 @@ export default function EmotionPicker({ value, onChange }: EmotionPickerProps) {
             ]}
             onPress={() => onChange(e.id)}
           >
-            <Text style={[styles.emoji, value === e.id && styles.emojiSelected]}>
-              {e.emoji}
-            </Text>
+            <TeamBadge
+              teamId={teamId}
+              size="sm"
+              emotion={e.character}
+            />
             <Text style={[styles.label, value === e.id && styles.labelSelected]}>
               {e.label}
             </Text>
@@ -38,11 +51,6 @@ export default function EmotionPicker({ value, onChange }: EmotionPickerProps) {
       </View>
     </View>
   );
-}
-
-export const EMOTION_EMOJI: Record<string, string> = {};
-for (const e of EMOTIONS) {
-  EMOTION_EMOJI[e.id] = e.emoji;
 }
 
 const styles = StyleSheet.create({
@@ -55,22 +63,17 @@ const styles = StyleSheet.create({
   },
   item: {
     alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     borderRadius: 14,
     backgroundColor: theme.muted,
     minWidth: 56,
-  },
-  emoji: {
-    fontSize: 26,
-  },
-  emojiSelected: {
-    fontSize: 26,
+    gap: 4,
   },
   label: {
     fontSize: 10,
     color: theme.mutedForeground,
-    marginTop: 2,
+    fontWeight: "500",
   },
   labelSelected: {
     color: theme.background,

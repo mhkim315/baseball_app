@@ -1,5 +1,7 @@
 import { View, Text, StyleSheet } from "react-native";
 import { TEAM_COLORS } from "@shared/teamColors";
+import { EMOTION_CHARACTER } from "@/components/EmotionPicker";
+import { TeamBadge } from "@/components/TeamBadge";
 import { theme } from "@/lib/theme";
 import { computeDiaryStats, type DiaryStats as Stats } from "@/lib/stats";
 import type { JikgwanRecord } from "@/lib/db";
@@ -98,11 +100,14 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
               const pct = stats.totalGames > 0
                 ? ((count / stats.totalGames) * 100).toFixed(0)
                 : "0";
+              const char = EMOTION_CHARACTER[emotion];
               return (
                 <View key={emotion} style={styles.emotionItem}>
-                  <Text style={styles.emotionEmoji}>
-                    {EMOJI_MAP[emotion] || "⚾"}
-                  </Text>
+                  {teamId && char ? (
+                    <TeamBadge teamId={teamId} size="sm" emotion={char} />
+                  ) : (
+                    <Text style={styles.emotionEmoji}>⚾</Text>
+                  )}
                   <Text style={styles.emotionPct}>{pct}%</Text>
                 </View>
               );
@@ -128,14 +133,6 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
     </View>
   );
 }
-
-const EMOJI_MAP: Record<string, string> = {
-  excited: "😆",
-  happy: "🤩",
-  neutral: "😐",
-  sad: "😢",
-  angry: "😤",
-};
 
 const styles = StyleSheet.create({
   container: {

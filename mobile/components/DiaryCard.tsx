@@ -2,7 +2,7 @@ import { View, Text, Image, Pressable, StyleSheet } from "react-native";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { TEAM_ID_TO_CODE } from "@shared/constants";
 import { TeamBadge } from "@/components/TeamBadge";
-import { EMOTION_EMOJI } from "@/components/EmotionPicker";
+import { EMOTION_CHARACTER } from "@/components/EmotionPicker";
 import { theme } from "@/lib/theme";
 import type { JikgwanRecord } from "@/lib/db";
 
@@ -28,7 +28,8 @@ export default function DiaryCard({ record, teamId, onShare, onDelete }: DiaryCa
   const hasScore = record.score_away != null && record.score_home != null;
   const frame = FRAME_STYLES[record.frame_style ?? "classic"] ?? FRAME_STYLES.classic;
   const isWin = record.is_win;
-  const emotionEmoji = record.emotion ? EMOTION_EMOJI[record.emotion] ?? null : null;
+  const emotionChar = record.emotion ? EMOTION_CHARACTER[record.emotion] ?? null : null;
+  const emotionTeam = teams.homeId || teams.awayId;
 
   let teamBorderColor: string | undefined;
   if (record.frame_style === "team" && teamId) {
@@ -47,10 +48,10 @@ export default function DiaryCard({ record, teamId, onShare, onDelete }: DiaryCa
           </View>
         )}
 
-        {/* Emotion emoji overlay */}
-        {emotionEmoji && (
+        {/* Emotion character overlay */}
+        {emotionChar && emotionTeam && (
           <View style={styles.emotionBadge}>
-            <Text style={styles.emotionEmoji}>{emotionEmoji}</Text>
+            <TeamBadge teamId={emotionTeam} size="sm" emotion={emotionChar} />
           </View>
         )}
 
@@ -196,7 +197,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  emotionEmoji: { fontSize: 20 },
   winBadge: {
     position: "absolute",
     top: 12,

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { View, Text, FlatList, Pressable, StyleSheet, Alert, RefreshControl } from "react-native";
 import * as Sharing from "expo-sharing";
 import DiaryCard from "@/components/DiaryCard";
-import { EMOTION_EMOJI } from "@/components/EmotionPicker";
+import { EMOTION_CHARACTER } from "@/components/EmotionPicker";
 import { theme } from "@/lib/theme";
 import type { JikgwanRecord } from "@/lib/db";
 import { TEAM_COLORS } from "@shared/teamColors";
@@ -69,11 +69,20 @@ export default function DiaryTimeline({ records, teamId, onDelete, onRefresh, re
         renderItem={({ item }) => (
           <Pressable style={styles.onThisDayCard}>
             <View style={styles.onThisDayHeader}>
-              {item.emotion && (
-                <Text style={styles.onThisDayEmoji}>
-                  {EMOTION_EMOJI[item.emotion] || "⚾"}
-                </Text>
-              )}
+              {item.emotion && (() => {
+                const char = EMOTION_CHARACTER[item.emotion];
+                const codeMap: Record<string, string> = {};
+                for (const [id, c] of Object.entries(TEAM_ID_TO_CODE)) {
+                  codeMap[c] = id;
+                }
+                const m = item.game_id.match(/^\d+-(\w{4})-\d+$/);
+                const emTeam = m ? (codeMap[m[1].slice(0, 2)] || codeMap[m[1].slice(2, 4)]) : null;
+                return emTeam && char ? (
+                  <TeamBadge teamId={emTeam} size="sm" emotion={char} />
+                ) : (
+                  <Text style={styles.onThisDayEmoji}>⚾</Text>
+                );
+              })()}
               <Text style={styles.onThisDayYear}>
                 {item.date.split(".")[0]}년
               </Text>

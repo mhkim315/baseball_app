@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { TEAM_COLORS } from "@shared/teamColors";
-import { EMOTION_EMOJI } from "@/components/EmotionPicker";
+import { EMOTION_CHARACTER } from "@/components/EmotionPicker";
 import { theme } from "@/lib/theme";
 import type { JikgwanRecord } from "@/lib/db";
 
@@ -22,6 +22,15 @@ interface DiaryCalendarProps {
   teamId: string | null;
   onSelectDate: (date: Date) => void;
   onMonthChange: (year: number, month: number) => void;
+}
+
+function emotionDotColor(char: string): string {
+  switch (char) {
+    case "joyful": return "#22c55e";
+    case "determined": return "#ef4444";
+    case "sad": return "#3b82f6";
+    default: return "#d4d4d4";
+  }
 }
 
 export default function DiaryCalendar({
@@ -119,7 +128,7 @@ export default function DiaryCalendar({
             else cellBg = theme.muted;
 
             if (latest.emotion) {
-              emotionEmoji = EMOTION_EMOJI[latest.emotion];
+              emotionEmoji = EMOTION_CHARACTER[latest.emotion];
             }
           }
 
@@ -140,7 +149,7 @@ export default function DiaryCalendar({
                   {cell.day}
                 </Text>
                 {emotionEmoji && (
-                  <Text style={styles.cellEmoji}>{emotionEmoji}</Text>
+                  <View style={[styles.emotionDot, { backgroundColor: emotionDotColor(emotionEmoji) }]} />
                 )}
                 {dayRecords && dayRecords.length > 1 && (
                   <Text style={styles.multiDot}>+{dayRecords.length - 1}</Text>
@@ -225,9 +234,11 @@ const styles = StyleSheet.create({
     color: theme.foreground,
     fontWeight: "500",
   },
-  cellEmoji: {
-    fontSize: 12,
-    marginTop: 1,
+  emotionDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginTop: 2,
   },
   multiDot: {
     position: "absolute",
