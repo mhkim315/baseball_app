@@ -295,8 +295,8 @@ export default function HomeScreen() {
   // Sort: my team games first
   const sortedGames = [...games].sort((a, b) => {
     if (activeTeam) {
-      const aIsMyTeam = a.homeTeam === activeTeam || a.awayTeam === activeTeam ? 0 : 1;
-      const bIsMyTeam = b.homeTeam === activeTeam || b.awayTeam === activeTeam ? 0 : 1;
+      const aIsMyTeam = (a.homeTeam === activeTeam || a.awayTeam === activeTeam) ? 0 : 1;
+      const bIsMyTeam = (b.homeTeam === activeTeam || b.awayTeam === activeTeam) ? 0 : 1;
       if (aIsMyTeam !== bIsMyTeam) return aIsMyTeam - bIsMyTeam;
     }
     return 0;
