@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { View, Text, FlatList, Pressable, StyleSheet, Alert, RefreshControl } from "react-native";
 import * as Sharing from "expo-sharing";
 import DiaryCard from "@/components/DiaryCard";
+import { TeamBadge } from "@/components/TeamBadge";
 import { EMOTION_CHARACTER } from "@/components/EmotionPicker";
 import { theme } from "@/lib/theme";
 import type { JikgwanRecord } from "@/lib/db";

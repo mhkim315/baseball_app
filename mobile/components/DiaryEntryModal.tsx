@@ -23,10 +23,18 @@ function getFirstDayOfMonth(year: number, month: number): number {
 function formatDate(d: Date): string {
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
 }
-function parseDate(str: string): Date | null {
-  const p = str.split(".");
-  if (p.length !== 3) return null;
-  return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+function formatDateForApi(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function gameEmotions(game: GameOption): { away: "joyful" | "sad" | "neutral"; home: "joyful" | "sad" | "neutral" } | null {
+  if (game.cancelled) return { away: "neutral", home: "neutral" };
+  if (game.homeScore == null || game.awayScore == null) return null;
+  if (game.homeScore === game.awayScore) return { away: "neutral", home: "neutral" };
+  if (game.homeScore > game.awayScore) return { away: "sad", home: "joyful" };
+  return { away: "joyful", home: "sad" };
 }
 
 // Game data for the selected date
@@ -36,6 +44,7 @@ interface GameOption {
   awayTeam: string;
   homeScore: number | null;
   awayScore: number | null;
+  cancelled: boolean;
   venue: string;
   time: string;
 }
@@ -93,14 +102,14 @@ export default function DiaryEntryModal({ visible, onClose, onSaved }: DiaryEntr
     setGamesLoading(true);
     try {
       const month = date.getMonth() + 1;
+      const apiDate = formatDateForApi(date);
       const [schedule, scores] = await Promise.all([
         fetchScheduleByMonth(month),
-        fetchDailyScores(formatDate(date)),
+        fetchDailyScores(apiDate),
       ]);
 
-      const dateStrFull = formatDate(date);
       const daySched = (schedule?.games ?? []).filter(
-        (g: ScheduleGame) => g.date === dateStrFull
+        (g: ScheduleGame) => g.date === apiDate
       );
 
       const scoreMap = new Map<string, ScoreEntry>();
@@ -116,6 +125,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved }: DiaryEntr
           awayTeam: TEAM_LIST.find((t) => t.shortName === g.away)?.id || "",
           homeScore: score?.homeScore ?? null,
           awayScore: score?.awayScore ?? null,
+          cancelled: score?.cancelled ?? false,
           venue: g.venue || "",
           time: g.time || "",
         };
@@ -236,15 +246,6 @@ export default function DiaryEntryModal({ visible, onClose, onSaved }: DiaryEntr
     setCalYear(calMonth === 11 ? calYear + 1 : calYear);
     setCalMonth(m);
   };
-  const goToday = () => {
-    const d = new Date();
-    setCalYear(d.getFullYear());
-    setCalMonth(d.getMonth());
-    loadGames(d);
-    setSelectedDate(d);
-    setStep("games");
-  };
-
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
       <View style={styles.overlay}>
@@ -305,23 +306,19 @@ export default function DiaryEntryModal({ visible, onClose, onSaved }: DiaryEntr
                     return (
                       <Pressable
                         key={`d-${cell.day}`}
-                        style={[
-                          styles.calCell,
-                          cell.isToday && styles.calCellToday,
-                        ]}
+                        style={styles.calCell}
                         onPress={() => handleDateSelect(cell.day)}
                       >
-                        <Text style={[styles.calDayNum, cell.isToday && styles.calDayNumToday]}>
-                          {cell.day}
-                        </Text>
+                        <View style={[styles.calDayInner, cell.isToday && styles.calDayToday]}>
+                          <Text style={styles.calDayNum}>
+                            {cell.day}
+                          </Text>
+                        </View>
                       </Pressable>
                     );
                   })}
                 </View>
 
-                <Pressable style={styles.todayBtn} onPress={goToday}>
-                  <Text style={styles.todayBtnText}>오늘 경기 보기</Text>
-                </Pressable>
               </View>
             )}
 
@@ -347,6 +344,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved }: DiaryEntr
                       const home = TEAM_COLORS[g.homeTeam];
                       const away = TEAM_COLORS[g.awayTeam];
                       const hasScore = g.homeScore != null && g.awayScore != null;
+                      const emotions = gameEmotions(g);
                       return (
                         <Pressable
                           key={`${g.homeTeam}-${g.awayTeam}-${i}`}
@@ -355,7 +353,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved }: DiaryEntr
                         >
                           <View style={styles.gameCardTop}>
                             <View style={styles.gameTeamRow}>
-                              <TeamBadge teamId={g.awayTeam} size="sm" />
+                              <TeamBadge teamId={g.awayTeam} size="sm" emotion={emotions?.away ?? "default"} />
                               <Text style={[styles.gameTeamName, { color: away?.primary }]}>
                                 {away?.shortName || "?"}
                               </Text>
@@ -363,7 +361,11 @@ export default function DiaryEntryModal({ visible, onClose, onSaved }: DiaryEntr
                                 <Text style={styles.gameScore}>{g.awayScore}</Text>
                               )}
                             </View>
-                            <Text style={styles.gameVs}>VS</Text>
+                            {g.cancelled ? (
+                              <Text style={styles.gameVs}>취소</Text>
+                            ) : (
+                              <Text style={styles.gameVs}>VS</Text>
+                            )}
                             <View style={styles.gameTeamRow}>
                               {hasScore && (
                                 <Text style={styles.gameScore}>{g.homeScore}</Text>
@@ -371,7 +373,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved }: DiaryEntr
                               <Text style={[styles.gameTeamName, { color: home?.primary }]}>
                                 {home?.shortName || "?"}
                               </Text>
-                              <TeamBadge teamId={g.homeTeam} size="sm" />
+                              <TeamBadge teamId={g.homeTeam} size="sm" emotion={emotions?.home ?? "default"} />
                             </View>
                           </View>
                           <View style={styles.gameMetaRow}>
@@ -548,19 +550,17 @@ const styles = StyleSheet.create({
   calGrid: { flexDirection: "row", flexWrap: "wrap" },
   calCell: {
     width: "14.28%", aspectRatio: 1,
-    justifyContent: "center", alignItems: "center", borderRadius: 8,
+    justifyContent: "center", alignItems: "center",
   },
-  calCellToday: {
-    borderWidth: 2, borderColor: theme.foreground,
+  calDayInner: {
+    width: 28, height: 28,
+    justifyContent: "center", alignItems: "center",
+    borderRadius: 14,
   },
-  calDayNum: { fontSize: 14, color: theme.foreground, fontWeight: "500" },
-  calDayNumToday: { fontWeight: "700" },
-  todayBtn: {
-    marginTop: 16, alignItems: "center",
-    paddingVertical: 12, borderRadius: 12,
+  calDayToday: {
     backgroundColor: theme.muted,
   },
-  todayBtnText: { fontSize: 14, fontWeight: "600", color: theme.foreground },
+  calDayNum: { fontSize: 14, color: theme.foreground, fontWeight: "500" },
 
   // Games
   loadingBox: { alignItems: "center", paddingVertical: 40, gap: 12 },
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
   gameScore: { fontSize: 18, fontWeight: "700", color: theme.foreground },
   gameVs: { fontSize: 12, color: theme.mutedForeground, fontWeight: "600" },
   gameMetaRow: {
-    flexDirection: "row", justifyContent: "center", gap: 12, marginTop: 8,
+    flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8, marginTop: 8,
   },
   gameMeta: { fontSize: 11, color: theme.mutedForeground },
 

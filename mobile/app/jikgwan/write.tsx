@@ -127,7 +127,7 @@ export default function JikgwanWriteScreen() {
           <Text style={styles.stepTitle}>오늘 경기 어땠나요?</Text>
           <Text style={styles.stepSub}>기분을 선택해주세요</Text>
           <View style={styles.emotionWrapper}>
-            <EmotionPicker value={emotion} onChange={setEmotion} />
+            <EmotionPicker value={emotion} onChange={setEmotion} teamId={params.awayTeam || params.homeTeam || "doosan"} />
           </View>
           <Pressable
             style={[styles.nextBtn, !emotion && styles.nextBtnDisabled]}
