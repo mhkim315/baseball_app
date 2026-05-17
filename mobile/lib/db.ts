@@ -70,6 +70,7 @@ async function migrateJikgwanSchema(database: SQLite.SQLiteDatabase): Promise<vo
     { name: "photos", type: "TEXT", dflt: "NULL" },
     { name: "cheered_team", type: "TEXT", dflt: "NULL" },
     { name: "is_live", type: "INTEGER", dflt: "NULL" },
+    { name: "seat", type: "TEXT", dflt: "NULL" },
   ];
   const existing = await database.getAllAsync<{ name: string }>(
     "PRAGMA table_info(jikgwan_records)"
@@ -157,6 +158,7 @@ export interface JikgwanRecord {
   is_win: number | null;
   cheered_team: string | null;
   is_live: number | null;
+  seat: string | null;
 }
 
 export async function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "created_at">): Promise<number> {
@@ -164,8 +166,8 @@ export async function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "creat
 
   const result = await database.runAsync(
     `INSERT INTO jikgwan_records
-      (game_id, date, photo_path, photos, memo, score_away, score_home, emotion, frame_style, stadium, is_win, cheered_team, is_live)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (game_id, date, photo_path, photos, memo, score_away, score_home, emotion, frame_style, stadium, is_win, cheered_team, is_live, seat)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     record.game_id || "",
     record.date || "",
     record.photo_path ?? null,
@@ -179,6 +181,7 @@ export async function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "creat
     record.is_win ?? null,
     record.cheered_team ?? null,
     record.is_live ?? null,
+    record.seat ?? null,
   );
   return result.lastInsertRowId ?? 0;
 }
@@ -201,7 +204,7 @@ export async function getJikgwanRecordsByMonth(year: number, month: number): Pro
 
 export async function updateJikgwanRecord(
   id: number,
-  fields: Partial<Pick<JikgwanRecord, "memo" | "emotion" | "three_line_1" | "three_line_2" | "three_line_3" | "frame_style" | "is_win" | "photos" | "cheered_team" | "is_live">>
+  fields: Partial<Pick<JikgwanRecord, "memo" | "emotion" | "three_line_1" | "three_line_2" | "three_line_3" | "frame_style" | "is_win" | "photos" | "cheered_team" | "is_live" | "seat">>
 ): Promise<void> {
   const database = await getDb();
   const setClauses: string[] = [];

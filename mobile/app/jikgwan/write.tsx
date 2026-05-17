@@ -82,6 +82,7 @@ export default function JikgwanWriteScreen() {
         is_win: isWin,
         cheered_team: null,
         is_live: 0,
+        seat: null,
       });
 
       if (recordId) {

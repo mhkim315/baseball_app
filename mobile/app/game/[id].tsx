@@ -7,6 +7,7 @@ import {
   type GameDetail, type ScoreEntry, type LineupPlayer,
 } from "@/lib/api";
 import { TeamBadge } from "@/components/TeamBadge";
+import DiaryEntryModal, { type GameOption } from "@/components/DiaryEntryModal";
 import { theme } from "@/lib/theme";
 
 const POSITION_LABELS: Record<string, string> = {
@@ -40,6 +41,9 @@ export default function GameDetailScreen() {
     homeRank: number; awayRank: number;
     homeRecent: ("승"|"패"|"무")[]; awayRecent: ("승"|"패"|"무")[];
   } | null>(null);
+  const [showDiaryModal, setShowDiaryModal] = useState(false);
+  const [diaryGamePreset, setDiaryGamePreset] = useState<GameOption | null>(null);
+  const [diaryPresetDate, setDiaryPresetDate] = useState<Date | null>(null);
 
   const load = useCallback(() => {
     if (!gid) return;
@@ -126,6 +130,31 @@ export default function GameDetailScreen() {
 
     return () => { cancelled = true; };
   }, [detail]);
+
+  const handleOpenDiary = useCallback(() => {
+    if (!detail) return;
+    const cancelled = detail.gameInfo?.status === "cancelled" ||
+      detail.etcRecords?.some(r => r.how?.includes("취소") || r.result?.includes("취소")) === true;
+    const gameOpt: GameOption = {
+      gameId: detail.gameId || gid,
+      homeTeam: detail.homeTeam,
+      awayTeam: detail.awayTeam,
+      homeScore: detail.score?.home ?? null,
+      awayScore: detail.score?.away ?? null,
+      cancelled,
+      venue: detail.gameInfo?.venue || "",
+      time: detail.gameInfo?.time || "",
+    };
+    const datePrefix = gid.slice(0, 8);
+    const gameDate = new Date(
+      parseInt(datePrefix.slice(0, 4)),
+      parseInt(datePrefix.slice(4, 6)) - 1,
+      parseInt(datePrefix.slice(6, 8)),
+    );
+    setDiaryGamePreset(gameOpt);
+    setDiaryPresetDate(gameDate);
+    setShowDiaryModal(true);
+  }, [detail, gid]);
 
   if (loading) {
     return (
@@ -494,6 +523,11 @@ export default function GameDetailScreen() {
           </View>
         )}
 
+        {/* Record in Diary button */}
+        <Pressable style={styles.diaryRecordBtn} onPress={handleOpenDiary}>
+          <Text style={styles.diaryRecordText}>직관 기록하기</Text>
+        </Pressable>
+
         {/* Footer */}
         <Text style={styles.footer}>
           {hasLineup
@@ -501,6 +535,14 @@ export default function GameDetailScreen() {
             : ""}
         </Text>
       </ScrollView>
+
+      <DiaryEntryModal
+        visible={showDiaryModal}
+        onClose={() => setShowDiaryModal(false)}
+        onSaved={() => setShowDiaryModal(false)}
+        presetGame={diaryGamePreset}
+        presetDate={diaryPresetDate}
+      />
     </View>
   );
 }
@@ -614,6 +656,20 @@ const styles = StyleSheet.create({
   highlightBadge: { backgroundColor: theme.muted, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   highlightBadgeText: { fontSize: 11, fontWeight: "500", color: theme.mutedForeground },
   highlightDesc: { fontSize: 14, color: theme.foreground, flex: 1, lineHeight: 20 },
+
+  // Diary record button
+  diaryRecordBtn: {
+    backgroundColor: theme.foreground,
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  diaryRecordText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: theme.background,
+  },
 
   // Footer
   footer: { textAlign: "center", fontSize: 11, color: theme.mutedForeground, marginTop: 24, marginBottom: 16 },

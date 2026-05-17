@@ -37,7 +37,7 @@ function gameEmotions(game: GameOption): { away: "joyful" | "sad" | "neutral"; h
 }
 
 // Game data for the selected date
-interface GameOption {
+export interface GameOption {
   gameId: string;
   homeTeam: string;
   awayTeam: string;
@@ -53,9 +53,11 @@ interface DiaryEntryModalProps {
   onClose: () => void;
   onSaved: () => void;
   editRecord?: JikgwanRecord | null;
+  presetGame?: GameOption | null;
+  presetDate?: Date | null;
 }
 
-export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord }: DiaryEntryModalProps) {
+export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord, presetGame, presetDate }: DiaryEntryModalProps) {
   const now = new Date();
   const [step, setStep] = useState<"calendar" | "games" | "write">("calendar");
 
@@ -77,6 +79,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
   const [userTeam, setUserTeam] = useState(DEFAULT_TEAM_ID);
   const [cheeredTeam, setCheeredTeam] = useState<string | null>(null);
   const [isLive, setIsLive] = useState<boolean>(true);
+  const [seat, setSeat] = useState("");
   const [showOtherGames, setShowOtherGames] = useState(false);
 
   // Custom alert state
@@ -105,7 +108,30 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
         setPhotoUris(parseEditPhotos(editRecord));
         setCheeredTeam(editRecord.cheered_team || null);
         setIsLive(editRecord.is_live !== 0);
+        setSeat(editRecord.seat || "");
         setGames([]);
+      } else if (presetGame) {
+        setStep("write");
+        setSelectedDate(presetDate || new Date());
+        setSelectedGame(presetGame);
+        setEmotion(null);
+        setContent("");
+        setPhotoUris([]);
+        setIsLive(true);
+        setSeat("");
+        setGames([]);
+        setShowOtherGames(false);
+        getMyTeam().then((t) => {
+          if (t) {
+            setUserTeam(t);
+            if (presetGame.homeTeam === t || presetGame.awayTeam === t) {
+              setCheeredTeam(t);
+            } else if (!presetGame.cancelled) {
+              setTeamPickerGame(presetGame);
+            }
+          }
+        });
+        return;
       } else {
         setStep("calendar");
         setSelectedDate(new Date());
@@ -114,11 +140,12 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
         setContent("");
         setPhotoUris([]);
         setIsLive(true);
+        setSeat("");
         setGames([]);
       }
       getMyTeam().then((t) => { if (t) setUserTeam(t); });
     }
-  }, [visible, editRecord]);
+  }, [visible, editRecord, presetGame, presetDate]);
 
   // Fetch games when date is selected
   const loadGames = useCallback(async (date: Date) => {
@@ -285,6 +312,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
           is_win: isWin,
           cheered_team: (cheeredTeam || myTeam || null) as string | null,
           is_live: isLive ? 1 : 0,
+          seat: seat.trim() || null,
         });
       } else {
         await addJikgwanRecord({
@@ -304,6 +332,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
           is_win: isWin != null ? isWin : null,
           cheered_team: (cheeredTeam || myTeam || null) as string | null,
           is_live: isLive ? 1 : 0,
+          seat: seat.trim() || null,
         });
       }
 
@@ -365,7 +394,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
             )}
             {step === "write" && (
               <View style={styles.stepBackRow}>
-                <Pressable onPress={() => setStep("games")} hitSlop={8}>
+                <Pressable onPress={() => presetGame ? handleClose() : setStep("games")} hitSlop={8}>
                   <Text style={styles.backArrow}>◀</Text>
                 </Pressable>
                 <Text style={styles.stepTitle}>{editRecord ? "기록 수정" : "기록 작성"}</Text>
@@ -644,7 +673,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
                       <View style={styles.editGameRow}>
                         <Pressable
                           style={[styles.cheerTeamCard, cheeredTeam === awayId && { borderColor: ac?.primary || "#333", borderWidth: 2 }]}
-                          onPress={() => setCheeredTeam(awayId)}
+                          onPress={() => setCheeredTeam(cheeredTeam === awayId ? null : awayId)}
                         >
                           <TeamBadge teamId={awayId} size="sm" />
                           <Text style={[styles.cheerTeamName, { color: ac?.primary }]}>{ac?.shortName || "?"}</Text>
@@ -653,7 +682,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
                         <Text style={styles.gameVs}>VS</Text>
                         <Pressable
                           style={[styles.cheerTeamCard, cheeredTeam === homeId && { borderColor: hc?.primary || "#333", borderWidth: 2 }]}
-                          onPress={() => setCheeredTeam(homeId)}
+                          onPress={() => setCheeredTeam(cheeredTeam === homeId ? null : homeId)}
                         >
                           <TeamBadge teamId={homeId} size="sm" />
                           <Text style={[styles.cheerTeamName, { color: hc?.primary }]}>{hc?.shortName || "?"}</Text>
@@ -688,6 +717,20 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
                     </Pressable>
                   </View>
                 </View>
+
+                {/* Seat info — only when live */}
+                {isLive && (
+                  <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>좌석 (선택)</Text>
+                    <TextInput
+                      style={styles.seatInput}
+                      value={seat}
+                      onChangeText={setSeat}
+                      placeholder="예: 1루 5열 12번"
+                      placeholderTextColor="#999"
+                    />
+                  </View>
+                )}
 
                 {/* Photos */}
                 <View style={styles.section}>
@@ -796,8 +839,8 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
                   </Text>
                 </Pressable>
               </View>
-              <Pressable style={styles.alertCancelBtn} onPress={() => setTeamPickerGame(null)}>
-                <Text style={styles.alertCancelText}>취소</Text>
+              <Pressable style={styles.alertCancelBtn} onPress={() => { setCheeredTeam(null); setTeamPickerGame(null); setStep("write"); }}>
+                <Text style={styles.alertCancelText}>선택안함</Text>
               </Pressable>
             </View>
           </View>
@@ -971,6 +1014,13 @@ const styles = StyleSheet.create({
     fontSize: 15, color: theme.foreground,
     borderWidth: 1, borderColor: theme.border,
     lineHeight: 24, minHeight: 160,
+  },
+  seatInput: {
+    backgroundColor: theme.card, borderRadius: 12,
+    padding: 14,
+    fontSize: 14, color: theme.foreground,
+    borderWidth: 1, borderColor: theme.border,
+    lineHeight: 20, minHeight: 44,
   },
   charCount: {
     position: "absolute", bottom: 8, right: 12,
