@@ -203,8 +203,8 @@ export default function GameDetailScreen() {
     scoreboardTable: { gap: 0 },
     scoreboardRow: { flexDirection: "row", alignItems: "center", marginBottom: 2 },
     scoreboardLabel: { fontSize: 12, fontWeight: "600", width: 28, color: theme.mutedForeground },
-    scoreboardCell: { fontSize: 12, color: theme.foreground, width: 24, textAlign: "center" },
-    scoreboardBorderCell: { fontSize: 12, color: theme.foreground, fontWeight: "600", width: 24, textAlign: "center", borderLeftWidth: 1, borderLeftColor: theme.border },
+    scoreboardCell: { fontSize: 12, color: theme.foreground, textAlign: "center", flex: 1 },
+    scoreboardBorderCell: { fontSize: 12, color: theme.foreground, fontWeight: "600", textAlign: "center", flex: 1, borderLeftWidth: 1, borderLeftColor: theme.border },
 
     // Preview
     previewRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
