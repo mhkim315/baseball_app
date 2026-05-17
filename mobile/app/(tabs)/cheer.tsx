@@ -5,7 +5,7 @@ import TeamExpander from "@/components/TeamExpander";
 import SettingsButton from "@/components/SettingsButton";
 import { theme } from "@/lib/theme";
 import { TEAM_COLORS } from "@shared/teamColors";
-import { DEFAULT_TEAM_ID } from "@shared/constants";
+import { DEFAULT_TEAM_ID, TEAM_NAME_TO_ID, buildGameId } from "@shared/constants";
 import {
   fetchCheeringSongs,
   fetchCheeringPlayers,
@@ -17,7 +17,6 @@ import {
   type TodayGame,
   type ScoreEntry,
 } from "@/lib/api";
-import { TEAM_NAME_TO_ID, TEAM_ID_TO_CODE } from "@shared/constants";
 
 const IMAGE_BASE = "https://fullcount.kr";
 
@@ -107,10 +106,8 @@ export default function CheerScreen() {
           if (!game) return null;
           const awayId = TEAM_NAME_TO_ID[game.away] || "";
           const homeId = TEAM_NAME_TO_ID[game.home] || "";
-          const awayCode = TEAM_ID_TO_CODE[awayId] || "";
-          const homeCode = TEAM_ID_TO_CODE[homeId] || "";
-          if (!awayCode || !homeCode) return null;
-          const gameId = `${yStr.replace(/-/g, "")}-${awayCode}${homeCode}-0`;
+          const gameId = buildGameId(awayId, homeId, yStr.replace(/-/g, ""));
+          if (!gameId) return null;
           return fetchGameDetail(gameId).then((detail) => {
             if (!detail?.lineup) return null;
             const side = detail.homeTeam === activeTeam ? "home" : "away";

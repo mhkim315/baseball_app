@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, Pressable, Image, StyleSheet, Linking, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
-import { TEAM_NAME_TO_ID, TEAM_ID_TO_CODE, DEFAULT_TEAM_ID } from "@shared/constants";
+import { TEAM_NAME_TO_ID, DEFAULT_TEAM_ID, buildGameId } from "@shared/constants";
 import { fetchCheeringSongs, fetchCheeringPlayers, fetchTodayGames, fetchGameDetail, fetchDailyScores } from "@/lib/api";
 import type { CheerSection, PlayerCheer } from "@/lib/api";
 import { theme } from "@/lib/theme";
@@ -90,10 +90,8 @@ export default function CheerScreen() {
           if (!game) return null;
           const awayId = TEAM_NAME_TO_ID[game.away] || "";
           const homeId = TEAM_NAME_TO_ID[game.home] || "";
-          const awayCode = TEAM_ID_TO_CODE[awayId] || "";
-          const homeCode = TEAM_ID_TO_CODE[homeId] || "";
-          if (!awayCode || !homeCode) return null;
-          const gameId = `${yStr.replace(/-/g, "")}-${awayCode}${homeCode}-0`;
+          const gameId = buildGameId(awayId, homeId, yStr.replace(/-/g, ""));
+          if (!gameId) return null;
           return fetchGameDetail(gameId).then((detail) => {
             if (!detail?.lineup) return null;
             const side = detail.homeTeam === selectedTeam ? "home" : "away";

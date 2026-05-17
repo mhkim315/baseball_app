@@ -16,7 +16,7 @@ import {
   type ScheduleGame,
 } from "@/lib/api";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
-import { TEAM_NAME_TO_ID, TEAM_ID_TO_CODE } from "@shared/constants";
+import { TEAM_NAME_TO_ID, buildGameId } from "@shared/constants";
 import { getMyTeam } from "@/lib/db";
 import SettingsButton from "@/components/SettingsButton";
 import { theme } from "@/lib/theme";
@@ -192,8 +192,6 @@ export default function HomeScreen() {
         const enhanced: EnhancedGame[] = dayGames.map((g: ScheduleGame) => {
           const homeId = TEAM_NAME_TO_ID[g.home] || "";
           const awayId = TEAM_NAME_TO_ID[g.away] || "";
-          const homeCode = TEAM_ID_TO_CODE[homeId] || "";
-          const awayCode = TEAM_ID_TO_CODE[awayId] || "";
           const score = scoreEntries.find(
             (s) => s.home === g.home && s.away === g.away
           );
@@ -201,7 +199,7 @@ export default function HomeScreen() {
           const pitchers = pitcherMap.get(gameKey);
           const apiGameId = gameIdMap.get(gameKey);
           return {
-            id: apiGameId || `${dateStr.replace(/-/g, "")}-${awayCode}${homeCode}-0`,
+            id: apiGameId || buildGameId(awayId, homeId, dateStr.replace(/-/g, "")),
             homeTeam: homeId,
             awayTeam: awayId,
             time: g.time || "18:30",

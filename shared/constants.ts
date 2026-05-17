@@ -61,3 +61,17 @@ export function formatDateForApi(d: Date): string {
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
+
+/**
+ * Build game_id "YYYYMMDD-ABCD-N" from team IDs and optional date.
+ * @param awayId Away team ID (e.g. "doosan")
+ * @param homeId Home team ID (e.g. "lg")
+ * @param dateStr Date string in YYYYMMDD format (defaults to "00000000")
+ * @param suffix Trailing game number (defaults to "0")
+ */
+export function buildGameId(awayId: string, homeId: string, dateStr = "00000000", suffix = "0"): string {
+  const awayCode = TEAM_ID_TO_CODE[awayId];
+  const homeCode = TEAM_ID_TO_CODE[homeId];
+  if (!awayCode || !homeCode) return "";
+  return `${dateStr}-${awayCode}${homeCode}-${suffix}`;
+}

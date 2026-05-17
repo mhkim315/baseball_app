@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
-import { TEAM_NAME_TO_ID, TEAM_ID_TO_CODE, getDaysInMonth, getFirstDayOfMonth, DEFAULT_TEAM_ID } from "@shared/constants";
+import { TEAM_NAME_TO_ID, getDaysInMonth, getFirstDayOfMonth, DEFAULT_TEAM_ID, buildGameId } from "@shared/constants";
 import { fetchScheduleByMonth, fetchAllDailyScores, type ScheduleGame } from "@/lib/api";
 import { theme } from "@/lib/theme";
 
@@ -173,9 +173,8 @@ export default function CalendarPage() {
                       const g = dayGames[0];
                       const homeId = TEAM_NAME_TO_ID[g.home] || "";
                       const awayId = TEAM_NAME_TO_ID[g.away] || "";
-                      const homeCode = TEAM_ID_TO_CODE[homeId] || "";
-                      const awayCode = TEAM_ID_TO_CODE[awayId] || "";
-                      router.push(`/game/${dateStr.replace(/-/g, "")}-${awayCode}${homeCode}-0`);
+                      const gameId = buildGameId(awayId, homeId, dateStr.replace(/-/g, ""));
+                      if (gameId) router.push(`/game/${gameId}`);
                     }}
                     disabled={isFuture || dayGames.length === 0}
                   >

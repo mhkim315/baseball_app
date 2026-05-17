@@ -6,7 +6,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
-import { parseGameTeamIds, TEAM_ID_TO_CODE, getDaysInMonth, getFirstDayOfMonth, formatDate, formatDateForApi, DEFAULT_TEAM_ID } from "@shared/constants";
+import { parseGameTeamIds, getDaysInMonth, getFirstDayOfMonth, formatDate, formatDateForApi, DEFAULT_TEAM_ID, buildGameId } from "@shared/constants";
 import EmotionPicker from "@/components/EmotionPicker";
 import { TeamBadge } from "@/components/TeamBadge";
 import { theme } from "@/lib/theme";
@@ -269,11 +269,12 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
         }
       }
 
+      const datePrefix = dateStr.replace(/\./g, "");
       let gameId = "";
       try {
-        const awayCode = selectedGame?.awayTeam ? TEAM_ID_TO_CODE[selectedGame.awayTeam] || "" : "";
-        const homeCode = selectedGame?.homeTeam ? TEAM_ID_TO_CODE[selectedGame.homeTeam] || "" : "";
-        gameId = awayCode && homeCode ? `0000-${awayCode}${homeCode}-0` : "";
+        if (selectedGame?.awayTeam && selectedGame?.homeTeam) {
+          gameId = buildGameId(selectedGame.awayTeam, selectedGame.homeTeam, datePrefix);
+        }
       } catch {}
 
       if (editRecord) {
