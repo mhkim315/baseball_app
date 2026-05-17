@@ -1,7 +1,7 @@
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useMemo } from "react";
 import { View, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
-import { theme } from "@/lib/theme";
+import { useTheme } from "@/lib/ThemeContext";
 
 const OPENFREEMAP_STYLE = "https://tiles.openfreemap.org/styles/bright";
 
@@ -51,6 +51,7 @@ function spotKind(raw: string | undefined, index: number): string {
 }
 
 export default function StadiumMapView({ spots, center, zoom = 15, focusedSpotId, onPinClick }: StadiumMapViewProps) {
+  const { theme } = useTheme();
   const webViewRef = useRef<WebView>(null);
 
   const html = generateMapHtml(spots, center, zoom);
@@ -68,6 +69,20 @@ export default function StadiumMapView({ spots, center, zoom = 15, focusedSpotId
       }
     } catch {}
   }, [onPinClick]);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      height: 280,
+      borderRadius: 16,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    webview: {
+      flex: 1,
+      backgroundColor: "transparent",
+    },
+  }), [theme]);
 
   return (
     <View style={styles.container}>
@@ -167,16 +182,4 @@ window.focusSpot=function(spotId){
 </script></body></html>`;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    height: 280,
-    borderRadius: 16,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  webview: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-});
+

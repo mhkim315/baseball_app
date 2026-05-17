@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { getMyTeam } from "@/lib/db";
@@ -6,9 +6,49 @@ import TeamExpander from "@/components/TeamExpander";
 import StadiumPage from "@/components/StadiumPage";
 import SettingsButton from "@/components/SettingsButton";
 import { TEAM_COLORS } from "@shared/teamColors";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
 export default function StadiumTab() {
+  const { theme, isDark } = useTheme();
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    header: {
+      paddingTop: 60,
+      paddingHorizontal: 20,
+      paddingBottom: 8,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: theme.foreground,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: 32,
+      paddingTop: 80,
+    },
+    emptyTitle: {
+      fontSize: 17,
+      fontWeight: "700",
+      color: theme.foreground,
+      marginBottom: 8,
+      textAlign: "center",
+    },
+    emptyDesc: {
+      fontSize: 13,
+      color: theme.mutedForeground,
+      lineHeight: 20,
+      textAlign: "center",
+    },
+  }), [theme]);
   const [myTeam, setMyTeam] = useState<string | null>(null);
   const [displayTeam, setDisplayTeam] = useState<string | null>(null);
 
@@ -18,7 +58,7 @@ export default function StadiumTab() {
     }, [])
   );
 
-  const myTeamColor = myTeam ? TEAM_COLORS[myTeam]?.primary : undefined;
+  const myTeamColor = myTeam ? teamPrimaryColor(myTeam, isDark) : undefined;
 
   if (!myTeam) {
     return (
@@ -57,43 +97,3 @@ export default function StadiumTab() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.background,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 8,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: theme.foreground,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-    paddingTop: 80,
-  },
-  emptyTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: theme.foreground,
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  emptyDesc: {
-    fontSize: 13,
-    color: theme.mutedForeground,
-    lineHeight: 20,
-    textAlign: "center",
-  },
-});

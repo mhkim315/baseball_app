@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { View, Text, Pressable, StyleSheet, RefreshControl, ScrollView, Alert } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { TEAM_COLORS } from "@shared/teamColors";
@@ -9,7 +9,7 @@ import DiaryEntryModal from "@/components/DiaryEntryModal";
 import { getJikgwanRecords, deleteJikgwanRecord, type JikgwanRecord } from "@/lib/db";
 import { getMyTeam } from "@/lib/db";
 import SettingsButton from "@/components/SettingsButton";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
 type DiaryTab = "timeline" | "calendar" | "stats";
 
@@ -20,12 +20,83 @@ const TABS: { key: DiaryTab; label: string }[] = [
 ];
 
 export default function DiaryScreen() {
+  const { theme, isDark } = useTheme();
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    header: {
+      paddingTop: 60,
+      paddingHorizontal: 20,
+      paddingBottom: 12,
+    },
+    headerTitle: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: theme.foreground,
+    },
+    headerSub: {
+      fontSize: 13,
+      color: theme.mutedForeground,
+      marginTop: 4,
+    },
+    // Segmented Control
+    segmentRow: {
+      flexDirection: "row",
+      marginHorizontal: 20,
+      marginBottom: 8,
+      gap: 0,
+    },
+    segment: {
+      flex: 1,
+      alignItems: "center",
+      paddingVertical: 10,
+    },
+    segmentText: {
+      fontSize: 14,
+      color: theme.mutedForeground,
+      fontWeight: "500",
+    },
+    // Tab content
+    tabContent: {
+      flex: 1,
+    },
+    scrollContent: {
+      padding: 16,
+      paddingBottom: 100,
+    },
+    // FAB
+    fab: {
+      position: "absolute",
+      right: 20,
+      bottom: 24,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: theme.foreground,
+      justifyContent: "center",
+      alignItems: "center",
+      elevation: 6,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.25,
+      shadowRadius: 6,
+    },
+    fabText: {
+      fontSize: 28,
+      color: theme.background,
+      fontWeight: "300",
+      lineHeight: 30,
+    },
+  }), [theme]);
   const [activeTab, setActiveTab] = useState<DiaryTab>("timeline");
   const [records, setRecords] = useState<JikgwanRecord[]>([]);
   const [myTeam, setMyTeam] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<JikgwanRecord | null>(null);
+  const [presetDate, setPresetDate] = useState<Date | null>(null);
 
   // Calendar state
   const now = new Date();
@@ -77,11 +148,13 @@ export default function DiaryScreen() {
   const handleCloseModal = () => {
     setShowEntryModal(false);
     setEditingRecord(null);
+    setPresetDate(null);
   };
 
   const handleSaved = () => {
     setShowEntryModal(false);
     setEditingRecord(null);
+    setPresetDate(null);
     loadRecords();
   };
 
@@ -99,7 +172,14 @@ export default function DiaryScreen() {
     setCalYear(date.getFullYear());
     setCalMonth(date.getMonth());
     setSelectedDate(date);
-    setActiveTab("timeline");
+    const dateStr = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
+    const hasRecord = records.some((r) => r.date === dateStr);
+    if (hasRecord) {
+      setActiveTab("timeline");
+    } else {
+      setPresetDate(date);
+      setShowEntryModal(true);
+    }
   };
 
   return (
@@ -109,7 +189,7 @@ export default function DiaryScreen() {
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Text style={styles.headerTitle}>다이어리</Text>
           <View style={{ flex: 1 }} />
-          <SettingsButton color={myTeam ? TEAM_COLORS[myTeam]?.primary : undefined} />
+          <SettingsButton color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
         </View>
         <Text style={styles.headerSub}>나의 직관 기록</Text>
       </View>
@@ -121,13 +201,13 @@ export default function DiaryScreen() {
             key={tab.key}
             style={[
               styles.segment,
-              activeTab === tab.key && { borderBottomWidth: 2, borderBottomColor: myTeam ? TEAM_COLORS[myTeam]?.primary : theme.foreground },
+              activeTab === tab.key && { borderBottomWidth: 2, borderBottomColor: myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground },
             ]}
             onPress={() => { setActiveTab(tab.key); if (tab.key !== "timeline") setSelectedDate(null); }}
           >
             <Text style={[
               styles.segmentText,
-              activeTab === tab.key && { color: myTeam ? TEAM_COLORS[myTeam]?.primary : theme.foreground, fontWeight: "700" },
+              activeTab === tab.key && { color: myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground, fontWeight: "700" },
             ]}>
               {tab.label}
             </Text>
@@ -192,77 +272,9 @@ export default function DiaryScreen() {
         onClose={handleCloseModal}
         onSaved={handleSaved}
         editRecord={editingRecord}
+        presetDate={presetDate}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.background,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: theme.foreground,
-  },
-  headerSub: {
-    fontSize: 13,
-    color: theme.mutedForeground,
-    marginTop: 4,
-  },
-  // Segmented Control
-  segmentRow: {
-    flexDirection: "row",
-    marginHorizontal: 20,
-    marginBottom: 8,
-    gap: 0,
-  },
-  segment: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  segmentText: {
-    fontSize: 14,
-    color: theme.mutedForeground,
-    fontWeight: "500",
-  },
-  // Tab content
-  tabContent: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  // FAB
-  fab: {
-    position: "absolute",
-    right: 20,
-    bottom: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.foreground,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-  },
-  fabText: {
-    fontSize: 28,
-    color: theme.background,
-    fontWeight: "300",
-    lineHeight: 30,
-  },
-});

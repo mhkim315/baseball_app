@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID, getDaysInMonth, getFirstDayOfMonth, DEFAULT_TEAM_ID, buildGameId } from "@shared/constants";
 import { fetchScheduleByMonth, fetchAllDailyScores, type ScheduleGame } from "@/lib/api";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -19,6 +19,7 @@ function teamShortName(teamId: string): string {
 }
 
 export default function CalendarPage() {
+  const { theme, isDark } = useTheme();
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedTeam, setSelectedTeam] = useState(DEFAULT_TEAM_ID);
@@ -73,6 +74,53 @@ export default function CalendarPage() {
   const goToPrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const goToNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 12 },
+    headerTitle: { fontSize: 24, fontWeight: "bold", color: theme.foreground },
+    loadingContainer: { paddingVertical: 60, alignItems: "center" },
+    errorText: { color: theme.mutedForeground, fontSize: 14, marginBottom: 16 },
+    retryBtn: { paddingVertical: 8, paddingHorizontal: 20, backgroundColor: theme.foreground, borderRadius: 16 },
+    retryText: { color: theme.background, fontSize: 13, fontWeight: "600" },
+
+    // Month nav
+    monthNav: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 12, gap: 24 },
+    monthBtn: { padding: 8 },
+    monthArrow: { fontSize: 14, color: theme.foreground },
+    monthTitle: { fontSize: 18, fontWeight: "700", color: theme.foreground, minWidth: 120, textAlign: "center" },
+
+    // Team filter
+    teamGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6, paddingHorizontal: 12, marginBottom: 8 },
+    teamItem: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card },
+    teamItemText: { fontSize: 12, color: theme.mutedForeground, fontWeight: "500" },
+    teamItemTextActive: { color: "#fff", fontWeight: "700" },
+
+    // Legend
+    legend: { flexDirection: "row", justifyContent: "center", gap: 16, paddingVertical: 8, marginBottom: 4 },
+    legendItem: { flexDirection: "row", alignItems: "center", gap: 4 },
+    legendDot: { width: 10, height: 10, borderRadius: 5 },
+    legendText: { fontSize: 10, color: theme.mutedForeground },
+    dhBadge: { backgroundColor: theme.muted, borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
+    dhBadgeText: { fontSize: 8, fontWeight: "700", color: theme.mutedForeground },
+
+    // Calendar
+    calendar: { paddingHorizontal: 8 },
+    weekRow: { flexDirection: "row" },
+    dayHeader: { width: "14.28%", alignItems: "center", paddingVertical: 6 },
+    dayHeaderText: { fontSize: 11, color: theme.mutedForeground, fontWeight: "600" },
+    calGrid: { flexDirection: "row", flexWrap: "wrap" },
+    calCell: { width: "14.28%", minHeight: 72, padding: 2, borderWidth: 0.5, borderColor: theme.border },
+    calDayRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 2 },
+    calDayNum: { fontSize: 11, color: theme.foreground, fontWeight: "500" },
+    calTodayNum: { fontSize: 12, fontWeight: "700", color: theme.primary },
+    dhTag: { fontSize: 8, fontWeight: "700", color: theme.mutedForeground, backgroundColor: theme.muted, borderRadius: 3, paddingHorizontal: 3 },
+    calGame: { marginBottom: 1, paddingLeft: 2 },
+    calOpp: { fontSize: 9, lineHeight: 12 },
+    calGameNum: { fontSize: 8 },
+    calScore: { fontSize: 9, fontWeight: "600" },
+    calVenue: { fontSize: 8, color: theme.mutedForeground },
+  }), [theme]);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -99,7 +147,7 @@ export default function CalendarPage() {
               onPress={() => setSelectedTeam(team.id)}
               style={[
                 styles.teamItem,
-                selectedTeam === team.id && { backgroundColor: team.primary, borderColor: team.primary },
+                selectedTeam === team.id && { backgroundColor: teamPrimaryColor(team.id, isDark), borderColor: teamPrimaryColor(team.id, isDark) },
               ]}
             >
               <Text style={[styles.teamItemText, selectedTeam === team.id && styles.teamItemTextActive]}>
@@ -111,7 +159,7 @@ export default function CalendarPage() {
 
         {/* Legend */}
         <View style={styles.legend}>
-          <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: teamColor?.primary || "#888" }]} /><Text style={styles.legendText}>홈</Text></View>
+          <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: teamPrimaryColor(selectedTeam, isDark) || "#888" }]} /><Text style={styles.legendText}>홈</Text></View>
           <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: "#1565c0" }]} /><Text style={styles.legendText}>승</Text></View>
           <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: "#d32f2f" }]} /><Text style={styles.legendText}>패</Text></View>
           <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: theme.muted }]} /><Text style={styles.legendText}>무</Text></View>
@@ -188,7 +236,7 @@ export default function CalendarPage() {
                       const isHome = g.home === homeTeamName;
                       const score = dayScores.find(s => s.away === g.away && s.home === g.home);
                       const oppName = isHome ? g.away : g.home;
-                      const col = teamColor?.primary;
+                      const col = teamPrimaryColor(selectedTeam, isDark);
 
                       return (
                         <View key={i} style={[styles.calGame, isHome && { borderLeftWidth: 2, borderLeftColor: col }]}>
@@ -221,49 +269,3 @@ export default function CalendarPage() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
-  header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 12 },
-  headerTitle: { fontSize: 24, fontWeight: "bold", color: theme.foreground },
-  loadingContainer: { paddingVertical: 60, alignItems: "center" },
-  errorText: { color: theme.mutedForeground, fontSize: 14, marginBottom: 16 },
-  retryBtn: { paddingVertical: 8, paddingHorizontal: 20, backgroundColor: theme.foreground, borderRadius: 16 },
-  retryText: { color: theme.background, fontSize: 13, fontWeight: "600" },
-
-  // Month nav
-  monthNav: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 12, gap: 24 },
-  monthBtn: { padding: 8 },
-  monthArrow: { fontSize: 14, color: theme.foreground },
-  monthTitle: { fontSize: 18, fontWeight: "700", color: theme.foreground, minWidth: 120, textAlign: "center" },
-
-  // Team filter
-  teamGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6, paddingHorizontal: 12, marginBottom: 8 },
-  teamItem: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card },
-  teamItemText: { fontSize: 12, color: theme.mutedForeground, fontWeight: "500" },
-  teamItemTextActive: { color: "#fff", fontWeight: "700" },
-
-  // Legend
-  legend: { flexDirection: "row", justifyContent: "center", gap: 16, paddingVertical: 8, marginBottom: 4 },
-  legendItem: { flexDirection: "row", alignItems: "center", gap: 4 },
-  legendDot: { width: 10, height: 10, borderRadius: 5 },
-  legendText: { fontSize: 10, color: theme.mutedForeground },
-  dhBadge: { backgroundColor: theme.muted, borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
-  dhBadgeText: { fontSize: 8, fontWeight: "700", color: theme.mutedForeground },
-
-  // Calendar
-  calendar: { paddingHorizontal: 8 },
-  weekRow: { flexDirection: "row" },
-  dayHeader: { width: "14.28%", alignItems: "center", paddingVertical: 6 },
-  dayHeaderText: { fontSize: 11, color: theme.mutedForeground, fontWeight: "600" },
-  calGrid: { flexDirection: "row", flexWrap: "wrap" },
-  calCell: { width: "14.28%", minHeight: 72, padding: 2, borderWidth: 0.5, borderColor: theme.border },
-  calDayRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 2 },
-  calDayNum: { fontSize: 11, color: theme.foreground, fontWeight: "500" },
-  calTodayNum: { fontSize: 12, fontWeight: "700", color: theme.primary },
-  dhTag: { fontSize: 8, fontWeight: "700", color: theme.mutedForeground, backgroundColor: theme.muted, borderRadius: 3, paddingHorizontal: 3 },
-  calGame: { marginBottom: 1, paddingLeft: 2 },
-  calOpp: { fontSize: 9, lineHeight: 12 },
-  calGameNum: { fontSize: 8 },
-  calScore: { fontSize: 9, fontWeight: "600" },
-  calVenue: { fontSize: 8, color: theme.mutedForeground },
-});

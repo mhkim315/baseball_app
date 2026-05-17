@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { Tabs, useNavigation } from "expo-router";
 import { View, StyleSheet } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { TEAM_COLORS } from "@shared/teamColors";
 import { getMyTeam } from "@/lib/db";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
 const ICON_PATHS: Record<string, string> = {
   홈: "M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z", // house
@@ -26,6 +25,7 @@ function TabIcon({ name, color }: { name: string; color: string }) {
 }
 
 export default function TabLayout() {
+  const { theme, isDark } = useTheme();
   const [myTeam, setMyTeam] = useState<string | null>(null);
   const navigation = useNavigation();
 
@@ -37,7 +37,7 @@ export default function TabLayout() {
     return unsubscribe;
   }, [navigation]);
 
-  const activeColor = myTeam ? TEAM_COLORS[myTeam]?.primary : theme.tabBarActive;
+  const activeColor = myTeam ? teamPrimaryColor(myTeam, isDark) : theme.tabBarActive;
 
   return (
     <Tabs

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { TEAM_COLORS } from "@shared/teamColors";
+import { useTheme } from "@/lib/ThemeContext";
 
 const IMAGE_BASE = "https://fullcount.kr";
 
@@ -17,6 +18,7 @@ const textSize = { sm: 9, md: 12, lg: 14 };
 
 export function TeamBadge({ teamId, size = "md", emotion = "default", variant = "character" }: TeamBadgeProps) {
   const team = TEAM_COLORS[teamId];
+  const { isDark } = useTheme();
   const [imgFailed, setImgFailed] = useState(false);
   if (!team) return null;
 
@@ -24,7 +26,7 @@ export function TeamBadge({ teamId, size = "md", emotion = "default", variant = 
 
   if (variant === "character") {
     const imgSrc = `${IMAGE_BASE}/team-characters/${teamId}_${emotion}.png`;
-    const bgColor = hexToRgba(team.primary, 0.35);
+    const bgColor = hexToRgba(isDark && team.primaryLight ? team.primaryLight : team.primary, 0.35);
 
     return (
       <View style={[styles.characterContainer, { width: px, height: px, borderRadius: px / 2, backgroundColor: bgColor }]}>

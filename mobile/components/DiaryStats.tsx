@@ -1,8 +1,9 @@
+import { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { EMOTION_CHARACTER } from "@/components/EmotionPicker";
 import { TeamBadge } from "@/components/TeamBadge";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import { computeDiaryStats, type DiaryStats as Stats } from "@/lib/stats";
 import type { JikgwanRecord } from "@/lib/db";
 
@@ -12,10 +13,11 @@ interface DiaryStatsProps {
 }
 
 export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
+  const { theme, isDark } = useTheme();
   const overallStats: Stats = computeDiaryStats(records);
   const liveRecords = records.filter((r) => r.is_live === 1);
   const liveStats: Stats | null = liveRecords.length > 0 ? computeDiaryStats(liveRecords) : null;
-  const teamColor = teamId ? TEAM_COLORS[teamId]?.primary : theme.foreground;
+  const teamColor = teamId ? teamPrimaryColor(teamId, isDark) : theme.foreground;
 
   function RingSection({ stats, label }: { stats: Stats; label: string }) {
     const wrPct = stats.totalGames > 0 ? (stats.winRate * 100).toFixed(1) : "-";
@@ -51,6 +53,182 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
       </View>
     );
   }
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      gap: 16,
+      paddingBottom: 100,
+    },
+    card: {
+      backgroundColor: theme.card,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: 16,
+    },
+    cardTitle: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: theme.foreground,
+      marginBottom: 12,
+    },
+    // Win rate ring card
+    ringCard: {
+      backgroundColor: theme.card,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: 16,
+    },
+    dualRingRow: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      alignItems: "flex-start",
+    },
+    dualRingCol: {
+      flex: 1,
+      alignItems: "center",
+    },
+    dualRingDivider: {
+      width: 1,
+      height: 140,
+      backgroundColor: theme.border,
+      marginHorizontal: 8,
+    },
+    ringContainer: {
+      alignItems: "center",
+      marginBottom: 16,
+    },
+    ringOuter: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      borderWidth: 8,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    ringInner: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      borderWidth: 6,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    ringValue: {
+      fontSize: 22,
+      fontWeight: "700",
+    },
+    ringLabel: {
+      fontSize: 10,
+      color: theme.mutedForeground,
+      marginTop: 1,
+    },
+    recordRow: {
+      flexDirection: "row",
+      gap: 24,
+    },
+    recordItem: {
+      alignItems: "center",
+      gap: 2,
+    },
+    recordNum: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: theme.foreground,
+    },
+    recordLabel: {
+      fontSize: 10,
+      color: theme.mutedForeground,
+    },
+    // Streak
+    streakCard: {
+      backgroundColor: theme.card,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: 16,
+    },
+    streakRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    streakItem: {
+      flex: 1,
+      alignItems: "center",
+      gap: 4,
+    },
+    streakNum: {
+      fontSize: 36,
+      fontWeight: "700",
+    },
+    streakLabel: {
+      fontSize: 11,
+      color: theme.mutedForeground,
+    },
+    streakDivider: {
+      width: 1,
+      height: 40,
+      backgroundColor: theme.border,
+    },
+    // Stadiums
+    stadiumRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    stadiumBadge: {
+      borderWidth: 1,
+      borderRadius: 12,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    stadiumText: {
+      fontSize: 12,
+      fontWeight: "500",
+    },
+    // Emotion
+    emotionRow: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+    },
+    emotionItem: {
+      alignItems: "center",
+      gap: 4,
+    },
+    emotionEmoji: {
+      fontSize: 24,
+    },
+    emotionPct: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: theme.foreground,
+    },
+    // Season
+    seasonRow: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+    },
+    seasonItem: {
+      alignItems: "center",
+      gap: 4,
+    },
+    seasonNum: {
+      fontSize: 28,
+      fontWeight: "700",
+      color: theme.foreground,
+    },
+    seasonLabel: {
+      fontSize: 11,
+      color: theme.mutedForeground,
+    },
+    noData: {
+      fontSize: 13,
+      color: theme.mutedForeground,
+      textAlign: "center",
+      paddingVertical: 16,
+    },
+  }), [theme]);
 
   return (
     <View style={styles.container}>
@@ -142,178 +320,3 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: 16,
-    paddingBottom: 100,
-  },
-  card: {
-    backgroundColor: theme.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.border,
-    padding: 16,
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: theme.foreground,
-    marginBottom: 12,
-  },
-  // Win rate ring card
-  ringCard: {
-    backgroundColor: theme.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.border,
-    padding: 16,
-  },
-  dualRingRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "flex-start",
-  },
-  dualRingCol: {
-    flex: 1,
-    alignItems: "center",
-  },
-  dualRingDivider: {
-    width: 1,
-    height: 140,
-    backgroundColor: theme.border,
-    marginHorizontal: 8,
-  },
-  ringContainer: {
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  ringOuter: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  ringInner: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    borderWidth: 6,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  ringValue: {
-    fontSize: 22,
-    fontWeight: "700",
-  },
-  ringLabel: {
-    fontSize: 10,
-    color: theme.mutedForeground,
-    marginTop: 1,
-  },
-  recordRow: {
-    flexDirection: "row",
-    gap: 24,
-  },
-  recordItem: {
-    alignItems: "center",
-    gap: 2,
-  },
-  recordNum: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: theme.foreground,
-  },
-  recordLabel: {
-    fontSize: 10,
-    color: theme.mutedForeground,
-  },
-  // Streak
-  streakCard: {
-    backgroundColor: theme.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.border,
-    padding: 16,
-  },
-  streakRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  streakItem: {
-    flex: 1,
-    alignItems: "center",
-    gap: 4,
-  },
-  streakNum: {
-    fontSize: 36,
-    fontWeight: "700",
-  },
-  streakLabel: {
-    fontSize: 11,
-    color: theme.mutedForeground,
-  },
-  streakDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: theme.border,
-  },
-  // Stadiums
-  stadiumRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  stadiumBadge: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  stadiumText: {
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  // Emotion
-  emotionRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  emotionItem: {
-    alignItems: "center",
-    gap: 4,
-  },
-  emotionEmoji: {
-    fontSize: 24,
-  },
-  emotionPct: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: theme.foreground,
-  },
-  // Season
-  seasonRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  seasonItem: {
-    alignItems: "center",
-    gap: 4,
-  },
-  seasonNum: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: theme.foreground,
-  },
-  seasonLabel: {
-    fontSize: 11,
-    color: theme.mutedForeground,
-  },
-  noData: {
-    fontSize: 13,
-    color: theme.mutedForeground,
-    textAlign: "center",
-    paddingVertical: 16,
-  },
-});

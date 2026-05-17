@@ -1,11 +1,13 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider } from "@/lib/AuthContext";
+import { ThemeProvider, useTheme } from "@/lib/ThemeContext";
 
-export default function RootLayout() {
+function RootLayoutInner() {
+  const { isDark } = useTheme();
   return (
-    <AuthProvider>
-      <StatusBar style="dark" />
+    <>
+      <StatusBar style={isDark ? "light" : "dark"} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="game/[id]" options={{ presentation: "card" }} />
@@ -17,6 +19,16 @@ export default function RootLayout() {
         <Stack.Screen name="cheer" options={{ headerShown: false }} />
         <Stack.Screen name="standings" options={{ headerShown: false }} />
       </Stack>
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <ThemeProvider>
+        <RootLayoutInner />
+      </ThemeProvider>
     </AuthProvider>
   );
 }

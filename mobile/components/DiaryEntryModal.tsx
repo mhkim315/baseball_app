@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View, Text, Pressable, TextInput, Modal, StyleSheet, Image,
   ActivityIndicator, ScrollView,
@@ -9,7 +9,7 @@ import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { parseGameTeamIds, getDaysInMonth, getFirstDayOfMonth, formatDate, formatDateForApi, DEFAULT_TEAM_ID, buildGameId } from "@shared/constants";
 import EmotionPicker from "@/components/EmotionPicker";
 import { TeamBadge } from "@/components/TeamBadge";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import { addJikgwanRecord, updateJikgwanRecord, getMyTeam, type JikgwanRecord } from "@/lib/db";
 import { savePhoto, resizePhoto, generatePhotoName } from "@/lib/camera";
 import { fetchScheduleByMonth, fetchDailyScores, type ScheduleGame, type ScoreEntry } from "@/lib/api";
@@ -58,6 +58,7 @@ interface DiaryEntryModalProps {
 }
 
 export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord, presetGame, presetDate }: DiaryEntryModalProps) {
+  const { theme, isDark } = useTheme();
   const now = new Date();
   const [step, setStep] = useState<"calendar" | "games" | "write">("calendar");
 
@@ -372,6 +373,326 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
     setCalYear(calMonth === 11 ? calYear + 1 : calYear);
     setCalMonth(m);
   };
+  const styles = useMemo(() => StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "flex-end",
+    },
+    sheet: {
+      backgroundColor: theme.background,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      maxHeight: "92%",
+      paddingBottom: 8,
+    },
+    handleRow: { alignItems: "center", paddingVertical: 10 },
+    handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border },
+
+    // Step header
+    stepHeader: {
+      paddingHorizontal: 20,
+      marginBottom: 12,
+    },
+    stepTitle: {
+      fontSize: 17,
+      fontWeight: "700",
+      color: theme.foreground,
+      textAlign: "center",
+    },
+    stepBackRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    backArrow: { fontSize: 16, color: theme.foreground },
+
+    scrollContent: { padding: 20, paddingTop: 0 },
+
+    // Calendar
+    calHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    calNav: { fontSize: 14, color: theme.foreground, paddingHorizontal: 8 },
+    calMonth: { fontSize: 16, fontWeight: "700", color: theme.foreground },
+    calDayRow: { flexDirection: "row", marginBottom: 4 },
+    calDayHeader: {
+      flex: 1, textAlign: "center", fontSize: 11,
+      color: theme.mutedForeground, fontWeight: "600", paddingVertical: 4,
+    },
+    calGrid: { flexDirection: "row", flexWrap: "wrap" },
+    calCell: {
+      width: "14.28%", aspectRatio: 1,
+      justifyContent: "center", alignItems: "center",
+    },
+    calDayInner: {
+      width: 28, height: 28,
+      justifyContent: "center", alignItems: "center",
+      borderRadius: 14,
+    },
+    calDayToday: {
+      backgroundColor: theme.muted,
+    },
+    calDayNum: { fontSize: 14, color: theme.foreground, fontWeight: "500" },
+
+    // Games
+    loadingBox: { alignItems: "center", paddingVertical: 40, gap: 12 },
+    loadingText: { fontSize: 13, color: theme.mutedForeground },
+    noGamesBox: { alignItems: "center", paddingVertical: 40, gap: 12 },
+    noGamesIcon: { fontSize: 40 },
+    noGamesText: { fontSize: 14, color: theme.mutedForeground },
+    writeWithoutGame: {
+      paddingVertical: 10, paddingHorizontal: 20,
+      borderRadius: 12, backgroundColor: theme.muted,
+      alignSelf: "center", marginTop: 8,
+    },
+    writeWithoutGameText: { fontSize: 13, fontWeight: "600", color: theme.foreground },
+    gameList: { gap: 10 },
+    gameCard: {
+      backgroundColor: theme.card, borderRadius: 14, borderWidth: 1,
+      borderColor: theme.border, paddingVertical: 10, paddingHorizontal: 14,
+    },
+    gameCardTop: {
+      flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12,
+    },
+    gameTeamRow: {
+      flexDirection: "row", alignItems: "center", gap: 6,
+    },
+    gameTeamName: { fontSize: 14, fontWeight: "600" },
+    gameScore: { fontSize: 18, fontWeight: "700", color: theme.foreground },
+    myBadge: {
+      fontSize: 10, fontWeight: "800", color: "#fff",
+      backgroundColor: theme.muted, paddingHorizontal: 5, paddingVertical: 1,
+      borderRadius: 4, overflow: "hidden",
+    },
+    myBadgeEdge: {
+      position: "absolute", top: 0, bottom: 0, justifyContent: "center", zIndex: 1,
+    },
+    gameVs: { fontSize: 12, color: theme.mutedForeground, fontWeight: "600" },
+    gameMeta: { fontSize: 11, color: theme.mutedForeground },
+    otherGamesToggle: {
+      paddingVertical: 10,
+      alignItems: "center",
+      borderRadius: 10,
+      backgroundColor: theme.muted,
+    },
+    otherGamesToggleText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: theme.mutedForeground,
+    },
+
+    // Selected game banner
+    selectedGameBanner: {
+      flexDirection: "row", alignItems: "center", justifyContent: "center",
+      gap: 10, marginBottom: 20,
+      backgroundColor: theme.muted, borderRadius: 12, padding: 12,
+    },
+    selectedGameText: { fontSize: 14, fontWeight: "700", color: theme.foreground },
+
+    // Section
+    section: { marginBottom: 20 },
+    sectionTitle: { fontSize: 14, fontWeight: "700", color: theme.foreground, marginBottom: 10 },
+
+    // Photo grid
+    photoGrid: {
+      flexDirection: "row", flexWrap: "wrap", gap: 8,
+    },
+    photoThumbWrap: {
+      position: "relative", borderRadius: 10, overflow: "hidden",
+    },
+    photoThumb: {
+      width: 80, height: 80, borderRadius: 10,
+    },
+    photoRemove: {
+      position: "absolute", top: 2, right: 2,
+      width: 20, height: 20, borderRadius: 10,
+      backgroundColor: "rgba(0,0,0,0.6)",
+      justifyContent: "center", alignItems: "center",
+    },
+    photoRemoveText: { color: "#fff", fontSize: 14, fontWeight: "700", lineHeight: 16 },
+    photoAddBtn: {
+      width: 80, height: 80, borderRadius: 10,
+      borderWidth: 1, borderColor: theme.border, borderStyle: "dashed",
+      justifyContent: "center", alignItems: "center",
+      backgroundColor: theme.muted,
+    },
+    photoAddIcon: { fontSize: 24, color: theme.mutedForeground },
+
+    // Input
+    inputRow: { position: "relative", marginBottom: 10 },
+    input: {
+      backgroundColor: theme.card, borderRadius: 12,
+      padding: 14, paddingRight: 50,
+      fontSize: 14, color: theme.foreground,
+      borderWidth: 1, borderColor: theme.border,
+      lineHeight: 20, minHeight: 44,
+    },
+    diaryInput: {
+      backgroundColor: theme.card, borderRadius: 14,
+      padding: 16,
+      fontSize: 15, color: theme.foreground,
+      borderWidth: 1, borderColor: theme.border,
+      lineHeight: 24, minHeight: 160,
+    },
+    seatInput: {
+      backgroundColor: theme.card, borderRadius: 12,
+      padding: 14,
+      fontSize: 14, color: theme.foreground,
+      borderWidth: 1, borderColor: theme.border,
+      lineHeight: 20, minHeight: 44,
+    },
+    charCount: {
+      position: "absolute", bottom: 8, right: 12,
+      fontSize: 10, color: theme.mutedForeground,
+    },
+
+    // Bottom
+    bottomRow: {
+      flexDirection: "row", gap: 12,
+      paddingHorizontal: 20, paddingTop: 8,
+    },
+    cancelBtn: {
+      flex: 1, paddingVertical: 14, borderRadius: 14,
+      borderWidth: 1, borderColor: theme.border, alignItems: "center",
+    },
+    cancelBtnFull: {
+      flex: 1, paddingVertical: 14, borderRadius: 14,
+      backgroundColor: theme.muted, alignItems: "center",
+    },
+    cancelText: { fontSize: 14, color: theme.foreground, fontWeight: "600" },
+    saveBtn: {
+      flex: 1, paddingVertical: 14, borderRadius: 14,
+      backgroundColor: theme.foreground, alignItems: "center",
+    },
+    saveText: { fontSize: 14, fontWeight: "700", color: theme.background },
+    editGameRow: {
+      flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12,
+    },
+    cheerTeamCard: {
+      alignItems: "center", gap: 6,
+      backgroundColor: theme.card, borderRadius: 12, borderWidth: 1, borderColor: theme.border,
+      paddingVertical: 12, paddingHorizontal: 20, minWidth: 100,
+    },
+    cheerTeamName: { fontSize: 13, fontWeight: "600", marginTop: 4 },
+    cheerTeamScore: { fontSize: 18, fontWeight: "700", color: theme.foreground },
+    cheerTeamBadge: {
+      position: "absolute", top: -6, right: -6,
+      fontSize: 12, fontWeight: "800", color: "#fff",
+      backgroundColor: theme.foreground,
+      width: 20, height: 20, borderRadius: 10, textAlign: "center", lineHeight: 20,
+      overflow: "hidden",
+    },
+    winResultText: {
+      fontSize: 14, fontWeight: "700", color: theme.foreground,
+      textAlign: "center", marginTop: 8,
+    },
+    liveToggleRow: {
+      flexDirection: "row",
+      gap: 10,
+    },
+    liveToggleBtn: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 12,
+      backgroundColor: theme.muted,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    liveToggleText: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: theme.foreground,
+    },
+
+    // Custom alert
+    alertOverlay: {
+      position: "absolute",
+      top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: "rgba(0,0,0,0.45)",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 100,
+    },
+    alertCard: {
+      backgroundColor: theme.card,
+      borderRadius: 18,
+      padding: 28,
+      minWidth: 280,
+      maxWidth: 320,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    alertTitle: {
+      fontSize: 17,
+      fontWeight: "700",
+      color: theme.foreground,
+      marginBottom: 8,
+    },
+    alertMessage: {
+      fontSize: 14,
+      color: theme.mutedForeground,
+      textAlign: "center",
+      marginBottom: 20,
+      lineHeight: 20,
+    },
+    alertOkBtn: {
+      backgroundColor: theme.foreground,
+      paddingVertical: 12,
+      paddingHorizontal: 48,
+      borderRadius: 12,
+      minWidth: 120,
+      alignItems: "center",
+    },
+    alertOkText: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: theme.background,
+    },
+    // Team picker
+    teamPickerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginBottom: 16,
+    },
+    teamPickerCard: {
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: theme.muted,
+      borderRadius: 14,
+      paddingVertical: 16,
+      paddingHorizontal: 20,
+      minWidth: 100,
+    },
+    teamPickerName: {
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    teamPickerVs: {
+      fontSize: 13,
+      fontWeight: "700",
+      color: theme.mutedForeground,
+    },
+    alertCancelBtn: {
+      paddingVertical: 8,
+      paddingHorizontal: 24,
+    },
+    alertCancelText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.mutedForeground,
+    },
+  }), [theme]);
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
       <View style={styles.overlay}>
@@ -478,7 +799,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                         const away = TEAM_COLORS[myGame.awayTeam];
                         const hasScore = myGame.homeScore != null && myGame.awayScore != null;
                         const emotions = gameEmotions(myGame);
-                        const myTeamColor = TEAM_COLORS[userTeam]?.primary;
+                        const myTeamColor = teamPrimaryColor(userTeam, isDark);
                         return (
                           <View style={styles.gameList}>
                             <Pressable
@@ -489,18 +810,18 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                               <View style={styles.gameCardTop}>
                                 {userTeam === myGame.awayTeam && (
                                   <View style={[styles.myBadgeEdge, { left: 0 }]}>
-                                    <Text style={[styles.myBadge, { backgroundColor: myTeamColor || "#333" }]}>MY</Text>
+                                    <Text style={[styles.myBadge, { backgroundColor: myTeamColor || theme.muted }]}>MY</Text>
                                   </View>
                                 )}
                                 {userTeam === myGame.homeTeam && (
                                   <View style={[styles.myBadgeEdge, { right: 0 }]}>
-                                    <Text style={[styles.myBadge, { backgroundColor: myTeamColor || "#333" }]}>MY</Text>
+                                    <Text style={[styles.myBadge, { backgroundColor: myTeamColor || theme.muted }]}>MY</Text>
                                   </View>
                                 )}
 
                                 <View style={styles.gameTeamRow}>
                                   <TeamBadge teamId={myGame.awayTeam} size="sm" emotion={emotions?.away ?? "default"} />
-                                  <Text style={[styles.gameTeamName, { color: away?.primary }]}>
+                                  <Text style={[styles.gameTeamName, { color: teamPrimaryColor(myGame.awayTeam, isDark) }]}>
                                     {away?.shortName || "?"}
                                   </Text>
                                   {hasScore && (
@@ -521,7 +842,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                                   {hasScore && (
                                     <Text style={styles.gameScore}>{myGame.homeScore}</Text>
                                   )}
-                                  <Text style={[styles.gameTeamName, { color: home?.primary }]}>
+                                  <Text style={[styles.gameTeamName, { color: teamPrimaryColor(myGame.homeTeam, isDark) }]}>
                                     {home?.shortName || "?"}
                                   </Text>
                                   <TeamBadge teamId={myGame.homeTeam} size="sm" emotion={emotions?.home ?? "default"} />
@@ -553,7 +874,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                                   <View style={styles.gameCardTop}>
                                     <View style={styles.gameTeamRow}>
                                       <TeamBadge teamId={g.awayTeam} size="sm" emotion={emotions?.away ?? "default"} />
-                                      <Text style={[styles.gameTeamName, { color: away?.primary }]}>
+                                      <Text style={[styles.gameTeamName, { color: teamPrimaryColor(g.awayTeam, isDark) }]}>
                                         {away?.shortName || "?"}
                                       </Text>
                                       {hasScore && <Text style={styles.gameScore}>{g.awayScore}</Text>}
@@ -570,7 +891,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
 
                                     <View style={styles.gameTeamRow}>
                                       {hasScore && <Text style={styles.gameScore}>{g.homeScore}</Text>}
-                                      <Text style={[styles.gameTeamName, { color: home?.primary }]}>
+                                      <Text style={[styles.gameTeamName, { color: teamPrimaryColor(g.homeTeam, isDark) }]}>
                                         {home?.shortName || "?"}
                                       </Text>
                                       <TeamBadge teamId={g.homeTeam} size="sm" emotion={emotions?.home ?? "default"} />
@@ -600,7 +921,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                                 <View style={styles.gameCardTop}>
                                   <View style={styles.gameTeamRow}>
                                     <TeamBadge teamId={g.awayTeam} size="sm" emotion={emotions?.away ?? "default"} />
-                                    <Text style={[styles.gameTeamName, { color: away?.primary }]}>
+                                    <Text style={[styles.gameTeamName, { color: teamPrimaryColor(g.awayTeam, isDark) }]}>
                                       {away?.shortName || "?"}
                                     </Text>
                                     {hasScore && <Text style={styles.gameScore}>{g.awayScore}</Text>}
@@ -617,7 +938,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
 
                                   <View style={styles.gameTeamRow}>
                                     {hasScore && <Text style={styles.gameScore}>{g.homeScore}</Text>}
-                                    <Text style={[styles.gameTeamName, { color: home?.primary }]}>
+                                    <Text style={[styles.gameTeamName, { color: teamPrimaryColor(g.homeTeam, isDark) }]}>
                                       {home?.shortName || "?"}
                                     </Text>
                                     <TeamBadge teamId={g.homeTeam} size="sm" emotion={emotions?.home ?? "default"} />
@@ -672,20 +993,20 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                       <Text style={styles.sectionTitle}>응원팀</Text>
                       <View style={styles.editGameRow}>
                         <Pressable
-                          style={[styles.cheerTeamCard, cheeredTeam === awayId && { borderColor: ac?.primary || "#333", borderWidth: 2 }]}
+                          style={[styles.cheerTeamCard, cheeredTeam === awayId && { borderColor: teamPrimaryColor(awayId, isDark) || theme.muted, borderWidth: 2 }]}
                           onPress={() => setCheeredTeam(cheeredTeam === awayId ? null : awayId)}
                         >
                           <TeamBadge teamId={awayId} size="sm" />
-                          <Text style={[styles.cheerTeamName, { color: ac?.primary }]}>{ac?.shortName || "?"}</Text>
+                          <Text style={[styles.cheerTeamName, { color: teamPrimaryColor(awayId, isDark) }]}>{ac?.shortName || "?"}</Text>
                           {cheeredTeam === awayId && <Text style={styles.cheerTeamBadge}>✓</Text>}
                         </Pressable>
                         <Text style={styles.gameVs}>VS</Text>
                         <Pressable
-                          style={[styles.cheerTeamCard, cheeredTeam === homeId && { borderColor: hc?.primary || "#333", borderWidth: 2 }]}
+                          style={[styles.cheerTeamCard, cheeredTeam === homeId && { borderColor: teamPrimaryColor(homeId, isDark) || "#333", borderWidth: 2 }]}
                           onPress={() => setCheeredTeam(cheeredTeam === homeId ? null : homeId)}
                         >
                           <TeamBadge teamId={homeId} size="sm" />
-                          <Text style={[styles.cheerTeamName, { color: hc?.primary }]}>{hc?.shortName || "?"}</Text>
+                          <Text style={[styles.cheerTeamName, { color: teamPrimaryColor(homeId, isDark) }]}>{hc?.shortName || "?"}</Text>
                           {cheeredTeam === homeId && <Text style={styles.cheerTeamBadge}>✓</Text>}
                         </Pressable>
                       </View>
@@ -704,7 +1025,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                   <Text style={styles.sectionTitle}>시청 방식</Text>
                   <View style={styles.liveToggleRow}>
                     <Pressable
-                      style={[styles.liveToggleBtn, isLive && { backgroundColor: TEAM_COLORS[userTeam]?.primary || theme.foreground }]}
+                      style={[styles.liveToggleBtn, isLive && { backgroundColor: teamPrimaryColor(userTeam, isDark) || theme.foreground }]}
                       onPress={() => setIsLive(true)}
                     >
                       <Text style={[styles.liveToggleText, isLive && { color: "#fff" }]}>직관</Text>
@@ -823,7 +1144,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                   setStep("write");
                 }}>
                   <TeamBadge teamId={teamPickerGame.awayTeam} size="md" />
-                  <Text style={[styles.teamPickerName, { color: away?.primary }]}>
+                  <Text style={[styles.teamPickerName, { color: teamPrimaryColor(teamPickerGame.awayTeam, isDark) }]}>
                     {away?.shortName || "원정팀"}
                   </Text>
                 </Pressable>
@@ -834,7 +1155,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                   setStep("write");
                 }}>
                   <TeamBadge teamId={teamPickerGame.homeTeam} size="md" />
-                  <Text style={[styles.teamPickerName, { color: home?.primary }]}>
+                  <Text style={[styles.teamPickerName, { color: teamPrimaryColor(teamPickerGame.homeTeam, isDark) }]}>
                     {home?.shortName || "홈팀"}
                   </Text>
                 </Pressable>
@@ -850,322 +1171,4 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  sheet: {
-    backgroundColor: theme.background,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: "92%",
-    paddingBottom: 8,
-  },
-  handleRow: { alignItems: "center", paddingVertical: 10 },
-  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border },
 
-  // Step header
-  stepHeader: {
-    paddingHorizontal: 20,
-    marginBottom: 12,
-  },
-  stepTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: theme.foreground,
-    textAlign: "center",
-  },
-  stepBackRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  backArrow: { fontSize: 16, color: theme.foreground },
-
-  scrollContent: { padding: 20, paddingTop: 0 },
-
-  // Calendar
-  calHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  calNav: { fontSize: 14, color: theme.foreground, paddingHorizontal: 8 },
-  calMonth: { fontSize: 16, fontWeight: "700", color: theme.foreground },
-  calDayRow: { flexDirection: "row", marginBottom: 4 },
-  calDayHeader: {
-    flex: 1, textAlign: "center", fontSize: 11,
-    color: theme.mutedForeground, fontWeight: "600", paddingVertical: 4,
-  },
-  calGrid: { flexDirection: "row", flexWrap: "wrap" },
-  calCell: {
-    width: "14.28%", aspectRatio: 1,
-    justifyContent: "center", alignItems: "center",
-  },
-  calDayInner: {
-    width: 28, height: 28,
-    justifyContent: "center", alignItems: "center",
-    borderRadius: 14,
-  },
-  calDayToday: {
-    backgroundColor: theme.muted,
-  },
-  calDayNum: { fontSize: 14, color: theme.foreground, fontWeight: "500" },
-
-  // Games
-  loadingBox: { alignItems: "center", paddingVertical: 40, gap: 12 },
-  loadingText: { fontSize: 13, color: theme.mutedForeground },
-  noGamesBox: { alignItems: "center", paddingVertical: 40, gap: 12 },
-  noGamesIcon: { fontSize: 40 },
-  noGamesText: { fontSize: 14, color: theme.mutedForeground },
-  writeWithoutGame: {
-    paddingVertical: 10, paddingHorizontal: 20,
-    borderRadius: 12, backgroundColor: theme.muted,
-    alignSelf: "center", marginTop: 8,
-  },
-  writeWithoutGameText: { fontSize: 13, fontWeight: "600", color: theme.foreground },
-  gameList: { gap: 10 },
-  gameCard: {
-    backgroundColor: theme.card, borderRadius: 14, borderWidth: 1,
-    borderColor: theme.border, paddingVertical: 10, paddingHorizontal: 14,
-  },
-  gameCardTop: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12,
-  },
-  gameTeamRow: {
-    flexDirection: "row", alignItems: "center", gap: 6,
-  },
-  gameTeamName: { fontSize: 14, fontWeight: "600" },
-  gameScore: { fontSize: 18, fontWeight: "700", color: theme.foreground },
-  myBadge: {
-    fontSize: 10, fontWeight: "800", color: "#fff",
-    backgroundColor: "#333", paddingHorizontal: 5, paddingVertical: 1,
-    borderRadius: 4, overflow: "hidden",
-  },
-  myBadgeEdge: {
-    position: "absolute", top: 0, bottom: 0, justifyContent: "center", zIndex: 1,
-  },
-  gameVs: { fontSize: 12, color: theme.mutedForeground, fontWeight: "600" },
-  gameMeta: { fontSize: 11, color: theme.mutedForeground },
-  otherGamesToggle: {
-    paddingVertical: 10,
-    alignItems: "center",
-    borderRadius: 10,
-    backgroundColor: theme.muted,
-  },
-  otherGamesToggleText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: theme.mutedForeground,
-  },
-
-  // Selected game banner
-  selectedGameBanner: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: 10, marginBottom: 20,
-    backgroundColor: theme.muted, borderRadius: 12, padding: 12,
-  },
-  selectedGameText: { fontSize: 14, fontWeight: "700", color: theme.foreground },
-
-  // Section
-  section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 14, fontWeight: "700", color: theme.foreground, marginBottom: 10 },
-
-  // Photo grid
-  photoGrid: {
-    flexDirection: "row", flexWrap: "wrap", gap: 8,
-  },
-  photoThumbWrap: {
-    position: "relative", borderRadius: 10, overflow: "hidden",
-  },
-  photoThumb: {
-    width: 80, height: 80, borderRadius: 10,
-  },
-  photoRemove: {
-    position: "absolute", top: 2, right: 2,
-    width: 20, height: 20, borderRadius: 10,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "center", alignItems: "center",
-  },
-  photoRemoveText: { color: "#fff", fontSize: 14, fontWeight: "700", lineHeight: 16 },
-  photoAddBtn: {
-    width: 80, height: 80, borderRadius: 10,
-    borderWidth: 1, borderColor: theme.border, borderStyle: "dashed",
-    justifyContent: "center", alignItems: "center",
-    backgroundColor: theme.muted,
-  },
-  photoAddIcon: { fontSize: 24, color: theme.mutedForeground },
-
-  // Input
-  inputRow: { position: "relative", marginBottom: 10 },
-  input: {
-    backgroundColor: theme.card, borderRadius: 12,
-    padding: 14, paddingRight: 50,
-    fontSize: 14, color: theme.foreground,
-    borderWidth: 1, borderColor: theme.border,
-    lineHeight: 20, minHeight: 44,
-  },
-  diaryInput: {
-    backgroundColor: theme.card, borderRadius: 14,
-    padding: 16,
-    fontSize: 15, color: theme.foreground,
-    borderWidth: 1, borderColor: theme.border,
-    lineHeight: 24, minHeight: 160,
-  },
-  seatInput: {
-    backgroundColor: theme.card, borderRadius: 12,
-    padding: 14,
-    fontSize: 14, color: theme.foreground,
-    borderWidth: 1, borderColor: theme.border,
-    lineHeight: 20, minHeight: 44,
-  },
-  charCount: {
-    position: "absolute", bottom: 8, right: 12,
-    fontSize: 10, color: theme.mutedForeground,
-  },
-
-  // Bottom
-  bottomRow: {
-    flexDirection: "row", gap: 12,
-    paddingHorizontal: 20, paddingTop: 8,
-  },
-  cancelBtn: {
-    flex: 1, paddingVertical: 14, borderRadius: 14,
-    borderWidth: 1, borderColor: theme.border, alignItems: "center",
-  },
-  cancelBtnFull: {
-    flex: 1, paddingVertical: 14, borderRadius: 14,
-    backgroundColor: theme.muted, alignItems: "center",
-  },
-  cancelText: { fontSize: 14, color: theme.foreground, fontWeight: "600" },
-  saveBtn: {
-    flex: 1, paddingVertical: 14, borderRadius: 14,
-    backgroundColor: theme.foreground, alignItems: "center",
-  },
-  saveText: { fontSize: 14, fontWeight: "700", color: theme.background },
-  editGameRow: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12,
-  },
-  cheerTeamCard: {
-    alignItems: "center", gap: 6,
-    backgroundColor: theme.card, borderRadius: 12, borderWidth: 1, borderColor: theme.border,
-    paddingVertical: 12, paddingHorizontal: 20, minWidth: 100,
-  },
-  cheerTeamName: { fontSize: 13, fontWeight: "600", marginTop: 4 },
-  cheerTeamScore: { fontSize: 18, fontWeight: "700", color: theme.foreground },
-  cheerTeamBadge: {
-    position: "absolute", top: -6, right: -6,
-    fontSize: 12, fontWeight: "800", color: "#fff",
-    backgroundColor: theme.foreground,
-    width: 20, height: 20, borderRadius: 10, textAlign: "center", lineHeight: 20,
-    overflow: "hidden",
-  },
-  winResultText: {
-    fontSize: 14, fontWeight: "700", color: theme.foreground,
-    textAlign: "center", marginTop: 8,
-  },
-  liveToggleRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  liveToggleBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: theme.muted,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  liveToggleText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: theme.foreground,
-  },
-
-  // Custom alert
-  alertOverlay: {
-    position: "absolute",
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 100,
-  },
-  alertCard: {
-    backgroundColor: theme.card,
-    borderRadius: 18,
-    padding: 28,
-    minWidth: 280,
-    maxWidth: 320,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  alertTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: theme.foreground,
-    marginBottom: 8,
-  },
-  alertMessage: {
-    fontSize: 14,
-    color: theme.mutedForeground,
-    textAlign: "center",
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  alertOkBtn: {
-    backgroundColor: theme.foreground,
-    paddingVertical: 12,
-    paddingHorizontal: 48,
-    borderRadius: 12,
-    minWidth: 120,
-    alignItems: "center",
-  },
-  alertOkText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: theme.background,
-  },
-  // Team picker
-  teamPickerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 16,
-  },
-  teamPickerCard: {
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: theme.muted,
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    minWidth: 100,
-  },
-  teamPickerName: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  teamPickerVs: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: theme.mutedForeground,
-  },
-  alertCancelBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 24,
-  },
-  alertCancelText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: theme.mutedForeground,
-  },
-});

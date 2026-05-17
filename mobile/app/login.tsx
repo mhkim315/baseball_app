@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, Pressable, StyleSheet, ActivityIndicator, Alert, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { makeRedirectUri, useAuthRequest } from "expo-auth-session";
 import { useAuth } from "@/lib/AuthContext";
-import { theme } from "@/lib/theme";
+import { useTheme } from "@/lib/ThemeContext";
 import * as WebBrowser from "expo-web-browser";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { SOCIAL_CONFIG, getRedirectUri } from "@/lib/socialConfig";
@@ -26,6 +26,7 @@ const naverDiscovery = {
 type Provider = "kakao" | "naver" | "google" | "apple";
 
 export default function LoginScreen() {
+  const { theme } = useTheme();
   const router = useRouter();
   const { login } = useAuth();
   const [loading, setLoading] = useState<Provider | null>(null);
@@ -147,6 +148,41 @@ export default function LoginScreen() {
     }
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    header: {
+      paddingTop: 60,
+      paddingHorizontal: 16,
+    },
+    closeBtn: { padding: 8, alignSelf: "flex-start" },
+    closeText: { color: theme.mutedForeground, fontSize: 16 },
+    body: {
+      flex: 1,
+      justifyContent: "center",
+      paddingHorizontal: 32,
+      paddingBottom: 80,
+    },
+    title: { fontSize: 28, fontWeight: "bold", color: theme.foreground, textAlign: "center" },
+    subtitle: { fontSize: 16, color: theme.secondaryForeground, textAlign: "center", marginTop: 8 },
+    description: {
+      fontSize: 13,
+      color: theme.mutedForeground,
+      textAlign: "center",
+      marginTop: 8,
+      marginBottom: 40,
+    },
+    buttonGroup: { gap: 12 },
+    socialBtn: {
+      paddingVertical: 14,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      height: 48,
+    },
+    socialBtnText: { fontSize: 15, fontWeight: "600" },
+    appleBtn: { height: 48, width: "100%" },
+  }), [theme]);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -200,9 +236,9 @@ export default function LoginScreen() {
             disabled={loading !== null}
           >
             {loading === "google" ? (
-              <ActivityIndicator color="#000" />
+              <ActivityIndicator color={theme.foreground} />
             ) : (
-              <Text style={[styles.socialBtnText, { color: "#000" }]}>
+              <Text style={[styles.socialBtnText, { color: theme.foreground }]}>
                 Google 로그인
               </Text>
             )}
@@ -223,38 +259,3 @@ export default function LoginScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 16,
-  },
-  closeBtn: { padding: 8, alignSelf: "flex-start" },
-  closeText: { color: theme.mutedForeground, fontSize: 16 },
-  body: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 32,
-    paddingBottom: 80,
-  },
-  title: { fontSize: 28, fontWeight: "bold", color: theme.foreground, textAlign: "center" },
-  subtitle: { fontSize: 16, color: theme.secondaryForeground, textAlign: "center", marginTop: 8 },
-  description: {
-    fontSize: 13,
-    color: theme.mutedForeground,
-    textAlign: "center",
-    marginTop: 8,
-    marginBottom: 40,
-  },
-  buttonGroup: { gap: 12 },
-  socialBtn: {
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    height: 48,
-  },
-  socialBtnText: { fontSize: 15, fontWeight: "600" },
-  appleBtn: { height: 48, width: "100%" },
-});

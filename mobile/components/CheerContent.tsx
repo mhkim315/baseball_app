@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, Pressable, StyleSheet, ActivityIndicator, Linking, Image } from "react-native";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID, buildGameId, formatDateForApi as formatDateStr } from "@shared/constants";
 import { fetchCheeringSongs, fetchCheeringPlayers, fetchTodayGames, fetchGameDetail, fetchDailyScores } from "@/lib/api";
 import type { CheerSection, PlayerCheer, TodayGame, ScoreEntry } from "@/lib/api";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
 const IMAGE_BASE = "https://fullcount.kr";
 
@@ -35,6 +35,7 @@ interface CheerContentProps {
 }
 
 export default function CheerContent({ teamId, activeTab, expandedSection, onToggleSection }: CheerContentProps) {
+  const { theme, isDark } = useTheme();
   const [sections, setSections] = useState<CheerSection[]>([]);
   const [players, setPlayers] = useState<PlayerCheer[]>([]);
   const [lineupPlayers, setLineupPlayers] = useState<string[]>([]);
@@ -121,6 +122,73 @@ export default function CheerContent({ teamId, activeTab, expandedSection, onTog
   const teamColor = TEAM_COLORS[teamId];
   const displayPlayers = lineupPlayers.length > 0 ? lineupPlayers : players.map((p) => p.name);
 
+  const styles = useMemo(() => StyleSheet.create({
+    loadingContainer: { paddingVertical: 60, alignItems: "center" },
+    errorText: { color: theme.mutedForeground, fontSize: 14, marginBottom: 16 },
+    retryBtn: { paddingVertical: 8, paddingHorizontal: 20, backgroundColor: theme.foreground, borderRadius: 16 },
+    retryText: { color: theme.background, fontSize: 13, fontWeight: "600" },
+
+    // Songs
+    section: {
+      backgroundColor: theme.card, borderRadius: 16, marginBottom: 12,
+      borderWidth: 1, borderColor: theme.border, overflow: "hidden",
+    },
+    sectionHeader: {
+      flexDirection: "row", alignItems: "center", padding: 16, gap: 8,
+    },
+    sectionDot: { width: 8, height: 8, borderRadius: 4 },
+    sectionTitle: { fontSize: 15, fontWeight: "600", color: theme.foreground, flex: 1 },
+    sectionCount: { fontSize: 11, color: theme.mutedForeground },
+    sectionArrow: { fontSize: 10, color: theme.mutedForeground },
+    songItem: {
+      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+      paddingHorizontal: 16, paddingVertical: 12,
+      borderTopWidth: 1, borderTopColor: theme.border,
+    },
+    songName: { fontSize: 14, fontWeight: "600", color: theme.foreground, flex: 1 },
+    songLinkIcon: { fontSize: 14, color: theme.mutedForeground },
+
+    // Players
+    playersCard: {
+      backgroundColor: theme.card, borderRadius: 16, borderWidth: 1, borderColor: theme.border, overflow: "hidden",
+    },
+    playersHeader: {
+      padding: 12, borderBottomWidth: 1, borderBottomColor: theme.border,
+      backgroundColor: theme.secondary,
+    },
+    playersSource: { fontSize: 11, fontWeight: "600", color: theme.foreground, marginBottom: 2 },
+    playersHint: { fontSize: 11, color: theme.mutedForeground },
+    playersGrid: { flexDirection: "row", flexWrap: "wrap" },
+    playerItem: {
+      width: "33.33%", paddingVertical: 14, paddingHorizontal: 8,
+      alignItems: "center", justifyContent: "center",
+      borderRightWidth: 0.5, borderBottomWidth: 0.5, borderColor: theme.border,
+    },
+    playerName: { fontSize: 13, fontWeight: "500", color: theme.foreground },
+
+    // Rules
+    rulesCard: {
+      backgroundColor: theme.card, borderRadius: 16, borderWidth: 1, borderColor: theme.border,
+      padding: 16, marginBottom: 16,
+    },
+    rulesIntro: { fontSize: 13, color: theme.mutedForeground, marginBottom: 16, lineHeight: 20 },
+    ruleItem: { marginBottom: 12 },
+    ruleTitle: { fontSize: 14, fontWeight: "700", color: theme.foreground, marginBottom: 2 },
+    ruleDesc: { fontSize: 13, color: theme.secondaryForeground, lineHeight: 20 },
+
+    // Gallery
+    gallerySection: { gap: 12 },
+    galleryCard: {
+      backgroundColor: theme.card, borderRadius: 16, borderWidth: 1, borderColor: theme.border, overflow: "hidden",
+    },
+    galleryImage: { width: "100%", height: 200 },
+    galleryCaption: { fontSize: 12, color: theme.mutedForeground, lineHeight: 18, padding: 12 },
+
+    // States
+    emptyCard: { backgroundColor: theme.card, borderRadius: 16, borderWidth: 1, borderColor: theme.border, padding: 32, alignItems: "center" },
+    emptyText: { fontSize: 13, color: theme.mutedForeground },
+  }), [theme]);
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -150,7 +218,7 @@ export default function CheerContent({ teamId, activeTab, expandedSection, onTog
                 style={styles.sectionHeader}
                 onPress={() => onToggleSection(expandedSection === idx ? null : idx)}
               >
-                <View style={[styles.sectionDot, { backgroundColor: teamColor?.primary || theme.primary }]} />
+                <View style={[styles.sectionDot, { backgroundColor: teamPrimaryColor(teamId, isDark) || theme.primary }]} />
                 <Text style={styles.sectionTitle}>{section.title}</Text>
                 <Text style={styles.sectionCount}>{section.songs.length}곡</Text>
                 <Text style={styles.sectionArrow}>{expandedSection === idx ? "▲" : "▼"}</Text>
@@ -235,69 +303,4 @@ export default function CheerContent({ teamId, activeTab, expandedSection, onTog
   );
 }
 
-const styles = StyleSheet.create({
-  loadingContainer: { paddingVertical: 60, alignItems: "center" },
-  errorText: { color: theme.mutedForeground, fontSize: 14, marginBottom: 16 },
-  retryBtn: { paddingVertical: 8, paddingHorizontal: 20, backgroundColor: theme.foreground, borderRadius: 16 },
-  retryText: { color: theme.background, fontSize: 13, fontWeight: "600" },
 
-  // Songs
-  section: {
-    backgroundColor: theme.card, borderRadius: 16, marginBottom: 12,
-    borderWidth: 1, borderColor: theme.border, overflow: "hidden",
-  },
-  sectionHeader: {
-    flexDirection: "row", alignItems: "center", padding: 16, gap: 8,
-  },
-  sectionDot: { width: 8, height: 8, borderRadius: 4 },
-  sectionTitle: { fontSize: 15, fontWeight: "600", color: theme.foreground, flex: 1 },
-  sectionCount: { fontSize: 11, color: theme.mutedForeground },
-  sectionArrow: { fontSize: 10, color: theme.mutedForeground },
-  songItem: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingHorizontal: 16, paddingVertical: 12,
-    borderTopWidth: 1, borderTopColor: theme.border,
-  },
-  songName: { fontSize: 14, fontWeight: "600", color: theme.foreground, flex: 1 },
-  songLinkIcon: { fontSize: 14, color: theme.mutedForeground },
-
-  // Players
-  playersCard: {
-    backgroundColor: theme.card, borderRadius: 16, borderWidth: 1, borderColor: theme.border, overflow: "hidden",
-  },
-  playersHeader: {
-    padding: 12, borderBottomWidth: 1, borderBottomColor: theme.border,
-    backgroundColor: theme.secondary,
-  },
-  playersSource: { fontSize: 11, fontWeight: "600", color: theme.foreground, marginBottom: 2 },
-  playersHint: { fontSize: 11, color: theme.mutedForeground },
-  playersGrid: { flexDirection: "row", flexWrap: "wrap" },
-  playerItem: {
-    width: "33.33%", paddingVertical: 14, paddingHorizontal: 8,
-    alignItems: "center", justifyContent: "center",
-    borderRightWidth: 0.5, borderBottomWidth: 0.5, borderColor: theme.border,
-  },
-  playerName: { fontSize: 13, fontWeight: "500", color: theme.foreground },
-
-  // Rules
-  rulesCard: {
-    backgroundColor: theme.card, borderRadius: 16, borderWidth: 1, borderColor: theme.border,
-    padding: 16, marginBottom: 16,
-  },
-  rulesIntro: { fontSize: 13, color: theme.mutedForeground, marginBottom: 16, lineHeight: 20 },
-  ruleItem: { marginBottom: 12 },
-  ruleTitle: { fontSize: 14, fontWeight: "700", color: theme.foreground, marginBottom: 2 },
-  ruleDesc: { fontSize: 13, color: theme.secondaryForeground, lineHeight: 20 },
-
-  // Gallery
-  gallerySection: { gap: 12 },
-  galleryCard: {
-    backgroundColor: theme.card, borderRadius: 16, borderWidth: 1, borderColor: theme.border, overflow: "hidden",
-  },
-  galleryImage: { width: "100%", height: 200 },
-  galleryCaption: { fontSize: 12, color: theme.mutedForeground, lineHeight: 18, padding: 12 },
-
-  // States
-  emptyCard: { backgroundColor: theme.card, borderRadius: 16, borderWidth: 1, borderColor: theme.border, padding: 32, alignItems: "center" },
-  emptyText: { fontSize: 13, color: theme.mutedForeground },
-});

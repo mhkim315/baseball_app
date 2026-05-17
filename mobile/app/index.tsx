@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { getMyTeam } from "@/lib/db";
-import { theme } from "@/lib/theme";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function IndexScreen() {
+  const { theme } = useTheme();
   const router = useRouter();
 
   useEffect(() => {
@@ -13,13 +14,13 @@ export default function IndexScreen() {
     });
   }, [router]);
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.background },
+  }), [theme]);
+
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color={theme.foreground} />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.background },
-});

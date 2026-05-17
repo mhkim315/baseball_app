@@ -2,8 +2,10 @@ import { useState, useRef } from "react";
 import { View, Text, Pressable, StyleSheet, Alert } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function JikgwanCameraScreen() {
+  const { theme } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const router = useRouter();
@@ -50,7 +52,7 @@ export default function JikgwanCameraScreen() {
           <Text style={styles.buttonText}>권한 허용하기</Text>
         </Pressable>
         <Pressable style={styles.cancelBtn} onPress={() => router.back()}>
-          <Text style={styles.cancelText}>취소</Text>
+          <Text style={[styles.cancelText, { color: theme.mutedForeground }]}>취소</Text>
         </Pressable>
       </View>
     );

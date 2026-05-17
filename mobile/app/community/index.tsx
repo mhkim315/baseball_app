@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator, Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/lib/AuthContext";
 import { fetchPosts, logout, type PostSummary } from "@/lib/auth";
-import { theme } from "@/lib/theme";
+import { useTheme } from "@/lib/ThemeContext";
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -20,6 +20,7 @@ function formatDate(iso: string): string {
 }
 
 export default function CommunityIndexScreen() {
+  const { theme } = useTheme();
   const router = useRouter();
   const { user, isAuthenticated, logout: authLogout } = useAuth();
   const [posts, setPosts] = useState<PostSummary[]>([]);
@@ -107,6 +108,59 @@ export default function CommunityIndexScreen() {
     </Pressable>
   );
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      paddingTop: 60,
+      paddingHorizontal: 20,
+      paddingBottom: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    headerTitle: { fontSize: 24, fontWeight: "bold", color: theme.foreground },
+    headerSub: { fontSize: 13, color: theme.mutedForeground, marginTop: 2 },
+    headerActions: { flexDirection: "row", gap: 8, alignItems: "center" },
+    logoutBtn: { paddingVertical: 6, paddingHorizontal: 10 },
+    logoutText: { color: theme.mutedForeground, fontSize: 12 },
+    loginBtn: { paddingVertical: 6, paddingHorizontal: 12 },
+    loginText: { color: theme.info, fontSize: 13, fontWeight: "600" },
+    writeBtn: {
+      backgroundColor: theme.foreground,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: 20,
+    },
+    writeText: { fontSize: 13, fontWeight: "600", color: theme.background },
+    listContent: { paddingBottom: 40 },
+    postCard: { padding: 16 },
+    postTitle: { fontSize: 15, fontWeight: "600", color: theme.foreground, marginBottom: 6 },
+    postMeta: { flexDirection: "row", gap: 10, alignItems: "center" },
+    postAuthor: { fontSize: 12, color: theme.mutedForeground },
+    postDate: { fontSize: 11, color: theme.mutedForeground },
+    postComments: { fontSize: 11, color: theme.info },
+    loginPrompt: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 40,
+    },
+    loginTitle: { fontSize: 20, fontWeight: "bold", color: theme.foreground, marginBottom: 8 },
+    loginSub: { fontSize: 14, color: theme.mutedForeground, textAlign: "center", marginBottom: 20 },
+    loginPromptBtn: {
+      backgroundColor: theme.foreground,
+      paddingVertical: 10,
+      paddingHorizontal: 24,
+      borderRadius: 20,
+    },
+    loginPromptText: { fontSize: 14, fontWeight: "600", color: theme.background },
+    loadingContainer: { paddingVertical: 60, alignItems: "center" },
+    emptyContainer: { paddingVertical: 60, alignItems: "center" },
+    emptyText: { color: theme.mutedForeground, fontSize: 14 },
+  }), [theme]);
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -161,55 +215,3 @@ export default function CommunityIndexScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  headerTitle: { fontSize: 24, fontWeight: "bold", color: theme.foreground },
-  headerSub: { fontSize: 13, color: theme.mutedForeground, marginTop: 2 },
-  headerActions: { flexDirection: "row", gap: 8, alignItems: "center" },
-  logoutBtn: { paddingVertical: 6, paddingHorizontal: 10 },
-  logoutText: { color: theme.mutedForeground, fontSize: 12 },
-  loginBtn: { paddingVertical: 6, paddingHorizontal: 12 },
-  loginText: { color: theme.info, fontSize: 13, fontWeight: "600" },
-  writeBtn: {
-    backgroundColor: theme.foreground,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-  },
-  writeText: { fontSize: 13, fontWeight: "600", color: theme.background },
-  listContent: { paddingBottom: 40 },
-  postCard: { padding: 16 },
-  postTitle: { fontSize: 15, fontWeight: "600", color: theme.foreground, marginBottom: 6 },
-  postMeta: { flexDirection: "row", gap: 10, alignItems: "center" },
-  postAuthor: { fontSize: 12, color: theme.mutedForeground },
-  postDate: { fontSize: 11, color: theme.mutedForeground },
-  postComments: { fontSize: 11, color: theme.info },
-  loginPrompt: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 40,
-  },
-  loginTitle: { fontSize: 20, fontWeight: "bold", color: theme.foreground, marginBottom: 8 },
-  loginSub: { fontSize: 14, color: theme.mutedForeground, textAlign: "center", marginBottom: 20 },
-  loginPromptBtn: {
-    backgroundColor: theme.foreground,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 20,
-  },
-  loginPromptText: { fontSize: 14, fontWeight: "600", color: theme.background },
-  loadingContainer: { paddingVertical: 60, alignItems: "center" },
-  emptyContainer: { paddingVertical: 60, alignItems: "center" },
-  emptyText: { color: theme.mutedForeground, fontSize: 14 },
-});

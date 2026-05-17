@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,13 +12,14 @@ import ConfirmModal from "@/components/ConfirmModal";
 import { JikgwanRecord, getJikgwanRecords, deleteJikgwanRecord } from "@/lib/db";
 import { deletePhoto } from "@/lib/camera";
 import { TEAM_COLORS } from "@shared/teamColors";
-import { theme } from "@/lib/theme";
+import { useTheme } from "@/lib/ThemeContext";
 
 interface Props {
   onTakePhoto: () => void;
 }
 
 export default function JikgwanFeed({ onTakePhoto }: Props) {
+  const { theme } = useTheme();
   const [records, setRecords] = useState<(JikgwanRecord & { uri: string })[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<(JikgwanRecord & { uri: string }) | null>(null);
 
@@ -90,6 +91,54 @@ export default function JikgwanFeed({ onTakePhoto }: Props) {
     );
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: { marginTop: 8 },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    title: { fontSize: 16, fontWeight: "bold", color: theme.foreground },
+    cameraBtn: {
+      backgroundColor: theme.foreground,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: 20,
+    },
+    cameraBtnText: { fontSize: 12, fontWeight: "600", color: theme.background },
+    card: {
+      backgroundColor: theme.card,
+      borderRadius: 16,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    photo: { width: "100%", height: 300 },
+    noPhoto: {
+      height: 200,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.muted,
+    },
+    noPhotoText: { color: theme.mutedForeground, fontSize: 14 },
+    meta: { padding: 14, gap: 6 },
+    date: { color: theme.mutedForeground, fontSize: 12 },
+    score: { color: theme.foreground, fontSize: 18, fontWeight: "bold" },
+    memo: { color: theme.foreground, fontSize: 13 },
+    actions: { flexDirection: "row", gap: 12, marginTop: 8 },
+    actionBtn: {
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 8,
+      backgroundColor: theme.muted,
+    },
+    actionText: { color: theme.foreground, fontSize: 12 },
+    empty: { alignItems: "center", paddingVertical: 32 },
+    emptyText: { color: theme.mutedForeground, fontSize: 14 },
+    emptySub: { color: theme.mutedForeground, fontSize: 12, marginTop: 4 },
+  }), [theme]);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -126,50 +175,4 @@ export default function JikgwanFeed({ onTakePhoto }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { marginTop: 8 },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  title: { fontSize: 16, fontWeight: "bold", color: theme.foreground },
-  cameraBtn: {
-    backgroundColor: theme.foreground,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-  },
-  cameraBtnText: { fontSize: 12, fontWeight: "600", color: theme.background },
-  card: {
-    backgroundColor: theme.card,
-    borderRadius: 16,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  photo: { width: "100%", height: 300 },
-  noPhoto: {
-    height: 200,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: theme.muted,
-  },
-  noPhotoText: { color: theme.mutedForeground, fontSize: 14 },
-  meta: { padding: 14, gap: 6 },
-  date: { color: theme.mutedForeground, fontSize: 12 },
-  score: { color: theme.foreground, fontSize: 18, fontWeight: "bold" },
-  memo: { color: theme.foreground, fontSize: 13 },
-  actions: { flexDirection: "row", gap: 12, marginTop: 8 },
-  actionBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: theme.muted,
-  },
-  actionText: { color: theme.foreground, fontSize: 12 },
-  empty: { alignItems: "center", paddingVertical: 32 },
-  emptyText: { color: theme.mutedForeground, fontSize: 14 },
-  emptySub: { color: theme.mutedForeground, fontSize: 12, marginTop: 4 },
-});
+

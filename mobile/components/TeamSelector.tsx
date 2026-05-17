@@ -1,7 +1,8 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
+import { useMemo } from "react";
 import { TeamBadge } from "@/components/TeamBadge";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
 interface TeamSelectorProps {
   selectedTeam?: string | null;
@@ -10,6 +11,42 @@ interface TeamSelectorProps {
 }
 
 export default function TeamSelector({ selectedTeam, onSelect, title }: TeamSelectorProps) {
+  const { theme, isDark } = useTheme();
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      padding: 16,
+    },
+    title: {
+      fontSize: 16,
+      fontWeight: "bold",
+      color: theme.foreground,
+      marginBottom: 16,
+      textAlign: "center",
+    },
+    grid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      gap: 12,
+    },
+    teamItem: {
+      width: 72,
+      height: 90,
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: 16,
+      borderWidth: 2,
+      borderColor: theme.border,
+      backgroundColor: theme.card,
+      gap: 8,
+    },
+    teamName: {
+      fontSize: 11,
+      fontWeight: "600",
+      color: theme.mutedForeground,
+    },
+  }), [theme]);
+
   return (
     <View style={styles.container}>
       {title && <Text style={styles.title}>{title}</Text>}
@@ -23,8 +60,8 @@ export default function TeamSelector({ selectedTeam, onSelect, title }: TeamSele
               style={[
                 styles.teamItem,
                 isSelected && {
-                  backgroundColor: team.primary + "30",
-                  borderColor: team.primary,
+                  backgroundColor: teamPrimaryColor(team.id, isDark) + "30",
+                  borderColor: teamPrimaryColor(team.id, isDark),
                 },
               ]}
             >
@@ -32,7 +69,7 @@ export default function TeamSelector({ selectedTeam, onSelect, title }: TeamSele
               <Text
                 style={[
                   styles.teamName,
-                  isSelected && { color: team.primary, fontWeight: "700" },
+                  isSelected && { color: teamPrimaryColor(team.id, isDark), fontWeight: "700" },
                 ]}
               >
                 {team.shortName}
@@ -45,37 +82,3 @@ export default function TeamSelector({ selectedTeam, onSelect, title }: TeamSele
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: theme.foreground,
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: 12,
-  },
-  teamItem: {
-    width: 72,
-    height: 90,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: theme.border,
-    backgroundColor: theme.card,
-    gap: 8,
-  },
-  teamName: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: theme.mutedForeground,
-  },
-});

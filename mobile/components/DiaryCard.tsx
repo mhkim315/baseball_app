@@ -1,10 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { View, Text, Image, Pressable, ScrollView, StyleSheet, NativeSyntheticEvent, NativeScrollEvent, useWindowDimensions } from "react-native";
 import { TeamBadge } from "@/components/TeamBadge";
 import { EMOTION_CHARACTER } from "@/components/EmotionPicker";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { parseGameTeamIds, getWinBadge } from "@shared/constants";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import type { JikgwanRecord } from "@/lib/db";
 
 interface DiaryCardProps {
@@ -33,11 +33,12 @@ function parsePhotos(record: JikgwanRecord): string[] {
 }
 
 export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit }: DiaryCardProps) {
+  const { theme, isDark } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
   const photoWidth = screenWidth;
   const photos = parsePhotos(record);
   const [photoIndex, setPhotoIndex] = useState(0);
-  const liveTeamColor = teamId ? TEAM_COLORS[teamId]?.primary : "#3b82f6";
+  const liveTeamColor = teamId ? teamPrimaryColor(teamId, isDark) : "#3b82f6";
 
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width);
@@ -56,6 +57,125 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit }:
     : [record.three_line_1, record.three_line_2, record.three_line_3]
         .filter(Boolean)
         .join("\n");
+
+  const styles = useMemo(() => StyleSheet.create({
+    card: {
+      backgroundColor: theme.card,
+      borderRadius: 0,
+      overflow: "hidden",
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    // Instagram-style header
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      gap: 10,
+    },
+    profileCol: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    profileFallback: {
+      fontSize: 28,
+    },
+    idCol: {
+      flex: 1,
+      gap: 3,
+    },
+    idRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    idDate: {
+      fontSize: 12,
+      color: theme.mutedForeground,
+      fontWeight: "500",
+    },
+    idTeams: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: theme.foreground,
+    },
+    winBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 1,
+      borderRadius: 4,
+    },
+    winBadgeText: {
+      fontSize: 10,
+      fontWeight: "800",
+      color: "#fff",
+    },
+    // Photos
+    photoContainer: {
+      position: "relative",
+    },
+    photo: {
+      height: 360,
+      resizeMode: "cover",
+    },
+    noPhoto: {
+      height: 200,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.muted,
+    },
+    noPhotoIcon: { fontSize: 40 },
+    dots: {
+      position: "absolute",
+      bottom: 10,
+      left: 0,
+      right: 0,
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 6,
+    },
+    dot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: "rgba(255,255,255,0.5)",
+    },
+    dotActive: {
+      backgroundColor: "#fff",
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    // Caption
+    caption: {
+      paddingHorizontal: 14,
+      paddingTop: 10,
+      paddingBottom: 4,
+    },
+    captionText: {
+      fontSize: 14,
+      color: theme.foreground,
+      lineHeight: 20,
+    },
+    // Actions
+    actions: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 14,
+      paddingBottom: 10,
+      paddingTop: 6,
+    },
+    actionBtn: {
+      paddingVertical: 6,
+      paddingHorizontal: 14,
+      borderRadius: 8,
+    },
+    actionText: {
+      fontSize: 13,
+      color: theme.mutedForeground,
+      fontWeight: "500",
+    },
+  }), [theme]);
 
   return (
     <View style={styles.card}>
@@ -179,124 +299,6 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit }:
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: theme.card,
-    borderRadius: 0,
-    overflow: "hidden",
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  // Instagram-style header
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    gap: 10,
-  },
-  profileCol: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  profileFallback: {
-    fontSize: 28,
-  },
-  idCol: {
-    flex: 1,
-    gap: 3,
-  },
-  idRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  idDate: {
-    fontSize: 12,
-    color: theme.mutedForeground,
-    fontWeight: "500",
-  },
-  idTeams: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: theme.foreground,
-  },
-  winBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 4,
-  },
-  winBadgeText: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: "#fff",
-  },
-  // Photos
-  photoContainer: {
-    position: "relative",
-  },
-  photo: {
-    height: 360,
-    resizeMode: "cover",
-  },
-  noPhoto: {
-    height: 200,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: theme.muted,
-  },
-  noPhotoIcon: { fontSize: 40 },
-  dots: {
-    position: "absolute",
-    bottom: 10,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 6,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(255,255,255,0.5)",
-  },
-  dotActive: {
-    backgroundColor: "#fff",
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  // Caption
-  caption: {
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 4,
-  },
-  captionText: {
-    fontSize: 14,
-    color: theme.foreground,
-    lineHeight: 20,
-  },
-  // Actions
-  actions: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    paddingBottom: 10,
-    paddingTop: 6,
-  },
-  actionBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-  },
-  actionText: {
-    fontSize: 13,
-    color: theme.mutedForeground,
-    fontWeight: "500",
-  },
-});
 
 const stampOverlay = StyleSheet.create({
   container: {

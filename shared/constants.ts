@@ -32,8 +32,8 @@ export function parseGameTeamIds(gameId: string): { awayId: string; homeId: stri
 
 /** Unified 승/무/패 badge colors used across all diary components */
 export function getWinBadge(isWin: number | null): { label: string; color: string } | null {
-  if (isWin === 1) return { label: "승", color: "#22c55e" };
-  if (isWin === 0) return { label: "무", color: "#d97706" };
+  if (isWin === 1) return { label: "승", color: "#3b82f6" };
+  if (isWin === 0) return { label: "무", color: "#f59e0b" };
   if (isWin === -1) return { label: "패", color: "#ef4444" };
   return null;
 }

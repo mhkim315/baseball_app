@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, Pressable, LayoutAnimation, Platform, UIManager } from "react-native";
 
 import { useRouter, useFocusEffect } from "expo-router";
@@ -19,7 +19,7 @@ import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID, buildGameId, formatDateForApi as formatDateStr } from "@shared/constants";
 import { getMyTeam } from "@/lib/db";
 import SettingsButton from "@/components/SettingsButton";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -50,6 +50,78 @@ interface EnhancedGame {
 }
 
 export default function HomeScreen() {
+  const { theme, isDark } = useTheme();
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    header: {
+      paddingTop: 60,
+      paddingHorizontal: 20,
+      paddingBottom: 12,
+    },
+    logoRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    logoIcon: {
+      fontSize: 22,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: theme.foreground,
+    },
+    subtitle: {
+      fontSize: 13,
+      color: theme.mutedForeground,
+      marginTop: 4,
+    },
+    calToggle: {
+      paddingHorizontal: 20,
+      paddingVertical: 6,
+    },
+    calToggleText: {
+      fontSize: 12,
+      color: theme.mutedForeground,
+    },
+    calWrapper: {
+      overflow: "hidden",
+    },
+    calWrapperOpen: {
+      maxHeight: 500,
+      paddingHorizontal: 16,
+      paddingBottom: 8,
+    },
+    calWrapperHidden: {
+      maxHeight: 0,
+      paddingBottom: 0,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    listContent: {
+      padding: 16,
+      paddingBottom: 100,
+    },
+    emptyContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 64,
+    },
+    emptyText: {
+      color: theme.mutedForeground,
+      fontSize: 14,
+    },
+    errorText: {
+      color: theme.destructive,
+      fontSize: 14,
+    },
+  }), [theme]);
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [games, setGames] = useState<EnhancedGame[]>([]);
@@ -325,7 +397,7 @@ export default function HomeScreen() {
         winPitcher={item.winPitcher}
         losePitcher={item.losePitcher}
         cancelled={item.cancelled}
-        highlighted={isMyTeamGame ? TEAM_COLORS[myTeam]?.primary : undefined}
+        highlighted={isMyTeamGame ? teamPrimaryColor(myTeam, isDark) : undefined}
         dense={!isMyTeamGame}
         onClick={() => router.push(`/game/${item.id}?ap=${encodeURIComponent(item.awayPitcher || "")}&hp=${encodeURIComponent(item.homePitcher || "")}`)}
       />
@@ -353,14 +425,14 @@ export default function HomeScreen() {
           <Text style={styles.title}>풀카운트</Text>
         </View>
         <View style={{ flex: 1 }} />
-        <SettingsButton color={myTeam ? TEAM_COLORS[myTeam]?.primary : undefined} />
+        <SettingsButton color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
       </View>
 
       {/* Date strip */}
       <DateStrip
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}
-        teamColor={myTeam ? TEAM_COLORS[myTeam]?.primary : undefined}
+        teamColor={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined}
       />
 
       {/* Calendar toggle */}
@@ -406,74 +478,3 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.background,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-  logoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  logoIcon: {
-    fontSize: 22,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: theme.foreground,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: theme.mutedForeground,
-    marginTop: 4,
-  },
-  calToggle: {
-    paddingHorizontal: 20,
-    paddingVertical: 6,
-  },
-  calToggleText: {
-    fontSize: 12,
-    color: theme.mutedForeground,
-  },
-  calWrapper: {
-    overflow: "hidden",
-  },
-  calWrapperOpen: {
-    maxHeight: 500,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  calWrapperHidden: {
-    maxHeight: 0,
-    paddingBottom: 0,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 64,
-  },
-  emptyText: {
-    color: theme.mutedForeground,
-    fontSize: 14,
-  },
-  errorText: {
-    color: theme.destructive,
-    fontSize: 14,
-  },
-});

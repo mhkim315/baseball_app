@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { TEAM_LIST } from "@shared/teamColors";
 import { TeamBadge } from "@/components/TeamBadge";
 import { setMyTeam } from "@/lib/db";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
 export default function OnboardingScreen() {
+  const { theme, isDark } = useTheme();
   const router = useRouter();
   const [step, setStep] = useState<"welcome" | "team">("welcome");
   const [selectedTeam, setSelectedTeam] = useState<string>("");
@@ -16,6 +17,60 @@ export default function OnboardingScreen() {
     await setMyTeam(selectedTeam);
     router.replace("/(tabs)");
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background, justifyContent: "center", alignItems: "center" },
+    content: { alignItems: "center", padding: 32, width: "100%", maxWidth: 400 },
+
+    logo: { fontSize: 64, marginBottom: 8 },
+    appName: { fontSize: 28, fontWeight: "bold", color: theme.foreground, marginBottom: 8 },
+    desc: { fontSize: 15, color: theme.mutedForeground, marginBottom: 8 },
+    gap: { height: 48 },
+
+    loginBtn: {
+      backgroundColor: theme.primary,
+      paddingVertical: 16,
+      paddingHorizontal: 48,
+      borderRadius: 16,
+      width: "100%",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    loginBtnText: { fontSize: 17, fontWeight: "700", color: theme.primaryForeground },
+
+    browseBtn: {
+      paddingVertical: 14,
+      paddingHorizontal: 48,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: theme.border,
+      width: "100%",
+      alignItems: "center",
+    },
+    browseBtnText: { fontSize: 15, color: theme.mutedForeground },
+
+    emoji: { fontSize: 48, marginBottom: 12 },
+    title: { fontSize: 22, fontWeight: "bold", color: theme.foreground, marginBottom: 8 },
+    sub: { fontSize: 13, color: theme.mutedForeground, marginBottom: 28, textAlign: "center" },
+
+    teamGrid: {
+      flexDirection: "row", flexWrap: "wrap", justifyContent: "center",
+      gap: 12, marginBottom: 32,
+    },
+    teamItem: {
+      width: 80, height: 94, justifyContent: "center", alignItems: "center",
+      borderRadius: 14, borderWidth: 2, backgroundColor: theme.card, gap: 6,
+    },
+    teamName: { fontSize: 11, fontWeight: "600", color: theme.mutedForeground },
+
+    startBtn: {
+      backgroundColor: theme.foreground, paddingVertical: 16, borderRadius: 16,
+      width: "100%", alignItems: "center",
+    },
+    startBtnDisabled: { opacity: 0.35 },
+    startBtnText: { fontSize: 17, fontWeight: "700", color: theme.background },
+    startBtnTextDisabled: { color: theme.background },
+  }), [theme]);
 
   if (step === "team") {
     return (
@@ -32,12 +87,12 @@ export default function OnboardingScreen() {
                 onPress={() => setSelectedTeam(team.id)}
                 style={[
                   styles.teamItem,
-                  { borderColor: selectedTeam === team.id ? team.primary : theme.border },
-                  selectedTeam === team.id && { backgroundColor: team.primary + "18" },
+                  { borderColor: selectedTeam === team.id ? teamPrimaryColor(team.id, isDark) : theme.border },
+                  selectedTeam === team.id && { backgroundColor: teamPrimaryColor(team.id, isDark) + "18" },
                 ]}
               >
                 <TeamBadge teamId={team.id} size="md" />
-                <Text style={[styles.teamName, selectedTeam === team.id && { color: team.primary, fontWeight: "700" }]}>
+                <Text style={[styles.teamName, selectedTeam === team.id && { color: teamPrimaryColor(team.id, isDark), fontWeight: "700" }]}>
                   {team.shortName}
                 </Text>
               </Pressable>
@@ -78,57 +133,3 @@ export default function OnboardingScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background, justifyContent: "center", alignItems: "center" },
-  content: { alignItems: "center", padding: 32, width: "100%", maxWidth: 400 },
-
-  logo: { fontSize: 64, marginBottom: 8 },
-  appName: { fontSize: 28, fontWeight: "bold", color: theme.foreground, marginBottom: 8 },
-  desc: { fontSize: 15, color: theme.mutedForeground, marginBottom: 8 },
-  gap: { height: 48 },
-
-  loginBtn: {
-    backgroundColor: theme.primary,
-    paddingVertical: 16,
-    paddingHorizontal: 48,
-    borderRadius: 16,
-    width: "100%",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  loginBtnText: { fontSize: 17, fontWeight: "700", color: theme.primaryForeground },
-
-  browseBtn: {
-    paddingVertical: 14,
-    paddingHorizontal: 48,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.border,
-    width: "100%",
-    alignItems: "center",
-  },
-  browseBtnText: { fontSize: 15, color: theme.mutedForeground },
-
-  emoji: { fontSize: 48, marginBottom: 12 },
-  title: { fontSize: 22, fontWeight: "bold", color: theme.foreground, marginBottom: 8 },
-  sub: { fontSize: 13, color: theme.mutedForeground, marginBottom: 28, textAlign: "center" },
-
-  teamGrid: {
-    flexDirection: "row", flexWrap: "wrap", justifyContent: "center",
-    gap: 12, marginBottom: 32,
-  },
-  teamItem: {
-    width: 80, height: 94, justifyContent: "center", alignItems: "center",
-    borderRadius: 14, borderWidth: 2, backgroundColor: theme.card, gap: 6,
-  },
-  teamName: { fontSize: 11, fontWeight: "600", color: theme.mutedForeground },
-
-  startBtn: {
-    backgroundColor: theme.foreground, paddingVertical: 16, borderRadius: 16,
-    width: "100%", alignItems: "center",
-  },
-  startBtnDisabled: { opacity: 0.35 },
-  startBtnText: { fontSize: 17, fontWeight: "700", color: theme.background },
-  startBtnTextDisabled: { color: theme.background },
-});

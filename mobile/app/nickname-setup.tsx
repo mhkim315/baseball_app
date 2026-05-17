@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/lib/AuthContext";
 import { updateNickname } from "@/lib/auth";
-import { theme } from "@/lib/theme";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function NicknameSetupScreen() {
+  const { theme } = useTheme();
   const router = useRouter();
   const { refreshUser } = useAuth();
   const [nickname, setNickname] = useState("");
@@ -39,6 +40,47 @@ export default function NicknameSetupScreen() {
       setSubmitting(false);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    body: {
+      flex: 1,
+      justifyContent: "center",
+      paddingHorizontal: 32,
+      paddingBottom: 80,
+    },
+    title: { fontSize: 48, textAlign: "center", marginBottom: 16 },
+    heading: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: theme.foreground,
+      textAlign: "center",
+      marginBottom: 8,
+    },
+    description: {
+      fontSize: 13,
+      color: theme.mutedForeground,
+      textAlign: "center",
+      marginBottom: 32,
+    },
+    input: {
+      backgroundColor: theme.muted,
+      borderRadius: 12,
+      padding: 16,
+      fontSize: 16,
+      color: theme.foreground,
+      marginBottom: 16,
+      textAlign: "center",
+    },
+    submitBtn: {
+      backgroundColor: theme.foreground,
+      paddingVertical: 14,
+      borderRadius: 12,
+      alignItems: "center",
+    },
+    submitDisabled: { opacity: 0.4 },
+    submitText: { fontSize: 16, fontWeight: "600", color: theme.background },
+  }), [theme]);
 
   return (
     <View style={styles.container}>
@@ -74,44 +116,3 @@ export default function NicknameSetupScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
-  body: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 32,
-    paddingBottom: 80,
-  },
-  title: { fontSize: 48, textAlign: "center", marginBottom: 16 },
-  heading: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: theme.foreground,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  description: {
-    fontSize: 13,
-    color: theme.mutedForeground,
-    textAlign: "center",
-    marginBottom: 32,
-  },
-  input: {
-    backgroundColor: theme.muted,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: theme.foreground,
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  submitBtn: {
-    backgroundColor: theme.foreground,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  submitDisabled: { opacity: 0.4 },
-  submitText: { fontSize: 16, fontWeight: "600", color: theme.background },
-});

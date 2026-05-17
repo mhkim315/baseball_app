@@ -1,5 +1,6 @@
+import { useMemo } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
-import { theme } from "@/lib/theme";
+import { useTheme } from "@/lib/ThemeContext";
 import { formatDateForApi as formatDateStr } from "@shared/constants";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -42,6 +43,7 @@ interface DateStripProps {
 }
 
 export default function DateStrip({ selectedDate, onDateChange, hasGameDates = [], teamColor }: DateStripProps) {
+  const { theme } = useTheme();
   const goPrevWeek = () => {
     const d = new Date(selectedDate);
     d.setDate(d.getDate() - 7);
@@ -57,6 +59,96 @@ export default function DateStrip({ selectedDate, onDateChange, hasGameDates = [
   const weekDates = getWeekDates(selectedDate);
 
   const goToday = () => onDateChange(new Date());
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+      backgroundColor: theme.card,
+    },
+    weekLabelRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 20,
+      paddingTop: 6,
+      paddingBottom: 0,
+    },
+    weekLabel: {
+      fontSize: 11,
+      fontWeight: "600",
+      color: theme.mutedForeground,
+    },
+    todayLabel: {
+      fontSize: 11,
+      fontWeight: "600",
+      color: theme.primary,
+    },
+    stripRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      minHeight: 56,
+    },
+    weekBtn: { paddingHorizontal: 12, paddingVertical: 8 },
+    weekArrow: { fontSize: 22, color: theme.mutedForeground, fontWeight: "300", lineHeight: 24 },
+    scrollArea: { flex: 1, position: "relative" },
+    datesRow: {
+      flexDirection: "row",
+      paddingHorizontal: 4,
+      paddingVertical: 10,
+    },
+    dateItem: {
+      flex: 1,
+      alignItems: "center",
+      paddingVertical: 8,
+      paddingHorizontal: 2,
+      borderRadius: 12,
+      minHeight: 53,
+    },
+    dateItemSelected: {
+      backgroundColor: theme.foreground,
+    },
+    dayText: {
+      fontSize: 10,
+      color: theme.mutedForeground,
+      marginBottom: 4,
+    },
+    dayTextSelected: {
+      color: "rgba(255,255,255,0.7)",
+    },
+    dateNum: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: theme.foreground,
+    },
+    dateNumSelected: {
+      color: theme.background,
+    },
+    dotRow: {
+      height: 4,
+      marginTop: 4,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    todayDot: {
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: theme.destructive,
+    },
+    gameDot: {
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: theme.primary,
+    },
+    sunday: {
+      color: theme.destructive,
+    },
+    saturday: {
+      color: theme.info,
+    },
+  }), [theme]);
 
   return (
     <View style={styles.container}>
@@ -114,92 +206,3 @@ export default function DateStrip({ selectedDate, onDateChange, hasGameDates = [
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-    backgroundColor: theme.card,
-  },
-  weekLabelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingTop: 6,
-    paddingBottom: 0,
-  },
-  weekLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: theme.mutedForeground,
-  },
-  todayLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: theme.primary,
-  },
-  stripRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: 56,
-  },
-  weekBtn: { paddingHorizontal: 12, paddingVertical: 8 },
-  weekArrow: { fontSize: 22, color: "#888", fontWeight: "300", lineHeight: 24 },
-  scrollArea: { flex: 1, position: "relative" },
-  datesRow: {
-    flexDirection: "row",
-    paddingHorizontal: 4,
-    paddingVertical: 10,
-  },
-  dateItem: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 2,
-    borderRadius: 12,
-    minHeight: 53,
-  },
-  dateItemSelected: {
-    backgroundColor: theme.foreground,
-  },
-  dayText: {
-    fontSize: 10,
-    color: theme.mutedForeground,
-    marginBottom: 4,
-  },
-  dayTextSelected: {
-    color: "rgba(255,255,255,0.7)",
-  },
-  dateNum: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: theme.foreground,
-  },
-  dateNumSelected: {
-    color: theme.background,
-  },
-  dotRow: {
-    height: 4,
-    marginTop: 4,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  todayDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: theme.destructive,
-  },
-  gameDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: theme.primary,
-  },
-  sunday: {
-    color: theme.destructive,
-  },
-  saturday: {
-    color: theme.info,
-  },
-});

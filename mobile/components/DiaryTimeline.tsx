@@ -5,7 +5,7 @@ import DiaryCard from "@/components/DiaryCard";
 import { TeamBadge } from "@/components/TeamBadge";
 import { EMOTION_CHARACTER } from "@/components/EmotionPicker";
 import ConfirmModal from "@/components/ConfirmModal";
-import { theme } from "@/lib/theme";
+import { useTheme } from "@/lib/ThemeContext";
 import type { JikgwanRecord } from "@/lib/db";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { parseGameTeamIds } from "@shared/constants";
@@ -21,6 +21,7 @@ interface DiaryTimelineProps {
 }
 
 export default function DiaryTimeline({ records, teamId, onDelete, onEdit, onRefresh, refreshing }: DiaryTimelineProps) {
+  const { theme } = useTheme();
   const [deleteTarget, setDeleteTarget] = useState<JikgwanRecord | null>(null);
 
   const onThisDayRecords = useMemo(() => {
@@ -50,6 +51,60 @@ export default function DiaryTimeline({ records, teamId, onDelete, onEdit, onRef
     onDelete(deleteTarget.id);
     setDeleteTarget(null);
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    listContent: {
+      paddingBottom: 100,
+    },
+    // On This Day
+    onThisDaySection: {
+      marginBottom: 20,
+    },
+    onThisDayTitle: {
+      fontSize: 15,
+      fontWeight: "700",
+      color: theme.foreground,
+      marginBottom: 12,
+    },
+    onThisDayCard: {
+      backgroundColor: theme.card,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: 14,
+      width: 180,
+      gap: 6,
+    },
+    onThisDayHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    onThisDayEmoji: {
+      fontSize: 20,
+    },
+    onThisDayYear: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: theme.mutedForeground,
+    },
+    onThisDayTeams: {
+      fontSize: 11,
+      color: theme.mutedForeground,
+    },
+    onThisDayLine: {
+      fontSize: 12,
+      color: theme.foreground,
+      lineHeight: 16,
+    },
+    empty: {
+      alignItems: "center",
+      paddingVertical: 80,
+    },
+    emptyIcon: { fontSize: 48, marginBottom: 16 },
+    emptyText: { color: theme.mutedForeground, fontSize: 15 },
+    emptySub: { color: theme.mutedForeground, fontSize: 12, marginTop: 6 },
+  }), [theme]);
 
   const renderItem = ({ item }: { item: JikgwanRecord }) => (
     <DiaryCard
@@ -139,58 +194,3 @@ export default function DiaryTimeline({ records, teamId, onDelete, onEdit, onRef
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  listContent: {
-    paddingBottom: 100,
-  },
-  // On This Day
-  onThisDaySection: {
-    marginBottom: 20,
-  },
-  onThisDayTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: theme.foreground,
-    marginBottom: 12,
-  },
-  onThisDayCard: {
-    backgroundColor: theme.card,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: theme.border,
-    padding: 14,
-    width: 180,
-    gap: 6,
-  },
-  onThisDayHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  onThisDayEmoji: {
-    fontSize: 18,
-  },
-  onThisDayYear: {
-    fontSize: 11,
-    color: theme.mutedForeground,
-    fontWeight: "600",
-  },
-  onThisDayTeams: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: theme.foreground,
-  },
-  onThisDayLine: {
-    fontSize: 11,
-    color: theme.mutedForeground,
-    lineHeight: 16,
-  },
-  empty: {
-    alignItems: "center",
-    paddingVertical: 80,
-  },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyText: { color: theme.mutedForeground, fontSize: 15 },
-  emptySub: { color: theme.mutedForeground, fontSize: 12, marginTop: 6 },
-});

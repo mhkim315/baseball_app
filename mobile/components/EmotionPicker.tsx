@@ -1,6 +1,7 @@
+import { useMemo } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { TeamBadge } from "@/components/TeamBadge";
-import { theme } from "@/lib/theme";
+import { useTheme } from "@/lib/ThemeContext";
 
 export type EmotionId = "excited" | "happy" | "neutral" | "sad" | "angry";
 
@@ -26,6 +27,34 @@ interface EmotionPickerProps {
 }
 
 export default function EmotionPicker({ value, onChange, teamId }: EmotionPickerProps) {
+  const { theme } = useTheme();
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      alignItems: "center",
+    },
+    row: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    item: {
+      alignItems: "center",
+      paddingVertical: 8,
+      paddingHorizontal: 8,
+      borderRadius: 14,
+      backgroundColor: theme.muted,
+      minWidth: 56,
+      gap: 4,
+    },
+    label: {
+      fontSize: 10,
+      color: theme.mutedForeground,
+      fontWeight: "500",
+    },
+    labelSelected: {
+      color: theme.background,
+    },
+  }), [theme]);
+
   return (
     <View style={styles.container}>
       <View style={styles.row}>
@@ -52,30 +81,3 @@ export default function EmotionPicker({ value, onChange, teamId }: EmotionPicker
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: "center",
-  },
-  row: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  item: {
-    alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderRadius: 14,
-    backgroundColor: theme.muted,
-    minWidth: 56,
-    gap: 4,
-  },
-  label: {
-    fontSize: 10,
-    color: theme.mutedForeground,
-    fontWeight: "500",
-  },
-  labelSelected: {
-    color: theme.background,
-  },
-});

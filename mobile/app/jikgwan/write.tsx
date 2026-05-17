@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, Pressable, TextInput, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { DEFAULT_TEAM_ID } from "@shared/constants";
 import EmotionPicker from "@/components/EmotionPicker";
-import { theme } from "@/lib/theme";
+import { useTheme } from "@/lib/ThemeContext";
 import { addJikgwanRecord, getMyTeam } from "@/lib/db";
 
 export default function JikgwanWriteScreen() {
+  const { theme } = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams<{
     photoUri: string;
@@ -114,6 +115,188 @@ export default function JikgwanWriteScreen() {
         return "다음 경기도 직관 가자!";
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+      padding: 20,
+    },
+    // Step indicator
+    steps: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 60,
+      marginBottom: 40,
+      gap: 0,
+    },
+    stepDot: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: theme.border,
+    },
+    stepActive: {
+      backgroundColor: theme.foreground,
+    },
+    stepLine: {
+      width: 40,
+      height: 2,
+      backgroundColor: theme.border,
+    },
+    // Step content
+    stepContent: {
+      flex: 1,
+    },
+    stepTitle: {
+      fontSize: 22,
+      fontWeight: "bold",
+      color: theme.foreground,
+      textAlign: "center",
+    },
+    stepSub: {
+      fontSize: 14,
+      color: theme.mutedForeground,
+      textAlign: "center",
+      marginTop: 8,
+      marginBottom: 32,
+    },
+    // Emotion
+    emotionWrapper: {
+      marginTop: 20,
+    },
+    // Input
+    fieldLabel: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.foreground,
+      marginTop: 20,
+      marginBottom: 8,
+    },
+    inputRow: {
+      position: "relative",
+    },
+    input: {
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      padding: 14,
+      paddingRight: 50,
+      fontSize: 15,
+      color: theme.foreground,
+      borderWidth: 1,
+      borderColor: theme.border,
+      lineHeight: 22,
+    },
+    charCount: {
+      position: "absolute",
+      bottom: 10,
+      right: 12,
+      fontSize: 11,
+      color: theme.mutedForeground,
+    },
+    // Buttons
+    nextBtn: {
+      backgroundColor: theme.foreground,
+      borderRadius: 14,
+      paddingVertical: 16,
+      alignItems: "center",
+      marginTop: 32,
+    },
+    nextBtnDisabled: {
+      backgroundColor: theme.muted,
+    },
+    nextBtnText: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: theme.background,
+    },
+    nextBtnTextDisabled: {
+      color: theme.mutedForeground,
+    },
+    // Confirm step
+    confirmCard: {
+      backgroundColor: theme.card,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: 20,
+      marginTop: 20,
+      gap: 12,
+    },
+    confirmEmotion: {
+      alignItems: "center",
+      gap: 4,
+    },
+    confirmEmoji: {
+      fontSize: 40,
+    },
+    confirmEmotionLabel: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.foreground,
+    },
+    confirmDivider: {
+      height: 1,
+      backgroundColor: theme.border,
+    },
+    confirmDiary: {
+      gap: 6,
+    },
+    confirmLine: {
+      fontSize: 14,
+      color: theme.foreground,
+      lineHeight: 20,
+    },
+    confirmGame: {
+      alignItems: "center",
+      gap: 4,
+    },
+    confirmGameText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.foreground,
+    },
+    confirmScore: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: theme.foreground,
+    },
+    confirmStadium: {
+      fontSize: 12,
+      color: theme.mutedForeground,
+    },
+    confirmActions: {
+      flexDirection: "row",
+      gap: 12,
+      marginTop: 24,
+    },
+    backBtn: {
+      flex: 1,
+      paddingVertical: 16,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.border,
+      alignItems: "center",
+    },
+    backBtnText: {
+      fontSize: 16,
+      color: theme.foreground,
+      fontWeight: "600",
+    },
+    saveBtn: {
+      flex: 1,
+      paddingVertical: 16,
+      borderRadius: 14,
+      backgroundColor: theme.foreground,
+      alignItems: "center",
+    },
+    saveBtnText: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: theme.background,
+    },
+  }), [theme]);
 
   return (
     <View style={styles.container}>
@@ -270,184 +453,3 @@ export default function JikgwanWriteScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.background,
-    padding: 20,
-  },
-  // Step indicator
-  steps: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 60,
-    marginBottom: 40,
-    gap: 0,
-  },
-  stepDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: theme.border,
-  },
-  stepActive: {
-    backgroundColor: theme.foreground,
-  },
-  stepLine: {
-    width: 40,
-    height: 2,
-    backgroundColor: theme.border,
-  },
-  // Step content
-  stepContent: {
-    flex: 1,
-  },
-  stepTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: theme.foreground,
-    textAlign: "center",
-  },
-  stepSub: {
-    fontSize: 14,
-    color: theme.mutedForeground,
-    textAlign: "center",
-    marginTop: 8,
-    marginBottom: 32,
-  },
-  // Emotion
-  emotionWrapper: {
-    marginTop: 20,
-  },
-  // Input
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: theme.foreground,
-    marginTop: 20,
-    marginBottom: 8,
-  },
-  inputRow: {
-    position: "relative",
-  },
-  input: {
-    backgroundColor: theme.card,
-    borderRadius: 12,
-    padding: 14,
-    paddingRight: 50,
-    fontSize: 15,
-    color: theme.foreground,
-    borderWidth: 1,
-    borderColor: theme.border,
-    lineHeight: 22,
-  },
-  charCount: {
-    position: "absolute",
-    bottom: 10,
-    right: 12,
-    fontSize: 11,
-    color: theme.mutedForeground,
-  },
-  // Buttons
-  nextBtn: {
-    backgroundColor: theme.foreground,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginTop: 32,
-  },
-  nextBtnDisabled: {
-    backgroundColor: theme.muted,
-  },
-  nextBtnText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: theme.background,
-  },
-  nextBtnTextDisabled: {
-    color: theme.mutedForeground,
-  },
-  // Confirm step
-  confirmCard: {
-    backgroundColor: theme.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.border,
-    padding: 20,
-    marginTop: 20,
-    gap: 12,
-  },
-  confirmEmotion: {
-    alignItems: "center",
-    gap: 4,
-  },
-  confirmEmoji: {
-    fontSize: 40,
-  },
-  confirmEmotionLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: theme.foreground,
-  },
-  confirmDivider: {
-    height: 1,
-    backgroundColor: theme.border,
-  },
-  confirmDiary: {
-    gap: 6,
-  },
-  confirmLine: {
-    fontSize: 14,
-    color: theme.foreground,
-    lineHeight: 20,
-  },
-  confirmGame: {
-    alignItems: "center",
-    gap: 4,
-  },
-  confirmGameText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: theme.foreground,
-  },
-  confirmScore: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: theme.foreground,
-  },
-  confirmStadium: {
-    fontSize: 12,
-    color: theme.mutedForeground,
-  },
-  confirmActions: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 24,
-  },
-  backBtn: {
-    flex: 1,
-    paddingVertical: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: theme.border,
-    alignItems: "center",
-  },
-  backBtnText: {
-    fontSize: 16,
-    color: theme.foreground,
-    fontWeight: "600",
-  },
-  saveBtn: {
-    flex: 1,
-    paddingVertical: 16,
-    borderRadius: 14,
-    backgroundColor: theme.foreground,
-    alignItems: "center",
-  },
-  saveBtnText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: theme.background,
-  },
-});

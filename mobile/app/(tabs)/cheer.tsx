@@ -1,11 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { getMyTeam } from "@/lib/db";
 import TeamExpander from "@/components/TeamExpander";
 import SettingsButton from "@/components/SettingsButton";
 import CheerContent from "@/components/CheerContent";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import { TEAM_COLORS } from "@shared/teamColors";
 
 type TabId = "songs" | "players" | "rules";
@@ -13,6 +13,37 @@ type TabId = "songs" | "players" | "rules";
 const TAB_LABELS: Record<TabId, string> = { songs: "구단 응원가", players: "선수 응원가", rules: "야구 규칙" };
 
 export default function CheerScreen() {
+  const { theme, isDark } = useTheme();
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    header: {
+      paddingTop: 60,
+      paddingHorizontal: 20,
+      paddingBottom: 8,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    pageTitle: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: theme.foreground,
+    },
+    content: {
+      padding: 16,
+      paddingBottom: 100,
+    },
+
+    // Tabs
+    tabRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: theme.border, marginHorizontal: 16 },
+    tab: { flex: 1, alignItems: "center", paddingVertical: 10 },
+    tabText: { fontSize: 12, color: theme.mutedForeground, fontWeight: "500" },
+
+    // Empty state
+    emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 32 },
+    emptyTitle: { fontSize: 17, fontWeight: "700", color: theme.foreground, marginBottom: 8, textAlign: "center" },
+    emptyDesc: { fontSize: 13, color: theme.mutedForeground, lineHeight: 20, textAlign: "center" },
+  }), [theme]);
   const [myTeam, setMyTeam] = useState<string | null>(null);
   const [displayTeam, setDisplayTeam] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>("songs");
@@ -58,7 +89,7 @@ export default function CheerScreen() {
           />
         )}
         {myTeam && <View style={{ width: 4 }} />}
-        <SettingsButton color={teamColor?.primary} />
+        <SettingsButton color={teamPrimaryColor(activeTeam, isDark)} />
       </View>
 
       {/* Tab switcher */}
@@ -67,9 +98,9 @@ export default function CheerScreen() {
           <Pressable
             key={tab}
             onPress={() => setActiveTab(tab)}
-            style={[styles.tab, activeTab === tab && { borderBottomColor: teamColor?.primary || theme.primary, borderBottomWidth: 2 }]}
+            style={[styles.tab, activeTab === tab && { borderBottomColor: teamPrimaryColor(activeTeam, isDark) || theme.primary, borderBottomWidth: 2 }]}
           >
-            <Text style={[styles.tabText, activeTab === tab && { color: teamColor?.primary || theme.primary, fontWeight: "700" }]}>
+            <Text style={[styles.tabText, activeTab === tab && { color: teamPrimaryColor(activeTeam, isDark) || theme.primary, fontWeight: "700" }]}>
               {TAB_LABELS[tab]}
             </Text>
           </Pressable>
@@ -88,33 +119,3 @@ export default function CheerScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 8,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  pageTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: theme.foreground,
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-
-  // Tabs
-  tabRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: theme.border, marginHorizontal: 16 },
-  tab: { flex: 1, alignItems: "center", paddingVertical: 10 },
-  tabText: { fontSize: 12, color: theme.mutedForeground, fontWeight: "500" },
-
-  // Empty state
-  emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 32 },
-  emptyTitle: { fontSize: 17, fontWeight: "700", color: theme.foreground, marginBottom: 8, textAlign: "center" },
-  emptyDesc: { fontSize: 13, color: theme.mutedForeground, lineHeight: 20, textAlign: "center" },
-});

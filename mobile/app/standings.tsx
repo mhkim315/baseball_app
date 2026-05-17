@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID } from "@shared/constants";
 import { fetchStandingsJson, type StandingRow } from "@/lib/api";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
 export default function StandingsScreen() {
+  const { theme, isDark } = useTheme();
   const router = useRouter();
   const [standings, setStandings] = useState<StandingRow[]>([]);
   const [fetchedAt, setFetchedAt] = useState("");
@@ -37,6 +38,45 @@ export default function StandingsScreen() {
     if (streak.includes("승")) return { color: "#1565c0" };
     return { color: theme.mutedForeground };
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+
+    // Header
+    headerBar: {
+      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+      paddingTop: 60, paddingHorizontal: 16, paddingBottom: 12,
+      borderBottomWidth: 1, borderBottomColor: theme.border,
+    },
+    backBtn: { padding: 8, width: 60 },
+    backText: { color: theme.foreground, fontSize: 20 },
+    headerTitle: { fontSize: 17, fontWeight: "600", color: theme.foreground },
+
+    // Table scroll
+    tableScroll: { flex: 1 },
+
+    // Table
+    tableHeader: { flexDirection: "row", backgroundColor: theme.muted, borderBottomWidth: 1, borderBottomColor: theme.border },
+    headerCell: { fontSize: 11, fontWeight: "700", color: theme.mutedForeground, paddingVertical: 10 },
+    tableRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: theme.border },
+    cell: { paddingVertical: 10, paddingHorizontal: 6, fontSize: 12, color: theme.foreground },
+    rankCell: { width: 36, textAlign: "center" },
+    teamCellH: { width: 70 },
+    teamCell: { width: 70, flexDirection: "row", alignItems: "center", gap: 4 },
+    teamDot: { width: 8, height: 8, borderRadius: 4 },
+    teamName: { fontSize: 12, color: theme.foreground, fontWeight: "500" },
+    statCell: { width: 48, textAlign: "center" },
+
+    // Loading / Error
+    loadingRow: { paddingVertical: 60, alignItems: "center" },
+    errorText: { color: theme.mutedForeground, fontSize: 14, marginBottom: 16 },
+    retryBtn: { paddingVertical: 8, paddingHorizontal: 20, backgroundColor: theme.foreground, borderRadius: 16 },
+    retryText: { color: theme.background, fontSize: 13, fontWeight: "600" },
+
+    // Footer
+    footer: { padding: 12, alignItems: "center" },
+    footerText: { fontSize: 11, color: theme.mutedForeground },
+  }), [theme]);
 
   return (
     <View style={styles.container}>
@@ -89,7 +129,7 @@ export default function StandingsScreen() {
                 <View key={i} style={[styles.tableRow, i % 2 === 1 && { backgroundColor: theme.secondary }]}>
                   <Text style={[styles.cell, styles.rankCell]}>{row.rank}</Text>
                   <View style={[styles.cell, styles.teamCell]}>
-                    {teamColor && <View style={[styles.teamDot, { backgroundColor: teamColor.primary }]} />}
+                    {teamColor && <View style={[styles.teamDot, { backgroundColor: teamPrimaryColor(teamId, isDark) }]} />}
                     <Text style={styles.teamName} numberOfLines={1}>{row.teamName}</Text>
                   </View>
                   <Text style={[styles.cell, styles.statCell]}>{total}</Text>
@@ -129,42 +169,3 @@ function formatDate(isoStr: string): string {
     return isoStr;
   }
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
-
-  // Header
-  headerBar: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingTop: 60, paddingHorizontal: 16, paddingBottom: 12,
-    borderBottomWidth: 1, borderBottomColor: theme.border,
-  },
-  backBtn: { padding: 8, width: 60 },
-  backText: { color: theme.foreground, fontSize: 20 },
-  headerTitle: { fontSize: 17, fontWeight: "600", color: theme.foreground },
-
-  // Table scroll
-  tableScroll: { flex: 1 },
-
-  // Table
-  tableHeader: { flexDirection: "row", backgroundColor: theme.muted, borderBottomWidth: 1, borderBottomColor: theme.border },
-  headerCell: { fontSize: 11, fontWeight: "700", color: theme.mutedForeground, paddingVertical: 10 },
-  tableRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: theme.border },
-  cell: { paddingVertical: 10, paddingHorizontal: 6, fontSize: 12, color: theme.foreground },
-  rankCell: { width: 36, textAlign: "center" },
-  teamCellH: { width: 70 },
-  teamCell: { width: 70, flexDirection: "row", alignItems: "center", gap: 4 },
-  teamDot: { width: 8, height: 8, borderRadius: 4 },
-  teamName: { fontSize: 12, color: theme.foreground, fontWeight: "500" },
-  statCell: { width: 48, textAlign: "center" },
-
-  // Loading / Error
-  loadingRow: { paddingVertical: 60, alignItems: "center" },
-  errorText: { color: theme.mutedForeground, fontSize: 14, marginBottom: 16 },
-  retryBtn: { paddingVertical: 8, paddingHorizontal: 20, backgroundColor: theme.foreground, borderRadius: 16 },
-  retryText: { color: theme.background, fontSize: 13, fontWeight: "600" },
-
-  // Footer
-  footer: { padding: 12, alignItems: "center" },
-  footerText: { fontSize: 11, color: theme.mutedForeground },
-});

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { TEAM_COLORS } from "@shared/teamColors";
@@ -8,7 +8,7 @@ import {
 } from "@/lib/api";
 import { TeamBadge } from "@/components/TeamBadge";
 import DiaryEntryModal, { type GameOption } from "@/components/DiaryEntryModal";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
 const POSITION_LABELS: Record<string, string> = {
   "1": "1B", "2": "2B", "3": "3B",
@@ -28,6 +28,7 @@ const WLS_COLORS: Record<string, { text: string; bg: string }> = {
 };
 
 export default function GameDetailScreen() {
+  const { theme, isDark } = useTheme();
   const router = useRouter();
   const { id: gameId, ap, hp } = useLocalSearchParams<{ id: string; ap?: string; hp?: string }>();
   const gid = gameId || "";
@@ -156,6 +157,134 @@ export default function GameDetailScreen() {
     setShowDiaryModal(true);
   }, [detail, gid]);
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    activityContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+    errorText: { color: theme.mutedForeground, fontSize: 14, marginBottom: 16 },
+    retryBtn: { paddingVertical: 10, paddingHorizontal: 20, backgroundColor: theme.foreground, borderRadius: 20 },
+    retryText: { color: theme.background, fontSize: 14, fontWeight: "600" },
+    scrollContent: { padding: 16, paddingBottom: 40 },
+
+    // Header bar
+    headerBar: {
+      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+      paddingTop: 60, paddingHorizontal: 16, paddingBottom: 12,
+      borderBottomWidth: 1, borderBottomColor: theme.border,
+      backgroundColor: theme.card,
+    },
+    headerBackBtn: { padding: 8, width: 60 },
+    headerBackText: { color: theme.foreground, fontSize: 20 },
+    headerBarTitle: { fontSize: 17, fontWeight: "600", color: theme.foreground },
+
+    // Card
+    card: { backgroundColor: theme.card, borderRadius: 16, borderWidth: 1, borderColor: theme.border, padding: 20, marginTop: 12 },
+    sectionTitle: { fontSize: 15, fontWeight: "700", color: theme.foreground, marginBottom: 12 },
+
+    // Game header
+    gameHeaderRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
+    teamColumn: { flex: 1, alignItems: "center", gap: 6 },
+    teamName: { fontSize: 14, fontWeight: "600" },
+    pitcherName: { fontSize: 12, color: theme.mutedForeground },
+    scoreColumn: { alignItems: "center", gap: 4, paddingHorizontal: 12 },
+    gameTime: { fontSize: 11, color: theme.mutedForeground },
+    scoreRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+    scoreNum: { fontSize: 26, fontWeight: "bold", color: theme.foreground },
+    scoreDim: { color: theme.mutedForeground, opacity: 0.5 },
+    scoreColon: { fontSize: 14, color: theme.mutedForeground },
+    vsText: { fontSize: 16, fontWeight: "700", color: theme.mutedForeground },
+    cancelledText: { fontSize: 16, fontWeight: "700", color: theme.mutedForeground, textDecorationLine: "line-through" },
+    statusBadge: { backgroundColor: theme.muted, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
+    statusLive: { backgroundColor: theme.destructive + "18" },
+    statusText: { fontSize: 10, fontWeight: "600", color: theme.mutedForeground },
+    statusLiveText: { color: theme.destructive },
+    venue: { textAlign: "center", fontSize: 11, color: theme.mutedForeground, marginTop: 12 },
+
+    // Scoreboard table
+    scoreboardTable: { gap: 0 },
+    scoreboardRow: { flexDirection: "row", alignItems: "center", marginBottom: 2 },
+    scoreboardLabel: { fontSize: 12, fontWeight: "600", width: 28, color: theme.mutedForeground },
+    scoreboardCell: { fontSize: 12, color: theme.foreground, width: 24, textAlign: "center" },
+    scoreboardBorderCell: { fontSize: 12, color: theme.foreground, fontWeight: "600", width: 24, textAlign: "center", borderLeftWidth: 1, borderLeftColor: theme.border },
+
+    // Preview
+    previewRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
+    previewTeamCol: { flex: 1, alignItems: "center", gap: 2 },
+    previewRank: { fontSize: 11, color: theme.mutedForeground },
+    previewTeam: { fontSize: 14, fontWeight: "700" },
+    previewRecord: { fontSize: 11, color: theme.mutedForeground },
+    previewVsCol: { alignItems: "center", gap: 2, paddingHorizontal: 16 },
+    previewVsLabel: { fontSize: 10, color: theme.mutedForeground },
+    recentDivider: { borderTopWidth: 1, borderTopColor: theme.border, paddingTop: 12 },
+    recentRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+    recentDots: { flexDirection: "row", gap: 3 },
+    recentDot: { width: 20, height: 20, borderRadius: 10, justifyContent: "center", alignItems: "center" },
+    recentWin: { backgroundColor: "#1565c0" },
+    recentLose: { backgroundColor: "#d32f2f" },
+    recentDraw: { backgroundColor: theme.muted },
+    recentDotText: { fontSize: 10, fontWeight: "bold", color: "#fff" },
+    recentLabel: { fontSize: 10, color: theme.mutedForeground },
+
+    // Pitchers
+    pitcherRow: { flexDirection: "row", gap: 8 },
+    pitcherCard: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: theme.secondary, borderRadius: 12, padding: 12 },
+    pitcherNameBold: { fontSize: 14, fontWeight: "600", color: theme.foreground },
+    pitcherTeam: { fontSize: 11 },
+
+    // Pitching result
+    pitchingList: { gap: 8 },
+    pitchingRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: theme.secondary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 },
+    pitchingLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
+    wlsBadge: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
+    wlsText: { fontSize: 10, fontWeight: "bold" },
+    pitchingName: { fontSize: 14, fontWeight: "500", color: theme.foreground },
+    pitchingStats: { fontSize: 12, color: theme.mutedForeground },
+
+    // Lineups
+    lineupSection: { marginTop: 12 },
+    lineupStatusRow: { alignItems: "center", marginBottom: 8 },
+    lineupStatusBadge: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 3 },
+    lineupStatusBadgeText: { fontSize: 11, fontWeight: "600" },
+    liveStatusBadge: { backgroundColor: theme.destructive + "18", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 3 },
+    liveStatusText: { fontSize: 11, fontWeight: "600", color: theme.destructive },
+    lineupConfirmed: { backgroundColor: "#e3f2fd" },
+    lineupExpected: { backgroundColor: "#fff3e0" },
+    lineupGrid: { flexDirection: "row", gap: 8 },
+    lineupCard: { flex: 1, backgroundColor: theme.card, borderRadius: 16, borderWidth: 1, borderColor: theme.border, padding: 12 },
+    lineupHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: theme.border },
+    lineupTeam: { fontSize: 13, fontWeight: "700" },
+    lineupPlayer: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
+    lineupOrder: { fontSize: 12, color: theme.mutedForeground, width: 14, textAlign: "right" },
+    lineupPos: { fontSize: 11, color: theme.mutedForeground, backgroundColor: theme.muted, borderRadius: 4, paddingHorizontal: 6, textAlign: "center", minWidth: 22 },
+    lineupName: { fontSize: 13, fontWeight: "500", color: theme.foreground },
+    noLineupCard: { alignItems: "center", paddingVertical: 32 },
+    noLineupText: { color: theme.mutedForeground, fontSize: 14, marginBottom: 4 },
+    noLineupSub: { color: theme.mutedForeground, fontSize: 12 },
+
+    // Highlights
+    highlightsList: { gap: 8 },
+    highlightRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
+    highlightBadge: { backgroundColor: theme.muted, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+    highlightBadgeText: { fontSize: 11, fontWeight: "500", color: theme.mutedForeground },
+    highlightDesc: { fontSize: 14, color: theme.foreground, flex: 1, lineHeight: 20 },
+
+    // Diary record button
+    diaryRecordBtn: {
+      backgroundColor: theme.foreground,
+      borderRadius: 16,
+      paddingVertical: 16,
+      alignItems: "center",
+      marginTop: 16,
+    },
+    diaryRecordText: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: theme.background,
+    },
+
+    // Footer
+    footer: { textAlign: "center", fontSize: 11, color: theme.mutedForeground, marginTop: 24, marginBottom: 16 },
+  }), [theme]);
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -259,7 +388,7 @@ export default function GameDetailScreen() {
             {/* Away team */}
             <View style={styles.teamColumn}>
               <TeamBadge teamId={detail.awayTeam} size="lg" emotion={awayEmotion} />
-              <Text style={[styles.teamName, { color: away.primary }]}>{away?.name}</Text>
+              <Text style={[styles.teamName, { color: teamPrimaryColor(detail.awayTeam, isDark) }]}>{away?.name}</Text>
               <Text style={styles.pitcherName}>{awayPitcherName || "-"}</Text>
             </View>
 
@@ -291,7 +420,7 @@ export default function GameDetailScreen() {
             {/* Home team */}
             <View style={styles.teamColumn}>
               <TeamBadge teamId={detail.homeTeam} size="lg" emotion={homeEmotion} />
-              <Text style={[styles.teamName, { color: home.primary }]}>{home?.name}</Text>
+              <Text style={[styles.teamName, { color: teamPrimaryColor(detail.homeTeam, isDark) }]}>{home?.name}</Text>
               <Text style={styles.pitcherName}>{homePitcherName || "-"}</Text>
             </View>
           </View>
@@ -317,7 +446,7 @@ export default function GameDetailScreen() {
               </View>
               {/* Away row */}
               <View style={styles.scoreboardRow}>
-                <Text style={[styles.scoreboardLabel, { color: away.primary }]}>{away?.shortName}</Text>
+                <Text style={[styles.scoreboardLabel, { color: teamPrimaryColor(detail.awayTeam, isDark) }]}>{away?.shortName}</Text>
                 {Array.from({ length: maxInn }).map((_, i) => (
                   <Text key={i} style={styles.scoreboardCell}>{innData.away[i] != null ? innData.away[i] : '-'}</Text>
                 ))}
@@ -327,7 +456,7 @@ export default function GameDetailScreen() {
               </View>
               {/* Home row */}
               <View style={styles.scoreboardRow}>
-                <Text style={[styles.scoreboardLabel, { color: home.primary }]}>{home?.shortName}</Text>
+                <Text style={[styles.scoreboardLabel, { color: teamPrimaryColor(detail.homeTeam, isDark) }]}>{home?.shortName}</Text>
                 {Array.from({ length: maxInn }).map((_, i) => (
                   <Text key={i} style={styles.scoreboardCell}>{innData.home[i] != null ? innData.home[i] : '-'}</Text>
                 ))}
@@ -345,7 +474,7 @@ export default function GameDetailScreen() {
             <View style={styles.previewRow}>
               <View style={styles.previewTeamCol}>
                 <Text style={styles.previewRank}>{previewData.awayRank}위</Text>
-                <Text style={[styles.previewTeam, { color: away.primary }]}>{away?.shortName}</Text>
+                <Text style={[styles.previewTeam, { color: teamPrimaryColor(detail.awayTeam, isDark) }]}>{away?.shortName}</Text>
                 <Text style={styles.previewRecord}>{previewData.awayRecord}</Text>
               </View>
               <View style={styles.previewVsCol}>
@@ -354,7 +483,7 @@ export default function GameDetailScreen() {
               </View>
               <View style={styles.previewTeamCol}>
                 <Text style={styles.previewRank}>{previewData.homeRank}위</Text>
-                <Text style={[styles.previewTeam, { color: home.primary }]}>{home?.shortName}</Text>
+                <Text style={[styles.previewTeam, { color: teamPrimaryColor(detail.homeTeam, isDark) }]}>{home?.shortName}</Text>
                 <Text style={styles.previewRecord}>{previewData.homeRecord}</Text>
               </View>
             </View>
@@ -388,14 +517,14 @@ export default function GameDetailScreen() {
               <TeamBadge teamId={detail.awayTeam} size="sm" variant="ball" />
               <View>
                 <Text style={styles.pitcherNameBold}>{awayPitcherName || "미정"}</Text>
-                <Text style={[styles.pitcherTeam, { color: away.primary }]}>{away?.shortName}</Text>
+                <Text style={[styles.pitcherTeam, { color: teamPrimaryColor(detail.awayTeam, isDark) }]}>{away?.shortName}</Text>
               </View>
             </View>
             <View style={styles.pitcherCard}>
               <TeamBadge teamId={detail.homeTeam} size="sm" variant="ball" />
               <View>
                 <Text style={styles.pitcherNameBold}>{homePitcherName || "미정"}</Text>
-                <Text style={[styles.pitcherTeam, { color: home.primary }]}>{home?.shortName}</Text>
+                <Text style={[styles.pitcherTeam, { color: teamPrimaryColor(detail.homeTeam, isDark) }]}>{home?.shortName}</Text>
               </View>
             </View>
           </View>
@@ -471,7 +600,7 @@ export default function GameDetailScreen() {
               <View style={styles.lineupCard}>
                 <View style={styles.lineupHeader}>
                   <TeamBadge teamId={detail.awayTeam} size="sm" variant="bat" />
-                  <Text style={[styles.lineupTeam, { color: away.primary }]}>{away?.shortName}</Text>
+                  <Text style={[styles.lineupTeam, { color: teamPrimaryColor(detail.awayTeam, isDark) }]}>{away?.shortName}</Text>
                 </View>
                 {awayLineup.map((player: LineupPlayer) => (
                   <View key={player.order} style={styles.lineupPlayer}>
@@ -485,7 +614,7 @@ export default function GameDetailScreen() {
               <View style={styles.lineupCard}>
                 <View style={styles.lineupHeader}>
                   <TeamBadge teamId={detail.homeTeam} size="sm" variant="bat" />
-                  <Text style={[styles.lineupTeam, { color: home.primary }]}>{home?.shortName}</Text>
+                  <Text style={[styles.lineupTeam, { color: teamPrimaryColor(detail.homeTeam, isDark) }]}>{home?.shortName}</Text>
                 </View>
                 {homeLineup.map((player: LineupPlayer) => (
                   <View key={player.order} style={styles.lineupPlayer}>
@@ -547,130 +676,4 @@ export default function GameDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
-  activityContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  errorText: { color: theme.mutedForeground, fontSize: 14, marginBottom: 16 },
-  retryBtn: { paddingVertical: 10, paddingHorizontal: 20, backgroundColor: theme.foreground, borderRadius: 20 },
-  retryText: { color: theme.background, fontSize: 14, fontWeight: "600" },
-  scrollContent: { padding: 16, paddingBottom: 40 },
 
-  // Header bar
-  headerBar: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingTop: 60, paddingHorizontal: 16, paddingBottom: 12,
-    borderBottomWidth: 1, borderBottomColor: theme.border,
-    backgroundColor: theme.card,
-  },
-  headerBackBtn: { padding: 8, width: 60 },
-  headerBackText: { color: theme.foreground, fontSize: 20 },
-  headerBarTitle: { fontSize: 17, fontWeight: "600", color: theme.foreground },
-
-  // Card
-  card: { backgroundColor: theme.card, borderRadius: 16, borderWidth: 1, borderColor: theme.border, padding: 20, marginTop: 12 },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: theme.foreground, marginBottom: 12 },
-
-  // Game header
-  gameHeaderRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
-  teamColumn: { flex: 1, alignItems: "center", gap: 6 },
-  teamName: { fontSize: 14, fontWeight: "600" },
-  pitcherName: { fontSize: 12, color: theme.mutedForeground },
-  scoreColumn: { alignItems: "center", gap: 4, paddingHorizontal: 12 },
-  gameTime: { fontSize: 11, color: theme.mutedForeground },
-  scoreRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  scoreNum: { fontSize: 26, fontWeight: "bold", color: theme.foreground },
-  scoreDim: { color: theme.mutedForeground, opacity: 0.5 },
-  scoreColon: { fontSize: 14, color: theme.mutedForeground },
-  vsText: { fontSize: 16, fontWeight: "700", color: theme.mutedForeground },
-  cancelledText: { fontSize: 16, fontWeight: "700", color: theme.mutedForeground, textDecorationLine: "line-through" },
-  statusBadge: { backgroundColor: theme.muted, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
-  statusLive: { backgroundColor: theme.destructive + "18" },
-  statusText: { fontSize: 10, fontWeight: "600", color: theme.mutedForeground },
-  statusLiveText: { color: theme.destructive },
-  venue: { textAlign: "center", fontSize: 11, color: theme.mutedForeground, marginTop: 12 },
-
-  // Scoreboard table
-  scoreboardTable: { gap: 0 },
-  scoreboardRow: { flexDirection: "row", alignItems: "center", marginBottom: 2 },
-  scoreboardLabel: { fontSize: 12, fontWeight: "600", width: 28 },
-  scoreboardCell: { fontSize: 12, color: theme.foreground, width: 24, textAlign: "center" },
-  scoreboardBorderCell: { fontSize: 12, color: theme.foreground, fontWeight: "600", width: 24, textAlign: "center", borderLeftWidth: 1, borderLeftColor: theme.border },
-
-  // Preview
-  previewRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
-  previewTeamCol: { flex: 1, alignItems: "center", gap: 2 },
-  previewRank: { fontSize: 11, color: theme.mutedForeground },
-  previewTeam: { fontSize: 14, fontWeight: "700" },
-  previewRecord: { fontSize: 11, color: theme.mutedForeground },
-  previewVsCol: { alignItems: "center", gap: 2, paddingHorizontal: 16 },
-  previewVsLabel: { fontSize: 10, color: theme.mutedForeground },
-  recentDivider: { borderTopWidth: 1, borderTopColor: theme.border, paddingTop: 12 },
-  recentRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  recentDots: { flexDirection: "row", gap: 3 },
-  recentDot: { width: 20, height: 20, borderRadius: 10, justifyContent: "center", alignItems: "center" },
-  recentWin: { backgroundColor: "#1565c0" },
-  recentLose: { backgroundColor: "#d32f2f" },
-  recentDraw: { backgroundColor: theme.muted },
-  recentDotText: { fontSize: 10, fontWeight: "bold", color: "#fff" },
-  recentLabel: { fontSize: 10, color: theme.mutedForeground },
-
-  // Pitchers
-  pitcherRow: { flexDirection: "row", gap: 8 },
-  pitcherCard: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: theme.secondary, borderRadius: 12, padding: 12 },
-  pitcherNameBold: { fontSize: 14, fontWeight: "600", color: theme.foreground },
-  pitcherTeam: { fontSize: 11 },
-
-  // Pitching result
-  pitchingList: { gap: 8 },
-  pitchingRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: theme.secondary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 },
-  pitchingLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
-  wlsBadge: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
-  wlsText: { fontSize: 10, fontWeight: "bold" },
-  pitchingName: { fontSize: 14, fontWeight: "500", color: theme.foreground },
-  pitchingStats: { fontSize: 12, color: theme.mutedForeground },
-
-  // Lineups
-  lineupSection: { marginTop: 12 },
-  lineupStatusRow: { alignItems: "center", marginBottom: 8 },
-  lineupStatusBadge: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 3 },
-  lineupStatusBadgeText: { fontSize: 11, fontWeight: "600" },
-  liveStatusBadge: { backgroundColor: theme.destructive + "18", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 3 },
-  liveStatusText: { fontSize: 11, fontWeight: "600", color: theme.destructive },
-  lineupConfirmed: { backgroundColor: "#e3f2fd" },
-  lineupExpected: { backgroundColor: "#fff3e0" },
-  lineupGrid: { flexDirection: "row", gap: 8 },
-  lineupCard: { flex: 1, backgroundColor: theme.card, borderRadius: 16, borderWidth: 1, borderColor: theme.border, padding: 12 },
-  lineupHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: theme.border },
-  lineupTeam: { fontSize: 13, fontWeight: "700" },
-  lineupPlayer: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
-  lineupOrder: { fontSize: 12, color: theme.mutedForeground, width: 14, textAlign: "right" },
-  lineupPos: { fontSize: 11, color: theme.mutedForeground, backgroundColor: theme.muted, borderRadius: 4, paddingHorizontal: 6, textAlign: "center", minWidth: 22 },
-  lineupName: { fontSize: 13, fontWeight: "500", color: theme.foreground },
-  noLineupCard: { alignItems: "center", paddingVertical: 32 },
-  noLineupText: { color: theme.mutedForeground, fontSize: 14, marginBottom: 4 },
-  noLineupSub: { color: theme.mutedForeground, fontSize: 12 },
-
-  // Highlights
-  highlightsList: { gap: 8 },
-  highlightRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
-  highlightBadge: { backgroundColor: theme.muted, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  highlightBadgeText: { fontSize: 11, fontWeight: "500", color: theme.mutedForeground },
-  highlightDesc: { fontSize: 14, color: theme.foreground, flex: 1, lineHeight: 20 },
-
-  // Diary record button
-  diaryRecordBtn: {
-    backgroundColor: theme.foreground,
-    borderRadius: 16,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginTop: 16,
-  },
-  diaryRecordText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: theme.background,
-  },
-
-  // Footer
-  footer: { textAlign: "center", fontSize: 11, color: theme.mutedForeground, marginTop: 24, marginBottom: 16 },
-});

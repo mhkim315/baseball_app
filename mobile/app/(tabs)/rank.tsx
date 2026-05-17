@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, ScrollView, ActivityIndicator, Pressable, StyleSheet } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { TEAM_COLORS } from "@shared/teamColors";
@@ -6,7 +6,7 @@ import { TEAM_NAME_TO_ID } from "@shared/constants";
 import { fetchStandingsJson, type StandingRow } from "@/lib/api";
 import { getMyTeam } from "@/lib/db";
 import SettingsButton from "@/components/SettingsButton";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
 function parseWLT(wlt: string): { wins: number; draws: number; losses: number } {
   const m = wlt.match(/(\d+)승(\d+)무(\d+)패/);
@@ -30,6 +30,7 @@ function streakColor(streak: string): string {
 }
 
 export default function RankScreen() {
+  const { theme, isDark } = useTheme();
   const [standings, setStandings] = useState<StandingRow[]>([]);
   const [fetchedAt, setFetchedAt] = useState("");
   const [loading, setLoading] = useState(true);
@@ -61,13 +62,161 @@ export default function RankScreen() {
 
   useEffect(() => { load(); }, [load]);
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    header: {
+      paddingTop: 60,
+      paddingHorizontal: 20,
+      paddingBottom: 12,
+    },
+    headerTitle: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: theme.foreground,
+    },
+    headerSub: {
+      fontSize: 13,
+      color: theme.mutedForeground,
+      marginTop: 4,
+    },
+
+    // States
+    center: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    errorText: {
+      color: theme.mutedForeground,
+      fontSize: 14,
+      marginBottom: 16,
+    },
+    retryBtn: {
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      backgroundColor: theme.foreground,
+      borderRadius: 20,
+    },
+    retryText: {
+      color: theme.background,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+
+    // Scroll
+    scrollContent: {
+      padding: 16,
+      paddingBottom: 40,
+    },
+
+    // Table
+    table: {
+      backgroundColor: theme.card,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: theme.border,
+      overflow: "hidden",
+    },
+    tableHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      backgroundColor: theme.muted,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    tableRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 12,
+      paddingHorizontal: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+
+    // Cells
+    cell: {
+      fontSize: 13,
+      color: theme.foreground,
+    },
+    colRank: {
+      width: 32,
+      textAlign: "center",
+    },
+    colTeam: {
+      flex: 1,
+    },
+    colNum: {
+      width: 36,
+      textAlign: "center",
+    },
+    colRate: {
+      width: 48,
+      textAlign: "center",
+    },
+    colGb: {
+      width: 40,
+      textAlign: "center",
+    },
+    colStreak: {
+      width: 48,
+      textAlign: "center",
+      fontSize: 12,
+      fontWeight: "600",
+    },
+
+    // Rank styles
+    rankBold: {
+      fontWeight: "700",
+      color: theme.foreground,
+    },
+    rankMuted: {
+      color: theme.mutedForeground,
+    },
+
+    // Team cell
+    teamCell: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    teamName: {
+      fontSize: 13,
+      fontWeight: "500",
+      color: theme.foreground,
+    },
+
+    // Rate
+    rateText: {
+      fontWeight: "600",
+    },
+
+    // GB
+    gbText: {
+      fontSize: 12,
+      color: theme.mutedForeground,
+    },
+
+    // Footer
+    footer: {
+      textAlign: "center",
+      fontSize: 12,
+      color: theme.mutedForeground,
+      marginTop: 16,
+    },
+  }), [theme]);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Text style={styles.headerTitle}>순위</Text>
           <View style={{ flex: 1 }} />
-          <SettingsButton color={myTeam ? TEAM_COLORS[myTeam]?.primary : undefined} />
+          <SettingsButton color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
         </View>
         <Text style={styles.headerSub}>2026 KBO 리그</Text>
       </View>
@@ -107,7 +256,7 @@ export default function RankScreen() {
               const isMyTeam = myTeam && teamId === myTeam;
 
               return (
-                <View key={`${row.teamName}-${idx}`} style={[styles.tableRow, isMyTeam && team && { backgroundColor: team.primary + "20" }]}>
+                <View key={`${row.teamName}-${idx}`} style={[styles.tableRow, isMyTeam && teamId && { backgroundColor: teamPrimaryColor(teamId, isDark) + "20" }]}>
                   <Text style={[styles.cell, styles.colRank, top5 ? styles.rankBold : styles.rankMuted]}>
                     {row.rank}
                   </Text>
@@ -141,151 +290,3 @@ export default function RankScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.background,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: theme.foreground,
-  },
-  headerSub: {
-    fontSize: 13,
-    color: theme.mutedForeground,
-    marginTop: 4,
-  },
-
-  // States
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  errorText: {
-    color: theme.mutedForeground,
-    fontSize: 14,
-    marginBottom: 16,
-  },
-  retryBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: theme.foreground,
-    borderRadius: 20,
-  },
-  retryText: {
-    color: theme.background,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-
-  // Scroll
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-
-  // Table
-  table: {
-    backgroundColor: theme.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.border,
-    overflow: "hidden",
-  },
-  tableHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: theme.muted,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  tableRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-
-  // Cells
-  cell: {
-    fontSize: 13,
-    color: theme.foreground,
-  },
-  colRank: {
-    width: 32,
-    textAlign: "center",
-  },
-  colTeam: {
-    flex: 1,
-  },
-  colNum: {
-    width: 36,
-    textAlign: "center",
-  },
-  colRate: {
-    width: 48,
-    textAlign: "center",
-  },
-  colGb: {
-    width: 40,
-    textAlign: "center",
-  },
-  colStreak: {
-    width: 48,
-    textAlign: "center",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
-  // Rank styles
-  rankBold: {
-    fontWeight: "700",
-    color: theme.foreground,
-  },
-  rankMuted: {
-    color: theme.mutedForeground,
-  },
-
-  // Team cell
-  teamCell: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  teamName: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: theme.foreground,
-  },
-
-  // Rate
-  rateText: {
-    fontWeight: "600",
-  },
-
-  // GB
-  gbText: {
-    fontSize: 12,
-    color: theme.mutedForeground,
-  },
-
-  // Footer
-  footer: {
-    textAlign: "center",
-    fontSize: 12,
-    color: theme.mutedForeground,
-    marginTop: 16,
-  },
-});

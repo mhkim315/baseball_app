@@ -149,6 +149,7 @@ export interface TeamColor {
   name: string;
   shortName: string;
   primary: string;
+  primaryLight: string;
   secondary: string;
   tertiary: string;
 }

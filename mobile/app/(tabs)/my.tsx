@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Pressable,
   TextInput,
   Modal,
+  Switch,
   StyleSheet,
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -14,7 +15,7 @@ import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { DEFAULT_TEAM_ID } from "@shared/constants";
 import { TeamBadge } from "@/components/TeamBadge";
 
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import {
   getMyTeam,
   setMyTeam,
@@ -31,6 +32,345 @@ const PROFILE_CHARACTERS = [
 ];
 
 export default function MyScreen() {
+  const { theme, isDark, toggleTheme } = useTheme();
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    header: {
+      paddingTop: 60,
+      paddingHorizontal: 20,
+      paddingBottom: 12,
+    },
+
+    // Tabs
+    tabRow: {
+      flexDirection: "row",
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+      marginHorizontal: 20,
+      marginBottom: 8,
+    },
+    tab: {
+      flex: 1,
+      alignItems: "center",
+      paddingVertical: 10,
+    },
+    tabActive: {
+      borderBottomWidth: 2,
+      borderBottomColor: theme.foreground,
+    },
+    tabText: {
+      fontSize: 14,
+      color: theme.mutedForeground,
+      fontWeight: "500",
+    },
+    tabTextActive: {
+      color: theme.foreground,
+      fontWeight: "700",
+    },
+    comingSoon: {
+      color: theme.mutedForeground,
+      fontSize: 14,
+      textAlign: "center",
+      paddingVertical: 32,
+    },
+    headerTitle: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: theme.foreground,
+    },
+    headerSub: {
+      fontSize: 13,
+      color: theme.mutedForeground,
+      marginTop: 4,
+    },
+    section: {
+      marginTop: 24,
+      paddingHorizontal: 20,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: "bold",
+      color: theme.foreground,
+      marginBottom: 12,
+    },
+    subSectionTitle: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: theme.mutedForeground,
+      marginBottom: 8,
+    },
+    myTeamHeader: {
+      alignItems: "center",
+      marginBottom: 16,
+      gap: 8,
+    },
+    myTeamRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.card,
+      borderRadius: 16,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: theme.border,
+      gap: 12,
+    },
+    myTeamArrow: {
+      fontSize: 22,
+      color: theme.mutedForeground,
+    },
+    myTeamName: {
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+
+    // Profile
+    profileRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 16,
+    },
+    profileImage: {
+      alignItems: "center",
+      gap: 4,
+    },
+    changeText: {
+      fontSize: 10,
+      color: theme.mutedForeground,
+    },
+    profileInfo: {
+      flex: 1,
+    },
+    nickname: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: theme.foreground,
+    },
+    changeHint: {
+      fontSize: 12,
+      color: theme.mutedForeground,
+      marginTop: 2,
+    },
+    noTeamProfile: {
+      backgroundColor: theme.card,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderStyle: "dashed",
+      padding: 24,
+      alignItems: "center",
+    },
+    noTeamProfileTitle: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: theme.foreground,
+      marginBottom: 6,
+    },
+    noTeamProfileDesc: {
+      fontSize: 12,
+      color: theme.mutedForeground,
+      lineHeight: 18,
+      textAlign: "center",
+    },
+
+    // Win rate
+    winRateCard: {
+      backgroundColor: theme.card,
+      borderRadius: 16,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    wrSubTitle: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: theme.mutedForeground,
+      marginBottom: 8,
+    },
+    winRateRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    winRateTotal: {
+      borderBottomWidth: 0,
+      paddingTop: 12,
+    },
+    winRateLabel: {
+      fontSize: 15,
+      color: theme.mutedForeground,
+    },
+    winRateValue: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: theme.foreground,
+    },
+    allWinRateRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+      gap: 8,
+    },
+    allWinRateLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      flex: 1,
+    },
+    allWinRateTeam: {
+      fontSize: 13,
+      color: theme.secondaryForeground,
+    },
+    allWinRatePct: {
+      fontSize: 14,
+      fontWeight: "700",
+      width: 55,
+      textAlign: "right",
+    },
+    allWinRateDetail: {
+      fontSize: 11,
+      color: theme.mutedForeground,
+      width: 80,
+      textAlign: "right",
+    },
+
+    // Placeholder
+    placeholder: {
+      color: theme.mutedForeground,
+      fontSize: 13,
+      textAlign: "center",
+      paddingVertical: 32,
+    },
+
+    // Settings
+    settingRow: {
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    settingLabel: {
+      fontSize: 14,
+      color: theme.foreground,
+    },
+    version: {
+      color: theme.mutedForeground,
+      fontSize: 12,
+      textAlign: "center",
+      marginTop: 24,
+    },
+
+    // Modal
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.7)",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 32,
+    },
+    modalContent: {
+      backgroundColor: theme.card,
+      borderRadius: 20,
+      padding: 24,
+      width: "100%",
+      maxWidth: 340,
+    },
+    teamPickerModal: {
+      backgroundColor: theme.card,
+      borderRadius: 20,
+      padding: 20,
+      width: "100%",
+      maxWidth: 340,
+    },
+    teamPickerGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      gap: 10,
+    },
+    teamPickerItem: {
+      width: 72,
+      height: 88,
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: 16,
+      borderWidth: 2,
+      borderColor: theme.border,
+      gap: 6,
+    },
+    teamPickerName: {
+      fontSize: 11,
+      fontWeight: "600",
+      color: theme.mutedForeground,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: theme.foreground,
+      marginBottom: 16,
+      textAlign: "center",
+    },
+    input: {
+      backgroundColor: theme.muted,
+      borderRadius: 12,
+      padding: 14,
+      fontSize: 16,
+      color: theme.foreground,
+      marginBottom: 16,
+    },
+    modalButtons: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    modalCancel: {
+      flex: 1,
+      alignItems: "center",
+      paddingVertical: 12,
+      borderRadius: 12,
+      backgroundColor: theme.secondary,
+    },
+    modalCancelText: {
+      fontSize: 14,
+      color: theme.mutedForeground,
+    },
+    modalSave: {
+      flex: 1,
+      alignItems: "center",
+      paddingVertical: 12,
+      borderRadius: 12,
+      backgroundColor: theme.foreground,
+    },
+    modalSaveText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.background,
+    },
+    charGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      gap: 12,
+      marginBottom: 16,
+    },
+    charItem: {
+      alignItems: "center",
+      padding: 8,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: theme.border,
+      width: 70,
+    },
+    charName: {
+      fontSize: 10,
+      color: theme.mutedForeground,
+      marginTop: 4,
+    },
+  }), [theme]);
   const [myTeam, setMyTeamState] = useState<string | null>(null);
   const [nickname, setNicknameState] = useState<string>("");
   const [profileImage, setProfileImageState] = useState<{ type: string; value: string } | null>(null);
@@ -88,7 +428,7 @@ export default function MyScreen() {
     setShowProfilePicker(false);
   };
 
-  const myTeamColor = myTeam ? TEAM_COLORS[myTeam]?.primary : "#888";
+  const myTeamColor = myTeam ? teamPrimaryColor(myTeam, isDark) : "#888";
 
   return (
     <ScrollView style={styles.container}>
@@ -213,7 +553,7 @@ export default function MyScreen() {
             <>
               <Text style={[styles.subSectionTitle, { marginTop: 16 }]}>전체 구단 승률</Text>
               {allWinRates.map((wr) => {
-                const teamColor = TEAM_COLORS[wr.teamId]?.primary || "#888";
+                const teamColor = teamPrimaryColor(wr.teamId, isDark) || "#888";
                 return (
                   <View key={wr.teamId} style={styles.allWinRateRow}>
                     <View style={styles.allWinRateLeft}>
@@ -240,6 +580,22 @@ export default function MyScreen() {
         <Pressable style={styles.settingRow} onPress={() => router.push("/community")}>
           <Text style={styles.settingLabel}>💬 커뮤니티 게시판</Text>
         </Pressable>
+      </View>
+
+      {/* Display Settings */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>화면 설정</Text>
+        <View style={styles.settingRow}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <Text style={styles.settingLabel}>다크 모드</Text>
+            <Switch
+              value={isDark}
+              onValueChange={toggleTheme}
+              trackColor={{ false: "#ddd", true: "#666" }}
+              thumbColor={isDark ? theme.foreground : "#f4f3f4"}
+            />
+          </View>
+        </View>
       </View>
 
       {/* App Info */}
@@ -295,11 +651,11 @@ export default function MyScreen() {
                     onPress={() => { handleTeamSelect(team.id); setShowTeamPicker(false); }}
                     style={[
                       styles.teamPickerItem,
-                      isSelected && { backgroundColor: team.primary + "20", borderColor: team.primary },
+                      isSelected && { backgroundColor: teamPrimaryColor(team.id, isDark) + "20", borderColor: teamPrimaryColor(team.id, isDark) },
                     ]}
                   >
                     <TeamBadge teamId={team.id} size="md" />
-                    <Text style={[styles.teamPickerName, isSelected && { color: team.primary, fontWeight: "700" }]}>
+                    <Text style={[styles.teamPickerName, isSelected && { color: teamPrimaryColor(team.id, isDark), fontWeight: "700" }]}>
                       {team.shortName}
                     </Text>
                   </Pressable>
@@ -344,341 +700,3 @@ export default function MyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.background,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-
-  // Tabs
-  tabRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-    marginHorizontal: 20,
-    marginBottom: 8,
-  },
-  tab: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  tabActive: {
-    borderBottomWidth: 2,
-    borderBottomColor: theme.foreground,
-  },
-  tabText: {
-    fontSize: 14,
-    color: theme.mutedForeground,
-    fontWeight: "500",
-  },
-  tabTextActive: {
-    color: theme.foreground,
-    fontWeight: "700",
-  },
-  comingSoon: {
-    color: theme.mutedForeground,
-    fontSize: 14,
-    textAlign: "center",
-    paddingVertical: 32,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: theme.foreground,
-  },
-  headerSub: {
-    fontSize: 13,
-    color: theme.mutedForeground,
-    marginTop: 4,
-  },
-  section: {
-    marginTop: 24,
-    paddingHorizontal: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: theme.foreground,
-    marginBottom: 12,
-  },
-  subSectionTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: theme.mutedForeground,
-    marginBottom: 8,
-  },
-  myTeamHeader: {
-    alignItems: "center",
-    marginBottom: 16,
-    gap: 8,
-  },
-  myTeamRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.card,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: theme.border,
-    gap: 12,
-  },
-  myTeamArrow: {
-    fontSize: 22,
-    color: theme.mutedForeground,
-  },
-  myTeamName: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-
-  // Profile
-  profileRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-  },
-  profileImage: {
-    alignItems: "center",
-    gap: 4,
-  },
-  changeText: {
-    fontSize: 10,
-    color: theme.mutedForeground,
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  nickname: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: theme.foreground,
-  },
-  changeHint: {
-    fontSize: 12,
-    color: theme.mutedForeground,
-    marginTop: 2,
-  },
-  noTeamProfile: {
-    backgroundColor: theme.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderStyle: "dashed",
-    padding: 24,
-    alignItems: "center",
-  },
-  noTeamProfileTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: theme.foreground,
-    marginBottom: 6,
-  },
-  noTeamProfileDesc: {
-    fontSize: 12,
-    color: theme.mutedForeground,
-    lineHeight: 18,
-    textAlign: "center",
-  },
-
-  // Win rate
-  winRateCard: {
-    backgroundColor: theme.card,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  wrSubTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: theme.mutedForeground,
-    marginBottom: 8,
-  },
-  winRateRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  winRateTotal: {
-    borderBottomWidth: 0,
-    paddingTop: 12,
-  },
-  winRateLabel: {
-    fontSize: 15,
-    color: theme.mutedForeground,
-  },
-  winRateValue: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: theme.foreground,
-  },
-  allWinRateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-    gap: 8,
-  },
-  allWinRateLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flex: 1,
-  },
-  allWinRateTeam: {
-    fontSize: 13,
-    color: theme.secondaryForeground,
-  },
-  allWinRatePct: {
-    fontSize: 14,
-    fontWeight: "700",
-    width: 55,
-    textAlign: "right",
-  },
-  allWinRateDetail: {
-    fontSize: 11,
-    color: theme.mutedForeground,
-    width: 80,
-    textAlign: "right",
-  },
-
-  // Placeholder
-  placeholder: {
-    color: theme.mutedForeground,
-    fontSize: 13,
-    textAlign: "center",
-    paddingVertical: 32,
-  },
-
-  // Settings
-  settingRow: {
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  settingLabel: {
-    fontSize: 14,
-    color: theme.foreground,
-  },
-  version: {
-    color: theme.mutedForeground,
-    fontSize: 12,
-    textAlign: "center",
-    marginTop: 24,
-  },
-
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
-  },
-  modalContent: {
-    backgroundColor: theme.card,
-    borderRadius: 20,
-    padding: 24,
-    width: "100%",
-    maxWidth: 340,
-  },
-  teamPickerModal: {
-    backgroundColor: theme.card,
-    borderRadius: 20,
-    padding: 20,
-    width: "100%",
-    maxWidth: 340,
-  },
-  teamPickerGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: 10,
-  },
-  teamPickerItem: {
-    width: 72,
-    height: 88,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: theme.border,
-    gap: 6,
-  },
-  teamPickerName: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: theme.mutedForeground,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: theme.foreground,
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  input: {
-    backgroundColor: theme.muted,
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-    color: theme.foreground,
-    marginBottom: 16,
-  },
-  modalButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  modalCancel: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: theme.secondary,
-  },
-  modalCancelText: {
-    fontSize: 14,
-    color: theme.mutedForeground,
-  },
-  modalSave: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: theme.foreground,
-  },
-  modalSaveText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: theme.background,
-  },
-  charGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: 12,
-    marginBottom: 16,
-  },
-  charItem: {
-    alignItems: "center",
-    padding: 8,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: theme.border,
-    width: 70,
-  },
-  charName: {
-    fontSize: 10,
-    color: theme.mutedForeground,
-    marginTop: 4,
-  },
-});

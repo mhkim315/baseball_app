@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { createPost, getToken } from "@/lib/auth";
-import { theme } from "@/lib/theme";
+import { useTheme } from "@/lib/ThemeContext";
 
 export default function CreatePostScreen() {
+  const { theme } = useTheme();
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -43,6 +44,39 @@ export default function CreatePostScreen() {
     }
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingTop: 60,
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    closeBtn: { padding: 8 },
+    closeText: { color: theme.mutedForeground, fontSize: 16 },
+    headerTitle: { fontSize: 17, fontWeight: "600", color: theme.foreground },
+    submitBtn: { padding: 8 },
+    submitText: { color: theme.primary, fontSize: 16, fontWeight: "600" },
+    titleInput: {
+      padding: 16,
+      fontSize: 18,
+      color: theme.foreground,
+      fontWeight: "600",
+    },
+    divider: { height: 1, backgroundColor: theme.border, marginHorizontal: 16 },
+    contentInput: {
+      flex: 1,
+      padding: 16,
+      fontSize: 15,
+      color: theme.foreground,
+      lineHeight: 22,
+    },
+  }), [theme]);
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -53,7 +87,7 @@ export default function CreatePostScreen() {
         <Text style={styles.headerTitle}>글쓰기</Text>
         <Pressable onPress={handleSubmit} disabled={submitting} style={styles.submitBtn}>
           {submitting ? (
-            <ActivityIndicator color="#000" size="small" />
+            <ActivityIndicator color={theme.foreground} size="small" />
           ) : (
             <Text style={styles.submitText}>완료</Text>
           )}
@@ -83,35 +117,3 @@ export default function CreatePostScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 60,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  closeBtn: { padding: 8 },
-  closeText: { color: theme.mutedForeground, fontSize: 16 },
-  headerTitle: { fontSize: 17, fontWeight: "600", color: theme.foreground },
-  submitBtn: { padding: 8 },
-  submitText: { color: theme.primary, fontSize: 16, fontWeight: "600" },
-  titleInput: {
-    padding: 16,
-    fontSize: 18,
-    color: theme.foreground,
-    fontWeight: "600",
-  },
-  divider: { height: 1, backgroundColor: theme.border, marginHorizontal: 16 },
-  contentInput: {
-    flex: 1,
-    padding: 16,
-    fontSize: 15,
-    color: theme.foreground,
-    lineHeight: 22,
-  },
-});

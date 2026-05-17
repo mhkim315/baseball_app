@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, Pressable, Modal, StyleSheet } from "react-native";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TeamBadge } from "@/components/TeamBadge";
-import { theme } from "@/lib/theme";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
 interface TeamExpanderProps {
   currentTeamId: string;
@@ -11,6 +11,7 @@ interface TeamExpanderProps {
 }
 
 export default function TeamExpander({ currentTeamId, myTeam, onSelectTeam }: TeamExpanderProps) {
+  const { theme, isDark } = useTheme();
   const [open, setOpen] = useState(false);
   const currentTeam = TEAM_COLORS[currentTeamId];
 
@@ -19,10 +20,87 @@ export default function TeamExpander({ currentTeamId, myTeam, onSelectTeam }: Te
     setOpen(false);
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    trigger: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 12,
+      backgroundColor: theme.card,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    teamName: {
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    arrow: {
+      fontSize: 8,
+      color: theme.mutedForeground,
+    },
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.6)",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 16,
+    },
+    dropdown: {
+      backgroundColor: theme.card,
+      borderRadius: 20,
+      padding: 14,
+      width: "100%",
+      maxWidth: 320,
+    },
+    dropdownTitle: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.foreground,
+      textAlign: "center",
+      marginBottom: 8,
+    },
+    teamRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: 10,
+    },
+    teamRowActive: {
+      backgroundColor: theme.secondary,
+    },
+    teamRowName: {
+      fontSize: 14,
+      flex: 1,
+    },
+    myBadge: {
+      borderRadius: 8,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+    },
+    myBadgeText: {
+      fontSize: 10,
+      color: "#fff",
+      fontWeight: "700",
+    },
+    dropdownHint: {
+      fontSize: 10,
+      color: theme.mutedForeground,
+      textAlign: "center",
+      marginTop: 6,
+      paddingTop: 8,
+      borderTopWidth: 1,
+      borderTopColor: theme.border,
+    },
+  }), [theme]);
+
   return (
     <View>
       <Pressable style={styles.trigger} onPress={() => setOpen(true)}>
-        <Text style={[styles.teamName, { color: currentTeam?.primary }]}>
+        <Text style={[styles.teamName, { color: teamPrimaryColor(currentTeam?.id, isDark) }]}>
           {currentTeam?.shortName || ""}
         </Text>
         <Text style={styles.arrow}>▼</Text>
@@ -44,13 +122,13 @@ export default function TeamExpander({ currentTeamId, myTeam, onSelectTeam }: Te
                 <TeamBadge teamId={team.id} size="md" />
                 <Text style={[
                   styles.teamRowName,
-                  { color: team.primary },
+                  { color: teamPrimaryColor(team.id, isDark) },
                   team.id === currentTeamId && { fontWeight: "700" },
                 ]}>
                   {team.name}
                 </Text>
                 {team.id === myTeam && (
-                  <View style={[styles.myBadge, { backgroundColor: team.primary }]}>
+                  <View style={[styles.myBadge, { backgroundColor: teamPrimaryColor(team.id, isDark) }]}>
                     <Text style={styles.myBadgeText}>MY</Text>
                   </View>
                 )}
@@ -66,79 +144,4 @@ export default function TeamExpander({ currentTeamId, myTeam, onSelectTeam }: Te
   );
 }
 
-const styles = StyleSheet.create({
-  trigger: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    backgroundColor: theme.card,
-    borderWidth: 1,
-    borderColor: theme.border,
-  },
-  teamName: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  arrow: {
-    fontSize: 8,
-    color: theme.mutedForeground,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-  },
-  dropdown: {
-    backgroundColor: theme.card,
-    borderRadius: 20,
-    padding: 14,
-    width: "100%",
-    maxWidth: 320,
-  },
-  dropdownTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: theme.foreground,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  teamRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-  },
-  teamRowActive: {
-    backgroundColor: theme.secondary,
-  },
-  teamRowName: {
-    fontSize: 14,
-    flex: 1,
-  },
-  myBadge: {
-    borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  myBadgeText: {
-    fontSize: 10,
-    color: "#fff",
-    fontWeight: "700",
-  },
-  dropdownHint: {
-    fontSize: 10,
-    color: theme.mutedForeground,
-    textAlign: "center",
-    marginTop: 6,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: theme.border,
-  },
-});
+
