@@ -1,9 +1,9 @@
 import { useState, useCallback } from "react";
 import { View, Text, Image, Pressable, ScrollView, StyleSheet, NativeSyntheticEvent, NativeScrollEvent, useWindowDimensions } from "react-native";
-import { TEAM_COLORS } from "@shared/teamColors";
-import { TEAM_ID_TO_CODE } from "@shared/constants";
 import { TeamBadge } from "@/components/TeamBadge";
 import { EMOTION_CHARACTER } from "@/components/EmotionPicker";
+import { TEAM_COLORS } from "@shared/teamColors";
+import { TEAM_ID_TO_CODE } from "@shared/constants";
 import { theme } from "@/lib/theme";
 import type { JikgwanRecord } from "@/lib/db";
 
@@ -15,28 +15,125 @@ interface DiaryCardProps {
   onEdit?: (record: JikgwanRecord) => void;
 }
 
+/** game_id "0000-ABCD-0" → { awayId, homeId } */
+function parseGameTeamIds(gameId: string): { awayId: string; homeId: string } {
+  const codeToId: Record<string, string> = {};
+  for (const [id, code] of Object.entries(TEAM_ID_TO_CODE)) {
+    codeToId[code] = id;
+  }
+  const m = gameId.match(/^\d+-(\w{4})-\d+$/);
+  if (m) {
+    return {
+      awayId: codeToId[m[1].slice(0, 2)] || "",
+      homeId: codeToId[m[1].slice(2, 4)] || "",
+    };
+  }
+  return { awayId: "", homeId: "" };
+}
+
+function getWinBadge(isWin: number | null): { label: string; color: string } | null {
+  if (isWin === 1) return { label: "승", color: "#16a34a" };
+  if (isWin === 0) return { label: "무", color: "#ca8a04" };
+  if (isWin === -1) return { label: "패", color: "#dc2626" };
+  return null;
+}
+
+function formatDisplayDate(dateStr: string): string {
+  const p = dateStr.split(".");
+  if (p.length === 3) return `${parseInt(p[0])}.${parseInt(p[1])}.${parseInt(p[2])}`;
+  return dateStr;
+}
+
+function parsePhotos(record: JikgwanRecord): string[] {
+  if (record.photos) {
+    try {
+      const parsed = JSON.parse(record.photos);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {}
+  }
+  if (record.photo_path) return [record.photo_path];
+  return [];
+}
+
 export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit }: DiaryCardProps) {
   const { width: screenWidth } = useWindowDimensions();
-  const photoWidth = screenWidth - 2; // card border
-  const teams = parseGameId(record.game_id);
-  const homeTeam = teams.homeId ? TEAM_COLORS[teams.homeId] : null;
-  const awayTeam = teams.awayId ? TEAM_COLORS[teams.awayId] : null;
-  const hasScore = record.score_away != null && record.score_home != null;
-  const emotionChar = record.emotion ? EMOTION_CHARACTER[record.emotion] ?? null : null;
-  const emotionTeam = teams.homeId || teams.awayId;
-  const diaryContent = record.memo || record.three_line_1 || "";
-
+  const photoWidth = screenWidth;
   const photos = parsePhotos(record);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const liveTeamColor = teamId ? TEAM_COLORS[teamId]?.primary : "#3b82f6";
 
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width);
     setPhotoIndex(idx);
   }, []);
 
+  // Parse teams from game_id
+  const gt = parseGameTeamIds(record.game_id || "");
+  const profileTeamId = record.cheered_team || gt.awayId || gt.homeId || "";
+  const charKey = record.emotion ? (EMOTION_CHARACTER[record.emotion] || "neutral") : "neutral";
+  const emChar = charKey as "joyful" | "determined" | "neutral" | "sad";
+
+  // Caption text: memo first, fallback to three_line
+  const caption = record.memo
+    ? record.memo
+    : [record.three_line_1, record.three_line_2, record.three_line_3]
+        .filter(Boolean)
+        .join("\n");
+
   return (
     <View style={styles.card}>
-      {/* Photos - swipeable */}
+      {/* Header — Instagram style */}
+      <View style={styles.header}>
+        <View style={styles.profileCol}>
+          {profileTeamId ? (
+            <TeamBadge teamId={profileTeamId} size="md" emotion={emChar} />
+          ) : (
+            <Text style={styles.profileFallback}>⚾</Text>
+          )}
+        </View>
+
+        <View style={styles.idCol}>
+          {/* Row 1: date + stadium */}
+          <View style={styles.idRow}>
+            <Text style={styles.idDate} numberOfLines={1}>
+              {formatDisplayDate(record.date)}
+              {record.stadium ? ` · ${record.stadium}` : ""}
+            </Text>
+          </View>
+
+          {/* Row 2: teams + score + badge */}
+          <View style={styles.idRow}>
+            {(gt.awayId || gt.homeId) && (
+              <Text style={styles.idTeams} numberOfLines={1}>
+                {gt.awayId && gt.homeId
+                  ? `${TEAM_COLORS[gt.awayId]?.shortName || "?"} ${record.score_away != null ? record.score_away : ""} : ${record.score_home != null ? record.score_home : ""} ${TEAM_COLORS[gt.homeId]?.shortName || "?"}`
+                  : TEAM_COLORS[gt.awayId || gt.homeId]?.shortName}
+              </Text>
+            )}
+            {(() => {
+              const badge = getWinBadge(record.is_win);
+              if (!badge) return null;
+              return (
+                <View style={[styles.winBadge, { backgroundColor: badge.color }]}>
+                  <Text style={styles.winBadgeText}>{badge.label}</Text>
+                </View>
+              );
+            })()}
+            {record.is_live !== null && (
+              <View style={[styles.winBadge, record.is_live === 1
+                ? { backgroundColor: liveTeamColor }
+                : { backgroundColor: "transparent", borderWidth: 1, borderColor: liveTeamColor }
+              ]}>
+                <Text style={[styles.winBadgeText, record.is_live === 1 ? { color: "#fff" } : { color: liveTeamColor }]}>
+                  {record.is_live === 1 ? "직관" : "집관"}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
+
+      {/* Photos — swipeable */}
       {photos.length > 0 ? (
         <View style={styles.photoContainer}>
           <ScrollView
@@ -47,10 +144,24 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit }:
             scrollEventThrottle={16}
           >
             {photos.map((uri, i) => (
-              <Image key={i} source={{ uri }} style={[styles.photo, { width: photoWidth }]} />
+              <View key={i} style={{ position: "relative" }}>
+                <Image source={{ uri }} style={[styles.photo, { width: photoWidth }]} />
+                {(gt.awayId || gt.homeId) && (
+                  <View style={stampOverlay.container}>
+                    <Text style={stampOverlay.text}>
+                      {formatDisplayDate(record.date)}
+                      {record.stadium ? ` · ${record.stadium}` : ""}
+                    </Text>
+                    {gt.awayId && gt.homeId && record.score_away != null && (
+                      <Text style={[stampOverlay.text, stampOverlay.score]}>
+                        {TEAM_COLORS[gt.awayId]?.shortName} {record.score_away} : {record.score_home} {TEAM_COLORS[gt.homeId]?.shortName}
+                      </Text>
+                    )}
+                  </View>
+                )}
+              </View>
             ))}
           </ScrollView>
-          {/* Dots */}
           {photos.length > 1 && (
             <View style={styles.dots}>
               {photos.map((_, i) => (
@@ -65,47 +176,14 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit }:
         </View>
       )}
 
-      {/* Body */}
-      <View style={styles.body}>
-        {/* Game info bar */}
-        {(homeTeam || awayTeam) && (
-          <View style={styles.gameBar}>
-            <Text style={[styles.teamName, awayTeam && { color: awayTeam.primary }]} numberOfLines={1}>
-              {awayTeam?.shortName || ""}
-            </Text>
-            {hasScore ? (
-              <Text style={styles.score}>{record.score_away}:{record.score_home}</Text>
-            ) : (
-              <Text style={styles.vs}>VS</Text>
-            )}
-            <Text style={[styles.teamName, homeTeam && { color: homeTeam.primary }]} numberOfLines={1}>
-              {homeTeam?.shortName || ""}
-            </Text>
-          </View>
-        )}
-
-        {/* Meta: stadium + date + emotion */}
-        <View style={styles.metaRow}>
-          {record.stadium && <Text style={styles.metaText}>{record.stadium}</Text>}
-          {record.stadium && <Text style={styles.metaDot}> · </Text>}
-          <Text style={styles.metaText}>{record.date}</Text>
-          {emotionChar && emotionTeam && (
-            <>
-              <Text style={styles.metaDot}> · </Text>
-              <TeamBadge teamId={emotionTeam} size="sm" emotion={emotionChar} />
-            </>
-          )}
-          {record.is_win === 1 && <Text style={styles.winTag}>승</Text>}
-          {record.is_win === -1 && <Text style={styles.lossTag}>패</Text>}
+      {/* Caption — diary text */}
+      {caption ? (
+        <View style={styles.caption}>
+          <Text style={styles.captionText}>{caption}</Text>
         </View>
+      ) : null}
 
-        {/* Diary content */}
-        {diaryContent ? (
-          <Text style={styles.diary}>{diaryContent}</Text>
-        ) : null}
-      </View>
-
-      {/* Actions */}
+      {/* Actions — share / edit / delete */}
       <View style={styles.actions}>
         {onShare && photos[0] && (
           <Pressable onPress={() => onShare(photos[0])} style={styles.actionBtn}>
@@ -124,44 +202,64 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit }:
   );
 }
 
-function parsePhotos(record: JikgwanRecord): string[] {
-  if (record.photos) {
-    try {
-      const parsed = JSON.parse(record.photos);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    } catch {}
-  }
-  if (record.photo_path) return [record.photo_path];
-  return [];
-}
-
-function parseGameId(gameId: string): { awayId?: string; homeId?: string } {
-  const match = gameId.match(/^\d+-(\w{4})-\d+$/);
-  if (!match) return {};
-  const code = match[1];
-  const TEAM_CODE_TO_ID: Record<string, string> = {};
-  for (const [id, c] of Object.entries(TEAM_ID_TO_CODE)) {
-    TEAM_CODE_TO_ID[c] = id;
-  }
-  return {
-    awayId: TEAM_CODE_TO_ID[code.slice(0, 2)],
-    homeId: TEAM_CODE_TO_ID[code.slice(2, 4)],
-  };
-}
-
 const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.card,
-    borderRadius: 16,
+    borderRadius: 0,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: theme.border,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
   },
+  // Instagram-style header
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 10,
+  },
+  profileCol: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileFallback: {
+    fontSize: 28,
+  },
+  idCol: {
+    flex: 1,
+    gap: 3,
+  },
+  idRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  idDate: {
+    fontSize: 12,
+    color: theme.mutedForeground,
+    fontWeight: "500",
+  },
+  idTeams: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: theme.foreground,
+  },
+  winBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  winBadgeText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#fff",
+  },
+  // Photos
   photoContainer: {
     position: "relative",
   },
   photo: {
-    height: 340,
+    height: 360,
     resizeMode: "cover",
   },
   noPhoto: {
@@ -192,79 +290,24 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
-  body: {
-    padding: 14,
-    gap: 8,
+  // Caption
+  caption: {
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 4,
   },
-  gameBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  teamName: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  score: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: theme.foreground,
-  },
-  vs: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: theme.mutedForeground,
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 2,
-  },
-  metaText: {
-    fontSize: 11,
-    color: theme.mutedForeground,
-  },
-  metaDot: {
-    fontSize: 11,
-    color: theme.mutedForeground,
-  },
-  winTag: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: "#fff",
-    backgroundColor: "#22c55e",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    overflow: "hidden",
-    marginLeft: 4,
-  },
-  lossTag: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: "#fff",
-    backgroundColor: "#ef4444",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    overflow: "hidden",
-    marginLeft: 4,
-  },
-  diary: {
+  captionText: {
     fontSize: 14,
     color: theme.foreground,
-    lineHeight: 22,
-    marginTop: 2,
+    lineHeight: 20,
   },
+  // Actions
   actions: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: theme.border,
+    paddingBottom: 10,
+    paddingTop: 6,
   },
   actionBtn: {
     paddingVertical: 6,
@@ -275,5 +318,30 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: theme.mutedForeground,
     fontWeight: "500",
+  },
+});
+
+const stampOverlay = StyleSheet.create({
+  container: {
+    position: "absolute",
+    bottom: 8,
+    right: 8,
+    gap: 1,
+    alignItems: "flex-end",
+  },
+  text: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "700",
+    lineHeight: 15,
+    fontFamily: "monospace",
+    includeFontPadding: false,
+    textShadowColor: "rgba(0,0,0,0.9)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  score: {
+    fontSize: 14,
+    fontWeight: "700",
   },
 });

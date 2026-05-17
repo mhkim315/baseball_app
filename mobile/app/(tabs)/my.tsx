@@ -21,7 +21,7 @@ import {
   setNickname,
   getProfileImage,
   setProfileImage,
-  getWinRate,
+  getTeamDiaryStats,
   getWinRates,
 } from "@/lib/db";
 
@@ -33,12 +33,9 @@ export default function MyScreen() {
   const [myTeam, setMyTeamState] = useState<string | null>(null);
   const [nickname, setNicknameState] = useState<string>("");
   const [profileImage, setProfileImageState] = useState<{ type: string; value: string } | null>(null);
-  const [myTeamWinRate, setMyTeamWinRate] = useState<{
-    total: number;
-    wins: number;
-    draws: number;
-    losses: number;
-    winRate: number;
+  const [teamDiaryStats, setTeamDiaryStats] = useState<{
+    overall: { total: number; wins: number; draws: number; losses: number; winRate: number };
+    live: { total: number; wins: number; draws: number; losses: number; winRate: number } | null;
   } | null>(null);
   const [allWinRates, setAllWinRates] = useState<any[]>([]);
   const [showNicknameModal, setShowNicknameModal] = useState(false);
@@ -56,8 +53,8 @@ export default function MyScreen() {
     setProfileImageState(profile);
 
     if (team) {
-      const wr = await getWinRate(team);
-      setMyTeamWinRate(wr);
+      const stats = await getTeamDiaryStats(team);
+      setTeamDiaryStats(stats);
     }
     const all = await getWinRates();
     setAllWinRates(all);
@@ -70,8 +67,8 @@ export default function MyScreen() {
   const handleTeamSelect = async (teamId: string) => {
     await setMyTeam(teamId);
     setMyTeamState(teamId);
-    const wr = await getWinRate(teamId);
-    setMyTeamWinRate(wr);
+    const stats = await getTeamDiaryStats(teamId);
+    setTeamDiaryStats(stats);
   };
 
   const handleSaveNickname = async () => {
@@ -140,33 +137,65 @@ export default function MyScreen() {
       </View>
 
       {/* Win Rate Section */}
-      {myTeam && myTeamWinRate && (
+      {myTeam && teamDiaryStats && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>직관 승률</Text>
+
+          {/* Overall */}
           <View style={styles.winRateCard}>
+            <Text style={styles.wrSubTitle}>전체</Text>
             <View style={styles.winRateRow}>
               <Text style={styles.winRateLabel}>경기</Text>
-              <Text style={styles.winRateValue}>{myTeamWinRate.total}경기</Text>
+              <Text style={styles.winRateValue}>{teamDiaryStats.overall.total}경기</Text>
             </View>
             <View style={styles.winRateRow}>
               <Text style={styles.winRateLabel}>승</Text>
-              <Text style={[styles.winRateValue, { color: "#22c55e" }]}>{myTeamWinRate.wins}승</Text>
+              <Text style={[styles.winRateValue, { color: "#22c55e" }]}>{teamDiaryStats.overall.wins}승</Text>
             </View>
             <View style={styles.winRateRow}>
               <Text style={styles.winRateLabel}>무</Text>
-              <Text style={styles.winRateValue}>{myTeamWinRate.draws}무</Text>
+              <Text style={styles.winRateValue}>{teamDiaryStats.overall.draws}무</Text>
             </View>
             <View style={styles.winRateRow}>
               <Text style={styles.winRateLabel}>패</Text>
-              <Text style={[styles.winRateValue, { color: "#ef4444" }]}>{myTeamWinRate.losses}패</Text>
+              <Text style={[styles.winRateValue, { color: "#ef4444" }]}>{teamDiaryStats.overall.losses}패</Text>
             </View>
             <View style={[styles.winRateRow, styles.winRateTotal]}>
               <Text style={styles.winRateLabel}>승률</Text>
               <Text style={[styles.winRateValue, { color: myTeamColor, fontSize: 18 }]}>
-                {(myTeamWinRate.winRate * 100).toFixed(1)}%
+                {(teamDiaryStats.overall.winRate * 100).toFixed(1)}%
               </Text>
             </View>
           </View>
+
+          {/* Live only */}
+          {teamDiaryStats.live && (
+            <View style={[styles.winRateCard, { marginTop: 12 }]}>
+              <Text style={styles.wrSubTitle}>직관</Text>
+              <View style={styles.winRateRow}>
+                <Text style={styles.winRateLabel}>경기</Text>
+                <Text style={styles.winRateValue}>{teamDiaryStats.live.total}경기</Text>
+              </View>
+              <View style={styles.winRateRow}>
+                <Text style={styles.winRateLabel}>승</Text>
+                <Text style={[styles.winRateValue, { color: "#22c55e" }]}>{teamDiaryStats.live.wins}승</Text>
+              </View>
+              <View style={styles.winRateRow}>
+                <Text style={styles.winRateLabel}>무</Text>
+                <Text style={styles.winRateValue}>{teamDiaryStats.live.draws}무</Text>
+              </View>
+              <View style={styles.winRateRow}>
+                <Text style={styles.winRateLabel}>패</Text>
+                <Text style={[styles.winRateValue, { color: "#ef4444" }]}>{teamDiaryStats.live.losses}패</Text>
+              </View>
+              <View style={[styles.winRateRow, styles.winRateTotal]}>
+                <Text style={styles.winRateLabel}>승률</Text>
+                <Text style={[styles.winRateValue, { color: myTeamColor, fontSize: 18 }]}>
+                  {(teamDiaryStats.live.winRate * 100).toFixed(1)}%
+                </Text>
+              </View>
+            </View>
+          )}
 
           {allWinRates.length > 0 && (
             <>
@@ -431,6 +460,12 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: theme.border,
+  },
+  wrSubTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: theme.mutedForeground,
+    marginBottom: 8,
   },
   winRateRow: {
     flexDirection: "row",

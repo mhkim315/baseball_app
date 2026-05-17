@@ -69,6 +69,7 @@ async function migrateJikgwanSchema(database: SQLite.SQLiteDatabase): Promise<vo
     { name: "is_win", type: "INTEGER", dflt: "NULL" },
     { name: "photos", type: "TEXT", dflt: "NULL" },
     { name: "cheered_team", type: "TEXT", dflt: "NULL" },
+    { name: "is_live", type: "INTEGER", dflt: "NULL" },
   ];
   const existing = await database.getAllAsync<{ name: string }>(
     "PRAGMA table_info(jikgwan_records)"
@@ -157,8 +158,8 @@ export async function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "creat
 
   const result = await database.runAsync(
     `INSERT INTO jikgwan_records
-      (game_id, date, photo_path, photos, memo, score_away, score_home, emotion, frame_style, stadium, is_win, cheered_team)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (game_id, date, photo_path, photos, memo, score_away, score_home, emotion, frame_style, stadium, is_win, cheered_team, is_live)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     record.game_id || "",
     record.date || "",
     record.photo_path ?? null,
@@ -171,6 +172,7 @@ export async function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "creat
     record.stadium ?? null,
     record.is_win ?? null,
     record.cheered_team ?? null,
+    record.is_live ?? null,
   );
   return result.lastInsertRowId ?? 0;
 }
@@ -193,7 +195,7 @@ export async function getJikgwanRecordsByMonth(year: number, month: number): Pro
 
 export async function updateJikgwanRecord(
   id: number,
-  fields: Partial<Pick<JikgwanRecord, "memo" | "emotion" | "three_line_1" | "three_line_2" | "three_line_3" | "frame_style" | "is_win" | "photos" | "cheered_team">>
+  fields: Partial<Pick<JikgwanRecord, "memo" | "emotion" | "three_line_1" | "three_line_2" | "three_line_3" | "frame_style" | "is_win" | "photos" | "cheered_team" | "is_live">>
 ): Promise<void> {
   const database = await getDb();
   const setClauses: string[] = [];
@@ -298,4 +300,40 @@ export async function getWinRates(): Promise<
     losses: r.losses,
     winRate: r.total_games > 0 ? r.wins / r.total_games : 0,
   }));
+}
+
+export async function getTeamDiaryStats(teamId: string): Promise<{
+  overall: { total: number; wins: number; draws: number; losses: number; winRate: number };
+  live: { total: number; wins: number; draws: number; losses: number; winRate: number } | null;
+}> {
+  const database = await getDb();
+  const rows = await database.getAllAsync<{ is_win: number; is_live: number | null }>(
+    "SELECT is_win, is_live FROM jikgwan_records WHERE cheered_team = ? AND is_win IS NOT NULL",
+    teamId
+  );
+
+  const overall = { wins: 0, draws: 0, losses: 0, total: 0, winRate: 0 };
+  const live = { wins: 0, draws: 0, losses: 0, total: 0, winRate: 0 };
+
+  for (const r of rows) {
+    if (r.is_win === 1) overall.wins++;
+    else if (r.is_win === 0) overall.draws++;
+    else if (r.is_win === -1) overall.losses++;
+    overall.total++;
+
+    if (r.is_live === 1) {
+      if (r.is_win === 1) live.wins++;
+      else if (r.is_win === 0) live.draws++;
+      else if (r.is_win === -1) live.losses++;
+      live.total++;
+    }
+  }
+
+  overall.winRate = overall.total > 0 ? overall.wins / overall.total : 0;
+  live.winRate = live.total > 0 ? live.wins / live.total : 0;
+
+  return {
+    overall,
+    live: live.total > 0 ? live : null,
+  };
 }

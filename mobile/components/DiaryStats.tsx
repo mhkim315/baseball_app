@@ -12,25 +12,20 @@ interface DiaryStatsProps {
 }
 
 export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
-  const stats: Stats = computeDiaryStats(records);
+  const overallStats: Stats = computeDiaryStats(records);
+  const liveRecords = records.filter((r) => r.is_live === 1);
+  const liveStats: Stats | null = liveRecords.length > 0 ? computeDiaryStats(liveRecords) : null;
   const teamColor = teamId ? TEAM_COLORS[teamId]?.primary : theme.foreground;
 
-  const winRatePct = stats.totalGames > 0
-    ? (stats.winRate * 100).toFixed(1)
-    : "-";
-
-  const fillAngle = stats.totalGames > 0 ? stats.winRate * 360 : 0;
-
-  return (
-    <View style={styles.container}>
-      {/* Win Rate Ring */}
-      <View style={styles.ringCard}>
-        <Text style={styles.cardTitle}>직관 승률</Text>
+  function RingSection({ stats, label }: { stats: Stats; label: string }) {
+    const wrPct = stats.totalGames > 0 ? (stats.winRate * 100).toFixed(1) : "-";
+    return (
+      <View style={styles.dualRingCol}>
+        <Text style={styles.cardTitle}>{label}</Text>
         <View style={styles.ringContainer}>
-          {/* Simple ring using border approach */}
           <View style={[styles.ringOuter, { borderColor: theme.border }]}>
             <View style={[styles.ringInner, { borderColor: teamColor }]}>
-              <Text style={[styles.ringValue, { color: teamColor }]}>{winRatePct}%</Text>
+              <Text style={[styles.ringValue, { color: teamColor }]}>{wrPct}%</Text>
               <Text style={styles.ringLabel}>승률</Text>
             </View>
           </View>
@@ -54,6 +49,19 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
           </View>
         </View>
       </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      {/* Win Rate Rings */}
+      <View style={styles.ringCard}>
+        <View style={styles.dualRingRow}>
+          <RingSection stats={overallStats} label="전체 승률" />
+          {liveStats && <View style={styles.dualRingDivider} />}
+          {liveStats && <RingSection stats={liveStats} label="직관 승률" />}
+        </View>
+      </View>
 
       {/* Streak */}
       <View style={styles.streakCard}>
@@ -61,14 +69,14 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
         <View style={styles.streakRow}>
           <View style={styles.streakItem}>
             <Text style={[styles.streakNum, { color: teamColor }]}>
-              {stats.currentStreak}
+              {overallStats.currentStreak}
             </Text>
             <Text style={styles.streakLabel}>현재 연속일</Text>
           </View>
           <View style={styles.streakDivider} />
           <View style={styles.streakItem}>
             <Text style={[styles.streakNum, { color: teamColor }]}>
-              {stats.longestStreak}
+              {overallStats.longestStreak}
             </Text>
             <Text style={styles.streakLabel}>최장 기록</Text>
           </View>
@@ -78,9 +86,9 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
       {/* Stadiums visited */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>방문한 구장</Text>
-        {stats.stadiums.length > 0 ? (
+        {overallStats.stadiums.length > 0 ? (
           <View style={styles.stadiumRow}>
-            {stats.stadiums.map((s) => (
+            {overallStats.stadiums.map((s) => (
               <View key={s} style={[styles.stadiumBadge, { borderColor: teamColor }]}>
                 <Text style={[styles.stadiumText, { color: teamColor }]}>{s}</Text>
               </View>
@@ -92,13 +100,13 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
       </View>
 
       {/* Emotion distribution */}
-      {Object.keys(stats.emotionCounts).length > 0 && (
+      {Object.keys(overallStats.emotionCounts).length > 0 && (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>감정 분포</Text>
           <View style={styles.emotionRow}>
-            {Object.entries(stats.emotionCounts).map(([emotion, count]) => {
-              const pct = stats.totalGames > 0
-                ? ((count / stats.totalGames) * 100).toFixed(0)
+            {Object.entries(overallStats.emotionCounts).map(([emotion, count]) => {
+              const pct = overallStats.totalGames > 0
+                ? ((count / overallStats.totalGames) * 100).toFixed(0)
                 : "0";
               const char = EMOTION_CHARACTER[emotion];
               return (
@@ -121,11 +129,11 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
         <Text style={styles.cardTitle}>2026시즌</Text>
         <View style={styles.seasonRow}>
           <View style={styles.seasonItem}>
-            <Text style={styles.seasonNum}>{stats.totalGames}</Text>
+            <Text style={styles.seasonNum}>{overallStats.totalGames}</Text>
             <Text style={styles.seasonLabel}>경기 직관</Text>
           </View>
           <View style={styles.seasonItem}>
-            <Text style={styles.seasonNum}>{stats.stadiums.length}</Text>
+            <Text style={styles.seasonNum}>{overallStats.stadiums.length}</Text>
             <Text style={styles.seasonLabel}>방문 구장</Text>
           </View>
         </View>
@@ -159,7 +167,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.border,
     padding: 16,
+  },
+  dualRingRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "flex-start",
+  },
+  dualRingCol: {
+    flex: 1,
     alignItems: "center",
+  },
+  dualRingDivider: {
+    width: 1,
+    height: 140,
+    backgroundColor: theme.border,
+    marginHorizontal: 8,
   },
   ringContainer: {
     alignItems: "center",

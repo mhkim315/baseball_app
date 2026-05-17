@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View, Text, Pressable, TextInput, Modal, StyleSheet, Image,
-  Alert, ActivityIndicator, ScrollView,
+  ActivityIndicator, ScrollView,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
-import { captureRef } from "react-native-view-shot";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TEAM_ID_TO_CODE } from "@shared/constants";
 import EmotionPicker from "@/components/EmotionPicker";
@@ -106,14 +105,18 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
   const [saving, setSaving] = useState(false);
   const [userTeam, setUserTeam] = useState("doosan");
   const [cheeredTeam, setCheeredTeam] = useState<string | null>(null);
+  const [isLive, setIsLive] = useState<boolean>(true);
+  const [showOtherGames, setShowOtherGames] = useState(false);
 
-  // Film stamp compositing
-  const [stampingUri, setStampingUri] = useState<string | null>(null);
-  const [stampInfo, setStampInfo] = useState({
-    awayTeam: "", homeTeam: "", awayScore: null as number | null,
-    homeScore: null as number | null, stadium: "", date: "",
-  });
-  const hiddenStampRef = useRef<View>(null);
+  // Custom alert state
+  const [simpleAlert, setSimpleAlert] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    onOk?: () => void;
+  }>({ visible: false, title: "", message: "" });
+
+  const [teamPickerGame, setTeamPickerGame] = useState<GameOption | null>(null);
 
   const dateStr = formatDate(selectedDate);
   const dateStrShort = `${String(selectedDate.getMonth() + 1)}월 ${selectedDate.getDate()}일`;
@@ -130,6 +133,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
         setContent(editRecord.memo || "");
         setPhotoUris(parseEditPhotos(editRecord));
         setCheeredTeam(editRecord.cheered_team || null);
+        setIsLive(editRecord.is_live !== 0);
         setGames([]);
       } else {
         setStep("calendar");
@@ -138,10 +142,10 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
         setEmotion(null);
         setContent("");
         setPhotoUris([]);
+        setIsLive(true);
         setGames([]);
       }
       getMyTeam().then((t) => { if (t) setUserTeam(t); });
-      setStampingUri(null);
     }
   }, [visible, editRecord]);
 
@@ -201,98 +205,58 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
     setSelectedDate(date);
     loadGames(date);
     setStep("games");
+    setShowOtherGames(false);
   };
 
   const handleGameSelect = (game: GameOption) => {
     setSelectedGame(game);
     const isMyGame = userTeam && (game.homeTeam === userTeam || game.awayTeam === userTeam);
-    if (isMyGame || (game.homeScore == null && game.awayScore == null) || game.cancelled) {
+    if (isMyGame) {
+      setCheeredTeam(userTeam);
+      setStep("write");
+      return;
+    }
+    // Cancelled game: skip team picker
+    if (game.cancelled) {
       setCheeredTeam(null);
       setStep("write");
       return;
     }
-    const home = TEAM_COLORS[game.homeTeam];
-    const away = TEAM_COLORS[game.awayTeam];
-    Alert.alert(
-      "응원 팀 선택",
-      "어느 팀을 응원했나요?",
-      [
-        { text: away?.shortName || "원정팀", onPress: () => { setCheeredTeam(game.awayTeam); setStep("write"); } },
-        { text: home?.shortName || "홈팀", onPress: () => { setCheeredTeam(game.homeTeam); setStep("write"); } },
-        { text: "취소", style: "cancel" },
-      ]
-    );
+    setTeamPickerGame(game);
   };
 
   const pickPhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("권한 필요", "앨범 접근 권한이 필요합니다");
+      setSimpleAlert({ visible: true, title: "권한 필요", message: "앨범 접근 권한이 필요합니다" });
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       quality: 0.8,
-      allowsMultipleSelection: true,
+      allowsEditing: true,
+      aspect: [1, 1],
     });
     if (!result.canceled && result.assets.length > 0) {
-      setPhotoUris((prev) => [...prev, ...result.assets.map((a) => a.uri)]);
+      setPhotoUris((prev) => [...prev, result.assets[0].uri]);
     }
-  };
-
-  const stampPhoto = async (uri: string): Promise<string> => {
-    setStampingUri(uri);
-    // Wait for state update to render the hidden compositor
-    await new Promise((r) => setTimeout(r, 150));
-    const shotUri = await captureRef(hiddenStampRef, { format: "jpg", quality: 0.92 });
-    if (!shotUri) throw new Error("capture failed");
-    const resized = await resizePhoto(shotUri);
-    const fileName = generatePhotoName();
-    return await savePhoto(resized, fileName);
   };
 
   const handleSave = async () => {
     if (saving) return;
     if (!content.trim()) {
-      Alert.alert("알림", "내용을 입력해주세요");
+      setSimpleAlert({ visible: true, title: "알림", message: "내용을 입력해주세요" });
       return;
     }
     setSaving(true);
     try {
-      // Compute stamp data from selected game or edit record
-      const stampAwayTeam = selectedGame?.awayTeam ||
-        (editRecord?.game_id ? parseGameTeamIds(editRecord.game_id).awayId : null);
-      const stampHomeTeam = selectedGame?.homeTeam ||
-        (editRecord?.game_id ? parseGameTeamIds(editRecord.game_id).homeId : null);
-      const stampAwayScore = selectedGame?.awayScore ?? editRecord?.score_away ?? null;
-      const stampHomeScore = selectedGame?.homeScore ?? editRecord?.score_home ?? null;
-      const stampStadium = selectedGame?.venue || editRecord?.stadium || null;
-      const stampDate = editRecord?.date || dateStr;
-      const hasStampData = !!(stampAwayTeam || stampHomeTeam);
-
-      if (hasStampData) {
-        setStampInfo({
-          awayTeam: stampAwayTeam || "",
-          homeTeam: stampHomeTeam || "",
-          awayScore: stampAwayScore,
-          homeScore: stampHomeScore,
-          stadium: stampStadium || "",
-          date: stampDate,
-        });
-      }
-
       let savedPhotoUris: string[] = [];
       if (photoUris.length > 0) {
         for (const uri of photoUris) {
           try {
-            let savedUri: string;
-            if (hasStampData) {
-              savedUri = await stampPhoto(uri);
-            } else {
-              const resized = await resizePhoto(uri);
-              const fileName = generatePhotoName();
-              savedUri = await savePhoto(resized, fileName);
-            }
+            const resized = await resizePhoto(uri);
+            const fileName = generatePhotoName();
+            const savedUri = await savePhoto(resized, fileName);
             savedPhotoUris.push(savedUri);
             try {
               const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -316,18 +280,21 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
         const hScore = selectedGame?.homeScore ?? editRecord?.score_home ?? null;
         const aScore = selectedGame?.awayScore ?? editRecord?.score_away ?? null;
         if (hScore != null && aScore != null) {
-          let isHome: boolean | null = null;
+          let isAway = false, isHome = false;
           if (selectedGame) {
+            isAway = selectedGame.awayTeam === targetTeam;
             isHome = selectedGame.homeTeam === targetTeam;
           } else if (editRecord) {
             const gt = parseGameTeamIds(editRecord.game_id);
+            isAway = gt.awayId === targetTeam;
             isHome = gt.homeId === targetTeam;
           }
-          if (isHome === true) {
+          if (isHome) {
             isWin = hScore > aScore ? 1 : hScore < aScore ? -1 : 0;
-          } else if (isHome === false) {
+          } else if (isAway) {
             isWin = aScore > hScore ? 1 : aScore < hScore ? -1 : 0;
           }
+          // targetTeam not in game → isWin stays null
         }
       }
 
@@ -344,7 +311,8 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
           emotion: emotion || null,
           photos: photosJson,
           is_win: isWin,
-          cheered_team: (cheeredTeam || null) as string | null,
+          cheered_team: (cheeredTeam || myTeam || null) as string | null,
+          is_live: isLive ? 1 : 0,
         });
       } else {
         await addJikgwanRecord({
@@ -363,15 +331,15 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
           stadium: selectedGame?.venue || null,
           is_win: isWin != null ? isWin : null,
           cheered_team: (cheeredTeam || myTeam || null) as string | null,
+          is_live: isLive ? 1 : 0,
         });
       }
 
-      Alert.alert("저장 완료", editRecord ? "기록이 수정되었습니다" : "직관 기록이 저장되었습니다");
-      onSaved();
+      setSimpleAlert({ visible: true, title: "저장 완료", message: editRecord ? "기록이 수정되었습니다" : "직관 기록이 저장되었습니다", onOk: onSaved });
     } catch (e) {
       console.warn("DiaryEntryModal handleSave error", e);
       const msg = e instanceof Error ? e.message : String(e);
-      Alert.alert("저장 오류", msg);
+      setSimpleAlert({ visible: true, title: "저장 오류", message: msg });
     } finally {
       setSaving(false);
     }
@@ -406,30 +374,6 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
       <View style={styles.overlay}>
-        {/* Hidden stamp compositor — renders photo + film stamp as composite image */}
-        {stampingUri && (
-          <View ref={hiddenStampRef} style={{ position: "absolute", left: 0, top: 0, width: 300, height: 400 }} collapsable={false}>
-            <View>
-              <Image source={{ uri: stampingUri }} style={{ width: 300, height: 400 }} resizeMode="cover" />
-              <View style={stampStyles.container}>
-                <View style={stampStyles.bg}>
-                    {stampInfo.awayTeam && stampInfo.homeTeam && (
-                      <Text style={stampStyles.text} numberOfLines={1}>
-                        {TEAM_COLORS[stampInfo.awayTeam]?.shortName} vs {TEAM_COLORS[stampInfo.homeTeam]?.shortName}
-                      </Text>
-                    )}
-                    {stampInfo.homeScore != null && (
-                      <Text style={[stampStyles.text, stampStyles.score]}>{stampInfo.awayScore}:{stampInfo.homeScore}</Text>
-                    )}
-                    {stampInfo.stadium ? (
-                      <Text style={stampStyles.text} numberOfLines={1}>{stampInfo.stadium}</Text>
-                    ) : null}
-                    <Text style={stampStyles.text}>{stampInfo.date}</Text>
-                  </View>
-                </View>
-              </View>
-          </View>
-        )}
         <View style={styles.sheet}>
           <View style={styles.handleRow}>
             <View style={styles.handle} />
@@ -521,66 +465,171 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
                   </View>
                 ) : (
                   <>
-                  <View style={styles.gameList}>
-                    {games.map((g, i) => {
-                      const home = TEAM_COLORS[g.homeTeam];
-                      const away = TEAM_COLORS[g.awayTeam];
-                      const hasScore = g.homeScore != null && g.awayScore != null;
-                      const emotions = gameEmotions(g);
-                      const isMyGame = userTeam && (g.homeTeam === userTeam || g.awayTeam === userTeam);
-                      const myTeamColor = isMyGame ? TEAM_COLORS[userTeam]?.primary : null;
-                      return (
-                        <Pressable
-                          key={`${g.homeTeam}-${g.awayTeam}-${i}`}
-                          style={[styles.gameCard, isMyGame && myTeamColor && { borderColor: myTeamColor, borderWidth: 2 }]}
-                          onPress={() => handleGameSelect(g)}
-                        >
-                          <View style={styles.gameCardTop}>
-                            {/* MY badge at edge */}
-                            {userTeam === g.awayTeam && (
-                              <View style={[styles.myBadgeEdge, { left: 0 }]}>
-                                <Text style={[styles.myBadge, { backgroundColor: myTeamColor || "#333" }]}>MY</Text>
+                  {(() => {
+                    const myGame = games.find(g => userTeam && (g.homeTeam === userTeam || g.awayTeam === userTeam));
+                    const otherGames = games.filter(g => !(userTeam && (g.homeTeam === userTeam || g.awayTeam === userTeam)));
+
+                    return (
+                      <>
+                      {/* MY team game — prominent */}
+                      {myGame && (() => {
+                        const home = TEAM_COLORS[myGame.homeTeam];
+                        const away = TEAM_COLORS[myGame.awayTeam];
+                        const hasScore = myGame.homeScore != null && myGame.awayScore != null;
+                        const emotions = gameEmotions(myGame);
+                        const myTeamColor = TEAM_COLORS[userTeam]?.primary;
+                        return (
+                          <View style={styles.gameList}>
+                            <Pressable
+                              key={`my-${myGame.homeTeam}-${myGame.awayTeam}`}
+                              style={[styles.gameCard, myTeamColor && { borderColor: myTeamColor, borderWidth: 2 }]}
+                              onPress={() => handleGameSelect(myGame)}
+                            >
+                              <View style={styles.gameCardTop}>
+                                {userTeam === myGame.awayTeam && (
+                                  <View style={[styles.myBadgeEdge, { left: 0 }]}>
+                                    <Text style={[styles.myBadge, { backgroundColor: myTeamColor || "#333" }]}>MY</Text>
+                                  </View>
+                                )}
+                                {userTeam === myGame.homeTeam && (
+                                  <View style={[styles.myBadgeEdge, { right: 0 }]}>
+                                    <Text style={[styles.myBadge, { backgroundColor: myTeamColor || "#333" }]}>MY</Text>
+                                  </View>
+                                )}
+
+                                <View style={styles.gameTeamRow}>
+                                  <TeamBadge teamId={myGame.awayTeam} size="sm" emotion={emotions?.away ?? "default"} />
+                                  <Text style={[styles.gameTeamName, { color: away?.primary }]}>
+                                    {away?.shortName || "?"}
+                                  </Text>
+                                  {hasScore && (
+                                    <Text style={styles.gameScore}>{myGame.awayScore}</Text>
+                                  )}
+                                </View>
+
+                                {myGame.cancelled ? (
+                                  <Text style={styles.gameVs}>취소</Text>
+                                ) : (
+                                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                                    <Text style={styles.gameVs}>VS</Text>
+                                    <Text style={styles.gameMeta}>{myGame.time}</Text>
+                                  </View>
+                                )}
+
+                                <View style={styles.gameTeamRow}>
+                                  {hasScore && (
+                                    <Text style={styles.gameScore}>{myGame.homeScore}</Text>
+                                  )}
+                                  <Text style={[styles.gameTeamName, { color: home?.primary }]}>
+                                    {home?.shortName || "?"}
+                                  </Text>
+                                  <TeamBadge teamId={myGame.homeTeam} size="sm" emotion={emotions?.home ?? "default"} />
+                                </View>
                               </View>
-                            )}
-                            {userTeam === g.homeTeam && (
-                              <View style={[styles.myBadgeEdge, { right: 0 }]}>
-                                <Text style={[styles.myBadge, { backgroundColor: myTeamColor || "#333" }]}>MY</Text>
-                              </View>
+                            </Pressable>
+
+                            {/* Other games toggle */}
+                            {otherGames.length > 0 && (
+                              <Pressable style={styles.otherGamesToggle} onPress={() => setShowOtherGames((v) => !v)}>
+                                <Text style={styles.otherGamesToggleText}>
+                                  {showOtherGames ? "접기 ▲" : `그 외 ${otherGames.length}경기 ▼`}
+                                </Text>
+                              </Pressable>
                             )}
 
-                            <View style={styles.gameTeamRow}>
-                              <TeamBadge teamId={g.awayTeam} size="sm" emotion={emotions?.away ?? "default"} />
-                              <Text style={[styles.gameTeamName, { color: away?.primary }]}>
-                                {away?.shortName || "?"}
-                              </Text>
-                              {hasScore && (
-                                <Text style={styles.gameScore}>{g.awayScore}</Text>
-                              )}
-                            </View>
+                            {/* Other games (expanded) */}
+                            {showOtherGames && otherGames.map((g, i) => {
+                              const home = TEAM_COLORS[g.homeTeam];
+                              const away = TEAM_COLORS[g.awayTeam];
+                              const hasScore = g.homeScore != null && g.awayScore != null;
+                              const emotions = gameEmotions(g);
+                              return (
+                                <Pressable
+                                  key={`other-${g.homeTeam}-${g.awayTeam}-${i}`}
+                                  style={styles.gameCard}
+                                  onPress={() => handleGameSelect(g)}
+                                >
+                                  <View style={styles.gameCardTop}>
+                                    <View style={styles.gameTeamRow}>
+                                      <TeamBadge teamId={g.awayTeam} size="sm" emotion={emotions?.away ?? "default"} />
+                                      <Text style={[styles.gameTeamName, { color: away?.primary }]}>
+                                        {away?.shortName || "?"}
+                                      </Text>
+                                      {hasScore && <Text style={styles.gameScore}>{g.awayScore}</Text>}
+                                    </View>
 
-                            {g.cancelled ? (
-                              <Text style={styles.gameVs}>취소</Text>
-                            ) : (
-                              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                                <Text style={styles.gameVs}>VS</Text>
-                                <Text style={styles.gameMeta}>{g.time}</Text>
-                              </View>
-                            )}
+                                    {g.cancelled ? (
+                                      <Text style={styles.gameVs}>취소</Text>
+                                    ) : (
+                                      <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                                        <Text style={styles.gameVs}>VS</Text>
+                                        <Text style={styles.gameMeta}>{g.time}</Text>
+                                      </View>
+                                    )}
 
-                            <View style={styles.gameTeamRow}>
-                              {hasScore && (
-                                <Text style={styles.gameScore}>{g.homeScore}</Text>
-                              )}
-                              <Text style={[styles.gameTeamName, { color: home?.primary }]}>
-                                {home?.shortName || "?"}
-                              </Text>
-                              <TeamBadge teamId={g.homeTeam} size="sm" emotion={emotions?.home ?? "default"} />
-                            </View>
+                                    <View style={styles.gameTeamRow}>
+                                      {hasScore && <Text style={styles.gameScore}>{g.homeScore}</Text>}
+                                      <Text style={[styles.gameTeamName, { color: home?.primary }]}>
+                                        {home?.shortName || "?"}
+                                      </Text>
+                                      <TeamBadge teamId={g.homeTeam} size="sm" emotion={emotions?.home ?? "default"} />
+                                    </View>
+                                  </View>
+                                </Pressable>
+                              );
+                            })}
                           </View>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
+                        );
+                      })()}
+
+                      {/* No MY team game: show all games in a flat list */}
+                      {!myGame && (
+                        <View style={styles.gameList}>
+                          {games.map((g, i) => {
+                            const home = TEAM_COLORS[g.homeTeam];
+                            const away = TEAM_COLORS[g.awayTeam];
+                            const hasScore = g.homeScore != null && g.awayScore != null;
+                            const emotions = gameEmotions(g);
+                            return (
+                              <Pressable
+                                key={`${g.homeTeam}-${g.awayTeam}-${i}`}
+                                style={styles.gameCard}
+                                onPress={() => handleGameSelect(g)}
+                              >
+                                <View style={styles.gameCardTop}>
+                                  <View style={styles.gameTeamRow}>
+                                    <TeamBadge teamId={g.awayTeam} size="sm" emotion={emotions?.away ?? "default"} />
+                                    <Text style={[styles.gameTeamName, { color: away?.primary }]}>
+                                      {away?.shortName || "?"}
+                                    </Text>
+                                    {hasScore && <Text style={styles.gameScore}>{g.awayScore}</Text>}
+                                  </View>
+
+                                  {g.cancelled ? (
+                                    <Text style={styles.gameVs}>취소</Text>
+                                  ) : (
+                                    <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                                      <Text style={styles.gameVs}>VS</Text>
+                                      <Text style={styles.gameMeta}>{g.time}</Text>
+                                    </View>
+                                  )}
+
+                                  <View style={styles.gameTeamRow}>
+                                    {hasScore && <Text style={styles.gameScore}>{g.homeScore}</Text>}
+                                    <Text style={[styles.gameTeamName, { color: home?.primary }]}>
+                                      {home?.shortName || "?"}
+                                    </Text>
+                                    <TeamBadge teamId={g.homeTeam} size="sm" emotion={emotions?.home ?? "default"} />
+                                  </View>
+                                </View>
+                              </Pressable>
+                            );
+                          })}
+                        </View>
+                      )}
+                      </>
+                    );
+                  })()}
                   <Pressable style={styles.writeWithoutGame} onPress={() => { setSelectedGame(null); setStep("write"); }}>
                     <Text style={styles.writeWithoutGameText}>경기정보 없이 쓰기</Text>
                   </Pressable>
@@ -603,55 +652,69 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
                   </View>
                 )}
 
-                {/* Edit mode: game info + team selector */}
-                {editRecord && editRecord.game_id && parseGameTeamIds(editRecord.game_id).awayId && (
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>응원팀</Text>
-                    <View style={styles.editGameRow}>
-                      {(() => {
-                        const gt = parseGameTeamIds(editRecord.game_id);
-                        const ac = TEAM_COLORS[gt.awayId];
-                        const hc = TEAM_COLORS[gt.homeId];
-                        const hasScores = editRecord.score_away != null && editRecord.score_home != null;
-                        return (
-                          <>
-                            <Pressable style={[styles.cheerTeamCard, cheeredTeam === gt.awayId && { borderColor: ac?.primary || "#333", borderWidth: 2 }]} onPress={() => setCheeredTeam(gt.awayId)}>
-                              <TeamBadge teamId={gt.awayId} size="sm" />
-                              <Text style={[styles.cheerTeamName, { color: ac?.primary }]}>{ac?.shortName || "?"}</Text>
-                              {hasScores && <Text style={styles.cheerTeamScore}>{editRecord.score_away}</Text>}
-                              {cheeredTeam === gt.awayId && <Text style={styles.cheerTeamBadge}>✓</Text>}
-                            </Pressable>
-                            <Text style={styles.gameVs}>VS</Text>
-                            <Pressable style={[styles.cheerTeamCard, cheeredTeam === gt.homeId && { borderColor: hc?.primary || "#333", borderWidth: 2 }]} onPress={() => setCheeredTeam(gt.homeId)}>
-                              <TeamBadge teamId={gt.homeId} size="sm" />
-                              <Text style={[styles.cheerTeamName, { color: hc?.primary }]}>{hc?.shortName || "?"}</Text>
-                              {hasScores && <Text style={styles.cheerTeamScore}>{editRecord.score_home}</Text>}
-                              {cheeredTeam === gt.homeId && <Text style={styles.cheerTeamBadge}>✓</Text>}
-                            </Pressable>
-                          </>
-                        );
-                      })()}
+                {/* Cheered team selector — new & edit */}
+                {(() => {
+                  // Determine teams from either selectedGame or editRecord
+                  let awayId = selectedGame?.awayTeam || "";
+                  let homeId = selectedGame?.homeTeam || "";
+                  if (!awayId && !homeId && editRecord?.game_id) {
+                    const gt = parseGameTeamIds(editRecord.game_id);
+                    awayId = gt.awayId;
+                    homeId = gt.homeId;
+                  }
+                  if (!awayId || !homeId) return null;
+
+                  const ac = TEAM_COLORS[awayId];
+                  const hc = TEAM_COLORS[homeId];
+                  return (
+                    <View style={styles.section}>
+                      <Text style={styles.sectionTitle}>응원팀</Text>
+                      <View style={styles.editGameRow}>
+                        <Pressable
+                          style={[styles.cheerTeamCard, cheeredTeam === awayId && { borderColor: ac?.primary || "#333", borderWidth: 2 }]}
+                          onPress={() => setCheeredTeam(awayId)}
+                        >
+                          <TeamBadge teamId={awayId} size="sm" />
+                          <Text style={[styles.cheerTeamName, { color: ac?.primary }]}>{ac?.shortName || "?"}</Text>
+                          {cheeredTeam === awayId && <Text style={styles.cheerTeamBadge}>✓</Text>}
+                        </Pressable>
+                        <Text style={styles.gameVs}>VS</Text>
+                        <Pressable
+                          style={[styles.cheerTeamCard, cheeredTeam === homeId && { borderColor: hc?.primary || "#333", borderWidth: 2 }]}
+                          onPress={() => setCheeredTeam(homeId)}
+                        >
+                          <TeamBadge teamId={homeId} size="sm" />
+                          <Text style={[styles.cheerTeamName, { color: hc?.primary }]}>{hc?.shortName || "?"}</Text>
+                          {cheeredTeam === homeId && <Text style={styles.cheerTeamBadge}>✓</Text>}
+                        </Pressable>
+                      </View>
                     </View>
-                    {editRecord.score_away != null && editRecord.score_home != null && cheeredTeam && (
-                      <Text style={styles.winResultText}>
-                        {(() => {
-                          const gt = parseGameTeamIds(editRecord.game_id);
-                          const isHome = cheeredTeam === gt.homeId;
-                          const sA = editRecord.score_away ?? 0;
-                          const sH = editRecord.score_home ?? 0;
-                          if (sA === sH) return "무승부";
-                          const won = isHome ? sH > sA : sA > sH;
-                          return won ? "승리!" : "패배";
-                        })()}
-                      </Text>
-                    )}
-                  </View>
-                )}
+                  );
+                })()}
 
                 {/* Emotion */}
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>오늘의 기분</Text>
-                  <EmotionPicker value={emotion} onChange={setEmotion} teamId={userTeam} />
+                  <EmotionPicker value={emotion} onChange={setEmotion} teamId={cheeredTeam || userTeam} />
+                </View>
+
+                {/* 직관/집관 toggle */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>시청 방식</Text>
+                  <View style={styles.liveToggleRow}>
+                    <Pressable
+                      style={[styles.liveToggleBtn, isLive && { backgroundColor: TEAM_COLORS[userTeam]?.primary || theme.foreground }]}
+                      onPress={() => setIsLive(true)}
+                    >
+                      <Text style={[styles.liveToggleText, isLive && { color: "#fff" }]}>직관</Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.liveToggleBtn, !isLive && { backgroundColor: "#888" }]}
+                      onPress={() => setIsLive(false)}
+                    >
+                      <Text style={[styles.liveToggleText, !isLive && { color: "#fff" }]}>집관</Text>
+                    </Pressable>
+                  </View>
                 </View>
 
                 {/* Photos */}
@@ -712,6 +775,62 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord 
           </View>
         </View>
       </View>
+
+      {/* Custom simple alert */}
+      {simpleAlert.visible && (
+        <View style={styles.alertOverlay}>
+          <View style={styles.alertCard}>
+            <Text style={styles.alertTitle}>{simpleAlert.title}</Text>
+            <Text style={styles.alertMessage}>{simpleAlert.message}</Text>
+            <Pressable style={styles.alertOkBtn} onPress={() => {
+              setSimpleAlert({ visible: false, title: "", message: "" });
+              simpleAlert.onOk?.();
+            }}>
+              <Text style={styles.alertOkText}>확인</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+
+      {/* Custom team picker */}
+      {teamPickerGame && (() => {
+        const home = TEAM_COLORS[teamPickerGame.homeTeam];
+        const away = TEAM_COLORS[teamPickerGame.awayTeam];
+        return (
+          <View style={styles.alertOverlay}>
+            <View style={styles.alertCard}>
+              <Text style={styles.alertTitle}>응원 팀 선택</Text>
+              <Text style={styles.alertMessage}>어느 팀을 응원했나요?</Text>
+              <View style={styles.teamPickerRow}>
+                <Pressable style={styles.teamPickerCard} onPress={() => {
+                  setCheeredTeam(teamPickerGame.awayTeam);
+                  setTeamPickerGame(null);
+                  setStep("write");
+                }}>
+                  <TeamBadge teamId={teamPickerGame.awayTeam} size="md" />
+                  <Text style={[styles.teamPickerName, { color: away?.primary }]}>
+                    {away?.shortName || "원정팀"}
+                  </Text>
+                </Pressable>
+                <Text style={styles.teamPickerVs}>VS</Text>
+                <Pressable style={styles.teamPickerCard} onPress={() => {
+                  setCheeredTeam(teamPickerGame.homeTeam);
+                  setTeamPickerGame(null);
+                  setStep("write");
+                }}>
+                  <TeamBadge teamId={teamPickerGame.homeTeam} size="md" />
+                  <Text style={[styles.teamPickerName, { color: home?.primary }]}>
+                    {home?.shortName || "홈팀"}
+                  </Text>
+                </Pressable>
+              </View>
+              <Pressable style={styles.alertCancelBtn} onPress={() => setTeamPickerGame(null)}>
+                <Text style={styles.alertCancelText}>취소</Text>
+              </Pressable>
+            </View>
+          </View>
+        );
+      })()}
     </Modal>
   );
 }
@@ -816,6 +935,17 @@ const styles = StyleSheet.create({
   },
   gameVs: { fontSize: 12, color: theme.mutedForeground, fontWeight: "600" },
   gameMeta: { fontSize: 11, color: theme.mutedForeground },
+  otherGamesToggle: {
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: 10,
+    backgroundColor: theme.muted,
+  },
+  otherGamesToggleText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: theme.mutedForeground,
+  },
 
   // Selected game banner
   selectedGameBanner: {
@@ -915,33 +1045,105 @@ const styles = StyleSheet.create({
     fontSize: 14, fontWeight: "700", color: theme.foreground,
     textAlign: "center", marginTop: 8,
   },
-});
-
-const stampStyles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    padding: 10,
+  liveToggleRow: {
+    flexDirection: "row",
+    gap: 10,
   },
-  bg: {
-    backgroundColor: "rgba(0,0,0,0.55)",
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    gap: 1,
-    alignItems: "flex-end",
+  liveToggleBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: theme.muted,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: theme.border,
   },
-  text: {
-    color: "#fff",
-    fontSize: 11,
+  liveToggleText: {
+    fontSize: 15,
     fontWeight: "600",
-    lineHeight: 15,
-    fontFamily: "monospace",
-    includeFontPadding: false,
+    color: theme.foreground,
   },
-  score: {
+
+  // Custom alert
+  alertOverlay: {
+    position: "absolute",
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 100,
+  },
+  alertCard: {
+    backgroundColor: theme.card,
+    borderRadius: 18,
+    padding: 28,
+    minWidth: 280,
+    maxWidth: 320,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  alertTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: theme.foreground,
+    marginBottom: 8,
+  },
+  alertMessage: {
+    fontSize: 14,
+    color: theme.mutedForeground,
+    textAlign: "center",
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  alertOkBtn: {
+    backgroundColor: theme.foreground,
+    paddingVertical: 12,
+    paddingHorizontal: 48,
+    borderRadius: 12,
+    minWidth: 120,
+    alignItems: "center",
+  },
+  alertOkText: {
     fontSize: 14,
     fontWeight: "700",
+    color: theme.background,
+  },
+  // Team picker
+  teamPickerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 16,
+  },
+  teamPickerCard: {
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: theme.muted,
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    minWidth: 100,
+  },
+  teamPickerName: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  teamPickerVs: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: theme.mutedForeground,
+  },
+  alertCancelBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 24,
+  },
+  alertCancelText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: theme.mutedForeground,
   },
 });
