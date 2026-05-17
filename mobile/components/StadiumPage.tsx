@@ -43,6 +43,18 @@ const FOOD_MAP_IMAGES: Record<string, string> = {
 
 const CATEGORY_ORDER = ["all", "chicken", "korean", "western", "cafe"];
 
+const NEARBY_CATEGORIES: Record<string, { emoji: string; color: string }> = {
+  "치킨·호프": { emoji: "🍗", color: "#dc2626" },
+  "치킨": { emoji: "🍗", color: "#dc2626" },
+  "한식": { emoji: "🍚", color: "#ca8a04" },
+  "분식": { emoji: "🍜", color: "#059669" },
+  "다양": { emoji: "🍽️", color: "#6b7280" },
+  "베이커리": { emoji: "🥐", color: "#d97706" },
+  "카페": { emoji: "☕", color: "#7c3aed" },
+  "전통시장": { emoji: "🏪", color: "#2563eb" },
+  "해산물": { emoji: "🦐", color: "#0891b2" },
+};
+
 // 8-direction label offsets (percentage points from pin position)
 const DIRECTION_OFFSETS: Record<string, { dx: number; dy: number }> = {
   NW: { dx: -5.5, dy: -5.5 }, N: { dx: 0, dy: -6.5 }, NE: { dx: 5.5, dy: -5.5 },
@@ -733,6 +745,11 @@ function NearbyTab({ nearby, stadiumSpot, focusedSpot, setFocusedSpot, eatsCente
   focusedSpot: string | undefined; setFocusedSpot: (s: string | undefined) => void;
   eatsCenter: number[];
 }) {
+  const [nearbyCategory, setNearbyCategory] = useState("all");
+  const allCats = Array.from(new Set(nearby.map((r) => r.cat)));
+  const currentCat = allCats.includes(nearbyCategory) ? nearbyCategory : "all";
+  const visible = currentCat === "all" ? nearby : nearby.filter((r) => r.cat === currentCat);
+
   const mapSpots = [
     ...(stadiumSpot ? [stadiumSpot] : []),
     ...nearby.map((r, i) => ({
@@ -740,35 +757,105 @@ function NearbyTab({ nearby, stadiumSpot, focusedSpot, setFocusedSpot, eatsCente
       description: `${r.cat} · ${r.address}`, kind: "parking",
     })),
   ];
+
+  const handleItemPress = (name: string, address: string) => {
+    const idx = nearby.findIndex((r) => r.name === name && r.address === address);
+    if (idx >= 0) setFocusedSpot(String(idx));
+  };
+
+  // Group by category for sectioned display
+  const groups = allCats
+    .filter((cat) => currentCat === "all" || cat === currentCat)
+    .map((cat) => ({ category: cat, items: nearby.filter((r) => r.cat === cat) }))
+    .filter((g) => g.items.length > 0);
+
   return (
     <View style={styles.tabContent}>
       {nearby.length > 0 && (
-        <StadiumMapView
-          spots={mapSpots}
-          center={eatsCenter}
-          zoom={13}
-          focusedSpotId={focusedSpot}
-          onPinClick={(spotId) => setFocusedSpot(spotId)}
-        />
-      )}
-      {nearby.length > 0 ? (
-        nearby.map((r, i) => (
-          <Pressable key={i} onPress={() => setFocusedSpot(String(i))}>
-            <View style={styles.infoCard}>
-              <View style={styles.nearbyHeader}>
-                <Text style={styles.spotName}>{r.name}</Text>
-                <Text style={styles.nearbyCat}>{r.cat}</Text>
-              </View>
-              <Text style={styles.spotDesc}>{r.address}</Text>
-              {r.phone && (
-                <Pressable onPress={() => Linking.openURL(`tel:${r.phone}`)}>
-                  <Text style={styles.phoneText}>{r.phone}</Text>
+        <>
+          {/* Category filter chips */}
+          {allCats.length > 1 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
+              <Pressable
+                key="all"
+                onPress={() => setNearbyCategory("all")}
+                style={[styles.catChip, currentCat === "all" ? { backgroundColor: theme.foreground } : styles.catChipInactive]}
+              >
+                <Text style={[styles.catChipText, currentCat === "all" ? styles.catChipTextActive : styles.catChipTextInactive]}>전체</Text>
+              </Pressable>
+              {allCats.map((cat) => (
+                <Pressable
+                  key={cat}
+                  onPress={() => setNearbyCategory(cat)}
+                  style={[styles.catChip, currentCat === cat ? { backgroundColor: NEARBY_CATEGORIES[cat]?.color || theme.foreground } : styles.catChipInactive]}
+                >
+                  <Text style={[styles.catChipText, currentCat === cat ? styles.catChipTextActive : styles.catChipTextInactive]}>
+                    {NEARBY_CATEGORIES[cat]?.emoji || ""} {cat}
+                  </Text>
                 </Pressable>
-              )}
+              ))}
+            </ScrollView>
+          )}
+
+          <StadiumMapView
+            spots={mapSpots}
+            center={eatsCenter}
+            zoom={13}
+            focusedSpotId={focusedSpot}
+            onPinClick={(spotId) => setFocusedSpot(spotId)}
+          />
+
+          {/* Grouped list */}
+          {groups.map((group) => (
+            <View key={group.category}>
+              <Text style={styles.nearbySectionTitle}>
+                {NEARBY_CATEGORIES[group.category]?.emoji || ""} {group.category} ({group.items.length})
+              </Text>
+              {group.items.map((r, i) => (
+                <Pressable key={i} onPress={() => handleItemPress(r.name, r.address)}>
+                  <View style={styles.infoCard}>
+                    <View style={styles.nearbyHeader}>
+                      <Text style={styles.spotName}>{r.name}</Text>
+                      <View style={[styles.nearbyBadge, { backgroundColor: NEARBY_CATEGORIES[r.cat]?.color || "#6b7280" }]}>
+                        <Text style={styles.nearbyBadgeText}>{r.cat}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.spotDesc}>{r.address}</Text>
+                    {r.phone && (
+                      <Pressable onPress={() => Linking.openURL(`tel:${r.phone}`)}>
+                        <Text style={styles.phoneText}>{r.phone}</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                </Pressable>
+              ))}
             </View>
-          </Pressable>
-        ))
-      ) : (
+          ))}
+
+          {/* Category chips at bottom */}
+          {allCats.length > 1 && (
+            <View style={styles.foodChips}>
+              {allCats.map((cat) => {
+                const count = nearby.filter((r) => r.cat === cat).length;
+                const catInfo = NEARBY_CATEGORIES[cat];
+                return (
+                  <Pressable
+                    key={cat}
+                    onPress={() => setNearbyCategory(currentCat === cat ? "all" : cat)}
+                    style={[styles.foodChip, currentCat === cat && { borderColor: catInfo?.color }]}
+                  >
+                    <View style={[styles.foodChipDot, { backgroundColor: catInfo?.color || "#6b7280" }]} />
+                    <Text style={[styles.foodChipText, currentCat === cat && { color: catInfo?.color }]}>
+                      {catInfo?.emoji || ""} {cat} {count}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+        </>
+      )}
+      {nearby.length === 0 && (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyText}>아직 주변 맛집 정보가 없어요</Text>
         </View>
@@ -895,7 +982,9 @@ const styles = StyleSheet.create({
 
   // Nearby
   nearbyHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  nearbyCat: { fontSize: 11, color: theme.mutedForeground },
+  nearbySectionTitle: { fontSize: 14, fontWeight: "700", color: theme.foreground, marginBottom: 4, marginTop: 8 },
+  nearbyBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  nearbyBadgeText: { fontSize: 10, fontWeight: "600", color: "#fff" },
   phoneText: { fontSize: 13, color: theme.info, marginTop: 4 },
 
   // Empty
