@@ -6,7 +6,6 @@ import SettingsButton from "@/components/SettingsButton";
 import CheerContent from "@/components/CheerContent";
 import { theme } from "@/lib/theme";
 import { TEAM_COLORS } from "@shared/teamColors";
-import { DEFAULT_TEAM_ID } from "@shared/constants";
 
 type TabId = "songs" | "players" | "rules";
 
@@ -22,8 +21,26 @@ export default function CheerScreen() {
     getMyTeam().then(setMyTeam);
   }, []);
 
-  const activeTeam = displayTeam || myTeam || DEFAULT_TEAM_ID;
-  const teamColor = TEAM_COLORS[activeTeam];
+  const activeTeam = displayTeam || myTeam;
+  const teamColor = activeTeam ? TEAM_COLORS[activeTeam] : null;
+
+  if (!activeTeam) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.pageTitle}>응원</Text>
+          <View style={{ flex: 1 }} />
+          <SettingsButton />
+        </View>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyTitle}>⚾ 응원팀을 먼저 선택해주세요</Text>
+          <Text style={styles.emptyDesc}>
+            MY 페이지에서 응원팀을 설정하면{'\n'}해당 구단의 응원가와 선수 정보를 볼 수 있어요
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -37,7 +54,7 @@ export default function CheerScreen() {
           />
         )}
         {myTeam && <View style={{ width: 4 }} />}
-        <SettingsButton color={myTeam ? teamColor?.primary : undefined} />
+        <SettingsButton color={teamColor?.primary} />
       </View>
 
       {/* Tab switcher */}
@@ -91,4 +108,9 @@ const styles = StyleSheet.create({
   tabRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: theme.border, marginHorizontal: 16 },
   tab: { flex: 1, alignItems: "center", paddingVertical: 10 },
   tabText: { fontSize: 12, color: theme.mutedForeground, fontWeight: "500" },
+
+  // Empty state
+  emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 32 },
+  emptyTitle: { fontSize: 17, fontWeight: "700", color: theme.foreground, marginBottom: 8, textAlign: "center" },
+  emptyDesc: { fontSize: 13, color: theme.mutedForeground, lineHeight: 20, textAlign: "center" },
 });

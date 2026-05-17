@@ -119,22 +119,31 @@ export default function MyScreen() {
       {/* Profile Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>프로필</Text>
-        <View style={styles.profileRow}>
-          <Pressable onPress={() => setShowProfilePicker(true)} style={styles.profileImage}>
-            <TeamBadge
-              teamId={myTeam || DEFAULT_TEAM_ID}
-              size="lg"
-              emotion={(profileImage?.value as any) || "default"}
-            />
-            <Text style={styles.changeText}>변경</Text>
-          </Pressable>
-          <View style={styles.profileInfo}>
-            <Pressable onPress={() => { setNicknameInput(nickname); setShowNicknameModal(true); }}>
-              <Text style={styles.nickname}>{nickname || "닉네임 설정"}</Text>
-              <Text style={styles.changeHint}>탭하여 변경</Text>
+        {myTeam ? (
+          <View style={styles.profileRow}>
+            <Pressable onPress={() => setShowProfilePicker(true)} style={styles.profileImage}>
+              <TeamBadge
+                teamId={myTeam}
+                size="lg"
+                emotion={(profileImage?.value as any) || "default"}
+              />
+              <Text style={styles.changeText}>변경</Text>
             </Pressable>
+            <View style={styles.profileInfo}>
+              <Pressable onPress={() => { setNicknameInput(nickname); setShowNicknameModal(true); }}>
+                <Text style={styles.nickname}>{nickname || "닉네임 설정"}</Text>
+                <Text style={styles.changeHint}>탭하여 변경</Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
+        ) : (
+          <View style={styles.noTeamProfile}>
+            <Text style={styles.noTeamProfileTitle}>⚾ 응원팀을 먼저 선택해주세요</Text>
+            <Text style={styles.noTeamProfileDesc}>
+              응원팀을 설정하면 나만의 프로필과{'\n'}직관 승률을 확인할 수 있어요
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Win Rate Section */}
@@ -452,6 +461,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: theme.mutedForeground,
     marginTop: 2,
+  },
+  noTeamProfile: {
+    backgroundColor: theme.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderStyle: "dashed",
+    padding: 24,
+    alignItems: "center",
+  },
+  noTeamProfileTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: theme.foreground,
+    marginBottom: 6,
+  },
+  noTeamProfileDesc: {
+    fontSize: 12,
+    color: theme.mutedForeground,
+    lineHeight: 18,
+    textAlign: "center",
   },
 
   // Win rate

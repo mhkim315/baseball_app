@@ -6,7 +6,6 @@ import TeamExpander from "@/components/TeamExpander";
 import StadiumPage from "@/components/StadiumPage";
 import SettingsButton from "@/components/SettingsButton";
 import { TEAM_COLORS } from "@shared/teamColors";
-import { DEFAULT_TEAM_ID } from "@shared/constants";
 import { theme } from "@/lib/theme";
 
 export default function StadiumTab() {
@@ -19,7 +18,6 @@ export default function StadiumTab() {
     }, [])
   );
 
-  const activeTeam = displayTeam || myTeam || DEFAULT_TEAM_ID;
   const myTeamColor = myTeam ? TEAM_COLORS[myTeam]?.primary : undefined;
 
   if (!myTeam) {
@@ -28,12 +26,19 @@ export default function StadiumTab() {
         <View style={styles.header}>
           <Text style={styles.title}>구장 안내</Text>
           <View style={{ flex: 1 }} />
-          <SettingsButton color={myTeamColor} />
+          <SettingsButton />
         </View>
-        <StadiumPage teamId={activeTeam} accentColor={myTeamColor} />
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyTitle}>⚾ 응원팀을 먼저 선택해주세요</Text>
+          <Text style={styles.emptyDesc}>
+            MY 페이지에서 응원팀을 설정하면{'\n'}해당 구단의 구장 정보를 볼 수 있어요
+          </Text>
+        </View>
       </ScrollView>
     );
   }
+
+  const activeTeam = displayTeam || myTeam;
 
   return (
     <ScrollView style={styles.container}>
@@ -69,5 +74,25 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: theme.foreground,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+    paddingTop: 80,
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: theme.foreground,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  emptyDesc: {
+    fontSize: 13,
+    color: theme.mutedForeground,
+    lineHeight: 20,
+    textAlign: "center",
   },
 });
