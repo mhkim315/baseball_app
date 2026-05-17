@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet, Alert } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
@@ -11,21 +11,26 @@ export default function JikgwanCameraScreen() {
 
   const takePicture = async () => {
     if (!cameraRef.current) return;
-    const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
-    if (photo) {
-      // Navigate to preview with the photo and game data
-      router.push({
-        pathname: "/jikgwan/preview",
-        params: {
-          photoUri: photo.uri,
-          gameId: params.gameId ?? "",
-          homeTeam: params.homeTeam ?? "",
-          awayTeam: params.awayTeam ?? "",
-          homeScore: params.homeScore ?? "",
-          awayScore: params.awayScore ?? "",
-          stadium: params.stadium ?? "",
-        },
-      });
+    try {
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
+      if (photo) {
+        // Navigate to preview with the photo and game data
+        router.push({
+          pathname: "/jikgwan/preview",
+          params: {
+            photoUri: photo.uri,
+            gameId: params.gameId ?? "",
+            homeTeam: params.homeTeam ?? "",
+            awayTeam: params.awayTeam ?? "",
+            homeScore: params.homeScore ?? "",
+            awayScore: params.awayScore ?? "",
+            stadium: params.stadium ?? "",
+          },
+        });
+      }
+    } catch (e) {
+      console.warn("takePicture failed", e);
+      Alert.alert("촬영 오류", "사진을 촬영하지 못했습니다");
     }
   };
 

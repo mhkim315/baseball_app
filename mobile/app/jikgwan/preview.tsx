@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { View, Text, Image, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import ViewShot from "react-native-view-shot";
+import ViewShot, { captureRef } from "react-native-view-shot";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { savePhoto, resizePhoto, generatePhotoName } from "@/lib/camera";
 import { theme } from "@/lib/theme";
@@ -36,8 +36,9 @@ export default function JikgwanPreviewScreen() {
     if (saving) return;
     setSaving(true);
     try {
-      // Capture photo + film stamp as composite image
-      const shotUri = await shotRef.current?.capture({ format: "jpg", quality: 0.92 });
+      // Capture photo + film stamp + frame as composite image
+      if (!shotRef.current) throw new Error("capture reference not ready");
+      const shotUri = await captureRef(shotRef, { format: "jpg", quality: 0.92 });
       if (!shotUri) throw new Error("capture failed");
 
       const resized = await resizePhoto(shotUri);
@@ -61,6 +62,7 @@ export default function JikgwanPreviewScreen() {
       });
     } catch (e) {
       console.warn("preview handleNext error", e);
+    } finally {
       setSaving(false);
     }
   };
@@ -68,9 +70,13 @@ export default function JikgwanPreviewScreen() {
   return (
     <View style={styles.container}>
       {/* Photo preview */}
-      <View style={[styles.photoContainer, { borderColor: FRAMES.find((f) => f.id === frameStyle)?.bg || "#fff", borderWidth: frameStyle === "rounded" ? 0 : 10, borderRadius: frameStyle === "rounded" ? 16 : 20 }]}>
+      <View style={styles.photoContainer}>
         <ViewShot ref={shotRef} options={{ format: "jpg", quality: 0.92 }}>
-          <View>
+          <View style={[
+            { backgroundColor: FRAMES.find((f) => f.id === frameStyle)?.bg || "#fff", overflow: "hidden", position: "relative" },
+            frameStyle === "rounded" ? { borderRadius: 16 } : { borderRadius: 20 },
+            frameStyle !== "rounded" && { borderWidth: 10, borderColor: FRAMES.find((f) => f.id === frameStyle)?.bg || "#fff" },
+          ]}>
             <Image source={{ uri: params.photoUri }} style={styles.photo} />
 
             {/* Film camera stamp — embedded into saved photo */}
@@ -139,9 +145,6 @@ const styles = StyleSheet.create({
   photoContainer: {
     margin: 20,
     marginTop: 60,
-    borderRadius: 20,
-    overflow: "hidden",
-    position: "relative",
   },
   photo: {
     width: "100%",

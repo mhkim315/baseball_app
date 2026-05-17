@@ -68,6 +68,7 @@ export default function JikgwanWriteScreen() {
         game_id: params.gameId || "",
         date: dateStr,
         photo_path: params.photoUri || null,
+        photos: params.photoUri ? JSON.stringify([params.photoUri]) : null,
         memo: null,
         score_away: params.awayScore ? parseInt(params.awayScore) : null,
         score_home: params.homeScore ? parseInt(params.homeScore) : null,
@@ -78,6 +79,8 @@ export default function JikgwanWriteScreen() {
         frame_style: params.frameStyle || "classic",
         stadium: params.stadium || null,
         is_win: isWin,
+        cheered_team: null,
+        is_live: 0,
       });
 
       if (recordId) {
