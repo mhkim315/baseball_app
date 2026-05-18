@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
-  View, Text, Pressable, TextInput, StyleSheet,
-  Animated, KeyboardAvoidingView, Platform, Keyboard,
+  View, Text, Pressable, TextInput, StyleSheet, ScrollView,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/lib/ThemeContext";
+import BottomSheet from "@/components/BottomSheet";
 import { EXPENSE_CATEGORIES, addExpense, type ExpenseCategory } from "@/lib/db";
 
 
@@ -17,47 +16,12 @@ interface ExpenseModalProps {
 
 export default function ExpenseModal({ visible, onClose, onSaved, presetDate }: ExpenseModalProps) {
   const { theme } = useTheme();
-  const insets = useSafeAreaInsets();
-  const sheetTranslateY = useRef(new Animated.Value(500)).current;
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
-  const [shouldRender, setShouldRender] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const now = new Date();
   const [selectedDate, setSelectedDate] = useState(presetDate || now);
   const [category, setCategory] = useState<ExpenseCategory>("food");
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
-
-  // Animate open
-  useEffect(() => {
-    if (visible) {
-      setShouldRender(true);
-      sheetTranslateY.setValue(500);
-      backdropOpacity.setValue(0);
-      Animated.parallel([
-        Animated.spring(sheetTranslateY, {
-          toValue: 0, useNativeDriver: true, tension: 50, friction: 9,
-        }),
-        Animated.timing(backdropOpacity, {
-          toValue: 1, duration: 250, useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [visible]);
-
-  // Track keyboard
-  useEffect(() => {
-    const show = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      (e) => setKeyboardHeight(e.endCoordinates.height)
-    );
-    const hide = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => setKeyboardHeight(0)
-    );
-    return () => { show.remove(); hide.remove(); };
-  }, []);
 
   // Reset on open
   useEffect(() => {
@@ -83,35 +47,13 @@ export default function ExpenseModal({ visible, onClose, onSaved, presetDate }: 
         memo: memo.trim() || null,
       });
       onSaved();
-      handleClose();
+      onClose();
     } catch (e) {
       console.warn("ExpenseModal save error", e);
     }
   };
 
-  const handleClose = useCallback(() => {
-    Animated.parallel([
-      Animated.timing(sheetTranslateY, { toValue: 500, duration: 280, useNativeDriver: true }),
-      Animated.timing(backdropOpacity, { toValue: 0, duration: 250, useNativeDriver: true }),
-    ]).start(() => {
-      setShouldRender(false);
-      onClose();
-    });
-  }, [sheetTranslateY, backdropOpacity, onClose]);
-
   const styles = useMemo(() => StyleSheet.create({
-    overlay: {
-      position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-      zIndex: 999, justifyContent: "flex-end",
-    },
-    sheet: {
-      backgroundColor: theme.background,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      maxHeight: "92%",
-    },
-    handleRow: { alignItems: "center", paddingVertical: 16 },
-    handle: { width: 48, height: 5, borderRadius: 3, backgroundColor: theme.border },
     header: {
       flexDirection: "row", alignItems: "center",
       paddingHorizontal: 20, marginBottom: 16,
@@ -183,22 +125,11 @@ export default function ExpenseModal({ visible, onClose, onSaved, presetDate }: 
     saveText: { fontSize: 14, fontWeight: "700", color: theme.background },
   }), [theme]);
 
-  if (!shouldRender) return null;
-
   return (
-    <View style={styles.overlay}>
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: backdropOpacity, backgroundColor: "rgba(0,0,0,0.5)" }]}>
-        <Pressable style={{ flex: 1 }} onPress={handleClose} />
-      </Animated.View>
-
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ justifyContent: "flex-end" }}>
-        <Animated.View style={[styles.sheet, { transform: [{ translateY: sheetTranslateY }], paddingBottom: Math.max(insets.bottom, 8) }]}>
-          <View style={styles.handleRow}>
-            <View style={styles.handle} />
-          </View>
-
-          <View style={styles.header}>
-            <Pressable style={[styles.headerBtn, styles.headerCancelBtn]} onPress={handleClose}>
+    <>
+      <BottomSheet visible={visible} onClose={onClose}>
+        <View style={styles.header}>
+          <Pressable style={[styles.headerBtn, styles.headerCancelBtn]} onPress={onClose}>
               <Text style={[styles.headerBtnText, styles.headerCancelText]}>취소</Text>
             </Pressable>
             <Text style={styles.title}>지출 기록</Text>
@@ -207,7 +138,7 @@ export default function ExpenseModal({ visible, onClose, onSaved, presetDate }: 
             </Pressable>
           </View>
 
-          <Animated.ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
 
             {/* Date */}
             <View style={styles.section}>
@@ -257,10 +188,8 @@ export default function ExpenseModal({ visible, onClose, onSaved, presetDate }: 
                 placeholderTextColor={theme.mutedForeground}
               />
             </View>
-          </Animated.ScrollView>
-
-        </Animated.View>
-      </KeyboardAvoidingView>
-    </View>
+          </ScrollView>
+      </BottomSheet>
+    </>
   );
 }

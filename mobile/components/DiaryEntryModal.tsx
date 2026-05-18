@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   View, Text, Pressable, TextInput, StyleSheet, Image,
-  ActivityIndicator, ScrollView, PanResponder,
-  Animated, KeyboardAvoidingView, BackHandler, Platform, Keyboard,
+  ActivityIndicator, ScrollView, Animated,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import * as ImagePicker from "expo-image-picker";
@@ -11,8 +10,8 @@ import { parseGameTeamIds, getDaysInMonth, getFirstDayOfMonth, formatDate, forma
 import EmotionPicker from "@/components/EmotionPicker";
 import PhotoCropper from "@/components/PhotoCropper";
 import { TeamBadge } from "@/components/TeamBadge";
+import BottomSheet from "@/components/BottomSheet";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { addJikgwanRecord, updateJikgwanRecord, getMyTeam, type JikgwanRecord } from "@/lib/db";
 import { addExpense, getExpensesByRecordId, deleteExpensesByRecordId, EXPENSE_CATEGORIES, type Expense, type ExpenseCategory } from "@/lib/db";
 import { savePhoto, resizePhoto, generatePhotoName } from "@/lib/camera";
@@ -63,10 +62,6 @@ interface DiaryEntryModalProps {
 
 export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord, presetGame, presetDate }: DiaryEntryModalProps) {
   const { theme, isDark } = useTheme();
-  const insets = useSafeAreaInsets();
-  const sheetTranslateY = useRef(new Animated.Value(500)).current;
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
-  const [shouldRender, setShouldRender] = useState(false);
   const calTranslateX = useRef(new Animated.Value(0)).current;
   const now = new Date();
   const [step, setStep] = useState<"calendar" | "games" | "write">("calendar");
@@ -109,62 +104,9 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
   }>({ visible: false, title: "", message: "" });
 
   const [teamPickerGame, setTeamPickerGame] = useState<GameOption | null>(null);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [cropUri, setCropUri] = useState<string | null>(null);
 
   const scrollRef = useRef<ScrollView>(null);
-
-  // Animate open when visible
-  useEffect(() => {
-    if (visible) {
-      setShouldRender(true);
-      sheetTranslateY.setValue(500);
-      backdropOpacity.setValue(0);
-      Animated.parallel([
-        Animated.spring(sheetTranslateY, {
-          toValue: 0,
-          useNativeDriver: true,
-          tension: 50,
-          friction: 9,
-        }),
-        Animated.timing(backdropOpacity, {
-          toValue: 1,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else if (shouldRender) {
-      // Close animation when parent sets visible=false (e.g. after successful save)
-      Animated.parallel([
-        Animated.timing(sheetTranslateY, {
-          toValue: 500,
-          duration: 280,
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropOpacity, {
-          toValue: 0,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setShouldRender(false);
-      });
-    }
-  }, [visible, shouldRender]);
-
-  // Track keyboard height for both platforms
-  useEffect(() => {
-    const show = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      (e) => setKeyboardHeight(e.endCoordinates.height)
-    );
-    const hide = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => setKeyboardHeight(0)
-    );
-    return () => { show.remove(); hide.remove(); };
-  }, []);
-
   const dateStr = formatDate(selectedDate);
   const dateStrShort = `${String(selectedDate.getMonth() + 1)}월 ${selectedDate.getDate()}일`;
 
@@ -463,47 +405,6 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
     }
   };
 
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-
-  const handleClose = useCallback(() => {
-    Animated.parallel([
-      Animated.timing(sheetTranslateY, {
-        toValue: 500,
-        duration: 280,
-        useNativeDriver: true,
-      }),
-      Animated.timing(backdropOpacity, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setShouldRender(false);
-      onCloseRef.current();
-    });
-  }, [sheetTranslateY, backdropOpacity]);
-
-  useEffect(() => {
-    if (!shouldRender) return;
-    const handler = () => {
-      handleClose();
-      return true;
-    };
-    const subscription = BackHandler.addEventListener("hardwareBackPress", handler);
-    return () => subscription.remove();
-  }, [shouldRender, handleClose]);
-
-  const sheetPan = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dy) > 10,
-    onPanResponderRelease: (_, gs) => {
-      if (gs.dy > 80) {
-        handleClose();
-      }
-    },
-  }), [handleClose]);
-
   // --- Calendar helpers ---
   const daysInMonth = getDaysInMonth(calYear, calMonth);
   const firstDay = getFirstDayOfMonth(calYear, calMonth);
@@ -540,21 +441,6 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
       Animated.spring(calTranslateX, { toValue: 0, useNativeDriver: true }).start();
     });
   const styles = useMemo(() => StyleSheet.create({
-    overlay: {
-      position: "absolute",
-      top: 0, left: 0, right: 0, bottom: 0,
-      zIndex: 999,
-      justifyContent: "flex-end",
-    },
-    sheet: {
-      backgroundColor: theme.background,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      maxHeight: "92%",
-    },
-    handleRow: { alignItems: "center", paddingVertical: 16 },
-    handle: { width: 48, height: 5, borderRadius: 3, backgroundColor: theme.border },
-
     // Step header
     stepHeader: {
       paddingHorizontal: 20,
@@ -965,25 +851,12 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
       fontWeight: "600",
       color: theme.mutedForeground,
     },
-  }), [theme, insets.bottom]);
-
-  if (!shouldRender) return null;
+  }), [theme]);
 
   return (
-    <View style={styles.overlay}>
-      {/* Backdrop — tap to close */}
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: backdropOpacity, backgroundColor: "rgba(0,0,0,0.5)" }]}>
-        <Pressable style={{ flex: 1 }} onPress={handleClose} />
-      </Animated.View>
-
-      {/* Sheet */}
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ justifyContent: "flex-end" }}>
-        <Animated.View style={[styles.sheet, { transform: [{ translateY: sheetTranslateY }], paddingBottom: Math.max(insets.bottom, 8) }]}>
-          <View style={styles.handleRow} {...sheetPan.panHandlers}>
-            <View style={styles.handle} />
-          </View>
-
-          {/* Header with step */}
+    <>
+      <BottomSheet visible={visible} onClose={onClose} swipeToClose hardwareBackPress>
+        {/* Header with step */}
           <View style={styles.stepHeader}>
             {step === "calendar" && <Text style={styles.stepTitle}>날짜 선택</Text>}
             {step === "games" && (
@@ -997,12 +870,12 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
             )}
             {step === "write" && (
               <View style={styles.stepBackRow}>
-                <Pressable onPress={() => presetGame ? handleClose() : setStep("games")} hitSlop={8}>
+                <Pressable onPress={() => presetGame ? onClose() : setStep("games")} hitSlop={8}>
                   <Text style={styles.backArrow}>◀</Text>
                 </Pressable>
                 <Text style={styles.stepTitle}>{editRecord ? "기록 수정" : "기록 작성"}</Text>
                 <View style={{ flexDirection: "row", gap: 8 }}>
-                  <Pressable style={styles.headerCancelBtn} onPress={handleClose}>
+                  <Pressable style={styles.headerCancelBtn} onPress={onClose}>
                     <Text style={styles.headerCancelText}>취소</Text>
                   </Pressable>
                   <Pressable style={styles.headerSaveBtn} onPress={handleSave} disabled={saving}>
@@ -1479,13 +1352,12 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
           {/* Bottom button — only for non-write steps */}
           {step !== "write" && (
             <View style={styles.bottomRow}>
-              <Pressable style={styles.cancelBtnFull} onPress={handleClose}>
+              <Pressable style={styles.cancelBtnFull} onPress={onClose}>
                 <Text style={styles.cancelText}>취소</Text>
               </Pressable>
             </View>
           )}
-        </Animated.View>
-      </KeyboardAvoidingView>
+      </BottomSheet>
 
       {/* Custom simple alert */}
       {simpleAlert.visible && (
@@ -1552,7 +1424,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
         }}
         onCancel={() => setCropUri(null)}
       />
-    </View>
+      </>
   );
 }
 
