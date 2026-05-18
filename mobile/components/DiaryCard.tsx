@@ -150,6 +150,17 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit }:
       color: theme.foreground,
       lineHeight: 20,
     },
+    seatRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 14,
+      paddingTop: 6,
+      gap: 4,
+    },
+    seatText: {
+      fontSize: 13,
+      color: theme.mutedForeground,
+    },
     // Actions
     actions: {
       flexDirection: "row",
@@ -266,6 +277,13 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit }:
       {caption ? (
         <View style={styles.caption}>
           <Text style={styles.captionText}>{caption}</Text>
+        </View>
+      ) : null}
+
+      {/* Seat info */}
+      {record.seat ? (
+        <View style={styles.seatRow}>
+          <Text style={styles.seatText}>🎫 {record.seat}</Text>
         </View>
       ) : null}
 
