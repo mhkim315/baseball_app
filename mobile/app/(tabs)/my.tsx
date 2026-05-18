@@ -16,9 +16,8 @@ import { DEFAULT_TEAM_ID } from "@shared/constants";
 import { TeamBadge } from "@/components/TeamBadge";
 
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTeam } from "@/lib/TeamContext";
 import {
-  getMyTeam,
-  setMyTeam,
   getNickname,
   setNickname,
   getProfileImage,
@@ -378,7 +377,7 @@ export default function MyScreen() {
       marginTop: 4,
     },
   }), [theme]);
-  const [myTeam, setMyTeamState] = useState<string | null>(null);
+  const { myTeam, setMyTeam } = useTeam();
   const [nickname, setNicknameState] = useState<string>("");
   const [profileImage, setProfileImageState] = useState<{ type: string; value: string } | null>(null);
   const [teamDiaryStats, setTeamDiaryStats] = useState<{
@@ -394,15 +393,13 @@ export default function MyScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const team = await getMyTeam();
-      setMyTeamState(team);
       const nick = await getNickname();
       setNicknameState(nick ?? "");
       const profile = await getProfileImage();
       setProfileImageState(profile);
 
-      if (team) {
-        const stats = await getTeamDiaryStats(team);
+      if (myTeam) {
+        const stats = await getTeamDiaryStats(myTeam);
         setTeamDiaryStats(stats);
       }
       const all = await getWinRates();
@@ -410,7 +407,7 @@ export default function MyScreen() {
     } catch (e) {
       console.warn("my.tsx loadData failed", e);
     }
-  }, []);
+  }, [myTeam]);
 
   useFocusEffect(
     useCallback(() => {
@@ -420,8 +417,7 @@ export default function MyScreen() {
 
   const handleTeamSelect = async (teamId: string) => {
     try {
-      await setMyTeam(teamId);
-      setMyTeamState(teamId);
+      setMyTeam(teamId);
       const stats = await getTeamDiaryStats(teamId);
       setTeamDiaryStats(stats);
     } catch (e) {

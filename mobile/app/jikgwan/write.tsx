@@ -5,10 +5,12 @@ import { TEAM_COLORS } from "@shared/teamColors";
 import { DEFAULT_TEAM_ID } from "@shared/constants";
 import EmotionPicker from "@/components/EmotionPicker";
 import { useTheme } from "@/lib/ThemeContext";
-import { addJikgwanRecord, getMyTeam } from "@/lib/db";
+import { useTeam } from "@/lib/TeamContext";
+import { addJikgwanRecord } from "@/lib/db";
 
 export default function JikgwanWriteScreen() {
   const { theme } = useTheme();
+  const { myTeam } = useTeam();
   const router = useRouter();
   const params = useLocalSearchParams<{
     photoUri: string;
@@ -52,8 +54,6 @@ export default function JikgwanWriteScreen() {
     if (saving) return;
     setSaving(true);
     try {
-      const myTeam = await getMyTeam();
-
       // Determine is_win from score + myTeam perspective
       let isWin: number | null = null;
       if (hasScore && myTeam) {

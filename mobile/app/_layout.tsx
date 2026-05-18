@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemeProvider, useTheme } from "@/lib/ThemeContext";
+import { TeamProvider } from "@/lib/TeamContext";
 
 function RootLayoutInner() {
   const { isDark } = useTheme();
@@ -24,7 +25,9 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <RootLayoutInner />
+        <TeamProvider>
+          <RootLayoutInner />
+        </TeamProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

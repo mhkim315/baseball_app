@@ -12,7 +12,8 @@ import PhotoCropper from "@/components/PhotoCropper";
 import { TeamBadge } from "@/components/TeamBadge";
 import BottomSheet from "@/components/BottomSheet";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
-import { addJikgwanRecord, updateJikgwanRecord, getMyTeam, type JikgwanRecord } from "@/lib/db";
+import { useTeam } from "@/lib/TeamContext";
+import { addJikgwanRecord, updateJikgwanRecord, type JikgwanRecord } from "@/lib/db";
 import { addExpense, getExpensesByRecordId, deleteExpensesByRecordId, EXPENSE_CATEGORIES, type Expense, type ExpenseCategory } from "@/lib/db";
 import { savePhoto, resizePhoto, generatePhotoName } from "@/lib/camera";
 import { fetchScheduleByMonth, fetchDailyScores, type ScheduleGame, type ScoreEntry } from "@/lib/api";
@@ -82,7 +83,8 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
   const [photoUris, setPhotoUris] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
-  const [userTeam, setUserTeam] = useState(DEFAULT_TEAM_ID);
+  const { myTeam: contextTeam } = useTeam();
+  const userTeam = contextTeam || DEFAULT_TEAM_ID;
   const [cheeredTeam, setCheeredTeam] = useState<string | null>(null);
   const [isLive, setIsLive] = useState<boolean>(true);
   const [seat, setSeat] = useState("");
@@ -146,16 +148,13 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
         setSeat("");
         setGames([]);
         setShowOtherGames(false);
-        getMyTeam().then((t) => {
-          if (t) {
-            setUserTeam(t);
-            if (presetGame.homeTeam === t || presetGame.awayTeam === t) {
-              setCheeredTeam(t);
-            } else if (!presetGame.cancelled) {
-              setTeamPickerGame(presetGame);
-            }
+        if (contextTeam) {
+          if (presetGame.homeTeam === contextTeam || presetGame.awayTeam === contextTeam) {
+            setCheeredTeam(contextTeam);
+          } else if (!presetGame.cancelled) {
+            setTeamPickerGame(presetGame);
           }
-        });
+        }
         return;
       } else {
         setStep("calendar");
@@ -168,7 +167,6 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
         setSeat("");
         setGames([]);
       }
-      getMyTeam().then((t) => { if (t) setUserTeam(t); });
     }
   }, [visible, editRecord, presetGame, presetDate]);
 
@@ -301,8 +299,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
       }
       const photosJson = savedPhotoUris.length > 0 ? JSON.stringify(savedPhotoUris) : null;
 
-      const myTeam = await getMyTeam();
-      const targetTeam = cheeredTeam || myTeam;
+      const targetTeam = cheeredTeam || userTeam;
       let isWin: number | null = null;
       if (targetTeam) {
         const hScore = selectedGame?.homeScore ?? editRecord?.score_home ?? null;
@@ -365,7 +362,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
           emotion: emotion || null,
           photos: photosJson,
           is_win: isWin,
-          cheered_team: (cheeredTeam || myTeam || null) as string | null,
+          cheered_team: (cheeredTeam || userTeam || null) as string | null,
           is_live: isLive ? 1 : 0,
           seat: seat.trim() || null,
         });
@@ -385,7 +382,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
           frame_style: "classic",
           stadium: selectedGame?.venue || null,
           is_win: isWin != null ? isWin : null,
-          cheered_team: (cheeredTeam || myTeam || null) as string | null,
+          cheered_team: (cheeredTeam || userTeam || null) as string | null,
           is_live: isLive ? 1 : 0,
           seat: seat.trim() || null,
         });

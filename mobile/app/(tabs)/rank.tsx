@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, ScrollView, ActivityIndicator, Pressable, StyleSheet } from "react-native";
-import { useFocusEffect } from "expo-router";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID } from "@shared/constants";
 import { fetchStandingsJson, type StandingRow } from "@/lib/api";
-import { getMyTeam } from "@/lib/db";
 import SettingsButton from "@/components/SettingsButton";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTeam } from "@/lib/TeamContext";
 
 function parseWLT(wlt: string): { wins: number; draws: number; losses: number } {
   const m = wlt.match(/(\d+)승(\d+)무(\d+)패/);
@@ -32,13 +31,7 @@ export default function RankScreen() {
   const [fetchedAt, setFetchedAt] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [myTeam, setMyTeam] = useState<string | null>(null);
-
-  useFocusEffect(
-    useCallback(() => {
-      getMyTeam().then(setMyTeam).catch(() => {});
-    }, [])
-  );
+  const { myTeam } = useTeam();
 
   const load = useCallback(() => {
     setLoading(true);

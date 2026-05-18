@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback, useMemo } from "react";
 import { View, Text, Image, ScrollView, FlatList, StyleSheet, ActivityIndicator, Pressable, PanResponder, LayoutAnimation, Platform, UIManager, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
 
-import { useRouter, useFocusEffect } from "expo-router";
+import { useRouter } from "expo-router";
 import DateStrip from "@/components/DateStrip";
 import GameCard from "@/components/GameCard";
 import CalendarGrid from "@/components/CalendarGrid";
@@ -19,9 +19,9 @@ import {
 } from "@/lib/gameCache";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID, buildGameId, formatDateForApi as formatDateStr } from "@shared/constants";
-import { getMyTeam } from "@/lib/db";
 import SettingsButton from "@/components/SettingsButton";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTeam } from "@/lib/TeamContext";
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -124,8 +124,8 @@ export default function HomeScreen() {
   const [gamesByDate, setGamesByDate] = useState<Record<string, EnhancedGame[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [myTeam, setMyTeamState] = useState<string | null>(null);
   const [displayTeam, setDisplayTeam] = useState<string | null>(null);
+  const { myTeam } = useTeam();
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calGames, setCalGames] = useState<ScheduleGame[]>([]);
   const [calScores, setCalScores] = useState<Record<string, { away: string; home: string; awayScore: number; homeScore: number; outcome?: string | null; cancelled?: boolean }[]>>({});
@@ -165,12 +165,6 @@ export default function HomeScreen() {
       },
     })
   ).current;
-
-  useFocusEffect(
-    useCallback(() => {
-      getMyTeam().then(setMyTeamState);
-    }, [])
-  );
 
   // Preload current month + adjacent months on mount
   useEffect(() => {

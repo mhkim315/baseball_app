@@ -1,11 +1,10 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
-import { useFocusEffect } from "expo-router";
-import { getMyTeam } from "@/lib/db";
 import TeamExpander from "@/components/TeamExpander";
 import SettingsButton from "@/components/SettingsButton";
 import CheerContent from "@/components/CheerContent";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTeam } from "@/lib/TeamContext";
 import { TEAM_COLORS } from "@shared/teamColors";
 
 type TabId = "songs" | "players" | "rules";
@@ -44,8 +43,8 @@ export default function CheerScreen() {
     emptyTitle: { fontSize: 17, fontWeight: "700", color: theme.foreground, marginBottom: 8, textAlign: "center" },
     emptyDesc: { fontSize: 13, color: theme.mutedForeground, lineHeight: 20, textAlign: "center" },
   }), [theme]);
-  const [myTeam, setMyTeam] = useState<string | null>(null);
   const [displayTeam, setDisplayTeam] = useState<string | null>(null);
+  const { myTeam } = useTeam();
   const [activeTab, setActiveTab] = useState<TabId>("songs");
   const [expanded, setExpanded] = useState<number | null>(0);
   const { width: screenWidth } = useWindowDimensions();
@@ -62,12 +61,6 @@ export default function CheerScreen() {
     const ids = ["songs", "players", "rules"] as const;
     if (idx >= 0 && idx < ids.length) setActiveTab(ids[idx]);
   }, [screenWidth]);
-
-  useFocusEffect(
-    useCallback(() => {
-      getMyTeam().then(setMyTeam).catch(() => {});
-    }, [])
-  );
 
   const activeTeam = displayTeam || myTeam;
   const teamColor = activeTeam ? TEAM_COLORS[activeTeam] : null;

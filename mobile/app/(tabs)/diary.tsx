@@ -11,9 +11,9 @@ import ExpenseBottomSheet from "@/components/ExpenseBottomSheet";
 import ExpenseStats from "@/components/ExpenseStats";
 import ExpenseModal from "@/components/ExpenseModal";
 import { getJikgwanRecords, deleteJikgwanRecord, getAllExpenses, getExpensesByDate, type JikgwanRecord, type Expense } from "@/lib/db";
-import { getMyTeam } from "@/lib/db";
 import SettingsButton from "@/components/SettingsButton";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTeam } from "@/lib/TeamContext";
 
 type DiaryTab = "timeline" | "calendar" | "stats";
 type SubTab = "jikgwan" | "expense";
@@ -120,8 +120,9 @@ export default function DiaryScreen() {
   const [subTab, setSubTab] = useState<SubTab>("jikgwan");
   const [records, setRecords] = useState<JikgwanRecord[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [myTeam, setMyTeam] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  const { myTeam } = useTeam();
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<JikgwanRecord | null>(null);
   const [presetDate, setPresetDate] = useState<Date | null>(null);
@@ -183,18 +184,10 @@ export default function DiaryScreen() {
     }
   }, []);
 
-  const loadMyTeam = useCallback(async () => {
-    try {
-      const team = await getMyTeam();
-      setMyTeam(team);
-    } catch {}
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
       loadData();
-      loadMyTeam();
-    }, [loadData, loadMyTeam])
+    }, [loadData])
   );
 
   const handleRefresh = async () => {

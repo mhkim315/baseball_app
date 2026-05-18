@@ -1,12 +1,11 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { useFocusEffect } from "expo-router";
-import { getMyTeam } from "@/lib/db";
 import TeamExpander from "@/components/TeamExpander";
 import StadiumPage from "@/components/StadiumPage";
 import SettingsButton from "@/components/SettingsButton";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTeam } from "@/lib/TeamContext";
 
 export default function StadiumTab() {
   const { theme, isDark } = useTheme();
@@ -49,14 +48,9 @@ export default function StadiumTab() {
       textAlign: "center",
     },
   }), [theme]);
-  const [myTeam, setMyTeam] = useState<string | null>(null);
   const [displayTeam, setDisplayTeam] = useState<string | null>(null);
 
-  useFocusEffect(
-    useCallback(() => {
-      getMyTeam().then(setMyTeam).catch(() => {});
-    }, [])
-  );
+  const { myTeam } = useTeam();
 
   const myTeamColor = myTeam ? teamPrimaryColor(myTeam, isDark) : undefined;
 
