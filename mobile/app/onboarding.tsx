@@ -14,7 +14,7 @@ export default function OnboardingScreen() {
   const handleStart = async () => {
     if (!selectedTeam) return;
     await setMyTeam(selectedTeam);
-    router.replace("/(tabs)");
+    router.replace("/(tabs)/home");
   };
 
   const styles = useMemo(() => StyleSheet.create({

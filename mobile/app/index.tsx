@@ -10,7 +10,7 @@ export default function IndexScreen() {
 
   useEffect(() => {
     getMyTeam().then((team) => {
-      router.replace(team ? "/(tabs)" : "/onboarding");
+      router.replace(team ? "/(tabs)/home" : "/onboarding");
     });
   }, [router]);
 

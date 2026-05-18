@@ -175,8 +175,8 @@ export default function HomeScreen() {
 
     if (todayView) {
       Promise.all([
-        fetchTodayGames(),
-        fetchDailyScores(dateStr),
+        fetchTodayGames().catch(() => null),
+        fetchDailyScores(dateStr).catch(() => null),
       ]).then(([gamesData, scoresData]) => {
         if (cancelled) return;
         const scoreEntries: ScoreEntry[] = scoresData?.games || [];
