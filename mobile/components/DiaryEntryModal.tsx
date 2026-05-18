@@ -391,8 +391,8 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
       maxHeight: "92%",
       paddingBottom: Math.max(insets.bottom, 8),
     },
-    handleRow: { alignItems: "center", paddingVertical: 10 },
-    handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: theme.border },
+    handleRow: { alignItems: "center", paddingVertical: 16 },
+    handle: { width: 48, height: 5, borderRadius: 3, backgroundColor: theme.border },
 
     // Step header
     stepHeader: {
@@ -700,7 +700,8 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
-      <View style={styles.overlay}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <Pressable style={{ flex: 1 }} onPress={handleClose} />
         <View style={styles.sheet}>
           <View style={styles.handleRow} {...sheetPan.panHandlers}>
             <View style={styles.handle} />

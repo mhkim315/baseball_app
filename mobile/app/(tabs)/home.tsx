@@ -138,10 +138,12 @@ export default function HomeScreen() {
   const calCache = useRef<Record<number, { games: ScheduleGame[]; scores: Record<string, any[]> }>>({});
 
   // Swipe-to-close for calendar
+  const calendarOpenRef = useRef(calendarOpen);
+  calendarOpenRef.current = calendarOpen;
   const calendarPan = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gs) => calendarOpen && Math.abs(gs.dy) > 10,
+      onMoveShouldSetPanResponder: (_, gs) => calendarOpenRef.current && Math.abs(gs.dy) > 10,
       onPanResponderRelease: (_, gs) => {
         if (gs.dy > 80) {
           LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
