@@ -37,6 +37,7 @@ export default function PhotoCropper({ visible, imageUri, onCrop, onCancel }: Ph
   const scaleRef = useRef(1);
   const startScaleRef = useRef(1);
   const startDistanceRef = useRef(0);
+  const prevTouchesRef = useRef(0);
 
   const getMaxOffset = () => {
     const { w, h } = imageDisplayRef.current;
@@ -66,21 +67,37 @@ export default function PhotoCropper({ visible, imageUri, onCrop, onCancel }: Ph
     onMoveShouldSetPanResponder: () => true,
     onPanResponderGrant: (evt) => {
       startOffsetRef.current = { ...offsetRef.current };
-      const touches = evt.nativeEvent.touches;
-      if (touches && touches.length >= 2) {
-        startDistanceRef.current = getDistance(touches as any);
+      const count = evt.nativeEvent.touches?.length ?? 0;
+      prevTouchesRef.current = count;
+      if (count >= 2) {
+        startDistanceRef.current = getDistance(evt.nativeEvent.touches as any);
         startScaleRef.current = scaleRef.current;
+      } else {
+        startDistanceRef.current = 0;
       }
     },
     onPanResponderMove: (evt, gs) => {
       const touches = evt.nativeEvent.touches;
-      if (touches && touches.length >= 2) {
-        // Pinch mode: scale based on finger distance ratio
+      const count = touches?.length ?? 0;
+
+      // Detect touch-count transition: entering pinch from pan
+      if (count >= 2 && prevTouchesRef.current < 2) {
+        startDistanceRef.current = getDistance(touches as any);
+        startScaleRef.current = scaleRef.current;
+        startOffsetRef.current = { ...offsetRef.current };
+      }
+      // Detect touch-count transition: exiting pinch back to pan
+      if (count < 2 && prevTouchesRef.current >= 2) {
+        startOffsetRef.current = { ...offsetRef.current };
+      }
+      prevTouchesRef.current = count;
+
+      if (count >= 2) {
+        // Pinch mode
         const dist = getDistance(touches as any);
         if (startDistanceRef.current > 0) {
           const newScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, startScaleRef.current * (dist / startDistanceRef.current)));
           scaleRef.current = newScale;
-          // Re-clamp offset to new zoom bounds
           const max = getMaxOffset();
           offsetRef.current.x = Math.max(-max.x, Math.min(max.x, offsetRef.current.x));
           offsetRef.current.y = Math.max(-max.y, Math.min(max.y, offsetRef.current.y));
@@ -96,8 +113,9 @@ export default function PhotoCropper({ visible, imageUri, onCrop, onCancel }: Ph
       }
     },
     onPanResponderRelease: () => {
-      // Reset pan start offset for next gesture
       startOffsetRef.current = { ...offsetRef.current };
+      startDistanceRef.current = 0;
+      prevTouchesRef.current = 0;
     },
   }), []);
 
