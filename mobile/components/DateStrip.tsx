@@ -60,14 +60,19 @@ export default function DateStrip({ selectedDate, onDateChange, hasGameDates = [
 
   const goToday = () => onDateChange(new Date());
 
+  const goPrevWeekRef = useRef(goPrevWeek);
+  goPrevWeekRef.current = goPrevWeek;
+  const goNextWeekRef = useRef(goNextWeek);
+  goNextWeekRef.current = goNextWeek;
+
   const weekPan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dx) > Math.abs(gs.dy) && Math.abs(gs.dx) > 15,
     onPanResponderRelease: (_, gs) => {
       if (gs.dx > 50) {
-        goPrevWeek();
+        goPrevWeekRef.current();
       } else if (gs.dx < -50) {
-        goNextWeek();
+        goNextWeekRef.current();
       }
     },
   })).current;

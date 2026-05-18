@@ -74,6 +74,11 @@ export default function CalendarGrid({
 
   const monthTranslateX = useRef(new Animated.Value(0)).current;
 
+  const goToPrevRef = useRef(goToPrev);
+  goToPrevRef.current = goToPrev;
+  const goToNextRef = useRef(goToNext);
+  goToNextRef.current = goToNext;
+
   const monthPan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dx) > Math.abs(gs.dy) && Math.abs(gs.dx) > 15,
@@ -82,9 +87,9 @@ export default function CalendarGrid({
     },
     onPanResponderRelease: (_, gs) => {
       if (gs.dx > 60) {
-        goToPrev();
+        goToPrevRef.current();
       } else if (gs.dx < -60) {
-        goToNext();
+        goToNextRef.current();
       }
       Animated.spring(monthTranslateX, { toValue: 0, useNativeDriver: true }).start();
     },

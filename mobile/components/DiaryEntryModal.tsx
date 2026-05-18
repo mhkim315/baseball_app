@@ -432,13 +432,17 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
     setCalYear(calMonth === 11 ? calYear + 1 : calYear);
     setCalMonth(m);
   };
+  const calPrevRef = useRef(calPrev);
+  calPrevRef.current = calPrev;
+  const calNextRef = useRef(calNext);
+  calNextRef.current = calNext;
   const calMonthPan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dx) > Math.abs(gs.dy) && Math.abs(gs.dx) > 15,
     onPanResponderMove: (_, gs) => { calTranslateX.setValue(Math.max(-40, Math.min(40, gs.dx))); },
     onPanResponderRelease: (_, gs) => {
-      if (gs.dx > 60) calPrev();
-      else if (gs.dx < -60) calNext();
+      if (gs.dx > 60) calPrevRef.current();
+      else if (gs.dx < -60) calNextRef.current();
       Animated.spring(calTranslateX, { toValue: 0, useNativeDriver: true }).start();
     },
   })).current;

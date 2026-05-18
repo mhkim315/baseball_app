@@ -97,6 +97,11 @@ export default function DiaryCalendar({
 
   const monthTranslateX = useRef(new Animated.Value(0)).current;
 
+  const handlePrevRef = useRef(handlePrev);
+  handlePrevRef.current = handlePrev;
+  const handleNextRef = useRef(handleNext);
+  handleNextRef.current = handleNext;
+
   const monthPan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dx) > Math.abs(gs.dy) && Math.abs(gs.dx) > 15,
@@ -105,9 +110,9 @@ export default function DiaryCalendar({
     },
     onPanResponderRelease: (_, gs) => {
       if (gs.dx > 60) {
-        handlePrev();
+        handlePrevRef.current();
       } else if (gs.dx < -60) {
-        handleNext();
+        handleNextRef.current();
       }
       Animated.spring(monthTranslateX, { toValue: 0, useNativeDriver: true }).start();
     },

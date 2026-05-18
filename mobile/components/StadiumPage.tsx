@@ -463,7 +463,7 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
           >
             {TABS.map((tab) => (
               <View key={tab.id} style={{ width: screenWidth }}>
-                <View style={styles.tabContent}>
+                <ScrollView>
                   {tab.id === "info" && (
                     <InfoTab stadiumId={stadiumId} brief={stadium} teamColor={teamColor} selectedTeam={selectedTeam} />
                   )}
@@ -510,7 +510,7 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
                       eatsCenter={eatsCenter}
                     />
                   )}
-                </View>
+                </ScrollView>
               </View>
             ))}
           </ScrollView>
