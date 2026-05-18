@@ -148,17 +148,20 @@ export default function HomeScreen() {
     return [prev, date, next].map(d => formatDateStr(d));
   }, []);
 
-  // Swipe-to-close for calendar
+  // Swipe for calendar: down to open, up to close
   const calendarOpenRef = useRef(calendarOpen);
   calendarOpenRef.current = calendarOpen;
   const calendarPan = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gs) => calendarOpenRef.current && Math.abs(gs.dy) > 10,
+      onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dy) > 10,
       onPanResponderRelease: (_, gs) => {
-        if (gs.dy < -80) {
+        if (gs.dy < -80 && calendarOpenRef.current) {
           LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
           setCalendarOpen(false);
+        } else if (gs.dy > 80 && !calendarOpenRef.current) {
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+          setCalendarOpen(true);
         }
       },
     })
@@ -475,7 +478,8 @@ export default function HomeScreen() {
         teamColor={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined}
       />
 
-      {/* Calendar toggle */}
+      {/* Calendar toggle + content — pan wraps both for open/close swipe */}
+      <View {...calendarPan.panHandlers}>
       <Pressable style={styles.calToggle} onPress={() => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setCalendarOpen(!calendarOpen);
@@ -484,7 +488,7 @@ export default function HomeScreen() {
           {calendarOpen ? "캘린더 접기 ▲" : "캘린더 보기 ▼"}
         </Text>
       </Pressable>
-      <View style={[styles.calWrapper, calendarOpen ? styles.calWrapperOpen : styles.calWrapperHidden]} {...calendarPan.panHandlers}>
+      <View style={[styles.calWrapper, calendarOpen ? styles.calWrapperOpen : styles.calWrapperHidden]}>
         <CalendarGrid
           year={calYear}
           month={calMonth}
@@ -497,6 +501,7 @@ export default function HomeScreen() {
           onMonthChange={(y, m) => { setCalYear(y); setCalMonth(m); }}
           onTeamChange={setDisplayTeam}
         />
+      </View>
       </View>
 
       {/* Game list — horizontal paging scroll */}
