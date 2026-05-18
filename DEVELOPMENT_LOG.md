@@ -1,6 +1,6 @@
 # Fullcount.kr Mobile App — 개발 작업 문서
 
-> 마지막 업데이트: 2026-05-16
+> 마지막 업데이트: 2026-05-18
 > 
 > 이 문서는 이전 대화 컨텍스트가 만료되어도 작업을 이어갈 수 있도록 상세히 기록합니다.
 
@@ -668,3 +668,93 @@ git push origin master
 6. **Google Sign In**: EAS 개발 빌드 후 `@react-native-google-signin/google-signin` 설치 필요
 7. **Apple Sign In**: iOS 시뮬레이터 미작동, 실기기 필요
 8. **데이터 삭제 정책**: 회원 탈퇴 시 30일 유예 후 개인정보 완전 삭제 (스케줄러 필요)
+9. **Photo save on Android production**: ImagePicker가 `content://` URI 반환 → `expo-file-system/legacy`의 `copyAsync`로 처리 (fetch()는 RN에서 content:// 미지원)
+10. **expo-image-picker SDK 54 호환버전**: `~17.0.11` 사용. 55.x는 SDK 55+ 전용
+11. **EAS Free plan**: 월 30회 Android 빌드 제한. 초과 시 `--local` 로컬 빌드 필요
+12. **System nav bar overlap**: `edgeToEdgeEnabled: true` 상태에서 Android 시스템 네비게이션 바가 앱을 가리지 않도록 `useSafeAreaInsets()`로 하단 패딩 적용
+
+---
+## 2026-05-18 이후 추가 작업 — Phase 7.1: 다크모드, 다이어리 개선, UI/UX
+
+### 다크모드 (ThemeContext 기반)
+**파일 생성:**
+- `lib/ThemeContext.tsx` — ThemeProvider, useTheme() hook, light/dark theme 전환, SQLite 저장, 시스템 Appearance 감지
+
+**파일 수정 (39개):**
+- 모든 컴포넌트에서 `import { theme }` → `import { useTheme }` + 컴포넌트 내 `const { theme } = useTheme()`
+- 스타일을 `useMemo(() => StyleSheet.create({...}), [theme])`로 이동
+- 다크모드 토글: MY 페이지 설정 섹션에 추가
+- `teamPrimaryColor(teamId, isDark)` 헬퍼로 팀 컬러 동적 처리
+
+### 다이어리 기능 개선
+**파일 수정:**
+- `components/DiaryEntryModal.tsx`:
+  - 직관/집관(`is_live`) 토글 버튼 추가
+  - 좌석 입력 필드 추가 (isLive=true 시 표시)
+  - 경기 상세 화면에서 프리셋 게임으로 바로 write 단계 진입 (`presetGame`/`presetDate` prop)
+  - 저장 완료 후 다이어리 탭으로 자동 이동
+  - `addJikgwanRecord`/`updateJikgwanRecord`에 `is_live`, `seat`, `cheered_team` 필드 추가
+- `components/DiaryCard.tsx`:
+  - 직관/집관 뱃지 표시
+  - 좌석 정보(🎫) 표시
+  - 기본 ⚾ 이미지 제거 (사진 없으면 아무 것도 표시 안 함)
+  - 공유/수정/삭제 버튼
+- `components/DiaryTimeline.tsx`:
+  - 날짜 선택 시 해당 날짜 기록만 필터링
+- `components/DiaryStats.tsx`:
+  - 다이어리 기반 승률과 실시간 승률 함께 표시 (dual win rate)
+
+### 사진 저장 시스템 재작성
+**`lib/camera.ts` 완전 재작성 (3차 시도):**
+- 1차: `fetch(content://)` — RN에서 작동 안 함 ❌
+- 2차: `readAsStringAsync` + base64 → 파일 쓰기 — 브릿지 모듈 의존성 이슈 ❌
+- 3차: `expo-file-system/legacy`의 `copyAsync` 사용 — Android ContentResolver 네이티브 지원 ✅
+  - `import * as FileSystem from "expo-file-system/legacy"`
+  - `FileSystem.copyAsync({ from: sourceUri, to: destUri })`
+- MediaLibrary 저장 제거 (`saveToLibraryAsync`로 갤러리 중복 저장 방지)
+- 사진 저장 실패 시 에러 throw 대신 `console.warn` + 건너뛰기
+
+### 경기 상세 화면 개선
+- 투수 기록 칩 레이아웃으로 변경 (승/세/홀/패를 `flexWrap: "wrap"` 칩으로 표시)
+- "직관 기록하기" 버튼 추가 → DiaryEntryModal 프리셋 모드로 연결
+- 저장 완료 후 다이어리 탭으로 자동 네비게이션
+
+### UI/UX 제스처 및 키보드 개선
+- **홈 캘린더 스와이프**: PanResponder로 아래로 스와이프 (>80px) 시 캘린더 접기
+  - `calendarOpenRef` 사용해 클로저에 상태 고정 문제 해결
+- **다이어리 모달 스와이프**: 핸들바 PanResponder로 아래 스와이프 시 모달 닫기
+  - 핸들바 영역 확대 (padding 10→16, width 36→48)
+  - 어두운 배경(overlay) 탭 시 모달 닫힘
+- **키보드 가림 방지**: ScrollView에 `keyboardShouldPersistTaps="handled"` 추가
+  - 일기 TextInput focus 시 `scrollToEnd` 호출
+- **시스템 네비게이션 바**: `useSafeAreaInsets().bottom`을 root layout에 적용
+  - DiaryEntryModal sheet에도 `Math.max(insets.bottom, 8)` 패딩 적용
+  - `edgeToEdgeEnabled: true` 유지, safe area로 대응
+
+### 캘린더 UI
+- `CalendarGrid.tsx` 다크모드 대응 (하드코딩된 light 색상 제거)
+- `CalendarPage.tsx` 생성 (다이어리 탭 내 캘린더 페이지)
+
+### 설정
+- `components/SettingsButton.tsx` — 톱니바퀴 아이콘 버튼
+- 모든 탭 페이지 상단에 설정 버튼 추가
+- MY 페이지 다크모드 토글
+
+### 앱 아이콘
+- splash 배경: `#faf9f5` → `#fde8d6` (파스텔 피치)
+- Android adaptiveIcon 배경: `#fde8d6`
+
+### 패키지 변경
+- `expo-image-picker`: `55.0.20` → `~17.0.11` (SDK 54 호환으로 다운그레이드)
+- `react-native-gesture-handler`: `~2.28.0` 설치 (PanResponder와 별도로 사용 가능)
+
+### EAS Build
+- 현재 Free plan Android 빌드 크레딧 소진 (6/1 초기화)
+- 로컬 빌드: `npx eas build --platform android --profile preview --local`
+
+### Git
+```bash
+git add .
+git commit -m "..."
+git push origin master
+```

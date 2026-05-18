@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
-  View, Text, Pressable, TextInput, Modal, StyleSheet, Image,
+  View, Text, Pressable, TextInput, StyleSheet, Image,
   ActivityIndicator, ScrollView, PanResponder,
+  Animated, KeyboardAvoidingView, BackHandler, Platform,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
@@ -60,6 +61,9 @@ interface DiaryEntryModalProps {
 export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord, presetGame, presetDate }: DiaryEntryModalProps) {
   const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const sheetTranslateY = useRef(new Animated.Value(500)).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const [shouldRender, setShouldRender] = useState(false);
   const now = new Date();
   const [step, setStep] = useState<"calendar" | "games" | "write">("calendar");
 
@@ -95,6 +99,28 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
   const [teamPickerGame, setTeamPickerGame] = useState<GameOption | null>(null);
 
   const scrollRef = useRef<ScrollView>(null);
+
+  // Animate open when visible
+  useEffect(() => {
+    if (visible) {
+      setShouldRender(true);
+      sheetTranslateY.setValue(500);
+      backdropOpacity.setValue(0);
+      Animated.parallel([
+        Animated.spring(sheetTranslateY, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 50,
+          friction: 9,
+        }),
+        Animated.timing(backdropOpacity, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible]);
 
   const dateStr = formatDate(selectedDate);
   const dateStrShort = `${String(selectedDate.getMonth() + 1)}월 ${selectedDate.getDate()}일`;
@@ -342,9 +368,36 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
     }
   };
 
-  const handleClose = () => {
-    onClose();
-  };
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  const handleClose = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(sheetTranslateY, {
+        toValue: 500,
+        duration: 280,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropOpacity, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShouldRender(false);
+      onCloseRef.current();
+    });
+  }, [sheetTranslateY, backdropOpacity]);
+
+  useEffect(() => {
+    if (!shouldRender) return;
+    const handler = () => {
+      handleClose();
+      return true;
+    };
+    const subscription = BackHandler.addEventListener("hardwareBackPress", handler);
+    return () => subscription.remove();
+  }, [shouldRender, handleClose]);
 
   const sheetPan = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => false,
@@ -380,8 +433,9 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
   };
   const styles = useMemo(() => StyleSheet.create({
     overlay: {
-      flex: 1,
-      backgroundColor: "rgba(0,0,0,0.5)",
+      position: "absolute",
+      top: 0, left: 0, right: 0, bottom: 0,
+      zIndex: 999,
       justifyContent: "flex-end",
     },
     sheet: {
@@ -698,11 +752,18 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
     },
   }), [theme, insets.bottom]);
 
+  if (!shouldRender) return null;
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+    <View style={styles.overlay}>
+      {/* Backdrop — tap to close */}
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: backdropOpacity, backgroundColor: "rgba(0,0,0,0.5)" }]}>
         <Pressable style={{ flex: 1 }} onPress={handleClose} />
-        <View style={styles.sheet}>
+      </Animated.View>
+
+      {/* Sheet */}
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ justifyContent: "flex-end" }}>
+        <Animated.View style={[styles.sheet, { transform: [{ translateY: sheetTranslateY }] }]}>
           <View style={styles.handleRow} {...sheetPan.panHandlers}>
             <View style={styles.handle} />
           </View>
@@ -1116,8 +1177,8 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
               </Pressable>
             )}
           </View>
-        </View>
-      </View>
+        </Animated.View>
+      </KeyboardAvoidingView>
 
       {/* Custom simple alert */}
       {simpleAlert.visible && (
@@ -1174,7 +1235,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
           </View>
         );
       })()}
-    </Modal>
+    </View>
   );
 }
 
