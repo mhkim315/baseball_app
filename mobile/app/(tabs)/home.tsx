@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { View, Text, Image, FlatList, StyleSheet, ActivityIndicator, Pressable, PanResponder, LayoutAnimation, Platform, UIManager, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+import { View, Text, Image, ScrollView, FlatList, StyleSheet, ActivityIndicator, Pressable, PanResponder, LayoutAnimation, Platform, UIManager, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
 
 import { useRouter, useFocusEffect } from "expo-router";
 import DateStrip from "@/components/DateStrip";
@@ -137,7 +137,7 @@ export default function HomeScreen() {
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
   const calCache = useRef<Record<number, { games: ScheduleGame[]; scores: Record<string, any[]> }>>({});
   const { width: screenWidth } = useWindowDimensions();
-  const pageScrollRef = useRef<FlatList<string>>(null);
+  const pageScrollRef = useRef<ScrollView>(null);
 
   // 3-date window for ScrollView paging
   const getDateWindow = useCallback((date: Date) => {
@@ -401,10 +401,9 @@ export default function HomeScreen() {
 
   // Reset scroll to center page when selectedDate changes
   useEffect(() => {
-    // Small delay to allow data to settle before resetting scroll
     const id = setTimeout(() => {
       if (screenWidth > 0) {
-        pageScrollRef.current?.scrollToOffset?.({ offset: screenWidth, animated: false });
+        pageScrollRef.current?.scrollTo({ x: screenWidth, animated: false });
       }
     }, 50);
     return () => clearTimeout(id);
@@ -511,20 +510,19 @@ export default function HomeScreen() {
           <ActivityIndicator size="large" color={theme.primary} />
         </View>
       ) : (
-        <FlatList
+        <ScrollView
           ref={pageScrollRef}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           onMomentumScrollEnd={handleMomentumScrollEnd}
-          data={dateStrs}
-          keyExtractor={(ds) => ds}
-          scrollEnabled={!loading}
-          renderItem={({ item: ds }) => {
+          style={{ flex: 1 }}
+        >
+          {dateStrs.map((ds) => {
             const pageGames = sortGames(gamesByDate[ds] || []);
             const empty = pageGames.length === 0 && !error;
             return (
-              <View style={{ width: screenWidth, flex: 1 }}>
+              <View key={ds} style={{ width: screenWidth, flex: 1 }}>
                 {error ? renderError() : empty ? renderEmpty() : (
                   <FlatList
                     data={pageGames}
@@ -536,8 +534,8 @@ export default function HomeScreen() {
                 )}
               </View>
             );
-          }}
-        />
+          })}
+        </ScrollView>
       )}
       </View>
     </View>
