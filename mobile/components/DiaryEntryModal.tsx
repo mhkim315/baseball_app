@@ -4,7 +4,6 @@ import {
   ActivityIndicator, ScrollView,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import * as MediaLibrary from "expo-media-library";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { parseGameTeamIds, getDaysInMonth, getFirstDayOfMonth, formatDate, formatDateForApi, DEFAULT_TEAM_ID, buildGameId } from "@shared/constants";
 import EmotionPicker from "@/components/EmotionPicker";
@@ -257,14 +256,6 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
             const fileName = generatePhotoName();
             const savedUri = await savePhoto(resized, fileName);
             savedPhotoUris.push(savedUri);
-            try {
-              const { status } = await MediaLibrary.requestPermissionsAsync();
-              if (status === "granted") {
-                await MediaLibrary.saveToLibraryAsync(savedUri);
-              }
-            } catch (e) {
-              console.warn("MediaLibrary save failed", e);
-            }
           } catch (e) {
             console.warn("사진 저장 실패, 건너뜁니다", uri, e);
           }
