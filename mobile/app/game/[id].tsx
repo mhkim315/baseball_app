@@ -231,9 +231,8 @@ export default function GameDetailScreen() {
     pitcherTeam: { fontSize: 11 },
 
     // Pitching result
-    pitchingList: { gap: 8 },
-    pitchingRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: theme.secondary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 },
-    pitchingLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
+    pitchingList: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+    pitchingRow: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: theme.secondary, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
     wlsBadge: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
     wlsText: { fontSize: 10, fontWeight: "bold" },
     pitchingName: { fontSize: 14, fontWeight: "500", color: theme.foreground },
@@ -540,12 +539,10 @@ export default function GameDetailScreen() {
                 const wc = WLS_COLORS[p.wls] || { text: theme.mutedForeground, bg: theme.muted };
                 return (
                   <View key={i} style={styles.pitchingRow}>
-                    <View style={styles.pitchingLeft}>
-                      <View style={[styles.wlsBadge, { backgroundColor: wc.bg }]}>
-                        <Text style={[styles.wlsText, { color: wc.text }]}>{wlsLabel}</Text>
-                      </View>
-                      <Text style={styles.pitchingName}>{p.name}</Text>
+                    <View style={[styles.wlsBadge, { backgroundColor: wc.bg }]}>
+                      <Text style={[styles.wlsText, { color: wc.text }]}>{wlsLabel}</Text>
                     </View>
+                    <Text style={[styles.pitchingName, { fontSize: 13 }]}>{p.name}</Text>
                     <Text style={styles.pitchingStats}>
                       {p.ip && `${p.ip}이닝`}
                       {p.era ? ` ERA ${p.era}` : ""}
@@ -558,20 +555,18 @@ export default function GameDetailScreen() {
         ) : scoreFallback?.winPitcher ? (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>투수 기록</Text>
-            <View style={styles.pitchingRow}>
-              <View style={styles.pitchingLeft}>
+            <View style={styles.pitchingList}>
+              <View style={styles.pitchingRow}>
                 <View style={[styles.wlsBadge, { backgroundColor: "#e3f2fd" }]}>
                   <Text style={[styles.wlsText, { color: "#1565c0" }]}>승</Text>
                 </View>
-                <Text style={styles.pitchingName}>{scoreFallback.winPitcher || "-"}</Text>
+                <Text style={[styles.pitchingName, { fontSize: 13 }]}>{scoreFallback.winPitcher || "-"}</Text>
               </View>
-            </View>
-            <View style={[styles.pitchingRow, { marginTop: 8 }]}>
-              <View style={styles.pitchingLeft}>
+              <View style={styles.pitchingRow}>
                 <View style={[styles.wlsBadge, { backgroundColor: "#ffebee" }]}>
                   <Text style={[styles.wlsText, { color: "#d32f2f" }]}>패</Text>
                 </View>
-                <Text style={styles.pitchingName}>{scoreFallback.losePitcher || "-"}</Text>
+                <Text style={[styles.pitchingName, { fontSize: 13 }]}>{scoreFallback.losePitcher || "-"}</Text>
               </View>
             </View>
           </View>

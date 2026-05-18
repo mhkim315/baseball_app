@@ -23,18 +23,32 @@ export function generatePhotoName(): string {
 export async function savePhoto(sourceUri: string, fileName: string): Promise<string> {
   const dir = await ensurePhotoDir();
   const dest = new File(dir, fileName);
+
+  // Try 1: move (fastest, works with file:// URIs)
   const src = new File(sourceUri);
-  try {
-    src.move(dest);
-  } catch {
+  if (src.exists) {
     try {
-      src.copy(dest);
-      if (src.exists) src.delete();
-    } catch (e) {
-      throw new Error("사진 저장 실패");
+      src.move(dest);
+      return dest.uri;
+    } catch {
+      try {
+        src.copy(dest);
+        if (src.exists) src.delete();
+        return dest.uri;
+      } catch {}
     }
   }
-  return dest.uri;
+
+  // Try 2: fetch + write (handles content:// and any URI fetch supports)
+  try {
+    const response = await fetch(sourceUri);
+    const blob = await response.blob();
+    const buffer = await blob.arrayBuffer();
+    dest.write(new Uint8Array(buffer));
+    return dest.uri;
+  } catch (e) {
+    throw new Error("사진 저장 실패");
+  }
 }
 
 export async function resizePhoto(uri: string, maxWidth = 1200): Promise<string> {

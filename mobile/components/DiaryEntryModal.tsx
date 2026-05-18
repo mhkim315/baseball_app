@@ -266,7 +266,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
               console.warn("MediaLibrary save failed", e);
             }
           } catch (e) {
-            throw new Error(`사진 처리 실패: ${uri}`);
+            console.warn("사진 저장 실패, 건너뜁니다", uri, e);
           }
         }
       }
