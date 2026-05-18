@@ -663,7 +663,7 @@ export default function GameDetailScreen() {
       <DiaryEntryModal
         visible={showDiaryModal}
         onClose={() => setShowDiaryModal(false)}
-        onSaved={() => setShowDiaryModal(false)}
+        onSaved={() => { setShowDiaryModal(false); router.push("/(tabs)/diary"); }}
         presetGame={diaryGamePreset}
         presetDate={diaryPresetDate}
       />
