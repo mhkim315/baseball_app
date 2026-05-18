@@ -36,7 +36,7 @@ export default function RankScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      getMyTeam().then(setMyTeam);
+      getMyTeam().then(setMyTeam).catch(() => {});
     }, [])
   );
 
