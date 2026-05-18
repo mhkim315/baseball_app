@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { View, Text, Image, FlatList, StyleSheet, ActivityIndicator, Pressable, Animated, PanResponder, LayoutAnimation, Platform, UIManager } from "react-native";
+import { View, Text, Image, FlatList, StyleSheet, ActivityIndicator, Pressable, PanResponder, LayoutAnimation, Platform, UIManager, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
 
 import { useRouter, useFocusEffect } from "expo-router";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import DateStrip from "@/components/DateStrip";
 import GameCard from "@/components/GameCard";
 import CalendarGrid from "@/components/CalendarGrid";
@@ -125,7 +124,7 @@ export default function HomeScreen() {
   }), [theme]);
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [games, setGames] = useState<EnhancedGame[]>([]);
+  const [gamesByDate, setGamesByDate] = useState<Record<string, EnhancedGame[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [myTeam, setMyTeamState] = useState<string | null>(null);
@@ -137,27 +136,17 @@ export default function HomeScreen() {
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
   const calCache = useRef<Record<number, { games: ScheduleGame[]; scores: Record<string, any[]> }>>({});
+  const { width: screenWidth } = useWindowDimensions();
+  const pageScrollRef = useRef<FlatList<string>>(null);
 
-  // Card swipe: ±1 day (native-thread gesture for smooth follow-finger feel)
-  const cardTranslateX = useRef(new Animated.Value(0)).current;
-
-  const cardSwipeGesture = Gesture.Pan()
-    .activeOffsetX([-15, 15])
-    .failOffsetY([-10, 10])
-    .onUpdate((e) => {
-      cardTranslateX.setValue(e.translationX);
-    })
-    .onEnd((e) => {
-      if (e.translationX > 60) {
-        cardTranslateX.setValue(0);
-        setSelectedDate(prev => { const d = new Date(prev); d.setDate(d.getDate() - 1); return d; });
-      } else if (e.translationX < -60) {
-        cardTranslateX.setValue(0);
-        setSelectedDate(prev => { const d = new Date(prev); d.setDate(d.getDate() + 1); return d; });
-      } else {
-        Animated.spring(cardTranslateX, { toValue: 0, useNativeDriver: true }).start();
-      }
-    });
+  // 3-date window for ScrollView paging
+  const getDateWindow = useCallback((date: Date) => {
+    const prev = new Date(date);
+    prev.setDate(prev.getDate() - 1);
+    const next = new Date(date);
+    next.setDate(next.getDate() + 1);
+    return [prev, date, next].map(d => formatDateStr(d));
+  }, []);
 
   // Swipe-to-close for calendar
   const calendarOpenRef = useRef(calendarOpen);
@@ -204,163 +193,138 @@ export default function HomeScreen() {
   }, []);
 
   const load = useCallback(() => {
-    const dateStr = formatDateStr(selectedDate);
+    const dates = getDateWindow(selectedDate);
     setLoading(true);
     setError(false);
     let cancelled = false;
 
-    const todayView = isToday(selectedDate);
+    const month = selectedDate.getMonth() + 1;
+    const schedulePromise = scheduleCache.current?.month === month
+      ? Promise.resolve(scheduleCache.current.games)
+      : fetchScheduleByMonth(month).then((s) => {
+          const gamesList = s?.games || [];
+          scheduleCache.current = { month, games: gamesList };
+          return gamesList;
+        });
 
-    if (todayView) {
-      Promise.all([
-        fetchTodayGames().catch(() => null),
-        fetchDailyScores(dateStr).catch(() => null),
-      ]).then(([gamesData, scoresData]) => {
+    const scorePromises = dates.map((ds) => fetchDailyScores(ds).catch(() => null));
+    const todayPromise = fetchTodayGames().catch(() => null);
+    const todayStr = formatDateStr(new Date());
+
+    Promise.all([schedulePromise, ...scorePromises, todayPromise])
+      .then(([scheduleGames, ...rest]: [unknown, ...unknown[]]) => {
         if (cancelled) return;
-        const scoreEntries: ScoreEntry[] = scoresData?.games || [];
-        if (gamesData?.games) {
-          const apiGames = gamesData.date === dateStr
-            ? gamesData.games
-            : (gamesData.nextGames?.filter((g) => g.date === dateStr) ?? []);
-          const enhanced: EnhancedGame[] = apiGames.map((g: TodayGame) => {
-            const score = scoreEntries.find(
-              (s) => s.away === TEAM_COLORS[g.away.id]?.shortName && s.home === TEAM_COLORS[g.home.id]?.shortName
-            );
-            const rawStatus = g.status as "scheduled" | "live" | "finished";
-            const [h, m] = (g.time || "18:30").split(":").map(Number);
-            const startTime = new Date(selectedDate);
-            startTime.setHours(h, m, 0, 0);
-            const hasStarted = new Date() >= startTime;
-            const hasResult = score?.outcome != null;
-            const isCancelled = g.status === "cancelled" || score?.cancelled === true;
-            let gameStatus: "scheduled" | "live" | "finished";
-            if (rawStatus === "finished" || hasResult) {
-              gameStatus = "finished";
-            } else if (isCancelled) {
-              gameStatus = "scheduled";
-            } else if (rawStatus === "live" || hasStarted) {
-              gameStatus = "live";
-            } else {
-              gameStatus = "scheduled";
+        const scoresList = rest.slice(0, 3) as ({ games: ScoreEntry[] } | null)[];
+        const todayData = rest[3] as { games: TodayGame[]; nextGames?: TodayGame[] } | null;
+        const schedule = scheduleGames as ScheduleGame[];
+
+        const result: Record<string, EnhancedGame[]> = {};
+        for (let i = 0; i < 3; i++) {
+          const ds = dates[i];
+          const dayGames = schedule.filter((g) => g.date === ds);
+          const scoreEntries: ScoreEntry[] = scoresList[i]?.games || [];
+          const isFuture = ds > todayStr;
+          const isToday = ds === todayStr;
+
+          // Pitcher map from todayGames (today) or nextGames (tomorrow)
+          const pitcherMap = new Map<string, { away?: string; home?: string }>();
+          const gameIdMap = new Map<string, string>();
+          if (isToday && todayData?.games) {
+            for (const g of todayData.games) {
+              const key = `${ds}-${g.away.id}-${g.home.id}`;
+              pitcherMap.set(key, {
+                away: g.away.starter?.name !== "미정" ? g.away.starter?.name : undefined,
+                home: g.home.starter?.name !== "미정" ? g.home.starter?.name : undefined,
+              });
+              gameIdMap.set(key, g.id);
             }
+          } else {
+            const tomorrowStr = formatDateStr(new Date(Date.now() + 86400000));
+            if (ds === tomorrowStr && todayData?.nextGames) {
+              for (const ng of todayData.nextGames) {
+                const key = `${ng.date}-${ng.away.id}-${ng.home.id}`;
+                pitcherMap.set(key, {
+                  away: ng.away.starter?.name !== "미정" ? ng.away.starter?.name : undefined,
+                  home: ng.home.starter?.name !== "미정" ? ng.home.starter?.name : undefined,
+                });
+                gameIdMap.set(key, ng.id);
+              }
+            }
+          }
+
+          const enhanced: EnhancedGame[] = dayGames.map((g) => {
+            const homeId = TEAM_NAME_TO_ID[g.home] || "";
+            const awayId = TEAM_NAME_TO_ID[g.away] || "";
+            const score = scoreEntries.find((s) => s.home === g.home && s.away === g.away);
+            const gameKey = `${ds}-${awayId}-${homeId}`;
+            const pitchers = pitcherMap.get(gameKey);
+            const apiGameId = gameIdMap.get(gameKey);
+
+            let status: "scheduled" | "live" | "finished" = "scheduled";
+            if (score?.cancelled) {
+              status = "finished";
+            } else if (score && !isFuture) {
+              status = "finished";
+            } else if (isToday) {
+              const [h, m] = (g.time || "18:30").split(":").map(Number);
+              const startTime = new Date();
+              startTime.setHours(h, m, 0, 0);
+              if (new Date() >= startTime) status = "live";
+            }
+
             return {
-              id: g.id,
-              homeTeam: g.home.id,
-              awayTeam: g.away.id,
+              id: apiGameId || buildGameId(awayId, homeId, ds.replace(/-/g, "")),
+              homeTeam: homeId,
+              awayTeam: awayId,
               time: g.time || "18:30",
               venue: g.venue || "",
-              status: gameStatus,
-              homeScore: g.score?.home ?? score?.homeScore,
-              awayScore: g.score?.away ?? score?.awayScore,
-              homePitcher: g.home.starter?.name,
-              awayPitcher: g.away.starter?.name,
+              status,
+              homeScore: score?.homeScore,
+              awayScore: score?.awayScore,
+              homePitcher: pitchers?.home,
+              awayPitcher: pitchers?.away,
               winPitcher: score?.winPitcher,
               losePitcher: score?.losePitcher,
-              cancelled: g.status === "cancelled" || score?.cancelled === true,
+              cancelled: score?.cancelled,
             };
           });
-          setGames(enhanced);
-        } else {
-          setGames([]);
-        }
-        setLoading(false);
-      }).catch(() => {
-        if (cancelled) return;
-        setError(true);
-        setLoading(false);
-      });
-    } else {
-      const month = selectedDate.getMonth() + 1;
-      const schedulePromise = scheduleCache.current?.month === month
-        ? Promise.resolve(scheduleCache.current.games)
-        : fetchScheduleByMonth(month).then((s) => {
-            const gamesList = s?.games || [];
-            scheduleCache.current = { month, games: gamesList };
-            return gamesList;
-          });
 
-      Promise.all([
-        schedulePromise,
-        fetchDailyScores(dateStr).catch(() => null),
-        fetchTodayGames().catch(() => null),
-      ]).then(([scheduleGames, scoresData, todayData]) => {
-        if (cancelled) return;
-        const dayGames = scheduleGames.filter((g: ScheduleGame) => g.date === dateStr);
-        const scoreEntries: ScoreEntry[] = scoresData?.games || [];
-        const isFuture = dateStr > formatDateStr(new Date());
-        const tomorrowDate = new Date();
-        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-        const tomorrowStr = formatDateStr(tomorrowDate);
-        const isTomorrow = dateStr === tomorrowStr;
-
-        const pitcherMap = new Map<string, { away?: string; home?: string }>();
-        const gameIdMap = new Map<string, string>();
-        if (isTomorrow) {
-          for (const ng of todayData?.nextGames ?? []) {
-            const key = `${ng.date}-${ng.away.id}-${ng.home.id}`;
-            pitcherMap.set(key, {
-              away: ng.away.starter?.name !== "미정" ? ng.away.starter?.name : undefined,
-              home: ng.home.starter?.name !== "미정" ? ng.home.starter?.name : undefined,
-            });
-            gameIdMap.set(key, ng.id);
-          }
-        }
-
-        const enhanced: EnhancedGame[] = dayGames.map((g: ScheduleGame) => {
-          const homeId = TEAM_NAME_TO_ID[g.home] || "";
-          const awayId = TEAM_NAME_TO_ID[g.away] || "";
-          const score = scoreEntries.find(
-            (s) => s.home === g.home && s.away === g.away
+          // Fallback: fetch game-detail for missing pitchers
+          const gamesNeedingPitchers = enhanced.filter(
+            (g) => !isFuture && (!g.homePitcher || !g.awayPitcher)
           );
-          const gameKey = `${dateStr}-${awayId}-${homeId}`;
-          const pitchers = pitcherMap.get(gameKey);
-          const apiGameId = gameIdMap.get(gameKey);
-          return {
-            id: apiGameId || buildGameId(awayId, homeId, dateStr.replace(/-/g, "")),
-            homeTeam: homeId,
-            awayTeam: awayId,
-            time: g.time || "18:30",
-            venue: g.venue || "",
-            status: score?.cancelled ? "finished" as const : (score && !isFuture ? "finished" : "scheduled"),
-            homeScore: score ? score.homeScore : undefined,
-            awayScore: score ? score.awayScore : undefined,
-            homePitcher: pitchers?.home,
-            awayPitcher: pitchers?.away,
-            winPitcher: score?.winPitcher,
-            losePitcher: score?.losePitcher,
-            cancelled: score?.cancelled,
-          };
-        });
-        setGames(enhanced);
+          if (gamesNeedingPitchers.length > 0) {
+            Promise.all(
+              gamesNeedingPitchers.map((g) => fetchGameDetail(g.id).catch(() => null))
+            ).then((results) => {
+              if (cancelled) return;
+              setGamesByDate((prev) => ({
+                ...prev,
+                [ds]: (prev[ds] || []).map((g) => {
+                  const detail = results.find((r) => r?.gameId === g.id);
+                  if (!detail?.starters) return g;
+                  return {
+                    ...g,
+                    homePitcher:
+                      g.homePitcher || (detail.starters?.home?.name || undefined),
+                    awayPitcher:
+                      g.awayPitcher || (detail.starters?.away?.name || undefined),
+                  };
+                }),
+              }));
+            }).catch(() => {});
+          }
 
-        // Fallback: fetch game-detail for missing pitchers
-        const gamesNeedingPitchers = enhanced.filter((g) => !isFuture && (!g.homePitcher || !g.awayPitcher));
-        if (gamesNeedingPitchers.length > 0) {
-          Promise.all(
-            gamesNeedingPitchers.map((g) => fetchGameDetail(g.id).catch(() => null))
-          ).then((results) => {
-            if (cancelled) return;
-            setGames((prev) =>
-              prev.map((g) => {
-                const detail = results.find((r) => r?.gameId === g.id);
-                if (!detail?.starters) return g;
-                return {
-                  ...g,
-                  homePitcher: g.homePitcher || (detail.starters?.home?.name || undefined),
-                  awayPitcher: g.awayPitcher || (detail.starters?.away?.name || undefined),
-                };
-              })
-            );
-          }).catch(() => {});
+          result[ds] = enhanced;
         }
-
+        setGamesByDate(result);
         setLoading(false);
-      }).catch(() => {
+      })
+      .catch(() => {
         if (cancelled) return;
         setError(true);
         setLoading(false);
       });
-    }
 
     return () => { cancelled = true; };
   }, [selectedDate]);
@@ -409,15 +373,53 @@ export default function HomeScreen() {
     return () => { cancelled = true; };
   }, [calendarOpen, calMonth]);
 
-  // Sort: my team games first
-  const sortedGames = [...games].sort((a, b) => {
-    if (myTeam) {
-      const aIsMyTeam = (a.homeTeam === myTeam || a.awayTeam === myTeam) ? 0 : 1;
-      const bIsMyTeam = (b.homeTeam === myTeam || b.awayTeam === myTeam) ? 0 : 1;
-      if (aIsMyTeam !== bIsMyTeam) return aIsMyTeam - bIsMyTeam;
-    }
-    return 0;
-  });
+  // 3-date paging handlers
+  const dateStrs = useMemo(() => getDateWindow(selectedDate), [selectedDate, getDateWindow]);
+
+  const handleMomentumScrollEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const page = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
+      if (page === 0) {
+        setSelectedDate((prev) => {
+          const d = new Date(prev);
+          d.setDate(d.getDate() - 1);
+          return d;
+        });
+      } else if (page === 2) {
+        setSelectedDate((prev) => {
+          const d = new Date(prev);
+          d.setDate(d.getDate() + 1);
+          return d;
+        });
+      }
+    },
+    [screenWidth]
+  );
+
+  // Reset scroll to center page when selectedDate changes
+  useEffect(() => {
+    // Small delay to allow data to settle before resetting scroll
+    const id = setTimeout(() => {
+      if (screenWidth > 0) {
+        pageScrollRef.current?.scrollToOffset?.({ offset: screenWidth, animated: false });
+      }
+    }, 50);
+    return () => clearTimeout(id);
+  }, [selectedDate, screenWidth]);
+
+  const sortGames = useCallback(
+    (games: EnhancedGame[]) => {
+      return [...games].sort((a, b) => {
+        if (myTeam) {
+          const aIsMyTeam = (a.homeTeam === myTeam || a.awayTeam === myTeam) ? 0 : 1;
+          const bIsMyTeam = (b.homeTeam === myTeam || b.awayTeam === myTeam) ? 0 : 1;
+          if (aIsMyTeam !== bIsMyTeam) return aIsMyTeam - bIsMyTeam;
+        }
+        return 0;
+      });
+    },
+    [myTeam]
+  );
 
   const renderGame = ({ item }: { item: EnhancedGame }) => {
     const isMyTeamGame = myTeam && (item.homeTeam === myTeam || item.awayTeam === myTeam);
@@ -497,25 +499,42 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* Game list */}
-      <GestureDetector gesture={cardSwipeGesture}>
-      <Animated.View style={{ flex: 1, transform: [{ translateX: cardTranslateX }] }}>
+      {/* Game list — horizontal paging scroll */}
+      <View style={{ flex: 1 }}>
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.primary} />
         </View>
       ) : (
         <FlatList
-          data={error ? [] : sortedGames}
-          renderItem={renderGame}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={error ? renderError : renderEmpty}
-          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+          ref={pageScrollRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={handleMomentumScrollEnd}
+          data={dateStrs}
+          keyExtractor={(ds) => ds}
+          scrollEnabled={!loading}
+          renderItem={({ item: ds }) => {
+            const pageGames = sortGames(gamesByDate[ds] || []);
+            const empty = pageGames.length === 0 && !error;
+            return (
+              <View style={{ width: screenWidth, flex: 1 }}>
+                {error ? renderError() : empty ? renderEmpty() : (
+                  <FlatList
+                    data={pageGames}
+                    renderItem={renderGame}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.listContent}
+                    ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+                  />
+                )}
+              </View>
+            );
+          }}
         />
       )}
-      </Animated.View>
-      </GestureDetector>
+      </View>
     </View>
   );
 }
