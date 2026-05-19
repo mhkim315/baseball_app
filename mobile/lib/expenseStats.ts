@@ -118,15 +118,15 @@ export function computeHomeAwayExpenses(expenses: Expense[], records: JikgwanRec
   const homeTotal = { total: 0, games: new Set<number>() };
   const awayTotal = { total: 0, games: new Set<number>() };
   for (const e of expenses) {
-    if (e.record_id == null) continue;
-    const rec = recMap.get(e.record_id);
+    const rec = e.record_id != null ? recMap.get(e.record_id) : findRecordByDate(e.date, records);
     if (!rec?.game_id || !rec.cheered_team) continue;
+    const rid = e.record_id ?? rec.id;
     const { homeId } = parseGameTeamIds(rec.game_id);
     if (!homeId) continue;
     if (homeId === rec.cheered_team) {
-      homeTotal.total += e.amount; homeTotal.games.add(e.record_id);
+      homeTotal.total += e.amount; homeTotal.games.add(rid);
     } else {
-      awayTotal.total += e.amount; awayTotal.games.add(e.record_id);
+      awayTotal.total += e.amount; awayTotal.games.add(rid);
     }
   }
   if (homeTotal.games.size === 0 && awayTotal.games.size === 0) return null;
@@ -149,13 +149,13 @@ export function computeWinLossExpenses(expenses: Expense[], records: JikgwanReco
   const l = { total: 0, games: new Set<number>() };
   const d = { total: 0, games: new Set<number>() };
   for (const e of expenses) {
-    if (e.record_id == null) continue;
-    const rec = recMap.get(e.record_id);
+    const rec = e.record_id != null ? recMap.get(e.record_id) : findRecordByDate(e.date, records);
     if (!rec) continue;
+    const rid = e.record_id ?? rec.id;
     const iw = resolveIsWin(rec);
-    if (iw === 1) { w.total += e.amount; w.games.add(e.record_id); }
-    else if (iw === -1) { l.total += e.amount; l.games.add(e.record_id); }
-    else if (iw === 0) { d.total += e.amount; d.games.add(e.record_id); }
+    if (iw === 1) { w.total += e.amount; w.games.add(rid); }
+    else if (iw === -1) { l.total += e.amount; l.games.add(rid); }
+    else if (iw === 0) { d.total += e.amount; d.games.add(rid); }
   }
   if (w.games.size === 0 && l.games.size === 0 && d.games.size === 0) return null;
   return {
@@ -177,12 +177,12 @@ export function computeStadiumExpenses(expenses: Expense[], records: JikgwanReco
   for (const r of records) recMap.set(r.id, r);
   const m = new Map<string, { total: number; games: Set<number> }>();
   for (const e of expenses) {
-    if (e.record_id == null) continue;
-    const rec = recMap.get(e.record_id);
+    const rec = e.record_id != null ? recMap.get(e.record_id) : findRecordByDate(e.date, records);
     if (!rec?.stadium) continue;
+    const rid = e.record_id ?? rec.id;
     if (!m.has(rec.stadium)) m.set(rec.stadium, { total: 0, games: new Set() });
     const s = m.get(rec.stadium)!;
-    s.total += e.amount; s.games.add(e.record_id);
+    s.total += e.amount; s.games.add(rid);
   }
   if (m.size === 0) return null;
   return Array.from(m.entries()).map(([stadium, v]) => ({
@@ -194,6 +194,16 @@ export function computeStadiumExpenses(expenses: Expense[], records: JikgwanReco
 export interface ResultCategoryData {
   win: Map<string, number>;
   loss: Map<string, number>;
+}
+
+/** Fallback: find a jikgwan record by date. Only returns a match when exactly one
+ *  record exists for the given date (ambiguous for doubleheaders → skip). */
+function findRecordByDate(date: string, records: JikgwanRecord[]): JikgwanRecord | null {
+  const found: JikgwanRecord[] = [];
+  for (const r of records) {
+    if (r.date === date) found.push(r);
+  }
+  return found.length === 1 ? found[0] : null;
 }
 
 /** Derive isWin from record scores when stored is_win is null/unset.
@@ -216,8 +226,7 @@ export function computeResultCategoryExpenses(expenses: Expense[], records: Jikg
   const winMap = new Map<string, number>();
   const lossMap = new Map<string, number>();
   for (const e of expenses) {
-    if (e.record_id == null) continue;
-    const rec = recMap.get(e.record_id);
+    const rec = e.record_id != null ? recMap.get(e.record_id) : findRecordByDate(e.date, records);
     if (!rec) continue;
     const iw = resolveIsWin(rec);
     if (iw === 1) winMap.set(e.category, (winMap.get(e.category) || 0) + e.amount);
