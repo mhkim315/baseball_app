@@ -15,114 +15,52 @@ interface PhotoCropperProps {
 
 const CROP_SIZE = Dimensions.get("window").width - 32;
 
-// SCALE = 1: image just fills the crop area (no extra zoom by default)
-const MIN_ZOOM = 1;
-const MAX_ZOOM = 5;
-
-function getDistance(touches: any[]): number {
-  if (!touches || touches.length < 2) return 0;
-  const dx = touches[0].pageX - touches[1].pageX;
-  const dy = touches[0].pageY - touches[1].pageY;
-  return Math.sqrt(dx * dx + dy * dy);
+function clamp(v: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, v));
 }
 
 export default function PhotoCropper({ visible, imageUri, onCrop, onCancel }: PhotoCropperProps) {
   const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
-  const [zoomPct, setZoomPct] = useState(100);
 
   const imageRef = useRef<Image>(null);
   const offsetRef = useRef({ x: 0, y: 0 });
   const imageDisplayRef = useRef({ w: 0, h: 0 });
   const naturalSizeRef = useRef({ w: 0, h: 0 });
-  const scaleRef = useRef(1);
-  const zoomPctRef = useRef(100);
-
-  // Pinch tracking
-  const pinchStartDist = useRef(0);
-  const pinchStartScale = useRef(1);
-
-  // Pan tracking
   const lastTouchRef = useRef({ x: 0, y: 0 });
 
   const getMaxOffset = useCallback(() => {
     const { w, h } = imageDisplayRef.current;
-    const s = scaleRef.current;
     return {
-      x: Math.max(0, (w * s - CROP_SIZE) / 2),
-      y: Math.max(0, (h * s - CROP_SIZE) / 2),
+      x: Math.max(0, (w - CROP_SIZE) / 2),
+      y: Math.max(0, (h - CROP_SIZE) / 2),
     };
   }, []);
 
   const applyTransform = useCallback(() => {
     const { x, y } = offsetRef.current;
-    const s = scaleRef.current;
     imageRef.current?.setNativeProps({
-      style: {
-        transform: [
-          { translateX: x },
-          { translateY: y },
-          { scale: s },
-        ],
-      },
+      style: { transform: [{ translateX: x }, { translateY: y }] },
     });
   }, []);
 
   const handleTouchStart = useCallback((evt: GestureResponderEvent) => {
-    const touches = (evt.nativeEvent as any).touches;
-    const count = touches?.length ?? 0;
-
-    if (count === 1) {
-      lastTouchRef.current = { x: touches[0].pageX, y: touches[0].pageY };
-    } else if (count >= 2) {
-      pinchStartDist.current = getDistance(touches);
-      pinchStartScale.current = scaleRef.current;
-    }
+    const touch = evt.nativeEvent;
+    lastTouchRef.current = { x: touch.pageX, y: touch.pageY };
   }, []);
 
   const handleTouchMove = useCallback((evt: GestureResponderEvent) => {
-    const touches = (evt.nativeEvent as any).touches;
-    const count = touches?.length ?? 0;
+    const touch = evt.nativeEvent;
+    const dx = touch.pageX - lastTouchRef.current.x;
+    const dy = touch.pageY - lastTouchRef.current.y;
+    lastTouchRef.current = { x: touch.pageX, y: touch.pageY };
 
-    if (count === 1 && pinchStartDist.current === 0) {
-      // Pan
-      const dx = touches[0].pageX - lastTouchRef.current.x;
-      const dy = touches[0].pageY - lastTouchRef.current.y;
-      lastTouchRef.current = { x: touches[0].pageX, y: touches[0].pageY };
-
-      const max = getMaxOffset();
-      offsetRef.current.x = Math.max(-max.x, Math.min(max.x, offsetRef.current.x + dx));
-      offsetRef.current.y = Math.max(-max.y, Math.min(max.y, offsetRef.current.y + dy));
-      applyTransform();
-    } else if (count >= 2 && pinchStartDist.current > 0) {
-      // Pinch
-      const dist = getDistance(touches);
-      if (dist > 0) {
-        const newScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchStartScale.current * (dist / pinchStartDist.current)));
-        if (newScale !== scaleRef.current) {
-          scaleRef.current = newScale;
-          const max = getMaxOffset();
-          offsetRef.current.x = Math.max(-max.x, Math.min(max.x, offsetRef.current.x));
-          offsetRef.current.y = Math.max(-max.y, Math.min(max.y, offsetRef.current.y));
-          applyTransform();
-          setZoomPct(Math.round(newScale * 100));
-        }
-      }
-    }
+    const max = getMaxOffset();
+    offsetRef.current.x = clamp(offsetRef.current.x + dx, -max.x, max.x);
+    offsetRef.current.y = clamp(offsetRef.current.y + dy, -max.y, max.y);
+    applyTransform();
   }, [getMaxOffset, applyTransform]);
-
-  const handleTouchEnd = useCallback((evt: GestureResponderEvent) => {
-    const touches = (evt.nativeEvent as any).touches;
-    if (!touches || touches.length === 0) {
-      pinchStartDist.current = 0;
-    }
-    // If going from 2 fingers to 1, update lastTouch for seamless transition to pan
-    if (touches && touches.length === 1) {
-      lastTouchRef.current = { x: touches[0].pageX, y: touches[0].pageY };
-      pinchStartDist.current = 0;
-    }
-  }, []);
 
   const handleImageLoad = (e: any) => {
     const { width: imgW, height: imgH } = e.nativeEvent.source;
@@ -133,9 +71,6 @@ export default function PhotoCropper({ visible, imageUri, onCrop, onCancel }: Ph
     imageDisplayRef.current = { w: dispW, h: dispH };
     setImageSize({ width: dispW, height: dispH });
     offsetRef.current = { x: 0, y: 0 };
-    scaleRef.current = 1;
-    pinchStartScale.current = 1;
-    setZoomPct(100);
   };
 
   const handleConfirm = async () => {
@@ -143,12 +78,11 @@ export default function PhotoCropper({ visible, imageUri, onCrop, onCancel }: Ph
     try {
       const { w: dispW, h: dispH } = imageDisplayRef.current;
       const offset = offsetRef.current;
-      const s = scaleRef.current;
 
-      const visLeft = Math.max(0, Math.min(dispW - CROP_SIZE / s, dispW / 2 - CROP_SIZE / (2 * s) - offset.x / s));
-      const visTop = Math.max(0, Math.min(dispH - CROP_SIZE / s, dispH / 2 - CROP_SIZE / (2 * s) - offset.y / s));
-      const visWidth = Math.min(CROP_SIZE / s, dispW - visLeft);
-      const visHeight = Math.min(CROP_SIZE / s, dispH - visTop);
+      const visLeft = clamp(dispW / 2 - CROP_SIZE / 2 - offset.x, 0, Math.max(0, dispW - CROP_SIZE));
+      const visTop = clamp(dispH / 2 - CROP_SIZE / 2 - offset.y, 0, Math.max(0, dispH - CROP_SIZE));
+      const visWidth = Math.min(CROP_SIZE, dispW - visLeft);
+      const visHeight = Math.min(CROP_SIZE, dispH - visTop);
 
       const { w: imgNatW, h: imgNatH } = naturalSizeRef.current;
       if (imgNatW === 0 || dispW === 0) {
@@ -197,13 +131,6 @@ export default function PhotoCropper({ visible, imageUri, onCrop, onCancel }: Ph
       marginTop: 16,
       opacity: 0.7,
     },
-    zoomText: {
-      color: "#fff",
-      fontSize: 12,
-      textAlign: "center",
-      marginTop: 4,
-      opacity: 0.5,
-    },
     bottomRow: {
       flexDirection: "row",
       gap: 16,
@@ -246,7 +173,6 @@ export default function PhotoCropper({ visible, imageUri, onCrop, onCancel }: Ph
         style={styles.guide}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
       >
         <Image
           ref={imageRef}
@@ -263,8 +189,7 @@ export default function PhotoCropper({ visible, imageUri, onCrop, onCancel }: Ph
         />
       </View>
 
-      <Text style={styles.hint}>핀치하여 확대/축소, 드래그하여 위치 조정</Text>
-      <Text style={styles.zoomText}>{zoomPct}%</Text>
+      <Text style={styles.hint}>드래그하여 위치 조정</Text>
 
       <View style={styles.bottomRow}>
         <Pressable style={[styles.btn, styles.cancelBtn]} onPress={onCancel}>
