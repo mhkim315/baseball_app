@@ -1,5 +1,6 @@
 import { parseGameTeamIds } from "@shared/constants";
 import type { JikgwanRecord } from "@/lib/db";
+import { resolveIsWin } from "@/lib/expenseStats";
 
 export interface DiaryStats {
   totalGames: number;
@@ -58,9 +59,9 @@ function opponentTeam(gameId: string, cheeredTeam: string): string {
 }
 
 export function computeDiaryStats(records: JikgwanRecord[]): DiaryStats {
-  const wins = records.filter((r) => r.is_win === 1).length;
-  const draws = records.filter((r) => r.is_win === 0).length;
-  const losses = records.filter((r) => r.is_win === -1).length;
+  const wins = records.filter((r) => resolveIsWin(r) === 1).length;
+  const draws = records.filter((r) => resolveIsWin(r) === 0).length;
+  const losses = records.filter((r) => resolveIsWin(r) === -1).length;
   const totalGames = wins + draws + losses;
   const winRate = totalGames > 0 ? wins / totalGames : 0;
 
@@ -124,14 +125,15 @@ export function computeDiaryStats(records: JikgwanRecord[]): DiaryStats {
 export function computeOpponentStats(records: JikgwanRecord[], cheeredTeam: string): OpponentStat[] {
   const map = new Map<string, { wins: number; draws: number; losses: number }>();
   for (const r of records) {
-    if (r.is_win == null || !r.cheered_team) continue;
+    if (resolveIsWin(r) == null || !r.cheered_team) continue;
     if (r.cheered_team !== cheeredTeam) continue;
     const opp = opponentTeam(r.game_id, cheeredTeam);
     if (!opp) continue;
+    const iw = resolveIsWin(r);
     const entry = map.get(opp) || { wins: 0, draws: 0, losses: 0 };
-    if (r.is_win === 1) entry.wins++;
-    else if (r.is_win === 0) entry.draws++;
-    else if (r.is_win === -1) entry.losses++;
+    if (iw === 1) entry.wins++;
+    else if (iw === 0) entry.draws++;
+    else if (iw === -1) entry.losses++;
     map.set(opp, entry);
   }
   const stats: OpponentStat[] = [];
@@ -147,13 +149,14 @@ export function computeHomeAwayStats(records: JikgwanRecord[], cheeredTeam: stri
   const home = { wins: 0, draws: 0, losses: 0, total: 0, winRate: 0 };
   const away = { wins: 0, draws: 0, losses: 0, total: 0, winRate: 0 };
   for (const r of records) {
-    if (r.is_win == null || !r.cheered_team) continue;
+    if (resolveIsWin(r) == null || !r.cheered_team) continue;
     if (r.cheered_team !== cheeredTeam) continue;
     const { homeId } = parseGameTeamIds(r.game_id);
+    const iw = resolveIsWin(r);
     const target = homeId === cheeredTeam ? home : away;
-    if (r.is_win === 1) target.wins++;
-    else if (r.is_win === 0) target.draws++;
-    else if (r.is_win === -1) target.losses++;
+    if (iw === 1) target.wins++;
+    else if (iw === 0) target.draws++;
+    else if (iw === -1) target.losses++;
   }
   home.total = home.wins + home.draws + home.losses;
   away.total = away.wins + away.draws + away.losses;
@@ -166,14 +169,15 @@ export function computeDayOfWeekStats(records: JikgwanRecord[]): DayOfWeekStat[]
   const dayMap = new Map<number, { wins: number; draws: number; losses: number }>();
   for (let i = 0; i < 7; i++) dayMap.set(i, { wins: 0, draws: 0, losses: 0 });
   for (const r of records) {
-    if (r.is_win == null) continue;
+    const iw = resolveIsWin(r);
+    if (iw == null) continue;
     const d = parseDateStr(r.date);
     if (!d) continue;
     const dayIdx = d.getDay();
     const entry = dayMap.get(dayIdx)!;
-    if (r.is_win === 1) entry.wins++;
-    else if (r.is_win === 0) entry.draws++;
-    else if (r.is_win === -1) entry.losses++;
+    if (iw === 1) entry.wins++;
+    else if (iw === 0) entry.draws++;
+    else if (iw === -1) entry.losses++;
   }
   return DAY_NAMES.map((day, i) => {
     const v = dayMap.get(i)!;
@@ -184,7 +188,10 @@ export function computeDayOfWeekStats(records: JikgwanRecord[]): DayOfWeekStat[]
 
 export function computeStreakStats(records: JikgwanRecord[]): StreakStat {
   const games = records
-    .filter((r) => r.is_win != null && r.is_win !== 0)
+    .filter((r) => {
+      const iw = resolveIsWin(r);
+      return iw != null && iw !== 0;
+    })
     .sort((a, b) => {
       const da = parseDateStr(a.date);
       const db = parseDateStr(b.date);
@@ -197,7 +204,7 @@ export function computeStreakStats(records: JikgwanRecord[]): StreakStat {
   let runType: "W" | "L" | null = null;
 
   for (const g of games) {
-    const type = g.is_win === 1 ? "W" : "L";
+    const type = resolveIsWin(g) === 1 ? "W" : "L";
     if (type === runType) {
       run++;
     } else {
@@ -213,12 +220,12 @@ export function computeStreakStats(records: JikgwanRecord[]): StreakStat {
   let currentType: "W" | "L" | null = null;
   let currentCount = 0;
   for (let i = games.length - 1; i >= 0; i--) {
-    const type = games[i].is_win === 1 ? "W" : "L";
+    const type = resolveIsWin(games[i]) === 1 ? "W" : "L";
     if (i === games.length - 1) {
       currentType = type;
       currentCount = 1;
     } else {
-      const prevType = games[i + 1].is_win === 1 ? "W" : "L";
+      const prevType = resolveIsWin(games[i + 1]) === 1 ? "W" : "L";
       if (type === prevType) {
         currentCount++;
       } else {

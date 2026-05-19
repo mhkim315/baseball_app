@@ -10,7 +10,7 @@ import ExpenseBottomSheet from "@/components/ExpenseBottomSheet";
 import ExpenseStats from "@/components/ExpenseStats";
 import ExpenseModal from "@/components/ExpenseModal";
 import { getJikgwanRecords, deleteJikgwanRecord, getAllExpenses, getExpensesByDate, type JikgwanRecord, type Expense } from "@/lib/db";
-import { cachedAllDailyScores, cachedDailyScores } from "@/lib/gameCache";
+import { cachedDailyScores } from "@/lib/gameCache";
 import { parseGameTeamIds } from "@shared/constants";
 import { TEAM_COLORS } from "@shared/teamColors";
 import SettingsButton from "@/components/SettingsButton";
@@ -174,17 +174,19 @@ export default function DiaryScreen() {
   const [expCalYear, setExpCalYear] = useState(now.getFullYear());
   const [expCalMonth, setExpCalMonth] = useState(now.getMonth());
 
+  const generationRef = useRef(0);
+
   const loadData = useCallback(async () => {
+    const gen = ++generationRef.current;
     try {
-      const [data, exps, scoresData] = await Promise.all([
+      const [data, exps] = await Promise.all([
         getJikgwanRecords(),
         getAllExpenses(),
-        cachedAllDailyScores(),
       ]);
-      // Merge scores into records in-memory (no DB write needed)
+      // Merge today's scores into records in-memory (shares cache key with home tab)
       const merge = (records: JikgwanRecord[], scoresList: { away: string; home: string; awayScore: number; homeScore: number; cancelled: boolean }[]) => {
         for (const r of records) {
-          if (r.score_away != null && r.score_home != null && r.is_win != null) continue;
+          if (r.score_away != null && r.score_home != null) continue;
           const { awayId, homeId } = parseGameTeamIds(r.game_id);
           if (!awayId || !homeId) continue;
           const awayShort = TEAM_COLORS[awayId]?.shortName;
@@ -202,20 +204,14 @@ export default function DiaryScreen() {
           }
         }
       };
-      // 1) Bulk merge from all-dates cache (Infinity TTL for past dates)
-      if (scoresData?.dates) {
-        for (const [apiDate, dayScores] of Object.entries(scoresData.dates)) {
-          const dayRecords = data.filter((r) => r.date.split(".").join("-") === apiDate);
-          if (dayRecords.length > 0) merge(dayRecords, dayScores);
-        }
-      }
-      // 2) Overlay today's scores using per-date cache (shares key with home tab)
       const today = new Date();
       const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
       try {
         const todayScores = await cachedDailyScores(todayStr);
-        if (todayScores?.games) merge(data, todayScores.games);
+        const todayRecords = data.filter((r) => r.date.split(".").join("-") === todayStr);
+        if (todayScores?.games) merge(todayRecords, todayScores.games);
       } catch {}
+      if (gen !== generationRef.current) return; // discard stale
       setRecords(data);
       setExpenses(exps);
     } catch (e) {

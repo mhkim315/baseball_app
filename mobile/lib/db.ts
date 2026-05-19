@@ -253,7 +253,7 @@ export async function getJikgwanRecordsByMonth(year: number, month: number): Pro
 
 export async function updateJikgwanRecord(
   id: number,
-  fields: Partial<Pick<JikgwanRecord, "memo" | "emotion" | "three_line_1" | "three_line_2" | "three_line_3" | "frame_style" | "is_win" | "photos" | "cheered_team" | "is_live" | "seat" | "score_away" | "score_home" | "stadium">>
+  fields: Partial<Pick<JikgwanRecord, "memo" | "emotion" | "three_line_1" | "three_line_2" | "three_line_3" | "frame_style" | "is_win" | "photos" | "cheered_team" | "is_live" | "seat" | "score_away" | "score_home" | "stadium" | "game_id">>
 ): Promise<void> {
   const database = await getDb();
   const setClauses: string[] = [];

@@ -74,6 +74,8 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit, e
         .filter(Boolean)
         .join("\n");
 
+  const upcoming = isUpcoming(record.date, record.score_away, record.score_home);
+
   const styles = useMemo(() => StyleSheet.create({
     card: {
       backgroundColor: theme.card,
@@ -223,7 +225,7 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit, e
             {(gt.awayId || gt.homeId) && (
               <Text style={styles.idTeams} numberOfLines={1}>
                 {gt.awayId && gt.homeId
-                  ? isUpcoming(record.date, record.score_away, record.score_home)
+                  ? upcoming
                     ? `${TEAM_COLORS[gt.awayId]?.shortName || "?"} vs ${TEAM_COLORS[gt.homeId]?.shortName || "?"} (예정)`
                     : record.score_away != null && record.score_home != null
                       ? `${TEAM_COLORS[gt.awayId]?.shortName || "?"} ${record.score_away} : ${record.score_home} ${TEAM_COLORS[gt.homeId]?.shortName || "?"}`
@@ -233,18 +235,7 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit, e
             )}
             {(() => {
               const badge = getWinBadge(resolveIsWin(record));
-              if (!badge) return null;
-              const parts = record.date.split(".");
-              if (parts.length === 3) {
-                const gameDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                const today = new Date(); today.setHours(0, 0, 0, 0);
-                const t = gameDate.getTime();
-                if (t > today.getTime()) return null;
-                if (t === today.getTime()) {
-                  const h = record.score_home, a = record.score_away;
-                  if ((h == null || h === 0) && (a == null || a === 0)) return null;
-                }
-              }
+              if (!badge || upcoming) return null;
               return (
                 <View style={[styles.winBadge, { backgroundColor: badge.color }]}>
                   <Text style={styles.winBadgeText}>{badge.label}</Text>

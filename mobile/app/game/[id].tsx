@@ -3,10 +3,11 @@ import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { TEAM_COLORS } from "@shared/teamColors";
 import {
-  fetchGameDetail, fetchDailyScores, fetchStandingsJson, fetchAllDailyScores,
+  fetchGameDetail, fetchStandingsJson,
   type GameDetail, type ScoreEntry, type LineupPlayer,
 } from "@/lib/api";
 import { TeamBadge } from "@/components/TeamBadge";
+import { cachedDailyScores, cachedAllDailyScores } from "@/lib/gameCache";
 import DiaryEntryModal, { type GameOption } from "@/components/DiaryEntryModal";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
@@ -58,7 +59,7 @@ export default function GameDetailScreen() {
       if (data) {
         setDetail(data);
         const dateStr = `${gid.slice(0, 4)}-${gid.slice(4, 6)}-${gid.slice(6, 8)}`;
-        fetchDailyScores(dateStr).then((scores) => {
+        cachedDailyScores(dateStr).then((scores) => {
           if (cancelled || !scores?.games) return;
           const homeName = TEAM_COLORS[data.homeTeam]?.shortName || "";
           const awayName = TEAM_COLORS[data.awayTeam]?.shortName || "";
@@ -91,7 +92,7 @@ export default function GameDetailScreen() {
     if (!homeName || !awayName) return;
     let cancelled = false;
 
-    Promise.all([fetchStandingsJson(), fetchAllDailyScores()]).then(([standings, allScores]) => {
+    Promise.all([fetchStandingsJson(), cachedAllDailyScores()]).then(([standings, allScores]) => {
       if (cancelled || !standings?.rows || !allScores?.dates) return;
       const homeStanding = standings.rows.find((r: any) => r.teamName === homeName);
       const awayStanding = standings.rows.find((r: any) => r.teamName === awayName);

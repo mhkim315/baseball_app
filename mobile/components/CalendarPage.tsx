@@ -3,8 +3,8 @@ import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from
 import { useRouter } from "expo-router";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID, getDaysInMonth, getFirstDayOfMonth, DEFAULT_TEAM_ID, buildGameId } from "@shared/constants";
-import { cachedScheduleByMonth } from "@/lib/gameCache";
-import { fetchAllDailyScores, type ScheduleGame } from "@/lib/api";
+import { cachedScheduleByMonth, cachedAllDailyScores } from "@/lib/gameCache";
+import { type ScheduleGame } from "@/lib/api";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -40,7 +40,7 @@ export default function CalendarPage() {
     setError(false);
     Promise.all([
       cachedScheduleByMonth(month + 1),
-      fetchAllDailyScores(),
+      cachedAllDailyScores(),
     ]).then(([schedule, allScores]) => {
       if (cancelled) return;
       if (schedule) setGames(schedule.games || []);
