@@ -126,7 +126,13 @@ var map = new maplibregl.Map({
   style:'${OPENFREEMAP_STYLE}',
   center:[${center[0]},${center[1]}],
   zoom:${zoom},
-  attributionControl:{compact:true}
+  attributionControl:{compact:true},
+  dragPan:false,
+  scrollZoom:false,
+  boxZoom:false,
+  doubleClickZoom:false,
+  touchZoomRotate:false,
+  keyboard:false
 });
 map.addControl(new maplibregl.NavigationControl({showCompass:true}),'top-right');
 

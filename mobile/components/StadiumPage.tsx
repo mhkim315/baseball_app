@@ -436,6 +436,7 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
             ref={tabScrollRef}
             horizontal
             pagingEnabled
+            nestedScrollEnabled
             showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={handleMomentumScrollEnd}
             style={{ flex: 1 }}
@@ -808,13 +809,15 @@ function ParkingTab({ brief, parkingSpots, focusedSpot, setFocusedSpot, surround
         </View>
       )}
       {parkingSpots.length > 0 && (
-        <StadiumMapView
-          spots={parkingSpots}
-          center={surroundingsCenter}
-          zoom={surroundingsZoom}
-          focusedSpotId={focusedSpot}
-          onPinClick={(spotId) => setFocusedSpot(spotId)}
-        />
+        <View onStartShouldSetResponder={() => true}>
+          <StadiumMapView
+            spots={parkingSpots}
+            center={surroundingsCenter}
+            zoom={surroundingsZoom}
+            focusedSpotId={focusedSpot}
+            onPinClick={(spotId) => setFocusedSpot(spotId)}
+          />
+        </View>
       )}
       {parkingSpots.length > 0 ? (
         parkingSpots.map((spot, i) => (
@@ -845,13 +848,15 @@ function TransportTab({ brief, transitSpots, focusedSpot, setFocusedSpot, surrou
   return (
     <View style={styles.tabContent}>
       {transitSpots.length > 0 && (
-        <StadiumMapView
-          spots={transitSpots}
-          center={surroundingsCenter}
-          zoom={surroundingsZoom}
-          focusedSpotId={focusedSpot}
-          onPinClick={(spotId) => setFocusedSpot(spotId)}
-        />
+        <View onStartShouldSetResponder={() => true}>
+          <StadiumMapView
+            spots={transitSpots}
+            center={surroundingsCenter}
+            zoom={surroundingsZoom}
+            focusedSpotId={focusedSpot}
+            onPinClick={(spotId) => setFocusedSpot(spotId)}
+          />
+        </View>
       )}
       {transitSpots.length > 0 ? (
         transitSpots.map((spot, i) => (
@@ -948,13 +953,15 @@ function NearbyTab({ nearby, stadiumSpot, focusedSpot, setFocusedSpot, eatsCente
             </ScrollView>
           )}
 
-          <StadiumMapView
-            spots={mapSpots}
-            center={eatsCenter}
-            zoom={13}
-            focusedSpotId={focusedSpot}
-            onPinClick={(spotId) => setFocusedSpot(spotId)}
-          />
+          <View onStartShouldSetResponder={() => true}>
+            <StadiumMapView
+              spots={mapSpots}
+              center={eatsCenter}
+              zoom={13}
+              focusedSpotId={focusedSpot}
+              onPinClick={(spotId) => setFocusedSpot(spotId)}
+            />
+          </View>
 
           {/* Grouped list */}
           {groups.map((group) => (
