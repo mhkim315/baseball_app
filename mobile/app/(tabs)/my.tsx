@@ -16,7 +16,6 @@ import { Linking } from "react-native";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { DEFAULT_TEAM_ID } from "@shared/constants";
 import { TeamBadge } from "@/components/TeamBadge";
-import TeamStats from "@/components/TeamStats";
 
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import { useTeam } from "@/lib/TeamContext";
@@ -599,10 +598,6 @@ export default function MyScreen() {
             </>
           )}
         </View>
-      )}
-
-      {myTeam && allRecords.length > 0 && (
-        <TeamStats records={allRecords.filter((r) => r.cheered_team === myTeam)} teamId={myTeam} />
       )}
 
       {/* Display Settings */}

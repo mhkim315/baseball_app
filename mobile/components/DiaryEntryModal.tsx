@@ -332,7 +332,16 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
 
       const targetTeam = cheeredTeam || userTeam;
       let isWin: number | null = null;
-      if (targetTeam) {
+
+      const isFutureGame = (() => {
+        const parts = dateStr.split(".");
+        if (parts.length !== 3) return false;
+        const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        return d > today;
+      })();
+
+      if (targetTeam && !isFutureGame) {
         const hScore = selectedGame?.homeScore ?? editRecord?.score_home ?? null;
         const aScore = selectedGame?.awayScore ?? editRecord?.score_away ?? null;
         if (hScore != null && aScore != null) {

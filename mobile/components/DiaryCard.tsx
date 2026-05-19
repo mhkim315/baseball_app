@@ -225,6 +225,17 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit, e
             {(() => {
               const badge = getWinBadge(record.is_win);
               if (!badge) return null;
+              const parts = record.date.split(".");
+              if (parts.length === 3) {
+                const gameDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                const today = new Date(); today.setHours(0, 0, 0, 0);
+                const t = gameDate.getTime();
+                if (t > today.getTime()) return null;
+                if (t === today.getTime()) {
+                  const h = record.score_home, a = record.score_away;
+                  if ((h == null || h === 0) && (a == null || a === 0)) return null;
+                }
+              }
               return (
                 <View style={[styles.winBadge, { backgroundColor: badge.color }]}>
                   <Text style={styles.winBadgeText}>{badge.label}</Text>

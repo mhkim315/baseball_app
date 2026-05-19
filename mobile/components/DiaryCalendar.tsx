@@ -273,7 +273,9 @@ export default function DiaryCalendar({
 
           const dateStr = `${year}.${String(month + 1).padStart(2, "0")}.${String(cell.day).padStart(2, "0")}`;
           const apiDateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(cell.day).padStart(2, "0")}`;
-          const isFuture = apiDateStr > `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+          const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+          const isFuture = apiDateStr > todayStr;
+          const isToday = apiDateStr === todayStr;
 
           const dayRecords = recordMap.get(dateStr);
           const dayGames = myGamesByDate.get(apiDateStr) || [];
@@ -306,16 +308,22 @@ export default function DiaryCalendar({
           let diaryResultBadge: { label: string; color: string } | null = null;
           if (dayRecords && dayRecords.length > 0) {
             const latest = dayRecords[0];
-            if (latest.is_win === 1) cellBg = isDark ? "#1a3a5c" : "#e3f2fd";
-            else if (latest.is_win === -1) cellBg = isDark ? "#3a1a1a" : "#ffebee";
-            else if (latest.is_win === 0) cellBg = isDark ? "#2a2a2a" : "#f5f5f5";
-            else cellBg = theme.muted;
+            const isTodayUnplayed = isToday && (latest.score_home == null || latest.score_home === 0) && (latest.score_away == null || latest.score_away === 0);
+            const skipResult = isFuture || isTodayUnplayed;
+            if (!skipResult) {
+              if (latest.is_win === 1) cellBg = isDark ? "#1a3a5c" : "#e3f2fd";
+              else if (latest.is_win === -1) cellBg = isDark ? "#3a1a1a" : "#ffebee";
+              else if (latest.is_win === 0) cellBg = isDark ? "#2a2a2a" : "#f5f5f5";
+              else cellBg = theme.muted;
+            } else {
+              cellBg = theme.muted;
+            }
 
             if (latest.emotion) {
               emotionChar = EMOTION_CHARACTER[latest.emotion];
             }
 
-            diaryResultBadge = getWinBadge(latest.is_win);
+            diaryResultBadge = skipResult ? null : getWinBadge(latest.is_win);
             if (latest.game_id && latest.cheered_team) {
               const gt = parseGameTeamIds(latest.game_id);
               const oppId = gt.awayId === latest.cheered_team ? gt.homeId : gt.awayId;

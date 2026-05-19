@@ -417,7 +417,7 @@ export default function DiaryScreen() {
                   teamId={myTeam}
                 />
               ) : (
-                <ExpenseStats expenses={expenses} />
+                <ExpenseStats expenses={expenses} records={records} />
               )}
             </ScrollView>
           </View>
