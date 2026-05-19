@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { View, Text, Pressable, Modal, StyleSheet, ActivityIndicator, Animated } from "react-native";
+import { View, Text, Pressable, Modal, ScrollView, StyleSheet, ActivityIndicator, Animated } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TeamBadge } from "@/components/TeamBadge";
@@ -121,7 +121,7 @@ export default function CalendarGrid({
     },
     pickerModal: {
       backgroundColor: theme.card, borderRadius: 20, padding: 14,
-      width: "100%", maxWidth: 320,
+      width: "100%", maxWidth: 320, maxHeight: "60%",
     },
     pickerTitle: {
       fontSize: 14, fontWeight: "600", color: theme.foreground,
@@ -406,6 +406,7 @@ export default function CalendarGrid({
         <Pressable style={styles.overlay} onPress={() => setTeamPickerOpen(false)}>
           <View style={styles.pickerModal}>
             <Text style={styles.pickerTitle}>팀 선택</Text>
+          <ScrollView>
             {TEAM_LIST.map((t) => (
               <Pressable
                 key={t.id}
@@ -421,6 +422,7 @@ export default function CalendarGrid({
                 )}
               </Pressable>
             ))}
+          </ScrollView>
           </View>
         </Pressable>
       </Modal>
