@@ -16,6 +16,7 @@ import { Linking } from "react-native";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { DEFAULT_TEAM_ID } from "@shared/constants";
 import { TeamBadge } from "@/components/TeamBadge";
+import TeamStats from "@/components/TeamStats";
 
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import { useTeam } from "@/lib/TeamContext";
@@ -26,7 +27,9 @@ import {
   setProfileImage,
   getTeamDiaryStats,
   getWinRates,
+  getJikgwanRecords,
 } from "@/lib/db";
+import type { JikgwanRecord } from "@/lib/db";
 
 const PROFILE_CHARACTERS: { key: string; label: string }[] = [
   { key: "default", label: "기본" },
@@ -391,6 +394,7 @@ export default function MyScreen() {
   const [nicknameInput, setNicknameInput] = useState("");
   const [showProfilePicker, setShowProfilePicker] = useState(false);
   const [showTeamPicker, setShowTeamPicker] = useState(false);
+  const [allRecords, setAllRecords] = useState<JikgwanRecord[]>([]);
   const router = useRouter();
 
   const loadData = useCallback(async () => {
@@ -406,6 +410,8 @@ export default function MyScreen() {
       }
       const all = await getWinRates();
       setAllWinRates(all);
+      const records = await getJikgwanRecords();
+      setAllRecords(records);
     } catch (e) {
       console.warn("my.tsx loadData failed", e);
     }
@@ -593,6 +599,10 @@ export default function MyScreen() {
             </>
           )}
         </View>
+      )}
+
+      {myTeam && allRecords.length > 0 && (
+        <TeamStats records={allRecords.filter((r) => r.cheered_team === myTeam)} teamId={myTeam} />
       )}
 
       {/* Display Settings */}
