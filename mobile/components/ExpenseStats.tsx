@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { useState, useMemo } from "react";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useTheme } from "@/lib/ThemeContext";
 import { EXPENSE_CATEGORIES, type Expense, type JikgwanRecord } from "@/lib/db";
 import { computeExpenseStats, computeHomeAwayExpenses, computeWinLossExpenses, computeStadiumExpenses, computeResultCategoryExpenses, formatAmount } from "@/lib/expenseStats";
@@ -17,10 +17,13 @@ export default function ExpenseStats({ expenses, records }: ExpenseStatsProps) {
   const { theme, isDark } = useTheme();
   const stats = useMemo(() => computeExpenseStats(expenses), [expenses]);
   const maxCatAmount = stats.categoryTotals.length > 0 ? stats.categoryTotals[0].amount : 1;
-  const ha = useMemo(() => computeHomeAwayExpenses(expenses, records), [expenses, records]);
-  const wl = useMemo(() => computeWinLossExpenses(expenses, records), [expenses, records]);
-  const stadiums = useMemo(() => computeStadiumExpenses(expenses, records), [expenses, records]);
-  const rc = useMemo(() => computeResultCategoryExpenses(expenses, records), [expenses, records]);
+  const liveRecords = useMemo(() => records.filter((r) => r.is_live === 1), [records]);
+  const ha = useMemo(() => computeHomeAwayExpenses(expenses, liveRecords), [expenses, liveRecords]);
+  const [includeBroadcast, setIncludeBroadcast] = useState(false);
+  const wlRecords = includeBroadcast ? records : liveRecords;
+  const wl = useMemo(() => computeWinLossExpenses(expenses, wlRecords), [expenses, wlRecords]);
+  const stadiums = useMemo(() => computeStadiumExpenses(expenses, liveRecords), [expenses, liveRecords]);
+  const rc = useMemo(() => computeResultCategoryExpenses(expenses, wlRecords), [expenses, wlRecords]);
 
   const styles = useMemo(() => StyleSheet.create({
     container: { gap: 16, paddingBottom: 100 },
@@ -180,7 +183,34 @@ export default function ExpenseStats({ expenses, records }: ExpenseStatsProps) {
       {/* Win vs Loss */}
       {wl && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>승리 vs 패배 지출</Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Text style={styles.cardTitle}>승리 vs 패배 지출</Text>
+            <Pressable
+              onPress={() => setIncludeBroadcast((v) => !v)}
+              style={{
+                flexDirection: "row", alignItems: "center", gap: 6,
+                paddingVertical: 4, paddingHorizontal: 10,
+                borderRadius: 12,
+                backgroundColor: includeBroadcast ? theme.foreground : theme.muted,
+              }}
+            >
+              <View style={{
+                width: 14, height: 14, borderRadius: 7,
+                backgroundColor: includeBroadcast ? theme.background : theme.mutedForeground,
+                alignItems: "center", justifyContent: "center",
+              }}>
+                {includeBroadcast && (
+                  <Text style={{ fontSize: 10, color: theme.foreground, fontWeight: "700" }}>✓</Text>
+                )}
+              </View>
+              <Text style={{
+                fontSize: 12, fontWeight: "600",
+                color: includeBroadcast ? theme.background : theme.mutedForeground,
+              }}>
+                집관 포함
+              </Text>
+            </Pressable>
+          </View>
           <View style={styles.duoRow}>
             {(["win", "loss"] as const).map((key) => {
               const d = wl[key];

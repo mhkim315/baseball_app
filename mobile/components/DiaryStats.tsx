@@ -44,7 +44,7 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
   const liveStats: Stats | null = liveRecords.length > 0 ? computeDiaryStats(liveRecords) : null;
   const teamColor = teamId ? teamPrimaryColor(teamId, isDark) : theme.foreground;
   const opponentStats = useMemo(() => teamId ? computeOpponentStats(records, teamId) : [], [records, teamId]);
-  const homeAway = useMemo(() => teamId ? computeHomeAwayStats(records, teamId) : null, [records, teamId]);
+  const homeAway = useMemo(() => teamId ? computeHomeAwayStats(liveRecords, teamId) : null, [liveRecords, teamId]);
   const dayStats = useMemo(() => computeDayOfWeekStats(records), [records]);
   const streak = useMemo(() => computeStreakStats(records), [records]);
 
@@ -414,9 +414,9 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
       {/* Stadiums visited */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>방문한 구장</Text>
-        {overallStats.stadiums.length > 0 ? (
+        {(liveStats?.stadiums ?? []).length > 0 ? (
           <View style={styles.stadiumRow}>
-            {overallStats.stadiums.map((s) => (
+            {(liveStats?.stadiums ?? []).map((s) => (
               <View key={s} style={[styles.stadiumBadge, { borderColor: teamColor }]}>
                 <Text style={[styles.stadiumText, { color: teamColor }]}>{s}</Text>
               </View>
