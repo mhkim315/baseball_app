@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from
 import { useRouter } from "expo-router";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID, getDaysInMonth, getFirstDayOfMonth, DEFAULT_TEAM_ID, buildGameId } from "@shared/constants";
-import { cachedScheduleByMonth, cachedAllDailyScores } from "@/lib/gameCache";
+import { cachedScheduleByMonth, cachedDailyScores } from "@/lib/gameCache";
 import { type ScheduleGame } from "@/lib/api";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
@@ -38,13 +38,24 @@ export default function CalendarPage() {
     let cancelled = false;
     setLoading(true);
     setError(false);
-    Promise.all([
-      cachedScheduleByMonth(month + 1),
-      cachedAllDailyScores(),
-    ]).then(([schedule, allScores]) => {
+    cachedScheduleByMonth(month + 1).then(async (schedule) => {
       if (cancelled) return;
-      if (schedule) setGames(schedule.games || []);
-      if (allScores) setScoresByDate(allScores.dates || {});
+      const gamesList = schedule?.games || [];
+      setGames(gamesList);
+      // Per-date scores: fetch all dates with games (not team-specific),
+      // so switching team filter instantly shows scores for any team
+      const allDates = [...new Set(gamesList.map((g) => g.date))];
+      const scoreResults = await Promise.all(
+        allDates.map((d) => cachedDailyScores(d).catch(() => null))
+      );
+      if (cancelled) return;
+      const scores: Record<string, ScoreInfo[]> = {};
+      for (let i = 0; i < allDates.length; i++) {
+        if (scoreResults[i]?.games) {
+          scores[allDates[i]] = scoreResults[i]!.games;
+        }
+      }
+      setScoresByDate(scores);
       setLoading(false);
     }).catch(() => {
       if (!cancelled) {

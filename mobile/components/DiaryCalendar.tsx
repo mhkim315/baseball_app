@@ -6,7 +6,7 @@ import { parseGameTeamIds, getWinBadge, getDaysInMonth, getFirstDayOfMonth } fro
 import { EMOTION_CHARACTER } from "@/components/EmotionPicker";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
-import { cachedScheduleByMonth, cachedAllDailyScores } from "@/lib/gameCache";
+import { cachedScheduleByMonth, cachedDailyScores } from "@/lib/gameCache";
 import { type ScheduleGame, type ScoreEntry } from "@/lib/api";
 import type { JikgwanRecord } from "@/lib/db";
 import { resolveIsWin } from "@/lib/expenseStats";
@@ -42,16 +42,28 @@ export default function DiaryCalendar({
     if (!teamName) return;
     let cancelled = false;
     setLoading(true);
-    Promise.all([
-      cachedScheduleByMonth(month + 1),
-      cachedAllDailyScores(),
-    ]).then(([schedule, scores]) => {
+    cachedScheduleByMonth(month + 1).then(async (schedule) => {
       if (cancelled) return;
-      if (schedule) setGames(schedule.games || []);
-      if (scores) setScoresByDate(scores.dates || {});
-    }).catch(() => {
-      // silent
-    }).finally(() => {
+      const gamesList = schedule?.games || [];
+      setGames(gamesList);
+      // Per-date scores: only fetch dates where my team played
+      const myDates = [...new Set(
+        gamesList
+          .filter((g) => teamName && (g.away === teamName || g.home === teamName))
+          .map((g) => g.date)
+      )];
+      const scoreResults = await Promise.all(
+        myDates.map((d) => cachedDailyScores(d).catch(() => null))
+      );
+      if (cancelled) return;
+      const scores: Record<string, ScoreEntry[]> = {};
+      for (let i = 0; i < myDates.length; i++) {
+        if (scoreResults[i]?.games) {
+          scores[myDates[i]] = scoreResults[i]!.games;
+        }
+      }
+      setScoresByDate(scores);
+    }).catch(() => {}).finally(() => {
       if (!cancelled) setLoading(false);
     });
     return () => { cancelled = true; };

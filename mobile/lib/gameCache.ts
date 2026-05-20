@@ -4,7 +4,6 @@ import {
   fetchScheduleByMonth as apiScheduleByMonth,
   fetchTodayGames as apiTodayGames,
   fetchGameDetail as apiGameDetail,
-  fetchAllDailyScores as apiAllDailyScores,
   fetchCheeringSongs as apiCheeringSongs,
   fetchCheeringPlayers as apiCheeringPlayers,
   type ScoreEntry,
@@ -22,6 +21,8 @@ function cacheKey(name: string, id: string): string {
 const now = () => new Date();
 const todayStr = () => now().toISOString().slice(0, 10);
 const thisYear = () => now().getFullYear();
+
+const pendingFetches = new Map<string, Promise<unknown | null>>();
 
 function safeParse(json: string): unknown | null {
   try {
@@ -55,18 +56,30 @@ async function fetchWithCache<T>(
     }
   }
 
-  const fresh = await fetcher();
-  if (fresh) {
-    await db.setCache(cacheKeyStr, JSON.stringify(fresh));
-    return fresh;
-  }
+  // In-flight dedup: reuse an ongoing fetch for the same key
+  const pending = pendingFetches.get(cacheKeyStr);
+  if (pending) return pending.then((r) => r as T | null);
 
-  // API failed — return stale cache if available
-  if (cached) {
-    const parsed = safeParse(cached.data);
-    if (parsed) return parsed as T;
+  const promise = (async (): Promise<T | null> => {
+    const fresh = await fetcher();
+    if (fresh) {
+      await db.setCache(cacheKeyStr, JSON.stringify(fresh));
+      return fresh;
+    }
+    // API failed — return stale cache if available
+    if (cached) {
+      const parsed = safeParse(cached.data);
+      if (parsed) return parsed as T;
+    }
+    return null;
+  })();
+
+  pendingFetches.set(cacheKeyStr, promise);
+  try {
+    return await promise;
+  } finally {
+    pendingFetches.delete(cacheKeyStr);
   }
-  return null;
 }
 
 // Cheering songs — effectively immutable per team
@@ -94,13 +107,6 @@ export async function cachedScheduleByMonth(month: number): Promise<{ games: Sch
 export async function cachedDailyScores(date: string): Promise<{ games: ScoreEntry[] } | null> {
   return fetchWithCache(cacheKey("scores", date), ttlForDate(date), () =>
     apiDailyScores(date)
-  );
-}
-
-// All daily scores — for calendar
-export async function cachedAllDailyScores(): Promise<{ dates: Record<string, ScoreEntry[]> } | null> {
-  return fetchWithCache("allscores", 300_000, () =>
-    apiAllDailyScores()
   );
 }
 

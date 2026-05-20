@@ -7,7 +7,7 @@ import {
   type GameDetail, type ScoreEntry, type LineupPlayer,
 } from "@/lib/api";
 import { TeamBadge } from "@/components/TeamBadge";
-import { cachedDailyScores, cachedAllDailyScores } from "@/lib/gameCache";
+import { cachedDailyScores, cachedScheduleByMonth } from "@/lib/gameCache";
 import DiaryEntryModal, { type GameOption } from "@/components/DiaryEntryModal";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 
@@ -92,20 +92,46 @@ export default function GameDetailScreen() {
     if (!homeName || !awayName) return;
     let cancelled = false;
 
-    Promise.all([fetchStandingsJson(), cachedAllDailyScores()]).then(([standings, allScores]) => {
-      if (cancelled || !standings?.rows || !allScores?.dates) return;
+    Promise.all([fetchStandingsJson()]).then(async ([standings]) => {
+      if (cancelled || !standings?.rows) return;
       const homeStanding = standings.rows.find((r: any) => r.teamName === homeName);
       const awayStanding = standings.rows.find((r: any) => r.teamName === awayName);
       if (!homeStanding || !awayStanding) return;
 
-      const dates = Object.keys(allScores.dates).sort().reverse();
+      // Fetch recent game dates from schedules (current + past 2 months)
+      const now = new Date();
+      const months = [now.getMonth() + 1, now.getMonth(), now.getMonth() - 1];
+      const schedules = await Promise.all(
+        months.map((m) => cachedScheduleByMonth(m).catch(() => null))
+      );
+      if (cancelled) return;
+
+      // Collect unique dates where either team played
+      const dateSet = new Set<string>();
+      for (const s of schedules) {
+        if (!s?.games) continue;
+        for (const g of s.games) {
+          if ((g.away === homeName || g.home === homeName || g.away === awayName || g.home === awayName)) {
+            dateSet.add(g.date);
+          }
+        }
+      }
+      const dates = [...dateSet].sort().reverse();
+
+      // Fetch per-date scores
+      const scoreResults = await Promise.all(
+        dates.map((d) => cachedDailyScores(d).catch(() => null))
+      );
+      if (cancelled) return;
+
       const homeRecent: ("승"|"패"|"무")[] = [];
       const awayRecent: ("승"|"패"|"무")[] = [];
 
-      for (const date of dates) {
+      for (let i = 0; i < dates.length; i++) {
         if (homeRecent.length >= 5 && awayRecent.length >= 5) break;
-        const games = allScores.dates[date];
-        for (const g of games) {
+        const dayScores = scoreResults[i]?.games;
+        if (!dayScores) continue;
+        for (const g of dayScores) {
           if (g.cancelled || g.outcome == null) continue;
           if (homeRecent.length < 5 && g.away === homeName) {
             homeRecent.push(g.awayScore > g.homeScore ? "승" : g.awayScore < g.homeScore ? "패" : "무");

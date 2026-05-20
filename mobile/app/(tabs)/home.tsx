@@ -15,7 +15,6 @@ import {
   cachedDailyScores,
   cachedTodayGames,
   cachedGameDetail,
-  cachedAllDailyScores,
 } from "@/lib/gameCache";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID, buildGameId, formatDateForApi as formatDateStr } from "@shared/constants";
@@ -169,19 +168,23 @@ export default function HomeScreen() {
   // Preload current month + adjacent months on mount
   useEffect(() => {
     const current = new Date().getMonth() + 1;
-    const fetchAndCache = (month: number) => {
-      if (month < 1 || month > 12) return Promise.resolve();
-      return Promise.all([
-        cachedScheduleByMonth(month),
-        cachedAllDailyScores(),
-      ]).then(([schedule, scores]) => {
-        const data = { games: schedule?.games || [], scores: scores?.dates || {} };
-        calCache.current[month] = data;
-        if (month === current) {
-          setCalGames(data.games);
-          setCalScores(data.scores);
-        }
-      }).catch(() => {});
+    const fetchAndCache = async (month: number) => {
+      if (month < 1 || month > 12) return;
+      const schedule = await cachedScheduleByMonth(month);
+      const gamesList = schedule?.games || [];
+      const myDates = [...new Set(gamesList.map((g) => g.date))];
+      const scoreResults = await Promise.all(
+        myDates.map((d) => cachedDailyScores(d).catch(() => null))
+      );
+      const scoresRecord: Record<string, any[]> = {};
+      for (let i = 0; i < myDates.length; i++) {
+        if (scoreResults[i]?.games) scoresRecord[myDates[i]] = scoreResults[i]!.games;
+      }
+      calCache.current[month] = { games: gamesList, scores: scoresRecord };
+      if (month === current) {
+        setCalGames(gamesList);
+        setCalScores(scoresRecord);
+      }
     };
     fetchAndCache(current);
     fetchAndCache(current - 1);
@@ -347,24 +350,33 @@ export default function HomeScreen() {
     }
 
     // Fetch this month (will update if cache exists)
-    Promise.all([
-      cachedScheduleByMonth(month),
-      cachedAllDailyScores(),
-    ]).then(([schedule, scores]) => {
+    cachedScheduleByMonth(month).then(async (schedule) => {
       if (cancelled) return;
-      const games = schedule?.games || [];
-      const sc = scores?.dates || {};
-      calCache.current[month] = { games, scores: sc };
-      setCalGames(games);
-      setCalScores(sc);
+      const gamesList = schedule?.games || [];
+      const myDates = [...new Set(gamesList.map((g) => g.date))];
+      const scoreResults = await Promise.all(
+        myDates.map((d) => cachedDailyScores(d).catch(() => null))
+      );
+      if (cancelled) return;
+      const scoresRecord: Record<string, any[]> = {};
+      for (let i = 0; i < myDates.length; i++) {
+        if (scoreResults[i]?.games) scoresRecord[myDates[i]] = scoreResults[i]!.games;
+      }
+      calCache.current[month] = { games: gamesList, scores: scoresRecord };
+      setCalGames(gamesList);
+      setCalScores(scoresRecord);
       // Preload adjacent months in background
       for (const adj of [month - 1, month + 1]) {
         if (adj >= 1 && adj <= 12 && !calCache.current[adj]) {
-          Promise.all([
-            cachedScheduleByMonth(adj),
-            cachedAllDailyScores(),
-          ]).then(([s, sc2]) => {
-            calCache.current[adj] = { games: s?.games || [], scores: sc2?.dates || {} };
+          cachedScheduleByMonth(adj).then(async (s) => {
+            const gl = s?.games || [];
+            const dts = [...new Set(gl.map((g) => g.date))];
+            const srs = await Promise.all(dts.map((d) => cachedDailyScores(d).catch(() => null)));
+            const src: Record<string, any[]> = {};
+            for (let i = 0; i < dts.length; i++) {
+              if (srs[i]?.games) src[dts[i]] = srs[i]!.games;
+            }
+            calCache.current[adj] = { games: gl, scores: src };
           }).catch(() => {});
         }
       }

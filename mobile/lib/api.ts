@@ -14,7 +14,6 @@ export const {
   fetchCheeringPlayers,
   fetchStandingsJson,
   fetchDailyScores,
-  fetchAllDailyScores,
   fetchSchedule,
   fetchScheduleByMonth,
   fetchTodayGames,
