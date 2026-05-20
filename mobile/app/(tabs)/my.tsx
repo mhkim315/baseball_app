@@ -24,11 +24,7 @@ import {
   setNickname,
   getProfileImage,
   setProfileImage,
-  getTeamDiaryStats,
-  getWinRates,
-  getJikgwanRecords,
 } from "@/lib/db";
-import type { JikgwanRecord } from "@/lib/db";
 
 const PROFILE_CHARACTERS: { key: string; label: string }[] = [
   { key: "default", label: "기본" },
@@ -106,12 +102,6 @@ export default function MyScreen() {
       color: theme.foreground,
       marginBottom: 12,
     },
-    subSectionTitle: {
-      fontSize: 13,
-      fontWeight: "600",
-      color: theme.mutedForeground,
-      marginBottom: 8,
-    },
     myTeamHeader: {
       alignItems: "center",
       marginBottom: 16,
@@ -185,70 +175,6 @@ export default function MyScreen() {
       textAlign: "center",
     },
 
-    // Win rate
-    winRateCard: {
-      backgroundColor: theme.card,
-      borderRadius: 16,
-      padding: 16,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    wrSubTitle: {
-      fontSize: 13,
-      fontWeight: "600",
-      color: theme.mutedForeground,
-      marginBottom: 8,
-    },
-    winRateRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      paddingVertical: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border,
-    },
-    winRateTotal: {
-      borderBottomWidth: 0,
-      paddingTop: 12,
-    },
-    winRateLabel: {
-      fontSize: 15,
-      color: theme.mutedForeground,
-    },
-    winRateValue: {
-      fontSize: 15,
-      fontWeight: "600",
-      color: theme.foreground,
-    },
-    allWinRateRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingVertical: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border,
-      gap: 8,
-    },
-    allWinRateLeft: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-      flex: 1,
-    },
-    allWinRateTeam: {
-      fontSize: 13,
-      color: theme.secondaryForeground,
-    },
-    allWinRatePct: {
-      fontSize: 14,
-      fontWeight: "700",
-      width: 55,
-      textAlign: "right",
-    },
-    allWinRateDetail: {
-      fontSize: 11,
-      color: theme.mutedForeground,
-      width: 80,
-      textAlign: "right",
-    },
 
     // Placeholder
     placeholder: {
@@ -384,16 +310,10 @@ export default function MyScreen() {
   const { myTeam, setMyTeam } = useTeam();
   const [nickname, setNicknameState] = useState<string>("");
   const [profileImage, setProfileImageState] = useState<{ type: string; value: string } | null>(null);
-  const [teamDiaryStats, setTeamDiaryStats] = useState<{
-    overall: { total: number; wins: number; draws: number; losses: number; winRate: number };
-    live: { total: number; wins: number; draws: number; losses: number; winRate: number } | null;
-  } | null>(null);
-  const [allWinRates, setAllWinRates] = useState<any[]>([]);
   const [showNicknameModal, setShowNicknameModal] = useState(false);
   const [nicknameInput, setNicknameInput] = useState("");
   const [showProfilePicker, setShowProfilePicker] = useState(false);
   const [showTeamPicker, setShowTeamPicker] = useState(false);
-  const [allRecords, setAllRecords] = useState<JikgwanRecord[]>([]);
   const router = useRouter();
 
   const loadData = useCallback(async () => {
@@ -402,19 +322,10 @@ export default function MyScreen() {
       setNicknameState(nick ?? "");
       const profile = await getProfileImage();
       setProfileImageState(profile);
-
-      if (myTeam) {
-        const stats = await getTeamDiaryStats(myTeam);
-        setTeamDiaryStats(stats);
-      }
-      const all = await getWinRates();
-      setAllWinRates(all);
-      const records = await getJikgwanRecords();
-      setAllRecords(records);
     } catch (e) {
       console.warn("my.tsx loadData failed", e);
     }
-  }, [myTeam]);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -425,8 +336,6 @@ export default function MyScreen() {
   const handleTeamSelect = async (teamId: string) => {
     try {
       setMyTeam(teamId);
-      const stats = await getTeamDiaryStats(teamId);
-      setTeamDiaryStats(stats);
     } catch (e) {
       console.warn("my.tsx handleTeamSelect failed", e);
     }
@@ -508,97 +417,11 @@ export default function MyScreen() {
           <View style={styles.noTeamProfile}>
             <Text style={styles.noTeamProfileTitle}>⚾ 응원팀을 먼저 선택해주세요</Text>
             <Text style={styles.noTeamProfileDesc}>
-              응원팀을 설정하면 나만의 프로필과{'\n'}직관 승률을 확인할 수 있어요
+              응원팀을 설정하면 나만의 프로필과{'\n'}통계를 확인할 수 있어요
             </Text>
           </View>
         )}
       </View>
-
-      {/* Win Rate Section */}
-      {myTeam && teamDiaryStats && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>직관 승률</Text>
-
-          {/* Overall */}
-          <View style={styles.winRateCard}>
-            <Text style={styles.wrSubTitle}>전체</Text>
-            <View style={styles.winRateRow}>
-              <Text style={styles.winRateLabel}>경기</Text>
-              <Text style={styles.winRateValue}>{teamDiaryStats.overall.total}경기</Text>
-            </View>
-            <View style={styles.winRateRow}>
-              <Text style={styles.winRateLabel}>승</Text>
-              <Text style={[styles.winRateValue, { color: "#22c55e" }]}>{teamDiaryStats.overall.wins}승</Text>
-            </View>
-            <View style={styles.winRateRow}>
-              <Text style={styles.winRateLabel}>무</Text>
-              <Text style={styles.winRateValue}>{teamDiaryStats.overall.draws}무</Text>
-            </View>
-            <View style={styles.winRateRow}>
-              <Text style={styles.winRateLabel}>패</Text>
-              <Text style={[styles.winRateValue, { color: "#ef4444" }]}>{teamDiaryStats.overall.losses}패</Text>
-            </View>
-            <View style={[styles.winRateRow, styles.winRateTotal]}>
-              <Text style={styles.winRateLabel}>승률</Text>
-              <Text style={[styles.winRateValue, { color: myTeamColor, fontSize: 18 }]}>
-                {(teamDiaryStats.overall.winRate * 100).toFixed(1)}%
-              </Text>
-            </View>
-          </View>
-
-          {/* Live only */}
-          {teamDiaryStats.live && (
-            <View style={[styles.winRateCard, { marginTop: 12 }]}>
-              <Text style={styles.wrSubTitle}>직관</Text>
-              <View style={styles.winRateRow}>
-                <Text style={styles.winRateLabel}>경기</Text>
-                <Text style={styles.winRateValue}>{teamDiaryStats.live.total}경기</Text>
-              </View>
-              <View style={styles.winRateRow}>
-                <Text style={styles.winRateLabel}>승</Text>
-                <Text style={[styles.winRateValue, { color: "#22c55e" }]}>{teamDiaryStats.live.wins}승</Text>
-              </View>
-              <View style={styles.winRateRow}>
-                <Text style={styles.winRateLabel}>무</Text>
-                <Text style={styles.winRateValue}>{teamDiaryStats.live.draws}무</Text>
-              </View>
-              <View style={styles.winRateRow}>
-                <Text style={styles.winRateLabel}>패</Text>
-                <Text style={[styles.winRateValue, { color: "#ef4444" }]}>{teamDiaryStats.live.losses}패</Text>
-              </View>
-              <View style={[styles.winRateRow, styles.winRateTotal]}>
-                <Text style={styles.winRateLabel}>승률</Text>
-                <Text style={[styles.winRateValue, { color: myTeamColor, fontSize: 18 }]}>
-                  {(teamDiaryStats.live.winRate * 100).toFixed(1)}%
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {allWinRates.length > 0 && (
-            <>
-              <Text style={[styles.subSectionTitle, { marginTop: 16 }]}>전체 구단 승률</Text>
-              {allWinRates.map((wr) => {
-                const teamColor = teamPrimaryColor(wr.teamId, isDark) || "#888";
-                return (
-                  <View key={wr.teamId} style={styles.allWinRateRow}>
-                    <View style={styles.allWinRateLeft}>
-                      <TeamBadge teamId={wr.teamId} size="sm" variant="ball" />
-                      <Text style={styles.allWinRateTeam}>{TEAM_COLORS[wr.teamId]?.shortName}</Text>
-                    </View>
-                    <Text style={[styles.allWinRatePct, { color: teamColor }]}>
-                      {(wr.winRate * 100).toFixed(1)}%
-                    </Text>
-                    <Text style={styles.allWinRateDetail}>
-                      {wr.wins}승 {wr.draws}무 {wr.losses}패
-                    </Text>
-                  </View>
-                );
-              })}
-            </>
-          )}
-        </View>
-      )}
 
       {/* Display Settings */}
       <View style={styles.section}>
