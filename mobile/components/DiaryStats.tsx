@@ -40,19 +40,17 @@ function interpolateColor(from: string, to: string, t: number): string {
 
 export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
   const { theme, isDark } = useTheme();
-  const [includeJipgwan, setIncludeJipgwan] = useState(false);
-  const liveRecords = records.filter((r) => r.is_live === 1);
-  const activeRecords = includeJipgwan ? records : liveRecords;
-  const activeStats: Stats = computeDiaryStats(activeRecords);
-  const liveStats: Stats | null = liveRecords.length > 0 ? computeDiaryStats(liveRecords) : null;
   const teamColor = teamId ? teamPrimaryColor(teamId, isDark) : theme.foreground;
-  const opponentStats = useMemo(() => teamId ? computeOpponentStats(activeRecords, teamId) : [], [activeRecords, teamId]);
-  const homeAway = useMemo(() => teamId ? computeHomeAwayStats(activeRecords, teamId) : null, [activeRecords, teamId]);
-  const dayStats = useMemo(() => computeDayOfWeekStats(activeRecords), [activeRecords]);
-  const streak = useMemo(() => computeStreakStats(activeRecords), [activeRecords]);
-  const stadiumStats = useMemo(() => {
+
+  // Tier 1 — 직관 전용 (liveRecords), 토글 영향 없음
+  const liveRecords = useMemo(() => records.filter((r) => r.is_live === 1), [records]);
+  const liveStats = useMemo(() => computeDiaryStats(liveRecords), [liveRecords]);
+  const allStats = useMemo(() => computeDiaryStats(records), [records]);
+  const dayStatsLive = useMemo(() => computeDayOfWeekStats(liveRecords), [liveRecords]);
+  const homeAwayLive = useMemo(() => teamId ? computeHomeAwayStats(liveRecords, teamId) : null, [liveRecords, teamId]);
+  const stadiumStatsLive = useMemo(() => {
     const map = new Map<string, { wins: number; total: number }>();
-    for (const r of activeRecords) {
+    for (const r of liveRecords) {
       if (!r.stadium) continue;
       const entry = map.get(r.stadium) || { wins: 0, total: 0 };
       entry.total++;
@@ -65,9 +63,16 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
       .sort((a, b) => b.count - a.count);
   }, [liveRecords]);
 
+  // Tier 2 — 토글 영향 받음 (하단 비교 섹션용)
+  const [includeJipgwan, setIncludeJipgwan] = useState(false);
+  const activeRecords = useMemo(() => includeJipgwan ? records : liveRecords, [includeJipgwan, records, liveRecords]);
+  const activeStats = useMemo(() => computeDiaryStats(activeRecords), [activeRecords]);
+  const opponentStats = useMemo(() => teamId ? computeOpponentStats(activeRecords, teamId) : [], [activeRecords, teamId]);
+  const streakActive = useMemo(() => computeStreakStats(activeRecords), [activeRecords]);
+
   const grayHex = isDark ? "#333" : "#e0e0e0";
-  const streakColor = streak.currentType === "W" ? "#22c55e" : streak.currentType === "L" ? "#ef4444" : theme.mutedForeground;
-  const streakBg = streak.currentType === "W" ? "#22c55e20" : streak.currentType === "L" ? "#ef444420" : theme.muted;
+  const streakColor = streakActive.currentType === "W" ? "#22c55e" : streakActive.currentType === "L" ? "#ef4444" : theme.mutedForeground;
+  const streakBg = streakActive.currentType === "W" ? "#22c55e20" : streakActive.currentType === "L" ? "#ef444420" : theme.muted;
 
   function RingSection({ stats, label }: { stats: Stats; label: string }) {
     const wrPct = stats.totalGames > 0 ? (stats.winRate * 100).toFixed(1) : "-";
@@ -219,7 +224,7 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
     },
     stadiumCell: {
       borderRadius: 8, paddingVertical: 8, paddingHorizontal: 4,
-      alignItems: "center", gap: 2, minWidth: 40, 
+      alignItems: "center", gap: 2, minWidth: 40,
     },
     stadiumName: {
       fontSize: 13, fontWeight: "600",
@@ -320,141 +325,77 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
     },
     streakBadgeText: { fontSize: 18, fontWeight: "800" },
     streakSub: { fontSize: 12, color: theme.mutedForeground, marginTop: 2 },
+    // Divider
+    dividerSection: {
+      flexDirection: "row", alignItems: "center", gap: 12,
+      paddingVertical: 8, marginTop: 8,
+    },
+    dividerLine: {
+      flex: 1, height: 1, backgroundColor: theme.border,
+    },
+    dividerText: {
+      fontSize: 12, color: theme.mutedForeground, fontWeight: "600",
+    },
   }), [theme]);
 
   return (
     <View style={styles.container}>
-      {/* 집관 포함 토글 */}
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end" }}>
-        <Pressable
-          style={[styles.toggleTrack, includeJipgwan && { backgroundColor: teamColor }]}
-          onPress={() => setIncludeJipgwan((v) => !v)}
-        >
-          <View style={[styles.toggleThumb, includeJipgwan && styles.toggleThumbActive]} />
-        </Pressable>
-        <Text style={[styles.toggleLabel, { color: includeJipgwan ? teamColor : theme.mutedForeground }]}>
-          집관 포함
-        </Text>
-      </View>
-
-      {/* Win Rate Rings */}
+      {/* Win Rate Rings — always both */}
       <View style={styles.card}>
         <View style={styles.dualRingRow}>
-          <RingSection stats={activeStats} label={includeJipgwan ? "전체 승률" : "직관 승률"} />
-          {includeJipgwan && liveStats && <View style={styles.dualRingDivider} />}
-          {includeJipgwan && liveStats && <RingSection stats={liveStats} label="직관 승률" />}
+          <RingSection stats={allStats} label="전체 승률" />
+          <View style={styles.dualRingDivider} />
+          <RingSection stats={liveStats} label="직관 승률" />
         </View>
       </View>
 
-      {teamId && homeAway && (
-        <>
-          {/* Home/Away */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>홈 / 원정</Text>
-            <View style={styles.haRow}>
-              <View style={styles.haCard}>
-                <Text style={styles.haLabel}>홈</Text>
-                <Text style={styles.haCounts}>{homeAway.home.wins}승 {homeAway.home.draws}무 {homeAway.home.losses}패</Text>
-                <Text style={[styles.haPct, { color: teamColor }]}>{formatPct(homeAway.home.winRate)}</Text>
-              </View>
-              <View style={styles.haCard}>
-                <Text style={styles.haLabel}>원정</Text>
-                <Text style={styles.haCounts}>{homeAway.away.wins}승 {homeAway.away.draws}무 {homeAway.away.losses}패</Text>
-                <Text style={[styles.haPct, { color: teamColor }]}>{formatPct(homeAway.away.winRate)}</Text>
-              </View>
+      {/* Home / Away (직관 only) */}
+      {teamId && homeAwayLive && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>홈 / 원정</Text>
+          <View style={styles.haRow}>
+            <View style={styles.haCard}>
+              <Text style={styles.haLabel}>홈</Text>
+              <Text style={styles.haCounts}>{homeAwayLive.home.wins}승 {homeAwayLive.home.draws}무 {homeAwayLive.home.losses}패</Text>
+              <Text style={[styles.haPct, { color: teamColor }]}>{formatPct(homeAwayLive.home.winRate)}</Text>
+            </View>
+            <View style={styles.haCard}>
+              <Text style={styles.haLabel}>원정</Text>
+              <Text style={styles.haCounts}>{homeAwayLive.away.wins}승 {homeAwayLive.away.draws}무 {homeAwayLive.away.losses}패</Text>
+              <Text style={[styles.haPct, { color: teamColor }]}>{formatPct(homeAwayLive.away.winRate)}</Text>
             </View>
           </View>
-
-          {/* Opponent H2H */}
-          {opponentStats.length > 0 && (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>상대전적</Text>
-              {opponentStats.map((opp) => {
-                const oppColor = teamPrimaryColor(opp.opponentId, isDark) || theme.foreground;
-                const oppName = TEAM_COLORS[opp.opponentId]?.shortName || opp.opponentId;
-                return (
-                  <View key={opp.opponentId} style={styles.oppRow}>
-                    <TeamBadge teamId={opp.opponentId} size="sm" variant="ball" />
-                    <Text style={[styles.oppTeamName, { color: oppColor }]}>{oppName}</Text>
-                    <Text style={styles.oppDetail}>{opp.wins}승 {opp.draws}무 {opp.losses}패</Text>
-                    <Text style={[styles.oppPct, { color: oppColor }]}>{formatPct(opp.winRate)}</Text>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-
-          {/* Day of week heatmap */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>요일별 승률</Text>
-            <View style={styles.dayGrid}>
-              {dayStats.map((ds) => {
-                const bg = ds.total === 0 ? grayHex : interpolateColor(grayHex, teamColor, ds.winRate);
-                const fg = brightness(bg) > 150 ? "#000" : "#fff";
-                return (
-                  <View key={ds.day} style={[styles.dayCell, { backgroundColor: bg }]}>
-                    <Text style={[styles.dayLabel, { color: fg, opacity: 0.7 }]}>{ds.day}</Text>
-                    <Text style={[styles.dayCount, { color: fg }]}>{ds.total}회</Text>
-                    <Text style={[styles.dayValue, { color: fg }]}>
-                      {ds.total > 0 ? formatPct(ds.winRate) : "-"}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* Win/Loss streak */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>연승 / 연패</Text>
-            <View style={styles.streakAnalysisRow}>
-              {streak.currentCount > 0 && streak.currentType ? (
-                <View style={[styles.streakBadge, { backgroundColor: streakBg }]}>
-                  <Text style={[styles.streakBadgeText, { color: streakColor }]}>
-                    {streak.currentCount}{streak.currentType === "W" ? "연승" : "연패"}
-                  </Text>
-                </View>
-              ) : (
-                <Text style={[styles.streakBadgeText, { color: theme.mutedForeground, fontSize: 14 }]}>
-                  기록 없음
-                </Text>
-              )}
-              <View style={{ flex: 1 }}>
-                <Text style={styles.streakSub}>
-                  최다 {streak.longestWin}연승 / {streak.longestLose}연패
-                </Text>
-              </View>
-            </View>
-          </View>
-        </>
+        </View>
       )}
 
-      {/* Streak */}
-      <View style={styles.streakCard}>
-        <Text style={styles.cardTitle}>연속 직관</Text>
-        <View style={styles.streakRow}>
-          <View style={styles.streakItem}>
-            <Text style={[styles.streakNum, { color: teamColor }]}>
-              {activeStats.currentStreak}
-            </Text>
-            <Text style={styles.streakLabel}>현재 연속일</Text>
-          </View>
-          <View style={styles.streakDivider} />
-          <View style={styles.streakItem}>
-            <Text style={[styles.streakNum, { color: teamColor }]}>
-              {activeStats.longestStreak}
-            </Text>
-            <Text style={styles.streakLabel}>최장 기록</Text>
+      {/* Day of week heatmap (직관 only) */}
+      {teamId && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>요일별 승률</Text>
+          <View style={styles.dayGrid}>
+            {dayStatsLive.map((ds) => {
+              const bg = ds.total === 0 ? grayHex : interpolateColor(grayHex, teamColor, ds.winRate);
+              const fg = brightness(bg) > 150 ? "#000" : "#fff";
+              return (
+                <View key={ds.day} style={[styles.dayCell, { backgroundColor: bg }]}>
+                  <Text style={[styles.dayLabel, { color: fg, opacity: 0.7 }]}>{ds.day}</Text>
+                  <Text style={[styles.dayCount, { color: fg }]}>{ds.total}회</Text>
+                  <Text style={[styles.dayValue, { color: fg }]}>
+                    {ds.total > 0 ? formatPct(ds.winRate) : "-"}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
         </View>
-      </View>
+      )}
 
-      {/* Stadiums visited */}
+      {/* Stadiums visited (직관 only) */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>방문한 구장</Text>
-        {stadiumStats.length > 0 ? (
+        {stadiumStatsLive.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.stadiumGrid}>
-            {stadiumStats.map((ss) => {
+            {stadiumStatsLive.map((ss) => {
               const bg = interpolateColor(grayHex, teamColor, ss.winRate);
               const fg = brightness(bg) > 150 ? '#000' : '#fff';
               return (
@@ -473,7 +414,108 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
         )}
       </View>
 
-      {/* Emotion distribution */}
+      {/* Attendance Streak (직관 only) */}
+      <View style={styles.streakCard}>
+        <Text style={styles.cardTitle}>연속 직관</Text>
+        <View style={styles.streakRow}>
+          <View style={styles.streakItem}>
+            <Text style={[styles.streakNum, { color: teamColor }]}>
+              {liveStats.currentStreak}
+            </Text>
+            <Text style={styles.streakLabel}>현재 연속일</Text>
+          </View>
+          <View style={styles.streakDivider} />
+          <View style={styles.streakItem}>
+            <Text style={[styles.streakNum, { color: teamColor }]}>
+              {liveStats.longestStreak}
+            </Text>
+            <Text style={styles.streakLabel}>최장 기록</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Season summary (직관 only) */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>2026시즌</Text>
+        <View style={styles.seasonRow}>
+          <View style={styles.seasonItem}>
+            <Text style={styles.seasonNum}>{liveStats.totalGames}</Text>
+            <Text style={styles.seasonLabel}>경기 직관</Text>
+          </View>
+          <View style={styles.seasonItem}>
+            <Text style={styles.seasonNum}>{liveStats.stadiums.length}</Text>
+            <Text style={styles.seasonLabel}>방문 구장</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* ── 집관 포함 비교 ── */}
+      <View style={styles.dividerSection}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>집관 포함 비교</Text>
+        <View style={styles.dividerLine} />
+      </View>
+
+      {/* Toggle row */}
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end" }}>
+        <Pressable
+          style={[styles.toggleTrack, includeJipgwan && { backgroundColor: teamColor }]}
+          onPress={() => setIncludeJipgwan((v) => !v)}
+        >
+          <View style={[styles.toggleThumb, includeJipgwan && styles.toggleThumbActive]} />
+        </Pressable>
+        <Text style={[styles.toggleLabel, { color: includeJipgwan ? teamColor : theme.mutedForeground }]}>
+          집관 포함
+        </Text>
+      </View>
+
+      {teamId && (
+        <>
+          {/* Win/Loss streak analysis (toggle-affected) */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>연승 / 연패</Text>
+            <View style={styles.streakAnalysisRow}>
+              {streakActive.currentCount > 0 && streakActive.currentType ? (
+                <View style={[styles.streakBadge, { backgroundColor: streakBg }]}>
+                  <Text style={[styles.streakBadgeText, { color: streakColor }]}>
+                    {streakActive.currentCount}{streakActive.currentType === "W" ? "연승" : "연패"}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={[styles.streakBadgeText, { color: theme.mutedForeground, fontSize: 14 }]}>
+                  기록 없음
+                </Text>
+              )}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.streakSub}>
+                  최다 {streakActive.longestWin}연승 / {streakActive.longestLose}연패
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Opponent H2H (toggle-affected) */}
+          {opponentStats.length > 0 && (
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>상대전적</Text>
+              {opponentStats.map((opp) => {
+                const oppColor = teamPrimaryColor(opp.opponentId, isDark) || theme.foreground;
+                const oppName = TEAM_COLORS[opp.opponentId]?.shortName || opp.opponentId;
+                return (
+                  <View key={opp.opponentId} style={styles.oppRow}>
+                    <TeamBadge teamId={opp.opponentId} size="sm" variant="ball" />
+                    <Text style={[styles.oppTeamName, { color: oppColor }]}>{oppName}</Text>
+                    <Text style={styles.oppDetail}>{opp.wins}승 {opp.draws}무 {opp.losses}패</Text>
+                    <Text style={[styles.oppPct, { color: oppColor }]}>{formatPct(opp.winRate)}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </>
+      )}
+
+      {/* Emotion distribution (toggle-affected) */}
       {Object.keys(activeStats.emotionCounts).length > 0 && (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>감정 분포</Text>
@@ -497,22 +539,6 @@ export default function DiaryStats({ records, teamId }: DiaryStatsProps) {
           </View>
         </View>
       )}
-
-      {/* Season progress */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>2026시즌</Text>
-        <View style={styles.seasonRow}>
-          <View style={styles.seasonItem}>
-            <Text style={styles.seasonNum}>{activeStats.totalGames}</Text>
-            <Text style={styles.seasonLabel}>경기 직관</Text>
-          </View>
-          <View style={styles.seasonItem}>
-            <Text style={styles.seasonNum}>{activeStats.stadiums.length}</Text>
-            <Text style={styles.seasonLabel}>방문 구장</Text>
-          </View>
-        </View>
-      </View>
     </View>
   );
 }
-

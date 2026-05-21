@@ -103,6 +103,17 @@ export default function ExpenseStats({ expenses, records, teamId }: ExpenseStats
     rcBarBg: { flex: 1, height: 14, borderRadius: 7, backgroundColor: theme.muted, overflow: "hidden" },
     rcBarFill: { height: "100%", borderRadius: 7 },
     rcAmount: { fontSize: 11, color: theme.foreground, fontWeight: "600", width: 52, textAlign: "right" },
+    // Divider
+    dividerSection: {
+      flexDirection: "row", alignItems: "center", gap: 12,
+      paddingVertical: 8, marginTop: 8,
+    },
+    dividerLine: {
+      flex: 1, height: 1, backgroundColor: theme.border,
+    },
+    dividerText: {
+      fontSize: 12, color: theme.mutedForeground, fontWeight: "600",
+    },
   }), [theme]);
 
   if (expenses.length === 0) {
@@ -182,6 +193,29 @@ export default function ExpenseStats({ expenses, records, teamId }: ExpenseStats
         </View>
       )}
 
+      {/* Per-stadium */}
+      {stadiums && stadiums.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>구장별 지출</Text>
+          {stadiums.map((s, i) => (
+            <View key={s.stadium} style={[styles.stadiumRow, i === stadiums.length - 1 && { borderBottomWidth: 0 }]}>
+              <Text style={styles.stadiumName}>{s.stadium}</Text>
+              <View style={styles.stadiumRight}>
+                <Text style={styles.stadiumTotal}>{formatAmount(s.total)}</Text>
+                <Text style={styles.stadiumAvg}>{s.gameCount}경기 · 경기당 {avgFmt(s.avgPerGame)}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* ── 집관 포함 비교 ── */}
+      <View style={styles.dividerSection}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>집관 포함 비교</Text>
+        <View style={styles.dividerLine} />
+      </View>
+
       {/* Win vs Loss */}
       {wl && (
         <View style={styles.card}>
@@ -227,22 +261,6 @@ export default function ExpenseStats({ expenses, records, teamId }: ExpenseStats
               );
             })}
           </View>
-        </View>
-      )}
-
-      {/* Per-stadium */}
-      {stadiums && stadiums.length > 0 && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>구장별 지출</Text>
-          {stadiums.map((s, i) => (
-            <View key={s.stadium} style={[styles.stadiumRow, i === stadiums.length - 1 && { borderBottomWidth: 0 }]}>
-              <Text style={styles.stadiumName}>{s.stadium}</Text>
-              <View style={styles.stadiumRight}>
-                <Text style={styles.stadiumTotal}>{formatAmount(s.total)}</Text>
-                <Text style={styles.stadiumAvg}>{s.gameCount}경기 · 경기당 {avgFmt(s.avgPerGame)}</Text>
-              </View>
-            </View>
-          ))}
         </View>
       )}
 
