@@ -208,6 +208,7 @@ export interface JikgwanRecord {
   cheered_team: string | null;
   is_live: number | null;
   seat: string | null;
+  is_cancelled?: number;
 }
 
 export async function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "created_at">): Promise<number> {

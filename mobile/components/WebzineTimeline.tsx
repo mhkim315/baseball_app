@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, FlatList, StyleSheet, RefreshControl } from "react-native";
 import WebzineCard from "@/components/WebzineCard";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -14,11 +14,21 @@ interface WebzineTimelineProps {
   refreshing: boolean;
   expensesByRecordId?: Map<number, Expense[]>;
   onPressRecord?: (record: JikgwanRecord) => void;
+  scrollTargetDate?: string | null;
 }
 
-export default function WebzineTimeline({ records, teamId, onDelete, onRefresh, refreshing, expensesByRecordId, onPressRecord }: WebzineTimelineProps) {
+export default function WebzineTimeline({ records, teamId, onDelete, onRefresh, refreshing, expensesByRecordId, onPressRecord, scrollTargetDate }: WebzineTimelineProps) {
   const { theme } = useTheme();
   const [deleteTarget, setDeleteTarget] = useState<JikgwanRecord | null>(null);
+  const flatListRef = useRef<FlatList<JikgwanRecord>>(null);
+
+  useEffect(() => {
+    if (!scrollTargetDate || records.length === 0) return;
+    const idx = records.findIndex((r) => r.date === scrollTargetDate);
+    if (idx >= 0) {
+      setTimeout(() => flatListRef.current?.scrollToIndex({ index: idx, animated: true, viewPosition: 0 }), 100);
+    }
+  }, [scrollTargetDate]);
 
   const handleDelete = (record: JikgwanRecord) => {
     setDeleteTarget(record);
@@ -57,6 +67,7 @@ export default function WebzineTimeline({ records, teamId, onDelete, onRefresh, 
   return (
     <>
       <FlatList
+        ref={flatListRef}
         data={records}
         renderItem={renderItem}
         keyExtractor={(item) => String(item.id)}
@@ -64,6 +75,9 @@ export default function WebzineTimeline({ records, teamId, onDelete, onRefresh, 
         removeClippedSubviews
         windowSize={5}
         ItemSeparatorComponent={() => <View style={{ height: 6 }} />}
+        onScrollToIndexFailed={(info) => {
+          flatListRef.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: true });
+        }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.mutedForeground} />
         }

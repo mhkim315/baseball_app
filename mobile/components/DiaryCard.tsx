@@ -252,6 +252,11 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit, e
                 </Text>
               </View>
             )}
+            {record.is_cancelled ? (
+              <View style={[styles.winBadge, { backgroundColor: isDark ? "#fff" : "#000" }]}>
+                <Text style={[styles.winBadgeText, { color: isDark ? "#000" : "#fff" }]}>취</Text>
+              </View>
+            ) : null}
           </View>
         </View>
       </View>

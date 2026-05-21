@@ -4,7 +4,7 @@ import { TeamBadge } from "@/components/TeamBadge";
 import { EMOTION_CHARACTER } from "@/components/EmotionPicker";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { parseGameTeamIds, getWinBadge } from "@shared/constants";
-import { useTheme } from "@/lib/ThemeContext";
+import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import type { JikgwanRecord, Expense } from "@/lib/db";
 import { formatAmount, getCategoryIcons, resolveIsWin } from "@/lib/expenseStats";
 
@@ -28,12 +28,13 @@ function parsePhotos(record: JikgwanRecord): string[] {
 }
 
 export default function WebzineCard({ record, teamId, expenses, onPress, onLongPress }: WebzineCardProps) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
   const photoW = screenWidth / 3;
   const photos = useMemo(() => parsePhotos(record), [record.photos, record.photo_path]);
   const gt = parseGameTeamIds(record.game_id || "");
   const profileTeamId = record.cheered_team || gt.awayId || gt.homeId || "";
+  const liveTeamColor = profileTeamId ? teamPrimaryColor(profileTeamId, isDark) : "#3b82f6";
   const charKey = record.emotion ? (EMOTION_CHARACTER[record.emotion] || "neutral") : "neutral";
   const emChar = charKey as "joyful" | "determined" | "neutral" | "sad" | "angry" | "furious" | "shocked";
 
@@ -109,7 +110,29 @@ export default function WebzineCard({ record, teamId, expenses, onPress, onLongP
               <Text style={styles.resultBadgeText}>{badge.label}</Text>
             </View>
           )}
+          {record.is_live !== null && (
+            <View style={[styles.resultBadge, record.is_live === 1
+              ? { backgroundColor: liveTeamColor }
+              : { backgroundColor: "transparent", borderWidth: 1, borderColor: liveTeamColor }
+            ]}>
+              <Text style={[styles.resultBadgeText, record.is_live === 1 ? { color: "#fff" } : { color: liveTeamColor }]}>
+                {record.is_live === 1 ? "직관" : "집관"}
+              </Text>
+            </View>
+          )}
+          {record.is_cancelled ? (
+            <View style={[styles.resultBadge, { backgroundColor: isDark ? "#fff" : "#000" }]}>
+              <Text style={[styles.resultBadgeText, { color: isDark ? "#000" : "#fff" }]}>취</Text>
+            </View>
+          ) : null}
         </View>
+
+        {/* Seat info */}
+        {record.seat ? (
+          <Text style={[styles.expenseText, { color: theme.mutedForeground }]} numberOfLines={1}>
+            🎫 {record.seat}
+          </Text>
+        ) : null}
 
         {/* Expense */}
         {totalExpense && (

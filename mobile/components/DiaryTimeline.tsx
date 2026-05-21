@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, FlatList, StyleSheet, RefreshControl } from "react-native";
 import * as Sharing from "expo-sharing";
 import DiaryCard from "@/components/DiaryCard";
@@ -15,11 +15,21 @@ interface DiaryTimelineProps {
   onRefresh: () => void;
   refreshing: boolean;
   expensesByRecordId?: Map<number, Expense[]>;
+  scrollTargetDate?: string | null;
 }
 
-export default function DiaryTimeline({ records, teamId, onDelete, onEdit, onRefresh, refreshing, expensesByRecordId }: DiaryTimelineProps) {
+export default function DiaryTimeline({ records, teamId, onDelete, onEdit, onRefresh, refreshing, expensesByRecordId, scrollTargetDate }: DiaryTimelineProps) {
   const { theme } = useTheme();
   const [deleteTarget, setDeleteTarget] = useState<JikgwanRecord | null>(null);
+  const flatListRef = useRef<FlatList<JikgwanRecord>>(null);
+
+  useEffect(() => {
+    if (!scrollTargetDate || records.length === 0) return;
+    const idx = records.findIndex((r) => r.date === scrollTargetDate);
+    if (idx >= 0) {
+      setTimeout(() => flatListRef.current?.scrollToIndex({ index: idx, animated: true, viewPosition: 0 }), 100);
+    }
+  }, [scrollTargetDate]);
 
   const handleShare = useCallback(async (uri: string) => {
     if (await Sharing.isAvailableAsync()) {
@@ -65,11 +75,15 @@ export default function DiaryTimeline({ records, teamId, onDelete, onEdit, onRef
   return (
     <>
       <FlatList
+        ref={flatListRef}
         data={records}
         renderItem={renderItem}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+        onScrollToIndexFailed={(info) => {
+          flatListRef.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: true });
+        }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.mutedForeground} />
         }

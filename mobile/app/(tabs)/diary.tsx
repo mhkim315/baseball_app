@@ -121,12 +121,6 @@ export default function DiaryScreen() {
       lineHeight: 30,
     },
     // View mode toggle
-    viewModeRow: {
-      flexDirection: "row",
-      gap: 6,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-    },
     viewModeBtn: {
       paddingVertical: 4,
       paddingHorizontal: 12,
@@ -159,6 +153,7 @@ export default function DiaryScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [timelineViewMode, setTimelineViewMode] = useState<TimelineViewMode>("list");
   const [webzineDetailRecord, setWebzineDetailRecord] = useState<JikgwanRecord | null>(null);
+  const [scrollTargetDate, setScrollTargetDate] = useState<string | null>(null);
 
   const { myTeam } = useTeam();
   const teamColor = myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground;
@@ -188,7 +183,6 @@ export default function DiaryScreen() {
 
   const handleTabPress = (tabKey: DiaryTab, index: number) => {
     tabScrollRef.current?.scrollTo({ x: screenWidth * index, animated: true });
-    if (tabKey !== "timeline") setSelectedDate(null);
   };
 
   const handleMomentumScrollEnd = useCallback(
@@ -204,7 +198,6 @@ export default function DiaryScreen() {
   const now = new Date();
   const [calYear, setCalYear] = useState(now.getFullYear());
   const [calMonth, setCalMonth] = useState(now.getMonth());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   // Expense calendar state
   const [expCalYear, setExpCalYear] = useState(now.getFullYear());
@@ -229,7 +222,8 @@ export default function DiaryScreen() {
           const homeShort = TEAM_COLORS[homeId]?.shortName;
           if (!awayShort || !homeShort) continue;
           const match = scoresList.find((s) => s.away === awayShort && s.home === homeShort);
-          if (!match || match.cancelled) continue;
+          if (!match) continue;
+          if (match.cancelled) { r.is_cancelled = 1; continue; }
           if (match.awayScore == null || match.homeScore == null) continue;
           if (match.awayScore === 0 && match.homeScore === 0) continue;
           r.score_away = match.awayScore;
@@ -273,7 +267,6 @@ export default function DiaryScreen() {
   );
 
   const handleRefresh = async () => {
-    setSelectedDate(null);
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
@@ -309,7 +302,6 @@ export default function DiaryScreen() {
     setShowEntryModal(false);
     setEditingRecord(null);
     setPresetDate(null);
-    setSelectedDate(null);
     if (expenseSheetDate) {
       const dateStr = `${expenseSheetDate.getFullYear()}.${String(expenseSheetDate.getMonth() + 1).padStart(2, "0")}.${String(expenseSheetDate.getDate()).padStart(2, "0")}`;
       try {
@@ -348,25 +340,15 @@ export default function DiaryScreen() {
     }
   };
 
-  const filteredRecords = selectedDate
-    ? records.filter((r) => {
-        const parts = r.date.split(".");
-        if (parts.length !== 3) return false;
-        const d = `${parseInt(parts[0])}-${parseInt(parts[1])}-${parseInt(parts[2])}`;
-        const sd = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
-        return d === sd;
-      })
-    : records;
-
   const handleSelectDate = (date: Date) => {
     setCalYear(date.getFullYear());
     setCalMonth(date.getMonth());
-    setSelectedDate(date);
     const dateStr = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
     const hasRecord = records.some((r) => r.date === dateStr);
     if (hasRecord) {
       setActiveTab("timeline");
       tabScrollRef.current?.scrollTo({ x: 0, animated: true });
+      setScrollTargetDate(dateStr);
     } else {
       setPresetDate(date);
       setShowEntryModal(true);
@@ -403,6 +385,22 @@ export default function DiaryScreen() {
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Text style={styles.headerTitle}>다이어리</Text>
           <View style={{ flex: 1 }} />
+          {activeTab === "timeline" && (
+            <View style={{ flexDirection: "row", gap: 4, marginRight: 10 }}>
+              <Pressable
+                style={[styles.viewModeBtn, timelineViewMode === "list" && { backgroundColor: myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground }]}
+                onPress={() => setTimelineViewMode("list")}
+              >
+                <Text style={[styles.viewModeBtnText, timelineViewMode === "list" && styles.viewModeBtnTextActive]}>▦ 카드형</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.viewModeBtn, timelineViewMode === "webzine" && { backgroundColor: myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground }]}
+                onPress={() => setTimelineViewMode("webzine")}
+              >
+                <Text style={[styles.viewModeBtnText, timelineViewMode === "webzine" && styles.viewModeBtnTextActive]}>☰ 리스트형</Text>
+              </Pressable>
+            </View>
+          )}
           <SettingsButton color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
         </View>
         <Text style={styles.headerSub}>나의 직관 기록</Text>
@@ -449,23 +447,6 @@ export default function DiaryScreen() {
         </View>
       )}
 
-      {/* View mode toggle (타임라인 only) */}
-      {activeTab === "timeline" && (
-        <View style={styles.viewModeRow}>
-          <Pressable
-            style={[styles.viewModeBtn, timelineViewMode === "list" && { backgroundColor: myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground }]}
-            onPress={() => setTimelineViewMode("list")}
-          >
-            <Text style={[styles.viewModeBtnText, timelineViewMode === "list" && styles.viewModeBtnTextActive]}>▦ 카드형</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.viewModeBtn, timelineViewMode === "webzine" && { backgroundColor: myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground }]}
-            onPress={() => setTimelineViewMode("webzine")}
-          >
-            <Text style={[styles.viewModeBtnText, timelineViewMode === "webzine" && styles.viewModeBtnTextActive]}>☰ 리스트형</Text>
-          </Pressable>
-        </View>
-      )}
 
       {/* Tab content — horizontal paging scroll */}
       <View style={{ flex: 1 }}>
@@ -480,23 +461,25 @@ export default function DiaryScreen() {
           <View style={{ width: screenWidth }}>
             {timelineViewMode === "list" ? (
               <DiaryTimeline
-                records={filteredRecords}
+                records={records}
                 teamId={myTeam}
                 onDelete={handleDelete}
                 onEdit={handleEdit}
                 onRefresh={handleRefresh}
                 refreshing={refreshing}
                 expensesByRecordId={expenseMap}
+                scrollTargetDate={scrollTargetDate}
               />
             ) : (
               <WebzineTimeline
-                records={filteredRecords}
+                records={records}
                 teamId={myTeam}
                 onDelete={handleDelete}
                 onRefresh={handleRefresh}
                 refreshing={refreshing}
                 expensesByRecordId={expenseMap}
                 onPressRecord={setWebzineDetailRecord}
+                scrollTargetDate={scrollTargetDate}
               />
             )}
           </View>
