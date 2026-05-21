@@ -1,7 +1,9 @@
 import { useState, useCallback, useMemo, useRef } from "react";
-import { View, Text, Pressable, StyleSheet, RefreshControl, ScrollView, Alert, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+import { View, Text, Pressable, StyleSheet, RefreshControl, ScrollView, Alert, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, Modal } from "react-native";
 import { useFocusEffect } from "expo-router";
 import DiaryTimeline from "@/components/DiaryTimeline";
+import WebzineTimeline from "@/components/WebzineTimeline";
+import DiaryCard from "@/components/DiaryCard";
 import DiaryCalendar from "@/components/DiaryCalendar";
 import DiaryStats from "@/components/DiaryStats";
 import DiaryEntryModal from "@/components/DiaryEntryModal";
@@ -19,6 +21,7 @@ import { useTeam } from "@/lib/TeamContext";
 
 type DiaryTab = "timeline" | "calendar" | "stats";
 type SubTab = "jikgwan" | "expense";
+type TimelineViewMode = "list" | "webzine";
 
 const TABS: { key: DiaryTab; label: string }[] = [
   { key: "timeline", label: "타임라인" },
@@ -117,12 +120,45 @@ export default function DiaryScreen() {
       fontWeight: "300",
       lineHeight: 30,
     },
+    // View mode toggle
+    viewModeRow: {
+      flexDirection: "row",
+      gap: 6,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    viewModeBtn: {
+      paddingVertical: 4,
+      paddingHorizontal: 12,
+      borderRadius: 14,
+      backgroundColor: theme.muted,
+    },
+    viewModeBtnText: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: theme.mutedForeground,
+    },
+    viewModeBtnTextActive: {
+      color: "#fff",
+    },
+    // Webzine detail header
+    webzineDetailHeader: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+    },
+    webzineDetailBack: {
+      fontSize: 15,
+      fontWeight: "600",
+    },
   }), [theme]);
   const [activeTab, setActiveTab] = useState<DiaryTab>("timeline");
   const [subTab, setSubTab] = useState<SubTab>("jikgwan");
   const [records, setRecords] = useState<JikgwanRecord[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [timelineViewMode, setTimelineViewMode] = useState<TimelineViewMode>("list");
+  const [webzineDetailRecord, setWebzineDetailRecord] = useState<JikgwanRecord | null>(null);
 
   const { myTeam } = useTeam();
   const teamColor = myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground;
@@ -413,6 +449,24 @@ export default function DiaryScreen() {
         </View>
       )}
 
+      {/* View mode toggle (타임라인 only) */}
+      {activeTab === "timeline" && (
+        <View style={styles.viewModeRow}>
+          <Pressable
+            style={[styles.viewModeBtn, timelineViewMode === "list" && { backgroundColor: myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground }]}
+            onPress={() => setTimelineViewMode("list")}
+          >
+            <Text style={[styles.viewModeBtnText, timelineViewMode === "list" && styles.viewModeBtnTextActive]}>☰ 타임라인</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.viewModeBtn, timelineViewMode === "webzine" && { backgroundColor: myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground }]}
+            onPress={() => setTimelineViewMode("webzine")}
+          >
+            <Text style={[styles.viewModeBtnText, timelineViewMode === "webzine" && styles.viewModeBtnTextActive]}>◆ 웹진</Text>
+          </Pressable>
+        </View>
+      )}
+
       {/* Tab content — horizontal paging scroll */}
       <View style={{ flex: 1 }}>
         <ScrollView
@@ -424,15 +478,27 @@ export default function DiaryScreen() {
         >
           {/* Tab 1: Timeline */}
           <View style={{ width: screenWidth }}>
-            <DiaryTimeline
-              records={filteredRecords}
-              teamId={myTeam}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-              onRefresh={handleRefresh}
-              refreshing={refreshing}
-              expensesByRecordId={expenseMap}
-            />
+            {timelineViewMode === "list" ? (
+              <DiaryTimeline
+                records={filteredRecords}
+                teamId={myTeam}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+                onRefresh={handleRefresh}
+                refreshing={refreshing}
+                expensesByRecordId={expenseMap}
+              />
+            ) : (
+              <WebzineTimeline
+                records={filteredRecords}
+                teamId={myTeam}
+                onDelete={handleDelete}
+                onRefresh={handleRefresh}
+                refreshing={refreshing}
+                expensesByRecordId={expenseMap}
+                onPressRecord={setWebzineDetailRecord}
+              />
+            )}
           </View>
 
           {/* Tab 2: Calendar (직관/지출 sub-tabs) */}
@@ -499,6 +565,38 @@ export default function DiaryScreen() {
           </View>
         </ScrollView>
       </View>
+
+      {/* Webzine detail modal */}
+      <Modal
+        visible={!!webzineDetailRecord}
+        animationType="slide"
+        onRequestClose={() => setWebzineDetailRecord(null)}
+      >
+        <View style={{ flex: 1, backgroundColor: theme.background }}>
+          <View style={[styles.webzineDetailHeader, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
+            <Pressable onPress={() => setWebzineDetailRecord(null)} hitSlop={12}>
+              <Text style={[styles.webzineDetailBack, { color: theme.foreground }]}>← 웹진</Text>
+            </Pressable>
+          </View>
+          <ScrollView>
+            {webzineDetailRecord && (
+              <DiaryCard
+                record={webzineDetailRecord}
+                teamId={myTeam}
+                onDelete={(record) => {
+                  handleDelete(record.id);
+                  setWebzineDetailRecord(null);
+                }}
+                onEdit={(record) => {
+                  setWebzineDetailRecord(null);
+                  handleEdit(record);
+                }}
+                expenses={expenseMap.get(webzineDetailRecord.id)}
+              />
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
 
       {/* FAB — context-aware */}
       <Pressable

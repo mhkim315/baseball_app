@@ -637,6 +637,16 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
       backgroundColor: theme.muted,
     },
     photoAddIcon: { fontSize: 24, color: theme.mutedForeground },
+    photoRepBadge: {
+      position: "absolute", bottom: 2, left: 2,
+      backgroundColor: "rgba(0,0,0,0.65)",
+      borderRadius: 4,
+      paddingHorizontal: 5,
+      paddingVertical: 1,
+    },
+    photoRepBadgeText: {
+      color: "#fff", fontSize: 9, fontWeight: "700",
+    },
 
     // Input
     inputRow: { position: "relative", marginBottom: 10 },
@@ -1228,6 +1238,11 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                         <Pressable style={styles.photoRemove} onPress={() => setPhotoUris((prev) => prev.filter((_, idx) => idx !== i))}>
                           <Text style={styles.photoRemoveText}>×</Text>
                         </Pressable>
+                        {i === 0 && photoUris.length > 1 && (
+                          <View style={styles.photoRepBadge}>
+                            <Text style={styles.photoRepBadgeText}>대표</Text>
+                          </View>
+                        )}
                       </View>
                     ))}
                     <Pressable style={styles.photoAddBtn} onPress={pickPhoto}>
