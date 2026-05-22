@@ -55,6 +55,7 @@ export interface GameOption {
   cancelled: boolean;
   venue: string;
   time: string;
+  isExhibition?: boolean;
 }
 
 interface DiaryEntryModalProps {
@@ -231,6 +232,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
         cancelled: g.cancelled,
         venue: resolveVenue(g.homeTeamId, g.venue),
         time: g.time || "13:00",
+        isExhibition: true,
       }));
 
       const scoreMap = new Map<string, ScoreEntry>();
@@ -621,6 +623,17 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
     },
     myBadgeEdge: {
       position: "absolute", top: 0, bottom: 0, justifyContent: "center", zIndex: 1,
+    },
+    exhibitionBadge: {
+      backgroundColor: theme.muted,
+      borderRadius: 4,
+      paddingHorizontal: 5,
+      paddingVertical: 1,
+    },
+    exhibitionBadgeText: {
+      fontSize: 10,
+      fontWeight: "700",
+      color: theme.mutedForeground,
     },
     gameVs: { fontSize: 12, color: theme.mutedForeground, fontWeight: "600" },
     gameMeta: { fontSize: 11, color: theme.mutedForeground },
@@ -1045,6 +1058,11 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                                   <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                                     <Text style={styles.gameVs}>VS</Text>
                                     <Text style={styles.gameMeta}>{myGame.time}</Text>
+                                    {myGame.isExhibition && (
+                                      <View style={styles.exhibitionBadge}>
+                                        <Text style={styles.exhibitionBadgeText}>시범</Text>
+                                      </View>
+                                    )}
                                   </View>
                                 )}
 
@@ -1096,6 +1114,11 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                                       <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                                         <Text style={styles.gameVs}>VS</Text>
                                         <Text style={styles.gameMeta}>{g.time}</Text>
+                                        {g.isExhibition && (
+                                          <View style={styles.exhibitionBadge}>
+                                            <Text style={styles.exhibitionBadgeText}>시범</Text>
+                                          </View>
+                                        )}
                                       </View>
                                     )}
 

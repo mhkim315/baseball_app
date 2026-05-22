@@ -458,7 +458,14 @@ export default function GameDetailScreen() {
         <Pressable onPress={() => router.back()} style={styles.headerBackBtn}>
           <Text style={styles.headerBackText}>←</Text>
         </Pressable>
-        <Text style={styles.headerBarTitle}>경기 상세</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Text style={styles.headerBarTitle}>경기 상세</Text>
+          {isExhibition && (
+            <View style={{ backgroundColor: "#888", borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1 }}>
+              <Text style={{ fontSize: 11, fontWeight: "700", color: "#fff" }}>시범</Text>
+            </View>
+          )}
+        </View>
         <View style={{ width: 60 }} />
       </View>
 
