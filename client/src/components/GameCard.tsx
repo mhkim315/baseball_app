@@ -15,6 +15,8 @@ interface GameCardProps {
   losePitcher?: string | null;
   cancelled?: boolean;
   onClick?: () => void;
+  liveInning?: number;
+  isTop?: boolean;
 }
 
 export default function GameCard({
@@ -30,6 +32,8 @@ export default function GameCard({
   winPitcher,
   losePitcher,
   cancelled,
+  liveInning,
+  isTop,
   onClick,
 }: GameCardProps) {
   const home = TEAM_COLORS[homeTeam];
@@ -43,7 +47,13 @@ export default function GameCard({
   const isDraw = hasResult ? homeScore === awayScore : null;
   const showScore = (status === "finished" || status === "live" || ((homeScore || 0) + (awayScore || 0) > 0)) && homeScore !== undefined && awayScore !== undefined;
 
-  const statusLabel = cancelled ? "취소" : status === "finished" ? "경기 종료" : status === "live" ? "경기 중" : "경기 전";
+  const statusLabel = cancelled
+    ? "취소"
+    : status === "finished"
+      ? "경기 종료"
+      : status === "live"
+        ? (liveInning != null ? `${liveInning}회${isTop ? "초" : "말"}` : "경기 중")
+        : "경기 전";
   const statusBadgeClass = cancelled
     ? "text-muted-foreground"
     : status === "live"

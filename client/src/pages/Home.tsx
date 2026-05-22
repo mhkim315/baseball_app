@@ -49,6 +49,8 @@ interface EnhancedGame {
   winPitcher?: string | null;
   losePitcher?: string | null;
   cancelled?: boolean;
+  liveInning?: number;
+  isTop?: boolean;
 }
 
 export default function Home() {
@@ -108,9 +110,41 @@ export default function Home() {
               winPitcher: score?.winPitcher,
               losePitcher: score?.losePitcher,
               cancelled: score?.cancelled,
+              liveInning: (g as any).liveInning,
+              isTop: (g as any).btop,
             };
           });
           setEnhancedGames(games);
+
+          // Fallback: fetch game-detail for live games to get inning data
+          const liveGames = games.filter((g) => g.status === "live" && g.liveInning == null);
+          if (liveGames.length > 0) {
+            Promise.all(
+              liveGames.map((g) => fetchGameDetail(g.id).catch(() => null))
+            ).then((results) => {
+              if (cancelled) return;
+              const updated = games.map((g) => {
+                const detail = results.find((r) => r?.gameId === g.id);
+                if (!detail?.scoreBoard?.inn || g.liveInning != null) return g;
+
+                const inn = detail.scoreBoard.inn;
+                const aLen = inn.away?.length ?? 0;
+                const hLen = inn.home?.length ?? 0;
+                let liveInning: number | undefined;
+                let isTop: boolean | undefined;
+                if (aLen > hLen) {
+                  liveInning = aLen;
+                  isTop = true;
+                } else if (hLen > 0) {
+                  liveInning = aLen;
+                  isTop = false;
+                }
+
+                return { ...g, liveInning, isTop };
+              });
+              setEnhancedGames(updated);
+            }).catch(() => {});
+          }
         } else {
           setEnhancedGames([]);
         }
@@ -178,20 +212,38 @@ export default function Home() {
         });
         setEnhancedGames(games);
 
-        // Fallback: fetch game-detail for games missing pitcher data
-        const gamesNeedingPitchers = games.filter(
-          (g) => !g.homePitcher || !g.awayPitcher
+        // Fallback: fetch game-detail for live games and missing pitcher data
+        const gamesNeedingDetail = games.filter(
+          (g) => g.status === "live" || !g.homePitcher || !g.awayPitcher
         );
-        if (gamesNeedingPitchers.length > 0) {
+        if (gamesNeedingDetail.length > 0) {
           Promise.all(
-            gamesNeedingPitchers.map((g) => fetchGameDetail(g.id).catch(() => null))
+            gamesNeedingDetail.map((g) => fetchGameDetail(g.id).catch(() => null))
           ).then((results) => {
             if (cancelled) return;
             const updated = games.map((g) => {
               const detail = results.find((r) => r?.gameId === g.id);
-              if (!detail?.starters) return g;
+              if (!detail) return g;
+
+              let liveInning = g.liveInning;
+              let isTop = g.isTop;
+              if (g.status === "live" && detail.scoreBoard?.inn && liveInning == null) {
+                const inn = detail.scoreBoard.inn;
+                const aLen = inn.away?.length ?? 0;
+                const hLen = inn.home?.length ?? 0;
+                if (aLen > hLen) {
+                  liveInning = aLen;
+                  isTop = true;
+                } else if (hLen > 0) {
+                  liveInning = aLen;
+                  isTop = false;
+                }
+              }
+
               return {
                 ...g,
+                liveInning,
+                isTop,
                 homePitcher: g.homePitcher || (detail.starters?.home?.name || undefined),
                 awayPitcher: g.awayPitcher || (detail.starters?.away?.name || undefined),
               };
@@ -269,6 +321,8 @@ export default function Home() {
                   winPitcher={game.winPitcher}
                   losePitcher={game.losePitcher}
                   cancelled={game.cancelled}
+                  liveInning={game.liveInning}
+                  isTop={game.isTop}
                   onClick={() => setLocation(`/game/${game.id}`)}
                 />
               );

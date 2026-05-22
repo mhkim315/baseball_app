@@ -48,6 +48,8 @@ interface EnhancedGame {
   winPitcher?: string | null;
   losePitcher?: string | null;
   cancelled?: boolean;
+  liveInning?: number;
+  isTop?: boolean;
 }
 
 export default function HomeScreen() {
@@ -290,22 +292,41 @@ export default function HomeScreen() {
             };
           });
 
-          // Fallback: fetch game-detail for missing pitchers
-          const gamesNeedingPitchers = enhanced.filter(
-            (g) => !isFuture && (!g.homePitcher || !g.awayPitcher)
+          // Fallback: fetch game-detail for live games and missing pitchers
+          const gamesNeedingDetail = enhanced.filter(
+            (g) => !isFuture && (g.status === "live" || !g.homePitcher || !g.awayPitcher)
           );
-          if (gamesNeedingPitchers.length > 0) {
+          if (gamesNeedingDetail.length > 0) {
             Promise.all(
-              gamesNeedingPitchers.map((g) => cachedGameDetail(g.id).catch(() => null))
+              gamesNeedingDetail.map((g) => cachedGameDetail(g.id).catch(() => null))
             ).then((results) => {
               if (cancelled) return;
               setGamesByDate((prev) => ({
                 ...prev,
                 [ds]: (prev[ds] || []).map((g) => {
                   const detail = results.find((r) => r?.gameId === g.id);
-                  if (!detail?.starters) return g;
+                  if (!detail) return g;
+
+                  // inning 추론: scoreBoard.inn 배열 길이로 초/말 판단
+                  let liveInning = g.liveInning;
+                  let isTop = g.isTop;
+                  if (g.status === "live" && detail.scoreBoard?.inn && liveInning == null) {
+                    const inn = detail.scoreBoard.inn;
+                    const aLen = inn.away?.length ?? 0;
+                    const hLen = inn.home?.length ?? 0;
+                    if (aLen > hLen) {
+                      liveInning = aLen;
+                      isTop = true;
+                    } else if (hLen > 0) {
+                      liveInning = aLen;
+                      isTop = false;
+                    }
+                  }
+
                   return {
                     ...g,
+                    liveInning,
+                    isTop,
                     homePitcher:
                       g.homePitcher || (detail.starters?.home?.name || undefined),
                     awayPitcher:
@@ -439,6 +460,8 @@ export default function HomeScreen() {
         winPitcher={item.winPitcher}
         losePitcher={item.losePitcher}
         cancelled={item.cancelled}
+        liveInning={item.liveInning}
+        isTop={item.isTop}
         highlighted={isMyTeamGame ? teamPrimaryColor(myTeam, isDark) : undefined}
         dense={!isMyTeamGame}
         onClick={() => router.push(`/game/${item.id}?ap=${encodeURIComponent(item.awayPitcher || "")}&hp=${encodeURIComponent(item.homePitcher || "")}`)}
