@@ -251,12 +251,18 @@ export default function HomeScreen() {
         const scoresList = rest.slice(0, 3) as ({ games: ScoreEntry[] } | null)[];
         const todayData = rest[3] as { games: TodayGame[]; nextGames?: TodayGame[] } | null;
         const exhibitionGames = (rest[4] || []) as ExhibitionGame[];
+        // Build lookup set for exhibition games (date format differs between schedule and exhibition API)
+        const exhSet = new Set<string>();
+        for (const eg of exhibitionGames) {
+          const d = `${eg.date.slice(0, 4)}-${eg.date.slice(4, 6)}-${eg.date.slice(6, 8)}`;
+          exhSet.add(`${d}|${eg.away}|${eg.home}`);
+        }
         const schedule = scheduleGames as ScheduleGame[];
 
         const result: Record<string, EnhancedGame[]> = {};
         for (let i = 0; i < 3; i++) {
           const ds = dates[i];
-          const dayGames = schedule.filter((g) => g.date === ds && !g.isExhibition);
+          const dayGames = schedule.filter((g) => g.date === ds && !exhSet.has(`${g.date}|${g.away}|${g.home}`));
           const scoreEntries: ScoreEntry[] = scoresList[i]?.games || [];
           const isFuture = ds > todayStr;
           const isToday = ds === todayStr;
