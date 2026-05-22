@@ -194,6 +194,25 @@ export default function HomeScreen() {
           const games = allScores?.[date];
           if (games) scoresRecord[date] = games;
         }
+        // Merge exhibition game scores (daily-scores API doesn't include them)
+        try {
+          const exh = await fetchExhibitionGames(cy);
+          for (const g of exh) {
+            if (g.awayScore == null) continue;
+            const dk = `${g.date.slice(0, 4)}-${g.date.slice(4, 6)}-${g.date.slice(6, 8)}`;
+            if (!scoresRecord[dk]) scoresRecord[dk] = [];
+            const sc = g.awayScore!;
+            const hc = g.homeScore!;
+            scoresRecord[dk].push({
+              away: g.away, home: g.home,
+              awayScore: sc, homeScore: hc,
+              outcome: sc > hc ? "W" : sc < hc ? "L" : "D",
+              cancelled: g.cancelled,
+              winPitcher: g.winPitcher, losePitcher: g.losePitcher,
+              gameIdx: 0,
+            });
+          }
+        } catch {}
         calCache.current[`${cy}:${month}`] = { games: gamesList, scores: scoresRecord };
         if (month === current) {
           setCalGames(gamesList);
@@ -429,6 +448,25 @@ export default function HomeScreen() {
       for (let i = 0; i < myDates.length; i++) {
         if (scoreResults[i]?.games) scoresRecord[myDates[i]] = scoreResults[i]!.games;
       }
+      // Merge exhibition game scores
+      try {
+        const exh = await fetchExhibitionGames(calYear);
+        for (const g of exh) {
+          if (g.awayScore == null) continue;
+          const dk = `${g.date.slice(0, 4)}-${g.date.slice(4, 6)}-${g.date.slice(6, 8)}`;
+          if (!scoresRecord[dk]) scoresRecord[dk] = [];
+          const sc = g.awayScore!;
+          const hc = g.homeScore!;
+          scoresRecord[dk].push({
+            away: g.away, home: g.home,
+            awayScore: sc, homeScore: hc,
+            outcome: sc > hc ? "W" : sc < hc ? "L" : "D",
+            cancelled: g.cancelled,
+            winPitcher: g.winPitcher, losePitcher: g.losePitcher,
+            gameIdx: 0,
+          });
+        }
+      } catch {}
       calCache.current[cacheKey] = { games: gamesList, scores: scoresRecord };
       if (!cancelled) {
         setCalGames(gamesList);
@@ -446,6 +484,24 @@ export default function HomeScreen() {
             for (let i = 0; i < dts.length; i++) {
               if (srs[i]?.games) src[dts[i]] = srs[i]!.games;
             }
+            try {
+              const exh = await fetchExhibitionGames(calYear);
+              for (const g of exh) {
+                if (g.awayScore == null) continue;
+                const dk = `${g.date.slice(0, 4)}-${g.date.slice(4, 6)}-${g.date.slice(6, 8)}`;
+                if (!src[dk]) src[dk] = [];
+                const sc = g.awayScore!;
+                const hc = g.homeScore!;
+                src[dk].push({
+                  away: g.away, home: g.home,
+                  awayScore: sc, homeScore: hc,
+                  outcome: sc > hc ? "W" : sc < hc ? "L" : "D",
+                  cancelled: g.cancelled,
+                  winPitcher: g.winPitcher, losePitcher: g.losePitcher,
+                  gameIdx: 0,
+                });
+              }
+            } catch {}
             calCache.current[adjKey] = { games: gl, scores: src };
           }).catch(() => {});
         }
