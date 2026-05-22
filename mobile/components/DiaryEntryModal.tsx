@@ -21,6 +21,7 @@ import { savePhoto, resizePhoto, generatePhotoName } from "@/lib/camera";
 import { cachedScheduleByMonth } from "@/lib/gameCache";
 import { fetchDailyScores, type ScheduleGame, type ScoreEntry } from "@/lib/api";
 import { resolveVenue } from "@/lib/stadiumData";
+import { fetchExhibitionGames } from "@/lib/exhibitionData";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -209,14 +210,28 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
     try {
       const month = date.getMonth() + 1;
       const apiDate = formatDateForApi(date);
-      const [schedule, scores] = await Promise.all([
+      const [schedule, scores, exhibitionData] = await Promise.all([
         cachedScheduleByMonth(month),
         fetchDailyScores(apiDate),
+        fetchExhibitionGames(),
       ]);
 
       const daySched = (schedule?.games ?? []).filter(
         (g: ScheduleGame) => g.date === apiDate
       );
+
+      // Exhibition games for this date
+      const exhibitionDay = exhibitionData.filter((g) => g.date === apiDate.replace(/-/g, ""));
+      const exhibitionOpts: GameOption[] = exhibitionDay.map((g) => ({
+        gameId: g.gameId,
+        homeTeam: g.homeTeamId,
+        awayTeam: g.awayTeamId,
+        homeScore: g.homeScore,
+        awayScore: g.awayScore,
+        cancelled: g.cancelled,
+        venue: resolveVenue(g.homeTeamId, g.venue),
+        time: g.time || "13:00",
+      }));
 
       const scoreMap = new Map<string, ScoreEntry>();
       for (const s of scores?.games ?? []) {
@@ -240,7 +255,8 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
       });
 
       // Sort: my team's game first
-      const sorted = [...gameOpts].sort((a, b) => {
+      const combined = [...gameOpts, ...exhibitionOpts];
+      const sorted = [...combined].sort((a, b) => {
         const aMy = userTeam && (a.homeTeam === userTeam || a.awayTeam === userTeam);
         const bMy = userTeam && (b.homeTeam === userTeam || b.awayTeam === userTeam);
         if (aMy && !bMy) return -1;

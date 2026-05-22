@@ -748,6 +748,22 @@ git push origin master
 - `expo-image-picker`: `55.0.20` → `~17.0.11` (SDK 54 호환으로 다운그레이드)
 - `react-native-gesture-handler`: `~2.28.0` 설치 (PanResponder와 별도로 사용 가능)
 
+### 사진 선택 시 날짜 필터링
+- DatePhotoPicker 컴포넌트 추가 — 갤러리에서 특정 날짜의 사진만 선택 가능
+- commit: `7bf7fee`
+
+### 경기 카드 이닝 표시
+- 라이브 경기에서 "경기 중" 대신 이닝 정보 표시 (예: "3회말")
+- GameDetail scoreBoard.inn 배열 길이로 이닝 추론 (away.length > home.length → 초, 같으면 → 말)
+- Web + Mobile GameCard 동시 적용
+- commit: `de22328`
+
+### 구장 미저장 버그 수정
+- /game-detail API가 빈 venue 반환 시 TEAM_VENUE 매핑으로 폴백
+- resolveVenue() 유틸을 두 진입 경로(다이어리탭, 경기상세)에서 공유
+- 기록 수정 경로에 stadium 필드 추가
+- commit: `88c2c24`
+
 ### EAS Build
 - 현재 Free plan Android 빌드 크레딧 소진 (6/1 초기화)
 - 로컬 빌드: `npx eas build --platform android --profile preview --local`

@@ -11,6 +11,7 @@ import { cachedDailyScores, cachedScheduleByMonth } from "@/lib/gameCache";
 import DiaryEntryModal, { type GameOption } from "@/components/DiaryEntryModal";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import { resolveVenue } from "@/lib/stadiumData";
+import { fetchExhibitionGames } from "@/lib/exhibitionData";
 
 const POSITION_LABELS: Record<string, string> = {
   "1": "1B", "2": "2B", "3": "3B",
@@ -39,6 +40,7 @@ export default function GameDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [scoreFallback, setScoreFallback] = useState<ScoreEntry | null>(null);
+  const [isExhibition, setIsExhibition] = useState(false);
   const [previewData, setPreviewData] = useState<{
     homeRecord: string; awayRecord: string;
     homeRank: number; awayRank: number;
@@ -53,12 +55,62 @@ export default function GameDetailScreen() {
     setLoading(true);
     setError(false);
     setScoreFallback(null);
+    setIsExhibition(false);
     let cancelled = false;
+
+    const tryExhibitionFallback = async () => {
+      if (cancelled) return;
+      try {
+        const exhibitionGames = await fetchExhibitionGames();
+        if (cancelled) return;
+        const eg = exhibitionGames.find((g: any) => g.gameId === gid);
+        if (eg) {
+          setIsExhibition(true);
+          setDetail({
+            gameId: eg.gameId,
+            date: `${eg.date.slice(0, 4)}-${eg.date.slice(4, 6)}-${eg.date.slice(6, 8)}`,
+            homeTeam: eg.homeTeamId,
+            awayTeam: eg.awayTeamId,
+            starters: {
+              home: eg.homeStarter ? { name: eg.homeStarter } : null,
+              away: eg.awayStarter ? { name: eg.awayStarter } : null,
+            },
+            lineup: { home: [], away: [] },
+            gameInfo: {
+              time: eg.time,
+              venue: resolveVenue(eg.homeTeamId, eg.venue),
+              status: eg.cancelled ? "cancelled" : "finished",
+            },
+            score: eg.awayScore != null
+              ? { away: eg.awayScore, home: eg.homeScore ?? 0 }
+              : undefined,
+            pitchingResult: eg.winPitcher || eg.losePitcher
+              ? [
+                  ...(eg.winPitcher ? [{ name: eg.winPitcher, wls: "W" }] : []),
+                  ...(eg.losePitcher ? [{ name: eg.losePitcher, wls: "L" }] : []),
+                ]
+              : undefined,
+          });
+          setLoading(false);
+        } else {
+          setError(true);
+          setLoading(false);
+        }
+      } catch {
+        if (!cancelled) { setError(true); setLoading(false); }
+      }
+    };
 
     fetchGameDetail(gid).then((data) => {
       if (cancelled) return;
       if (data) {
         setDetail(data);
+        fetchExhibitionGames().then((exhibitionGames) => {
+          if (cancelled) return;
+          if (exhibitionGames.some((g: any) => g.gameId === gid)) {
+            setIsExhibition(true);
+          }
+        });
         const dateStr = `${gid.slice(0, 4)}-${gid.slice(4, 6)}-${gid.slice(6, 8)}`;
         cachedDailyScores(dateStr).then((scores) => {
           if (cancelled || !scores?.games) return;
@@ -69,12 +121,14 @@ export default function GameDetailScreen() {
           );
           if (match) setScoreFallback(match);
         });
+        setLoading(false);
       } else {
-        setError(true);
+        tryExhibitionFallback();
       }
-      setLoading(false);
     }).catch(() => {
-      if (!cancelled) { setError(true); setLoading(false); }
+      if (!cancelled) {
+        tryExhibitionFallback();
+      }
     });
 
     return () => { cancelled = true; };
@@ -87,7 +141,7 @@ export default function GameDetailScreen() {
 
   // Fetch standings + recent games for preview card
   useEffect(() => {
-    if (!detail) return;
+    if (!detail || isExhibition) return;
     const homeName = TEAM_COLORS[detail.homeTeam]?.shortName;
     const awayName = TEAM_COLORS[detail.awayTeam]?.shortName;
     if (!homeName || !awayName) return;
@@ -158,7 +212,7 @@ export default function GameDetailScreen() {
     }).catch((e) => console.warn("game/[id] preview fetch failed", e));
 
     return () => { cancelled = true; };
-  }, [detail]);
+  }, [detail, isExhibition]);
 
   const handleOpenDiary = useCallback(() => {
     if (!detail) return;
@@ -649,7 +703,7 @@ export default function GameDetailScreen() {
               </View>
             </View>
           </View>
-        ) : (
+        ) : isExhibition ? null : (
           <View style={[styles.card, styles.noLineupCard]}>
             <Text style={styles.noLineupText}>아직 라인업이 공개되지 않았어요</Text>
             <Text style={styles.noLineupSub}>경기 시작 전에 확정 후 업데이트돼요</Text>
