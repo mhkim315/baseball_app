@@ -97,9 +97,10 @@ export async function cachedCheeringPlayers(teamId: string): Promise<{ players: 
 }
 
 // Schedule by month — never changes, cache forever (key includes year)
-export async function cachedScheduleByMonth(month: number): Promise<{ games: ScheduleGame[] } | null> {
-  return fetchWithCache(cacheKey("schedule", `${thisYear()}:${month}`), Infinity, () =>
-    apiScheduleByMonth(month)
+export async function cachedScheduleByMonth(month: number, year?: number): Promise<{ games: ScheduleGame[] } | null> {
+  const y = year ?? thisYear();
+  return fetchWithCache(cacheKey("schedule", `${y}:${month}`), Infinity, () =>
+    apiScheduleByMonth(month, y)
   );
 }
 

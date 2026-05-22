@@ -24,20 +24,25 @@ interface ExhibitionResponse {
   games: ExhibitionGame[];
 }
 
-let cached: ExhibitionGame[] | null = null;
+const cache = new Map<number, ExhibitionGame[]>();
 
-export async function fetchExhibitionGames(): Promise<ExhibitionGame[]> {
-  if (cached) return cached;
+export async function fetchExhibitionGames(year?: number): Promise<ExhibitionGame[]> {
+  const y = year ?? new Date().getFullYear();
+  if (cache.has(y)) return cache.get(y)!;
   try {
-    const resp = await fetch("https://api.fullcount.kr/exhibition-games");
+    const url = year != null
+      ? `https://api.fullcount.kr/exhibition-games?year=${year}`
+      : "https://api.fullcount.kr/exhibition-games";
+    const resp = await fetch(url);
     const data: ExhibitionResponse = await resp.json();
-    cached = (data.games || []).map((g) => ({
+    const games = (data.games || []).map((g) => ({
       ...g,
       awayTeamId: TEAM_NAME_TO_ID[g.away] || "",
       homeTeamId: TEAM_NAME_TO_ID[g.home] || "",
     }));
+    cache.set(y, games);
   } catch {
-    cached = [];
+    cache.set(y, []);
   }
-  return cached;
+  return cache.get(y)!;
 }

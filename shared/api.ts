@@ -93,15 +93,24 @@ export function createApi(options: ApiClientOptions) {
       client.get<{ year: number; games: ScheduleGame[] }>("/schedule"),
 
     fetchScheduleByMonth: (
-      month: number
+      month: number,
+      year?: number
     ): Promise<{
       year: number;
       month: number;
       games: ScheduleGame[];
     } | null> =>
       client.get<{ year: number; month: number; games: ScheduleGame[] }>(
-        `/schedule/${month}`
+        `/schedule/${month}${year != null ? `?year=${year}` : ""}`
       ),
+
+    fetchSeasons: (): Promise<{ years: number[] } | null> =>
+      client.get<{ years: number[] }>("/seasons"),
+
+    fetchRegularGames: (
+      year: number
+    ): Promise<{ year: number; games: any[] } | null> =>
+      client.get<{ year: number; games: any[] }>(`/regular-games/${year}`),
 
     fetchTodayGames: (): Promise<{ date: string; games: TodayGame[]; nextGames?: TodayGame[] } | null> =>
       client.get<{ date: string; games: TodayGame[]; nextGames?: TodayGame[] }>("/today-games"),
