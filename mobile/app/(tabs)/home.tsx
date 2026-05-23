@@ -271,6 +271,7 @@ export default function HomeScreen() {
           const pitcherMap = new Map<string, { away?: string; home?: string }>();
           const gameIdMap = new Map<string, string>();
           const gameStatusMap = new Map<string, string>();
+          const gameTimeMap = new Map<string, string>();
           if (isToday && todayData?.games) {
             for (const g of todayData.games) {
               const key = `${ds}-${g.away.id}-${g.home.id}`;
@@ -280,6 +281,7 @@ export default function HomeScreen() {
               });
               gameIdMap.set(key, g.id);
               if (g.status) gameStatusMap.set(key, g.status);
+              if (g.time) gameTimeMap.set(key, g.time);
             }
           } else {
             const tomorrow = new Date();
@@ -310,6 +312,7 @@ export default function HomeScreen() {
             const pitchers = pitcherMap.get(gameKey);
             const apiGameId = gameIdMap.get(gameKey);
             const serverStatus = gameStatusMap.get(gameKey);
+            const serverTime = gameTimeMap.get(gameKey);
 
             let status: "scheduled" | "live" | "finished" = "scheduled";
             if (score?.cancelled) {
@@ -319,7 +322,7 @@ export default function HomeScreen() {
             } else if (serverStatus === "live") {
               status = "live";
             } else if (isToday && !score?.cancelled) {
-              const timeStr = g.time || "18:30";
+              const timeStr = serverTime || g.time || "18:30";
               const [h, m] = timeStr.split(":").map(Number);
               const startTime = new Date();
               startTime.setHours(h ?? 18, m ?? 30, 0, 0);
@@ -331,7 +334,7 @@ export default function HomeScreen() {
               id: apiGameId || buildGameId(awayId, homeId, gameDate, String(gi)),
               homeTeam: homeId,
               awayTeam: awayId,
-              time: g.time || "18:30",
+              time: serverTime || g.time || "18:30",
               venue: (g.venue || "").replace(/\s*\(.*?\)\s*$/, "").trim(),
               status,
               homeScore: score?.homeScore,
