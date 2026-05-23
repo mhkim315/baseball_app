@@ -281,26 +281,28 @@ export default function HomeScreen() {
             const pairIdx = pairCount.get(pairKey) || 0;
             pairCount.set(pairKey, pairIdx + 1);
             const matchingScores = scoreEntries.filter((s) => s.home === g.home && s.away === g.away);
-            const score = matchingScores.find(s => s.gameIdx === pairIdx) || matchingScores[pairIdx] || matchingScores[0];
+            const score = matchingScores.find(s => (s.gameIdx ?? 0) === pairIdx) || matchingScores[pairIdx];
             const gameKey = `${ds}-${awayId}-${homeId}`;
             const pitchers = pitcherMap.get(gameKey);
             const apiGameId = gameIdMap.get(gameKey);
             const serverStatus = gameStatusMap.get(gameKey);
             const serverTime = gameTimeMap.get(gameKey);
 
+            const timeStr = serverTime || g.time || "18:30";
+            const [h, m] = timeStr.split(":").map(Number);
+            const startTime = new Date();
+            startTime.setHours(h ?? 18, m ?? 30, 0, 0);
+            const gameHasStarted = new Date() >= startTime;
+
             let status: "scheduled" | "live" | "finished" = "scheduled";
             if (score?.cancelled) {
               status = "finished";
             } else if (score && !isFuture && score.outcome !== null) {
               status = "finished";
-            } else if (serverStatus === "live") {
+            } else if (serverStatus === "live" && gameHasStarted) {
               status = "live";
-            } else if (isToday && !score?.cancelled) {
-              const timeStr = serverTime || g.time || "18:30";
-              const [h, m] = timeStr.split(":").map(Number);
-              const startTime = new Date();
-              startTime.setHours(h ?? 18, m ?? 30, 0, 0);
-              if (new Date() >= startTime) status = "live";
+            } else if (isToday && !score?.cancelled && gameHasStarted) {
+              status = "live";
             }
 
             // Past exhibition games have no score data — mark as finished
@@ -309,8 +311,9 @@ export default function HomeScreen() {
             }
 
             const gameDate = ds.replace(/-/g, "");
+            const isDHPair = (pairCount.get(pairKey) ?? 0) > 1;
             return {
-              id: apiGameId || buildGameId(awayId, homeId, gameDate, String(gi)),
+              id: isDHPair ? buildGameId(awayId, homeId, gameDate, String(gi)) : (apiGameId || buildGameId(awayId, homeId, gameDate, String(gi))),
               homeTeam: homeId,
               awayTeam: awayId,
               time: serverTime || g.time || "18:30",

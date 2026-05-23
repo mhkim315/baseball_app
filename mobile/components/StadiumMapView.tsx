@@ -35,6 +35,9 @@ interface StadiumMapViewProps {
   zoom?: number;
   focusedSpotId?: string;
   onPinClick?: (spotId: string) => void;
+  onTouchStart?: () => void;
+  onTouchEnd?: () => void;
+  onTouchCancel?: () => void;
 }
 
 function pinSvgHtml(fill: string): string {
@@ -50,7 +53,7 @@ function spotKind(raw: string | undefined, index: number): string {
   return index === 0 ? "stadium" : "parking";
 }
 
-export default function StadiumMapView({ spots, center, zoom = 15, focusedSpotId, onPinClick }: StadiumMapViewProps) {
+export default function StadiumMapView({ spots, center, zoom = 15, focusedSpotId, onPinClick, onTouchStart, onTouchEnd, onTouchCancel }: StadiumMapViewProps) {
   const { theme } = useTheme();
   const webViewRef = useRef<WebView>(null);
 
@@ -94,6 +97,9 @@ export default function StadiumMapView({ spots, center, zoom = 15, focusedSpotId
         overScrollMode="never"
         bounces={false}
         onMessage={handleMessage}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        onTouchCancel={onTouchCancel}
         javaScriptEnabled
         domStorageEnabled
         originWhitelist={["*"]}

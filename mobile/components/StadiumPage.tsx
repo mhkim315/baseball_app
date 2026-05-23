@@ -289,6 +289,27 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
   const tabInnerScrollRefs = useRef<Record<string, ScrollView | null>>({});
+  const scrollLockUntilRef = useRef<number>(0);
+  const activeMapTouchesRef = useRef(0);
+
+  const handleMapTouchStart = useCallback(() => {
+    activeMapTouchesRef.current += 1;
+    tabScrollRef.current?.setNativeProps({ scrollEnabled: false });
+  }, []);
+  const handleMapTouchEnd = useCallback(() => {
+    activeMapTouchesRef.current = Math.max(0, activeMapTouchesRef.current - 1);
+    if (activeMapTouchesRef.current === 0) {
+      tabScrollRef.current?.setNativeProps({ scrollEnabled: true });
+    }
+  }, []);
+  const handleMapTouchCancel = useCallback(() => {
+    activeMapTouchesRef.current = 0;
+    tabScrollRef.current?.setNativeProps({ scrollEnabled: true });
+  }, []);
+  const handleSetFocusedSpot = useCallback((spotId: string | undefined) => {
+    scrollLockUntilRef.current = Date.now() + 300;
+    setFocusedSpot(spotId);
+  }, []);
 
   const handleTabPress = useCallback((tabId: TabId) => {
     setActiveTab(tabId);
@@ -297,6 +318,7 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
   }, [screenWidth]);
 
   const handleMomentumScrollEnd = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (Date.now() < scrollLockUntilRef.current) return;
     const idx = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
     if (idx >= 0 && idx < TABS.length) {
       const newTabId = TABS[idx].id;
@@ -488,9 +510,12 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
                       brief={stadium}
                       parkingSpots={parking}
                       focusedSpot={focusedSpot}
-                      setFocusedSpot={setFocusedSpot}
+                      setFocusedSpot={handleSetFocusedSpot}
                       surroundingsCenter={surroundingsCenter}
                       surroundingsZoom={Math.max(surroundingsZoom - 1, 10)}
+                      onMapTouchStart={handleMapTouchStart}
+                      onMapTouchEnd={handleMapTouchEnd}
+                      onMapTouchCancel={handleMapTouchCancel}
                     />
                   )}
                   {tab.id === "transport" && (
@@ -498,9 +523,12 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
                       brief={stadium}
                       transitSpots={transitSpots}
                       focusedSpot={focusedSpot}
-                      setFocusedSpot={setFocusedSpot}
+                      setFocusedSpot={handleSetFocusedSpot}
                       surroundingsCenter={surroundingsCenter}
                       surroundingsZoom={Math.max(surroundingsZoom - 1, 10)}
+                      onMapTouchStart={handleMapTouchStart}
+                      onMapTouchEnd={handleMapTouchEnd}
+                      onMapTouchCancel={handleMapTouchCancel}
                     />
                   )}
                   {tab.id === "nearby" && (
@@ -508,8 +536,11 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
                       nearby={nearby}
                       stadiumSpot={stadiumSpot}
                       focusedSpot={focusedSpot}
-                      setFocusedSpot={setFocusedSpot}
+                      setFocusedSpot={handleSetFocusedSpot}
                       eatsCenter={eatsCenter}
+                      onMapTouchStart={handleMapTouchStart}
+                      onMapTouchEnd={handleMapTouchEnd}
+                      onMapTouchCancel={handleMapTouchCancel}
                     />
                   )}
                 </ScrollView>
@@ -828,10 +859,11 @@ function FoodTab({ stadiumId, foods, foodFloor, setFoodFloor, foodCategory, setF
 }
 
 /* ====== Parking Tab ====== */
-function ParkingTab({ brief, parkingSpots, focusedSpot, setFocusedSpot, surroundingsCenter, surroundingsZoom }: {
+function ParkingTab({ brief, parkingSpots, focusedSpot, setFocusedSpot, surroundingsCenter, surroundingsZoom, onMapTouchStart, onMapTouchEnd, onMapTouchCancel }: {
   brief: StadiumBrief | null; parkingSpots: SurroundingSpot[];
   focusedSpot: string | undefined; setFocusedSpot: (s: string | undefined) => void;
   surroundingsCenter: number[]; surroundingsZoom: number;
+  onMapTouchStart?: () => void; onMapTouchEnd?: () => void; onMapTouchCancel?: () => void;
 }) {
   const { theme } = useTheme();
   const styles = useStadiumStyles();
@@ -857,6 +889,9 @@ function ParkingTab({ brief, parkingSpots, focusedSpot, setFocusedSpot, surround
           zoom={surroundingsZoom}
           focusedSpotId={focusedSpot}
           onPinClick={(spotId) => setFocusedSpot(spotId)}
+          onTouchStart={onMapTouchStart}
+          onTouchEnd={onMapTouchEnd}
+          onTouchCancel={onMapTouchCancel}
         />
       )}
       {parkingSpots.length > 0 ? (
@@ -878,10 +913,11 @@ function ParkingTab({ brief, parkingSpots, focusedSpot, setFocusedSpot, surround
 }
 
 /* ====== Transport Tab ====== */
-function TransportTab({ brief, transitSpots, focusedSpot, setFocusedSpot, surroundingsCenter, surroundingsZoom }: {
+function TransportTab({ brief, transitSpots, focusedSpot, setFocusedSpot, surroundingsCenter, surroundingsZoom, onMapTouchStart, onMapTouchEnd, onMapTouchCancel }: {
   brief: StadiumBrief | null; transitSpots: SurroundingSpot[];
   focusedSpot: string | undefined; setFocusedSpot: (s: string | undefined) => void;
   surroundingsCenter: number[]; surroundingsZoom: number;
+  onMapTouchStart?: () => void; onMapTouchEnd?: () => void; onMapTouchCancel?: () => void;
 }) {
   const { theme } = useTheme();
   const styles = useStadiumStyles();
@@ -894,6 +930,9 @@ function TransportTab({ brief, transitSpots, focusedSpot, setFocusedSpot, surrou
           zoom={surroundingsZoom}
           focusedSpotId={focusedSpot}
           onPinClick={(spotId) => setFocusedSpot(spotId)}
+          onTouchStart={onMapTouchStart}
+          onTouchEnd={onMapTouchEnd}
+          onTouchCancel={onMapTouchCancel}
         />
       )}
       {transitSpots.length > 0 ? (
@@ -930,11 +969,12 @@ function TransportTab({ brief, transitSpots, focusedSpot, setFocusedSpot, surrou
 }
 
 /* ====== Nearby Tab ====== */
-function NearbyTab({ nearby, stadiumSpot, focusedSpot, setFocusedSpot, eatsCenter }: {
+function NearbyTab({ nearby, stadiumSpot, focusedSpot, setFocusedSpot, eatsCenter, onMapTouchStart, onMapTouchEnd, onMapTouchCancel }: {
   nearby: EatsSpot[];
   stadiumSpot: SurroundingSpot | null;
   focusedSpot: string | undefined; setFocusedSpot: (s: string | undefined) => void;
   eatsCenter: number[];
+  onMapTouchStart?: () => void; onMapTouchEnd?: () => void; onMapTouchCancel?: () => void;
 }) {
   const { theme } = useTheme();
   const styles = useStadiumStyles();
@@ -997,6 +1037,9 @@ function NearbyTab({ nearby, stadiumSpot, focusedSpot, setFocusedSpot, eatsCente
             zoom={13}
             focusedSpotId={focusedSpot}
             onPinClick={(spotId) => setFocusedSpot(spotId)}
+            onTouchStart={onMapTouchStart}
+            onTouchEnd={onMapTouchEnd}
+            onTouchCancel={onMapTouchCancel}
           />
 
           {/* Grouped list */}

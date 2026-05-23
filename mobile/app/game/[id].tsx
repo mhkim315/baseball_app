@@ -75,8 +75,12 @@ export default function GameDetailScreen() {
         const { awayId, homeId } = parseGameTeamIds(gid);
         const awayShort = TEAM_COLORS[awayId]?.shortName;
         const homeShort = TEAM_COLORS[homeId]?.shortName;
+        const parts = gid.split("-");
+        const suffix = parts[parts.length - 1];
+        const gameSeq = parseInt(suffix, 10);
+        const gameIdx = isNaN(gameSeq) ? 0 : gameSeq;
         const scoreEntry = scores?.games?.find(
-          (s) => s.away === awayShort && s.home === homeShort
+          (s) => s.away === awayShort && s.home === homeShort && (s.gameIdx ?? 0) === gameIdx
         );
         const scheduleEntry = schedule?.games?.find(
           (g) => g.away === awayShort && g.home === homeShort
@@ -149,17 +153,24 @@ export default function GameDetailScreen() {
         if (scores?.games) {
           const homeName = TEAM_COLORS[data.homeTeam]?.shortName || "";
           const awayName = TEAM_COLORS[data.awayTeam]?.shortName || "";
+          const { awayId: gAwayId, homeId: gHomeId } = parseGameTeamIds(gid);
+          const fallbackHomeName = TEAM_COLORS[gHomeId]?.shortName || "";
+          const fallbackAwayName = TEAM_COLORS[gAwayId]?.shortName || "";
           const gameSeq = (() => {
             const parts = gid.split("-");
             const suffix = parts[parts.length - 1];
             const n = parseInt(suffix, 10);
             return isNaN(n) ? 0 : n;
           })();
-          const exactMatch = scores.games.find(
-            (s: ScoreEntry) => s.home === homeName && s.away === awayName && (s.gameIdx ?? 0) === gameSeq
-          );
+          const exactMatch =
+            scores.games.find(
+              (s: ScoreEntry) => s.home === homeName && s.away === awayName && (s.gameIdx ?? 0) === gameSeq
+            ) ||
+            scores.games.find(
+              (s: ScoreEntry) => s.home === fallbackHomeName && s.away === fallbackAwayName && (s.gameIdx ?? 0) === gameSeq
+            );
           const match = exactMatch || scores.games.find(
-            (s: ScoreEntry) => s.home === homeName && s.away === awayName
+            (s: ScoreEntry) => s.home === (homeName || fallbackHomeName) && s.away === (awayName || fallbackAwayName)
           );
           if (match) {
             setScoreFallback(match);
