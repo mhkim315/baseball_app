@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { Linking } from "react-native";
+import Constants from "expo-constants";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { DEFAULT_TEAM_ID } from "@shared/constants";
 import { TeamBadge } from "@/components/TeamBadge";
@@ -24,6 +25,7 @@ import {
   setNickname,
   getProfileImage,
   setProfileImage,
+  resetAllData,
 } from "@/lib/db";
 
 const PROFILE_CHARACTERS: { key: string; label: string }[] = [
@@ -314,6 +316,7 @@ export default function MyScreen() {
   const [nicknameInput, setNicknameInput] = useState("");
   const [showProfilePicker, setShowProfilePicker] = useState(false);
   const [showTeamPicker, setShowTeamPicker] = useState(false);
+const [showResetConfirm, setShowResetConfirm] = useState(false);
   const router = useRouter();
 
   const loadData = useCallback(async () => {
@@ -448,7 +451,18 @@ export default function MyScreen() {
         <Pressable style={styles.settingRow} onPress={() => Linking.openURL("https://fullcount.kr/terms")}>
           <Text style={styles.settingLabel}>이용약관</Text>
         </Pressable>
-        <Text style={styles.version}>v1.0.0</Text>
+        <Pressable style={styles.settingRow} onPress={() => Linking.openURL("mailto:info@fullcount.kr?subject=풀카운트 문의")}>
+          <Text style={styles.settingLabel}>문의하기</Text>
+        </Pressable>
+        <Text style={styles.version}>v{Constants.expoConfig?.version ?? "1.0.0"}</Text>
+      </View>
+
+      {/* Data Management */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>데이터 관리</Text>
+        <Pressable style={styles.settingRow} onPress={() => setShowResetConfirm(true)}>
+          <Text style={[styles.settingLabel, { color: "#e74c3c" }]}>모든 데이터 초기화</Text>
+        </Pressable>
       </View>
 
       <View style={{ height: 40 }} />
@@ -510,6 +524,39 @@ export default function MyScreen() {
             </View>
           </View>
         </Pressable>
+      </Modal>
+
+      {/* Reset confirmation modal */}
+      <Modal visible={showResetConfirm} transparent animationType="fade" onRequestClose={() => setShowResetConfirm(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>데이터 초기화</Text>
+            <Text style={{ fontSize: 14, color: theme.mutedForeground, marginBottom: 16, lineHeight: 20, textAlign: "center" }}>
+              모든 직관기록, 사진, 지출내역, 설정이{'\n'}영구적으로 삭제됩니다.{'\n\n'}계속하시겠습니까?
+            </Text>
+            <View style={styles.modalButtons}>
+              <Pressable style={styles.modalCancel} onPress={() => setShowResetConfirm(false)}>
+                <Text style={styles.modalCancelText}>취소</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.modalSave, { backgroundColor: "#e74c3c" }]}
+                onPress={async () => {
+                  setShowResetConfirm(false);
+                  try {
+                    await resetAllData();
+                    const { deleteAllPhotos } = await import("@/lib/camera");
+                    await deleteAllPhotos();
+                    loadData();
+                  } catch (e) {
+                    console.warn("resetAllData failed", e);
+                  }
+                }}
+              >
+                <Text style={styles.modalSaveText}>초기화</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
       </Modal>
 
       {/* Profile Character Picker Modal */}

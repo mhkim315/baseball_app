@@ -73,3 +73,15 @@ export async function deletePhoto(uri: string): Promise<void> {
     // non-critical
   }
 }
+
+export async function deleteAllPhotos(): Promise<void> {
+  try {
+    const dirUri = `${FileSystem.documentDirectory}${PHOTO_DIR_NAME}/`;
+    const info = await FileSystem.getInfoAsync(dirUri);
+    if (info.exists) {
+      await FileSystem.deleteAsync(dirUri, { idempotent: false });
+    }
+  } catch (e) {
+    console.warn("deleteAllPhotos failed", e);
+  }
+}

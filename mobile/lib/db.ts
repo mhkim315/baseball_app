@@ -472,6 +472,17 @@ export async function getWinRate(teamId: string): Promise<{
   };
 }
 
+export async function resetAllData(): Promise<void> {
+  const database = await getDb();
+  await database.execAsync(`
+    DELETE FROM jikgwan_records;
+    DELETE FROM expenses;
+    DELETE FROM win_rate_cache;
+    DELETE FROM api_cache;
+    DELETE FROM user_settings;
+  `);
+}
+
 export async function getWinRates(): Promise<
   Array<{
     teamId: string;
