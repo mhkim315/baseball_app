@@ -207,7 +207,8 @@
       "Bash(Select-String \"80cd96e\")",
       "Bash(Get-Content C:\\\\Users\\\\user\\\\Documents\\\\baseball_app\\\\mobile\\\\package.json)",
       "Bash(Select-String -Pattern 'react-native|expo')",
-      "Bash(Get-ChildItem C:\\\\Users\\\\user\\\\Documents\\\\baseball_app\\\\mobile\\\\app *)"
+      "Bash(Get-ChildItem C:\\\\Users\\\\user\\\\Documents\\\\baseball_app\\\\mobile\\\\app *)",
+      "PowerShell(git *)"
     ],
     "mode": "bypass"
   }
