@@ -292,6 +292,27 @@ export default function Home() {
         </p>
       </div>
 
+      {/* Android beta banner */}
+      <div className="mx-4 mt-3 md:mt-4 max-w-lg md:mx-auto">
+        <div
+          className="rounded-xl bg-primary/10 border border-primary/20 p-4 cursor-pointer active:scale-[0.98] transition-transform"
+          onClick={() => setLocation("/app")}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === "Enter") setLocation("/app"); }}
+        >
+          <h2 className="text-base font-bold text-primary">
+            📱 풀카운트 안드로이드 앱 — 비공개 테스트 중
+          </h2>
+          <p className="text-sm text-foreground mt-2 leading-relaxed">
+            내가 직관한 날짜, 점수, 감정을 기록하고 나만의 야구 일기를 완성하세요.
+          </p>
+          <p className="text-xs text-primary font-medium mt-2">
+            자세히 보기 →
+          </p>
+        </div>
+      </div>
+
       {/* Week label + date slider */}
       <div className="sticky top-0 md:top-16 z-40 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-lg mx-auto">

@@ -11,6 +11,7 @@ import CalendarPage from "./pages/CalendarPage";
 import Stadium from "./pages/Stadium";
 import Cheer from "./pages/Cheer";
 import Standings from "./pages/Standings";
+import BetaPage from "./pages/Beta";
 import TermsPage from "./pages/Terms";
 import PrivacyPage from "./pages/Privacy";
 import Header from "./components/Header";
@@ -29,6 +30,7 @@ function AppRoutes() {
       <Route path={"/stadium"} component={withAnimation(Stadium)} />
       <Route path={"/cheer"} component={withAnimation(Cheer)} />
       <Route path={"/rank"} component={withAnimation(Standings)} />
+      <Route path={"/app"} component={withAnimation(BetaPage)} />
       <Route path={"/terms"} component={withAnimation(TermsPage)} />
       <Route path={"/privacy"} component={withAnimation(PrivacyPage)} />
       <Route component={NotFound} />
