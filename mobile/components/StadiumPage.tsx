@@ -290,21 +290,33 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
   activeTabRef.current = activeTab;
   const tabInnerScrollRefs = useRef<Record<string, ScrollView | null>>({});
   const scrollLockUntilRef = useRef<number>(0);
-  const activeMapTouchesRef = useRef(0);
+  const outerScrollLockRef = useRef(0);
 
   const handleMapTouchStart = useCallback(() => {
-    activeMapTouchesRef.current += 1;
+    outerScrollLockRef.current += 1;
     tabScrollRef.current?.setNativeProps({ scrollEnabled: false });
   }, []);
   const handleMapTouchEnd = useCallback(() => {
-    activeMapTouchesRef.current = Math.max(0, activeMapTouchesRef.current - 1);
-    if (activeMapTouchesRef.current === 0) {
+    outerScrollLockRef.current = Math.max(0, outerScrollLockRef.current - 1);
+    if (outerScrollLockRef.current === 0) {
       tabScrollRef.current?.setNativeProps({ scrollEnabled: true });
     }
   }, []);
   const handleMapTouchCancel = useCallback(() => {
-    activeMapTouchesRef.current = 0;
-    tabScrollRef.current?.setNativeProps({ scrollEnabled: true });
+    outerScrollLockRef.current = Math.max(0, outerScrollLockRef.current - 1);
+    if (outerScrollLockRef.current === 0) {
+      tabScrollRef.current?.setNativeProps({ scrollEnabled: true });
+    }
+  }, []);
+  const handleInnerScrollBeginDrag = useCallback(() => {
+    outerScrollLockRef.current += 1;
+    tabScrollRef.current?.setNativeProps({ scrollEnabled: false });
+  }, []);
+  const handleInnerScrollEnd = useCallback(() => {
+    outerScrollLockRef.current = Math.max(0, outerScrollLockRef.current - 1);
+    if (outerScrollLockRef.current === 0) {
+      tabScrollRef.current?.setNativeProps({ scrollEnabled: true });
+    }
   }, []);
   const handleSetFocusedSpot = useCallback((spotId: string | undefined) => {
     scrollLockUntilRef.current = Date.now() + 300;
@@ -319,6 +331,7 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
 
   const handleMomentumScrollEnd = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (Date.now() < scrollLockUntilRef.current) return;
+    if (outerScrollLockRef.current > 0) return;
     const idx = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
     if (idx >= 0 && idx < TABS.length) {
       const newTabId = TABS[idx].id;
@@ -487,6 +500,9 @@ export default function StadiumPage({ teamId: propTeamId, accentColor }: { teamI
               <View key={tab.id} style={{ width: screenWidth }}>
                 <ScrollView
                   ref={(el) => { tabInnerScrollRefs.current[tab.id] = el; }}
+                  onScrollBeginDrag={handleInnerScrollBeginDrag}
+                  onScrollEndDrag={handleInnerScrollEnd}
+                  onMomentumScrollEnd={handleInnerScrollEnd}
                 >
                   {tab.id === "info" && (
                     <InfoTab stadiumId={stadiumId} brief={stadium} teamColor={teamColor} selectedTeam={selectedTeam} />
