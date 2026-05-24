@@ -557,8 +557,8 @@ export default function DiaryStats({ records, teamId, year }: DiaryStatsProps) {
                 </Text>
                 <Text style={[styles.wrcDiffDesc, { color: isPos ? "#22c55e" : "#ef4444" }]}>
                   {isPos
-                    ? "내가 직관할 때 우리팀이 더 잘해요"
-                    : "내가 보면 우리팀이 못해요 😅"}
+                    ? (includeJipgwan ? "내가 함께 할 때 우리팀이 더 잘해요" : "내가 직관할 때 우리팀이 더 잘해요")
+                    : (includeJipgwan ? "내가 함께 하면 우리팀이 못해요 😅" : "내가 직관할 때 우리팀이 못해요 😅")}
                 </Text>
               </View>
             );
