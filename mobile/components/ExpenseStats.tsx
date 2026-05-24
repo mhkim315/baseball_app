@@ -12,7 +12,7 @@ interface ExpenseStatsProps {
 }
 
 function avgFmt(n: number): string {
-  return n >= 10000 ? `${Math.round(n / 10000)}만` : n.toLocaleString();
+  return n >= 10000 ? `${(Math.round(n / 1000) / 10).toFixed(1)}만` : n.toLocaleString();
 }
 
 export default function ExpenseStats({ expenses, records, teamId, year }: ExpenseStatsProps) {
