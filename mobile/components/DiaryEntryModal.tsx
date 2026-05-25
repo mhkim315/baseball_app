@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   View, Text, Pressable, TextInput, StyleSheet, Image,
   ActivityIndicator, ScrollView, Animated, Keyboard, Platform,
-  Alert,
+  Modal,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import * as ImagePicker from "expo-image-picker";
@@ -1387,10 +1387,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                     <Text style={styles.cancelText}>취소</Text>
                   </Pressable>
                   <Pressable style={styles.cancelBtn} onPress={() => {
-                    Alert.alert("경기정보 없이 쓰기", "경기 정보를 선택하지 않으면 일기에 점수/결과가 표시되지 않습니다. 그래도 진행하시겠습니까?", [
-                      { text: "취소", style: "cancel" },
-                      { text: "확인", onPress: () => { setSelectedGame(null); setStep("write"); } },
-                    ]);
+                    setSimpleAlert({ visible: true, title: "경기정보 없이 쓰기", message: "경기 정보를 선택하지 않으면 일기에 점수/결과가 표시되지 않습니다. 그래도 진행하시겠습니까?", onOk: () => { setSelectedGame(null); setStep("write"); } });
                   }}>
                     <Text style={styles.cancelText}>경기정보 없이 쓰기</Text>
                   </Pressable>
@@ -1405,7 +1402,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
       </BottomSheet>
 
       {/* Custom simple alert */}
-      {simpleAlert.visible && (
+      <Modal transparent visible={simpleAlert.visible} onRequestClose={() => setSimpleAlert({ visible: false, title: "", message: "" })}>
         <View style={styles.alertOverlay}>
           <View style={styles.alertCard}>
             <Text style={styles.alertTitle}>{simpleAlert.title}</Text>
@@ -1418,7 +1415,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
             </Pressable>
           </View>
         </View>
-      )}
+      </Modal>
 
       <PhotoCropper
         visible={!!cropUri}
