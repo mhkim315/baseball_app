@@ -113,16 +113,16 @@ export async function cachedScheduleByMonth(month: number, year?: number): Promi
     return { games };
   }
   // 2026+: API for regular season, local for exhibition games
-  const apiResult = await fetchWithCache(cacheKey("schedule", `${y}:${month}`), Infinity, () =>
+  const apiResult = await fetchWithCache(cacheKey("schedule", `${y}:${month}`), 86_400_000, () =>
     apiScheduleByMonth(month, y)
   );
   const localGames = LOCAL_SCHEDULE[`${y}:${month}`];
   if (!localGames) return apiResult;
-  // Merge: local exhibition games + API regular season, dedup by date+away+home
+  // Merge: local exhibition games + API regular season, dedup by date+away+home+gameIdx
   const merged = [...(apiResult?.games ?? [])];
-  const seen = new Set(merged.map(g => `${g.date}|${g.away}|${g.home}`));
+  const seen = new Set(merged.map(g => `${g.date}|${g.away}|${g.home}|${g.gameIdx ?? 0}`));
   for (const g of localGames) {
-    const key = `${g.date}|${g.away}|${g.home}`;
+    const key = `${g.date}|${g.away}|${g.home}|${g.gameIdx ?? 0}`;
     if (!seen.has(key)) {
       merged.push({ ...g, isExhibition: true });
       seen.add(key);
