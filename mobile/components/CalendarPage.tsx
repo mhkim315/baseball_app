@@ -245,7 +245,7 @@ export default function CalendarPage() {
                 }
 
                 const handlePress = () => {
-                  if (isFuture || dayGames.length === 0) return;
+                  if (isFuture || dayGames.length === 0 || isDH) return;
                   const g = dayGames[0];
                   const homeId = TEAM_NAME_TO_ID[g.home] || "";
                   const awayId = TEAM_NAME_TO_ID[g.away] || "";
@@ -295,14 +295,23 @@ export default function CalendarPage() {
                                 const s = matchingScores.find(x => (x.gameIdx ?? 0) === i) || matchingScores[i];
                                 const label = s && !s.cancelled ? outcomeLabel(s.outcome) : null;
                                 return (
-                                  <View key={i} style={{
-                                    backgroundColor: label === "승" ? "#1565c0" : label === "패" ? "#d32f2f" : label === "무" ? theme.muted : "#888",
-                                    borderRadius: 3, paddingHorizontal: 3, paddingVertical: 1,
+                                  <Pressable key={i} onPress={() => {
+                                    const homeId = TEAM_NAME_TO_ID[g.home] || "";
+                                    const awayId = TEAM_NAME_TO_ID[g.away] || "";
+                                    const allDateGames = games.filter(x => x.date === dateStr);
+                                    const globalIdx = allDateGames.indexOf(g);
+                                    const badgeGameId = buildGameId(awayId, homeId, dateStr.replace(/-/g, ""), globalIdx >= 0 ? String(globalIdx) : "0");
+                                    if (badgeGameId) router.push(`/game/${badgeGameId}`);
                                   }}>
-                                    <Text style={{ fontSize: 9, fontWeight: "700", color: "#fff" }}>
-                                      {i + 1}차{s?.cancelled ? "취" : label || ""}
-                                    </Text>
-                                  </View>
+                                    <View style={{
+                                      backgroundColor: label === "승" ? "#1565c0" : label === "패" ? "#d32f2f" : label === "무" ? theme.muted : "#888",
+                                      borderRadius: 3, paddingHorizontal: 3, paddingVertical: 1,
+                                    }}>
+                                      <Text style={{ fontSize: 9, fontWeight: "700", color: "#fff" }}>
+                                        {i + 1}차{s?.cancelled ? "취" : label || ""}
+                                      </Text>
+                                    </View>
+                                  </Pressable>
                                 );
                               })}
                             </View>
