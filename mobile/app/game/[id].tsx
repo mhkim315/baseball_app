@@ -71,7 +71,6 @@ export default function GameDetailScreen() {
         ]);
         if (cancelled) return;
 
-        console.log("[DEBUG-GAME] gid:", gid, "date:", dateStr, "scoresCount:", scores?.games?.length, "scheduleCount:", schedule?.games?.length, "scores:", JSON.stringify(scores?.games?.map(s=>({away:s.away,home:s.home,awayScore:s.awayScore,homeScore:s.homeScore,outcome:s.outcome,gameIdx:s.gameIdx,cancelled:s.cancelled}))), "schedule:", JSON.stringify(schedule?.games?.map(g=>({away:g.away,home:g.home,time:g.time,gameIdx:g.gameIdx,isExhibition:g.isExhibition}))));
 
         const { awayId, homeId } = parseGameTeamIds(gid);
         const awayShort = TEAM_COLORS[awayId]?.shortName;
@@ -204,12 +203,22 @@ export default function GameDetailScreen() {
             const n = parseInt(suffix, 10);
             return isNaN(n) ? 0 : n;
           })();
+          // Calculate relative DH index within same-matchup games on this date
+          const allDaySchedule = schedule?.games?.filter(g => g.date === dateStr) || [];
+          let relativeIdx = 0, matchFound = false;
+          for (let i = 0, matchupCount = 0; i < allDaySchedule.length; i++) {
+            if (allDaySchedule[i].away === (awayName || fallbackAwayName) && allDaySchedule[i].home === (homeName || fallbackHomeName)) {
+              if (i === gameSeq) { relativeIdx = matchupCount; matchFound = true; break; }
+              matchupCount++;
+            }
+          }
+          const finalGameIdx = matchFound ? relativeIdx : (isNaN(gameSeq) ? 0 : gameSeq);
           const exactMatch =
             scores.games.find(
-              (s: ScoreEntry) => s.home === homeName && s.away === awayName && (s.gameIdx ?? 0) === gameSeq
+              (s: ScoreEntry) => s.home === homeName && s.away === awayName && (s.gameIdx ?? 0) === finalGameIdx
             ) ||
             scores.games.find(
-              (s: ScoreEntry) => s.home === fallbackHomeName && s.away === fallbackAwayName && (s.gameIdx ?? 0) === gameSeq
+              (s: ScoreEntry) => s.home === fallbackHomeName && s.away === fallbackAwayName && (s.gameIdx ?? 0) === finalGameIdx
             );
           const match = exactMatch || scores.games.find(
             (s: ScoreEntry) => s.home === (homeName || fallbackHomeName) && s.away === (awayName || fallbackAwayName)

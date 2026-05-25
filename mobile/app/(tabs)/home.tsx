@@ -346,7 +346,7 @@ export default function HomeScreen() {
             };
           });
 
-          if (enhanced.length > 0) console.log("[DEBUG-HOME] date:", ds, "games:", JSON.stringify(enhanced.map(g=>({id:g.id,homeTeam:g.homeTeam,awayTeam:g.awayTeam,homeScore:g.homeScore,awayScore:g.awayScore,cancelled:g.cancelled,status:g.status,isExhibition:g.isExhibition}))));
+
 
           // Fallback: fetch game-detail for live games and missing pitchers
           const gamesNeedingDetail = enhanced.filter(

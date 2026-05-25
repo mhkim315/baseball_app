@@ -286,7 +286,6 @@ export default function CalendarPage() {
                         const isHome = g0.home === homeTeamName;
                         const oppName = isHome ? g0.away : g0.home;
                         const col = teamPrimaryColor(selectedTeam, isDark);
-                        console.log("[DEBUG-DH] date:", dateStr, "dayGames:", JSON.stringify(dayGames.map(g=>({away:g.away,home:g.home,time:g.time}))), "dayScores:", JSON.stringify(dayScores.map(s=>({away:s.away,home:s.home,gameIdx:s.gameIdx,outcome:s.outcome}))));
                         return (
                           <View style={[styles.calGame, isHome && { borderLeftWidth: 2, borderLeftColor: col }]}>
                             <Text style={[styles.calOpp, { color: theme.foreground }]} numberOfLines={1}>{oppName}</Text>
@@ -294,7 +293,6 @@ export default function CalendarPage() {
                               {dayGames.slice(0, 2).map((g, i) => {
                                 const matchingScores = dayScores.filter(x => x.away === g.away && x.home === g.home);
                                 const s = matchingScores.find(x => (x.gameIdx ?? 0) === i) || matchingScores[i];
-                                console.log("[DEBUG-DH] gameIdx:", i, "matchedScore:", s ? JSON.stringify({away:s.away,home:s.home,gameIdx:s.gameIdx,outcome:s.outcome,cancelled:s.cancelled}) : "null");
                                 const label = s && !s.cancelled ? outcomeLabel(s.outcome) : null;
                                 return (
                                   <View key={i} style={{
