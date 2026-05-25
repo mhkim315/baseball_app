@@ -89,7 +89,8 @@ export default function GameDetailScreen() {
             matchupCount++;
           }
         }
-        const finalGameIdx = matchFound ? relativeIdx : (isNaN(gameSeq) ? 0 : gameSeq);
+        const matchingCount = allDaySchedule.filter(g => g.away === awayShort && g.home === homeShort).length;
+        const finalGameIdx = matchFound ? (matchingCount > 1 ? relativeIdx + 1 : 0) : (isNaN(gameSeq) ? 0 : gameSeq);
 
         const scoreEntry = scores?.games?.find(
           (s) => s.away === awayShort && s.home === homeShort && (s.gameIdx ?? 0) === finalGameIdx
@@ -212,7 +213,8 @@ export default function GameDetailScreen() {
               matchupCount++;
             }
           }
-          const finalGameIdx = matchFound ? relativeIdx : (isNaN(gameSeq) ? 0 : gameSeq);
+          const matchingCount = allDaySchedule.filter(g => g.away === (awayName || fallbackAwayName) && g.home === (homeName || fallbackHomeName)).length;
+          const finalGameIdx = matchFound ? (matchingCount > 1 ? relativeIdx + 1 : 0) : (isNaN(gameSeq) ? 0 : gameSeq);
           const exactMatch =
             scores.games.find(
               (s: ScoreEntry) => s.home === homeName && s.away === awayName && (s.gameIdx ?? 0) === finalGameIdx
