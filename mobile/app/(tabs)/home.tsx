@@ -297,7 +297,7 @@ export default function HomeScreen() {
             const pairIdx = pairCount.get(pairKey) || 0;
             pairCount.set(pairKey, pairIdx + 1);
             const matchingScores = scoreEntries.filter((s) => s.home === g.home && s.away === g.away);
-            const score = matchingScores.find(s => (s.gameIdx ?? 0) === pairIdx) || matchingScores[pairIdx];
+            const score = matchingScores.find(s => (s.gameIdx ?? 0) === pairIdx + 1) || matchingScores[pairIdx];
             const gameKey = `${ds}-${awayId}-${homeId}`;
             const pitchers = pitcherMap.get(gameKey);
             const apiGameId = gameIdMap.get(gameKey);

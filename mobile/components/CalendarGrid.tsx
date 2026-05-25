@@ -326,7 +326,7 @@ export default function CalendarGrid({
                 const pairIdx = labelPairCount.get(pairKey) || 0;
                 labelPairCount.set(pairKey, pairIdx + 1);
                 const matchingScores = dayScores.filter((sc) => sc.away === g.away && sc.home === g.home);
-                const s = matchingScores.find(sc => (sc.gameIdx ?? 0) === pairIdx) || matchingScores[pairIdx];
+                const s = matchingScores.find(sc => (sc.gameIdx ?? 0) === pairIdx + 1) || matchingScores[pairIdx];
                 if (!s || s.cancelled || s.outcome == null || (s.awayScore === 0 && s.homeScore === 0)) return "";
                 const homeWon = s.homeScore > s.awayScore;
                 const tied = s.homeScore === s.awayScore;
@@ -427,7 +427,7 @@ export default function CalendarGrid({
                       const pairIdx = nonDHPairCount.get(pairKey) || 0;
                       nonDHPairCount.set(pairKey, pairIdx + 1);
                       const matchingScores = dayScores.filter((s) => s.away === g.away && s.home === g.home);
-                      const score = matchingScores.find(s => (s.gameIdx ?? 0) === pairIdx) || matchingScores[pairIdx];
+                      const score = matchingScores.find(s => (s.gameIdx ?? 0) === pairIdx + 1) || matchingScores[pairIdx];
                       const oppName = isHome ? g.away : g.home;
 
                       let resultColor: string | undefined;

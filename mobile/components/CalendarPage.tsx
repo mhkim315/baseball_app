@@ -292,7 +292,7 @@ export default function CalendarPage() {
                             <View style={{ flexDirection: "row", gap: 2, flexWrap: "wrap" }}>
                               {dayGames.slice(0, 2).map((g, i) => {
                                 const matchingScores = dayScores.filter(x => x.away === g.away && x.home === g.home);
-                                const s = matchingScores.find(x => (x.gameIdx ?? 0) === i) || matchingScores[i];
+                                const s = matchingScores.find(x => (x.gameIdx ?? 0) === i + 1) || matchingScores[i];
                                 const label = s && !s.cancelled ? outcomeLabel(s.outcome) : null;
                                 return (
                                   <Pressable key={i} onPress={() => {
