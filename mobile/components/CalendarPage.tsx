@@ -291,7 +291,8 @@ export default function CalendarPage() {
                             <Text style={[styles.calOpp, { color: theme.foreground }]} numberOfLines={1}>{oppName}</Text>
                             <View style={{ flexDirection: "row", gap: 2, flexWrap: "wrap" }}>
                               {dayGames.slice(0, 2).map((g, i) => {
-                                const s = dayScores.find(x => x.away === g.away && x.home === g.home);
+                                const matchingScores = dayScores.filter(x => x.away === g.away && x.home === g.home);
+                                const s = matchingScores.find(x => (x.gameIdx ?? 0) === i) || matchingScores[i];
                                 const label = s && !s.cancelled ? outcomeLabel(s.outcome) : null;
                                 return (
                                   <View key={i} style={{
