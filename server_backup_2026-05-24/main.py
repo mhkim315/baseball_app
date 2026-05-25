@@ -289,26 +289,43 @@ def get_schedule_by_month(month: int, year: int = None):
 
     if year is not None:
         path = DATA_DIR / "seasons" / str(year) / "regular-season.json"
-        if not path.exists():
+        if path.exists():
+            with open(path, "r", encoding="utf-8") as f:
+                reg = json.load(f)
+            result = []
+            for g in reg.get("games", []):
+                ds = g.get("date", "")
+                if len(ds) == 8:
+                    m = int(ds[4:6])
+                    d = int(ds[6:8])
+                    if m == month:
+                        result.append({
+                            "date": ds,
+                            "month": m,
+                            "day": d,
+                            "venue": g.get("venue", ""),
+                            "away": g.get("away", ""),
+                            "home": g.get("home", ""),
+                            "time": g.get("time"),
+                        })
+            return {"year": year, "month": month, "games": result}
+        # Fall back to flat kbo_schedule_{year}.json for ongoing seasons
+        data = load_json(f"kbo_schedule_{year}.json")
+        if data is None:
             return JSONResponse({"error": "Data not found"}, status_code=404)
-        with open(path, "r", encoding="utf-8") as f:
-            reg = json.load(f)
         result = []
-        for g in reg.get("games", []):
-            ds = g.get("date", "")
-            if len(ds) == 8:
-                m = int(ds[4:6])
-                d = int(ds[6:8])
-                if m == month:
-                    result.append({
-                        "date": ds,
-                        "month": m,
-                        "day": d,
-                        "venue": g.get("venue", ""),
-                        "away": g.get("away", ""),
-                        "home": g.get("home", ""),
-                        "time": g.get("time"),
-                    })
+        for g in data.get("games", []):
+            if g.get("month") == month:
+                ds = g.get("date", "")
+                result.append({
+                    "date": ds,
+                    "month": g.get("month"),
+                    "day": g.get("day"),
+                    "venue": g.get("venue", ""),
+                    "away": g.get("away", ""),
+                    "home": g.get("home", ""),
+                    "time": g.get("time"),
+                })
         return {"year": year, "month": month, "games": result}
 
     year = date.today().year
