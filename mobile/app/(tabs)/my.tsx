@@ -65,7 +65,7 @@ function BadgeCollectionSection() {
     .filter(Boolean);
 
   return (
-    <Pressable style={[{ marginHorizontal: 16, marginBottom: 20, borderRadius: 14, borderWidth: 1, padding: 14 }, { backgroundColor: theme.card, borderColor: theme.border }]} onPress={() => router.push("/(tabs)/diary")}>
+    <Pressable style={[{ marginHorizontal: 16, marginBottom: 20, borderRadius: 14, borderWidth: 1, padding: 14 }, { backgroundColor: theme.card, borderColor: theme.border }]} onPress={() => router.push({ pathname: "/(tabs)/diary", params: { tab: "achievement" } })}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
         <Text style={{ fontSize: 28 }}>{levelEmoji}</Text>
         <View style={{ flex: 1 }}>
