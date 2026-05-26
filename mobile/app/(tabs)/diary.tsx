@@ -448,7 +448,7 @@ export default function DiaryScreen() {
       <AchievementToast
         badges={toastBadges}
         onDismiss={() => setToastBadges([])}
-        onPress={() => { setToastBadges([]); setActiveTab("stats"); setSubTab("achievement"); }}
+        onPress={() => { setToastBadges([]); setActiveTab("stats"); setSubTab("achievement"); tabScrollRef.current?.scrollTo({ x: screenWidth * 2, animated: false }); }}
       />
 
       {/* Header */}
