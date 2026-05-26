@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import DateStrip from "@/components/DateStrip";
 import GameCard from "@/components/GameCard";
 import CalendarGrid from "@/components/CalendarGrid";
+import AchievementWidget from "@/components/AchievementWidget";
 import {
   type TodayGame,
   type ScoreEntry,
@@ -604,6 +605,9 @@ export default function HomeScreen() {
         />
       </View>
       </View>
+
+      {/* Achievement widget */}
+      <AchievementWidget />
 
       {/* Game list — horizontal paging scroll */}
       <View style={{ flex: 1 }}>

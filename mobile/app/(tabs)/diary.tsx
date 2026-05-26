@@ -12,6 +12,7 @@ import DiaryEntryModal from "@/components/DiaryEntryModal";
 import ExpenseBottomSheet from "@/components/ExpenseBottomSheet";
 import ExpenseStats from "@/components/ExpenseStats";
 import AchievementList from "@/components/AchievementList";
+import AchievementToast from "@/components/AchievementToast";
 import ExpenseModal from "@/components/ExpenseModal";
 import { getJikgwanRecords, deleteJikgwanRecord, getAllExpenses, getExpensesByDate, getBadgesByDate, type JikgwanRecord, type Expense, type Badge } from "@/lib/db";
 import { cachedDailyScores } from "@/lib/gameCache";
@@ -155,10 +156,19 @@ export default function DiaryScreen() {
   const [sheetExpenses, setSheetExpenses] = useState<Expense[]>([]);
   const [achievementSheetDate, setAchievementSheetDate] = useState<Date | null>(null);
   const [achievementBadges, setAchievementBadges] = useState<Badge[]>([]);
+  const [toastBadges, setToastBadges] = useState<Badge[]>([]);
 
   // Horizontal tab scroll
   const tabScrollRef = useRef<ScrollView>(null);
   const { width: screenWidth } = useWindowDimensions();
+
+  const checkBadges = async () => {
+    try {
+      const { evaluateBadges } = await import("@/lib/achievements");
+      const newBadges = await evaluateBadges();
+      if (newBadges.length > 0) setToastBadges(newBadges);
+    } catch {}
+  };
 
   // Filter records by search query
   const filteredRecords = useMemo(() => {
@@ -283,7 +293,7 @@ export default function DiaryScreen() {
   useFocusEffect(
     useCallback(() => {
       loadData();
-      import("@/lib/achievements").then(({ evaluateBadges }) => evaluateBadges().catch(() => {}));
+      checkBadges();
     }, [loadData])
   );
 
@@ -304,7 +314,7 @@ export default function DiaryScreen() {
         } catch {}
       }
       loadData();
-      import("@/lib/achievements").then(({ evaluateBadges }) => evaluateBadges().catch(() => {}));
+      checkBadges();
     } catch {
       Alert.alert("삭제 오류", "기록을 삭제하지 못했습니다");
     }
@@ -332,7 +342,7 @@ export default function DiaryScreen() {
       } catch {}
     }
     loadData();
-    import("@/lib/achievements").then(({ evaluateBadges }) => evaluateBadges().catch(() => {}));
+    checkBadges();
   };
 
   const handleExpenseSaved = async () => {
@@ -414,6 +424,13 @@ export default function DiaryScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Badge unlock toast */}
+      <AchievementToast
+        badges={toastBadges}
+        onDismiss={() => setToastBadges([])}
+        onPress={() => { setToastBadges([]); setActiveTab("stats"); setSubTab("achievement"); }}
+      />
+
       {/* Header */}
       <View style={styles.header}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>

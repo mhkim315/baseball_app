@@ -215,7 +215,7 @@ export default function AchievementList({ records }: AchievementListProps) {
   }
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       {/* Level Card */}
       <View style={styles.levelCard}>
         <Text style={styles.levelEmoji}>{levelEmoji(levelInfo.level)}</Text>
@@ -287,7 +287,7 @@ export default function AchievementList({ records }: AchievementListProps) {
           );
         })}
       </View>
-    </ScrollView>
+    </View>
   );
 }
 

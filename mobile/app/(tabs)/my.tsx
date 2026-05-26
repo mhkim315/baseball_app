@@ -26,8 +26,11 @@ import {
   setNickname,
   getProfileImage,
   setProfileImage,
+  getBadges,
   resetAllData,
+  type Badge,
 } from "@/lib/db";
+import { BADGE_DEFINITIONS, computeLevel } from "@/lib/achievements";
 
 const PROFILE_CHARACTERS: { key: string; label: string }[] = [
   { key: "default", label: "기본" },
@@ -39,6 +42,47 @@ const PROFILE_CHARACTERS: { key: string; label: string }[] = [
   { key: "shocked", label: "놀람" },
   { key: "determined", label: "불굴" },
 ];
+
+function BadgeCollectionSection() {
+  const { theme } = useTheme();
+  const router = useRouter();
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useFocusEffect(useCallback(() => {
+    getBadges().then(setBadges).catch(() => {}).finally(() => setLoading(false));
+  }, []));
+
+  if (loading) return null;
+
+  const levelInfo = computeLevel(badges);
+  const levelEmoji = levelInfo.level >= 7 ? "👑" : levelInfo.level >= 5 ? "🏆" : levelInfo.level >= 3 ? "🥇" : "🥚";
+  const unlockedCount = badges.filter((b) => b.unlocked_date).length;
+  const unlockedBadges = badges
+    .filter((b) => b.unlocked_date)
+    .map((b) => BADGE_DEFINITIONS.find((d) => d.badgeKey === b.badge_key))
+    .filter(Boolean);
+
+  return (
+    <Pressable style={[{ marginHorizontal: 16, marginBottom: 20, borderRadius: 14, borderWidth: 1, padding: 14 }, { backgroundColor: theme.card, borderColor: theme.border }]} onPress={() => router.push("/(tabs)/diary")}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <Text style={{ fontSize: 28 }}>{levelEmoji}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground }}>
+            도전과제
+          </Text>
+          <Text style={{ fontSize: 12, color: theme.mutedForeground }}>
+            {unlockedCount}/{BADGE_DEFINITIONS.length} 획득 · LV.{levelInfo.level}
+          </Text>
+        </View>
+        {unlockedBadges.slice(0, 5).map((def) => (
+          <Text key={def!.badgeKey} style={{ fontSize: 20 }}>{def!.emoji}</Text>
+        ))}
+        <Text style={{ fontSize: 14, color: theme.mutedForeground }}>→</Text>
+      </View>
+    </Pressable>
+  );
+}
 
 export default function MyScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -442,6 +486,9 @@ export default function MyScreen() {
           </View>
         </View>
       </View>
+
+      {/* Badge Collection */}
+      <BadgeCollectionSection />
 
       {/* App Info */}
       <View style={styles.section}>
