@@ -11,21 +11,23 @@ interface AchievementToastProps {
 }
 
 export default function AchievementToast({ badges, onDismiss, onPress }: AchievementToastProps) {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const translateY = useRef(new Animated.Value(-120)).current;
   const [visible, setVisible] = useState(false);
 
   const dynamicStyles = useMemo(() => ({
     inner: {
-      backgroundColor: isDark ? "#1a1a2e" : theme.foreground,
+      backgroundColor: theme.card,
+      borderWidth: 1,
+      borderColor: theme.border,
     },
     title: {
-      color: isDark ? "#fff" : theme.background,
+      color: theme.foreground,
     },
     more: {
-      color: isDark ? "#aaa" : theme.mutedForeground,
+      color: theme.mutedForeground,
     },
-  }), [isDark, theme]);
+  }), [theme]);
 
   useEffect(() => {
     if (badges.length === 0) return;
