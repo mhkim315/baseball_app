@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { Animated, Text, Pressable, StyleSheet } from "react-native";
+import { useTheme } from "@/lib/ThemeContext";
 import { BADGE_DEFINITIONS } from "@/lib/achievements";
 import type { Badge } from "@/lib/db";
 
@@ -10,8 +11,21 @@ interface AchievementToastProps {
 }
 
 export default function AchievementToast({ badges, onDismiss, onPress }: AchievementToastProps) {
+  const { theme, isDark } = useTheme();
   const translateY = useRef(new Animated.Value(-120)).current;
   const [visible, setVisible] = useState(false);
+
+  const dynamicStyles = useMemo(() => ({
+    inner: {
+      backgroundColor: isDark ? "#1a1a2e" : theme.foreground,
+    },
+    title: {
+      color: isDark ? "#fff" : theme.background,
+    },
+    more: {
+      color: isDark ? "#aaa" : theme.mutedForeground,
+    },
+  }), [isDark, theme]);
 
   useEffect(() => {
     if (badges.length === 0) return;
@@ -44,11 +58,11 @@ export default function AchievementToast({ badges, onDismiss, onPress }: Achieve
     <Animated.View
       style={[styles.container, { transform: [{ translateY }] }]}
     >
-      <Pressable onPress={onPress ?? onDismiss} style={styles.inner}>
+      <Pressable onPress={onPress ?? onDismiss} style={[styles.inner, dynamicStyles.inner]}>
         <Text style={styles.emoji}>{def?.emoji ?? "🏅"}</Text>
-        <Text style={styles.title}>{def?.title ?? badges[0].badge_key} 달성!</Text>
+        <Text style={[styles.title, dynamicStyles.title]}>{def?.title ?? badges[0].badge_key} 달성!</Text>
         {badges.length > 1 && (
-          <Text style={styles.more}>외 {badges.length - 1}개</Text>
+          <Text style={[styles.more, dynamicStyles.more]}>외 {badges.length - 1}개</Text>
         )}
       </Pressable>
     </Animated.View>
@@ -67,7 +81,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#1a1a2e",
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 18,
@@ -83,11 +96,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#fff",
     flex: 1,
   },
   more: {
     fontSize: 12,
-    color: "#aaa",
   },
 });
