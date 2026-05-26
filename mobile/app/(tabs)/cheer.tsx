@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, ActivityIndicator } from "react-native";
 import TeamExpander from "@/components/TeamExpander";
-import SettingsButton from "@/components/SettingsButton";
+import MyButton from "@/components/MyButton";
 import CheerContent from "@/components/CheerContent";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import { useTeam } from "@/lib/TeamContext";
@@ -71,7 +71,7 @@ export default function CheerScreen() {
         <View style={styles.header}>
           <Text style={styles.pageTitle}>응원</Text>
           <View style={{ flex: 1 }} />
-          <SettingsButton />
+          <MyButton />
         </View>
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={theme.foreground} />
@@ -86,7 +86,7 @@ export default function CheerScreen() {
         <View style={styles.header}>
           <Text style={styles.pageTitle}>응원</Text>
           <View style={{ flex: 1 }} />
-          <SettingsButton />
+          <MyButton />
         </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyTitle}>⚾ 응원팀을 먼저 선택해주세요</Text>
@@ -111,7 +111,7 @@ export default function CheerScreen() {
           />
         )}
         {myTeam && <View style={{ width: 4 }} />}
-        <SettingsButton color={teamPrimaryColor(activeTeam, isDark)} />
+        <MyButton color={teamPrimaryColor(activeTeam, isDark)} />
       </View>
 
       {/* Tab switcher */}

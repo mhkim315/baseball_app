@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import TeamExpander from "@/components/TeamExpander";
 import StadiumPage from "@/components/StadiumPage";
-import SettingsButton from "@/components/SettingsButton";
+import MyButton from "@/components/MyButton";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import { useTeam } from "@/lib/TeamContext";
@@ -60,7 +60,7 @@ export default function StadiumTab() {
         <View style={styles.header}>
           <Text style={styles.title}>구장 안내</Text>
           <View style={{ flex: 1 }} />
-          <SettingsButton />
+          <MyButton />
         </View>
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={theme.foreground} />
@@ -75,7 +75,7 @@ export default function StadiumTab() {
         <View style={styles.header}>
           <Text style={styles.title}>구장 안내</Text>
           <View style={{ flex: 1 }} />
-          <SettingsButton />
+          <MyButton />
         </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyTitle}>⚾ 응원팀을 먼저 선택해주세요</Text>
@@ -100,7 +100,7 @@ export default function StadiumTab() {
           onSelectTeam={setDisplayTeam}
         />
         <View style={{ width: 4 }} />
-        <SettingsButton color={myTeamColor} />
+        <MyButton color={myTeamColor} />
       </View>
       <StadiumPage teamId={activeTeam} accentColor={myTeamColor} />
     </View>

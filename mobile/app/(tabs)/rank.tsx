@@ -5,7 +5,7 @@ import { TEAM_NAME_TO_ID } from "@shared/constants";
 import { fetchStandingsJson, type StandingRow } from "@/lib/api";
 import { HISTORICAL_STANDINGS } from "@/lib/standingsData";
 import YearSelector from "@/components/YearSelector";
-import SettingsButton from "@/components/SettingsButton";
+import MyButton from "@/components/MyButton";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import { useTeam } from "@/lib/TeamContext";
 
@@ -226,7 +226,7 @@ export default function RankScreen() {
           <View style={{ flex: 1 }} />
           <YearSelector year={year} onYearChange={setYear} />
           <View style={{ width: 8 }} />
-          <SettingsButton color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
+          <MyButton color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
         </View>
         <Text style={styles.headerSub}>{year} KBO 리그</Text>
       </View>

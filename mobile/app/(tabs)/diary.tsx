@@ -20,7 +20,7 @@ import { cachedDailyScores } from "@/lib/gameCache";
 import { BADGE_DEFINITIONS } from "@/lib/achievements";
 import { parseGameTeamIds } from "@shared/constants";
 import { TEAM_COLORS } from "@shared/teamColors";
-import SettingsButton from "@/components/SettingsButton";
+import MyButton from "@/components/MyButton";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import { useTeam } from "@/lib/TeamContext";
 
@@ -509,7 +509,7 @@ export default function DiaryScreen() {
               ))}
             </View>
           )}
-          <SettingsButton color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
+          <MyButton color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, marginBottom: 8 }}>
           <Text style={styles.headerSub}>나의 직관 기록</Text>

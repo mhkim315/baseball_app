@@ -21,7 +21,7 @@ import {
 import { TEAM_COLORS } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID, buildGameId, formatDateForApi as formatDateStr } from "@shared/constants";
 
-import SettingsButton from "@/components/SettingsButton";
+import MyButton from "@/components/MyButton";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import { useTeam } from "@/lib/TeamContext";
 
@@ -588,7 +588,7 @@ export default function HomeScreen() {
           <Text style={styles.title}>풀카운트</Text>
         </View>
         <View style={{ flex: 1 }} />
-        <SettingsButton color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
+        <MyButton color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
       </View>
 
       {/* Date strip */}

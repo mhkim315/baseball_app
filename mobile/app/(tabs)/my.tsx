@@ -424,8 +424,8 @@ export default function MyScreen() {
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>설정</Text>
-        <Text style={styles.headerSub}>응원팀 선택, 직관기록, 승률 통계</Text>
+        <Text style={styles.headerTitle}>MY</Text>
+        <Text style={styles.headerSub}>프로필, 응원팀, 직관기록, 통계</Text>
       </View>
 
       {/* My Team Section */}
