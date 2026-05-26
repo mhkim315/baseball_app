@@ -579,14 +579,6 @@ export default function HomeScreen() {
 
       {/* Calendar toggle + content — pan wraps both for open/close swipe */}
       <View {...calendarPan.panHandlers}>
-      <Pressable style={styles.calToggle} onPress={() => {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        setCalendarOpen(!calendarOpen);
-      }}>
-        <Text style={styles.calToggleText}>
-          {calendarOpen ? "캘린더 접기 ▲" : "캘린더 보기 ▼"}
-        </Text>
-      </Pressable>
       <View style={[styles.toggleWrapper, calendarOpen ? styles.toggleOpen : styles.toggleHidden]}>
         <CalendarGrid
           year={calYear}
@@ -604,15 +596,26 @@ export default function HomeScreen() {
       </View>
       </View>
 
-      {/* Achievement toggle */}
-      <Pressable style={styles.calToggle} onPress={() => {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        setAchievementOpen(!achievementOpen);
-      }}>
-        <Text style={styles.calToggleText}>
-          {achievementOpen ? "도전과제 접기 ▲" : "도전과제 보기 ▼"}
-        </Text>
-      </Pressable>
+      {/* Toggle row */}
+      <View style={{ flexDirection: "row", paddingHorizontal: 20 }}>
+        <Pressable style={{ flex: 1, paddingVertical: 6 }} onPress={() => {
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+          setCalendarOpen(!calendarOpen);
+        }}>
+          <Text style={styles.calToggleText}>
+            {calendarOpen ? "캘린더 접기 ▲" : "캘린더 보기 ▼"}
+          </Text>
+        </Pressable>
+        <Text style={[styles.calToggleText, { paddingVertical: 6 }]}>|</Text>
+        <Pressable style={{ flex: 1, paddingVertical: 6 }} onPress={() => {
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+          setAchievementOpen(!achievementOpen);
+        }}>
+          <Text style={[styles.calToggleText, { textAlign: "right" }]}>
+            {achievementOpen ? "도전과제 접기 ▲" : "도전과제 보기 ▼"}
+          </Text>
+        </Pressable>
+      </View>
       <View style={[styles.toggleWrapper, achievementOpen ? styles.toggleOpen : styles.toggleHidden]}>
         <AchievementWidget />
       </View>
