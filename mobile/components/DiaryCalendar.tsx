@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet, ActivityIndicator, Animated } from "
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { parseGameTeamIds, getWinBadge, getDaysInMonth, getFirstDayOfMonth } from "@shared/constants";
-import { EMOTION_CHARACTER } from "@/components/EmotionPicker";
+import { EMOTION_CHARACTER } from "@/lib/emotions";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import { cachedScheduleByMonth, cachedDailyScores } from "@/lib/gameCache";

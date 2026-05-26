@@ -3,6 +3,7 @@ import { computeStreakStats } from "@/lib/stats";
 import { resolveIsWin } from "@/lib/expenseStats";
 import { parseGameTeamIds } from "@shared/constants";
 import { TEAM_COLORS } from "@shared/teamColors";
+import { EMOTION_COUNT } from "@/lib/emotions";
 
 // --- Types ---
 
@@ -1434,13 +1435,13 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     tier: "easy",
     xp: 10,
     category: "exploration",
-    progressTarget: 6,
+    progressTarget: EMOTION_COUNT,
     check: (records) => {
       const emotions = new Set(records.filter(r => r.emotion).map(r => r.emotion));
       return {
-        unlocked: emotions.size >= 6,
-        progressCurrent: Math.min(emotions.size, 6),
-        progressTarget: 6,
+        unlocked: emotions.size >= EMOTION_COUNT,
+        progressCurrent: Math.min(emotions.size, EMOTION_COUNT),
+        progressTarget: EMOTION_COUNT,
       };
     },
   },

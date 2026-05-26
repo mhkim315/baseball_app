@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
 import { TEAM_COLORS } from "@shared/teamColors";
-import { EMOTION_CHARACTER } from "@/components/EmotionPicker";
+import { EMOTION_CHARACTER } from "@/lib/emotions";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import { computeDiaryStats, computeOpponentStats, computeHomeAwayStats, computeDayOfWeekStats, computeStreakStats, computeAttendanceScoring, type DiaryStats as Stats } from "@/lib/stats";

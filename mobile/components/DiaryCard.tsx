@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { View, Text, Image, Pressable, ScrollView, Alert, StyleSheet, NativeSyntheticEvent, NativeScrollEvent, useWindowDimensions } from "react-native";
 import { TeamBadge } from "@/components/TeamBadge";
-import { EMOTION_CHARACTER } from "@/components/EmotionPicker";
+import { EMOTION_CHARACTER } from "@/lib/emotions";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { parseGameTeamIds, getWinBadge } from "@shared/constants";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
