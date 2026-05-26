@@ -164,6 +164,7 @@ export default function DiaryScreen() {
     if (params.tab === "achievement") {
       setActiveTab("stats");
       setSubTab("achievement");
+      tabScrollRef.current?.scrollTo({ x: screenWidth * 2, animated: false });
     }
   }, [params.tab]);
 
