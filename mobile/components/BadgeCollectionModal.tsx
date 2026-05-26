@@ -42,7 +42,7 @@ function BadgeDetailPopup({ badge, def, levelTitle, onClose }: {
       <View style={[detailStyles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
         <Text style={{ fontSize: 48, textAlign: "center", marginBottom: 8 }}>{def.emoji}</Text>
         <Text style={[detailStyles.title, { color: theme.foreground }]}>{def.title}</Text>
-        <Text style={[detailStyles.desc, { color: theme.mutedForeground }]}>{def.description}</Text>
+        <Text style={[detailStyles.desc, { color: theme.mutedForeground }]}>{def.category === "secret" && !badge?.unlocked_date ? "???" : def.description}</Text>
         <View style={detailStyles.row}>
           <Text style={[detailStyles.tag, { backgroundColor: theme.muted, color: theme.mutedForeground }]}>
             {def.category === "milestone" ? "🏆 마일스톤" : def.category === "streak" ? "🔥 연승" : def.category === "attendance" ? "📅 출석" : def.category === "exploration" ? "🗺️ 탐험" : "🤫 시크릿"}

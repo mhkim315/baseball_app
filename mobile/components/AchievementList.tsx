@@ -272,7 +272,7 @@ export default function AchievementList({ records }: AchievementListProps) {
               <Text style={styles.badgeEmoji}>{def.emoji}</Text>
               <View style={styles.badgeInfo}>
                 <Text style={styles.badgeTitle}>{def.title}</Text>
-                <Text style={styles.badgeDesc}>{def.description}</Text>
+                <Text style={styles.badgeDesc}>{def.category === "secret" && !unlocked ? "???" : def.description}</Text>
                 {unlocked && item.badge?.unlocked_date && (
                   <Text style={styles.badgeDate}>획득일: {item.badge.unlocked_date}</Text>
                 )}
