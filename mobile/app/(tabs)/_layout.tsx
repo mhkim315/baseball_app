@@ -10,6 +10,7 @@ const ICON_PATHS: Record<string, string> = {
   다이어리: "M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H6V4h2v8l2.5-1.5L13 12V4h5v16z", // book
   응원: "M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z", // music note
   순위: "M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z", // bar chart
+  MY: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z", // person
 };
 
 function TabIcon({ name, color }: { name: string; color: string }) {
@@ -80,7 +81,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabIcon name="순위" color={color} />,
         }}
       />
-      <Tabs.Screen name="my" options={{ href: null }} />
+      <Tabs.Screen
+        name="my"
+        options={{
+          title: "MY",
+          tabBarIcon: ({ color }) => <TabIcon name="MY" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
