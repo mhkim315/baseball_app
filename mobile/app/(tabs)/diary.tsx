@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, RefreshControl, ScrollView, Alert, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, Modal } from "react-native";
 import { useFocusEffect } from "expo-router";
 import DiaryTimeline from "@/components/DiaryTimeline";
@@ -13,6 +13,7 @@ import ExpenseBottomSheet from "@/components/ExpenseBottomSheet";
 import ExpenseStats from "@/components/ExpenseStats";
 import AchievementList from "@/components/AchievementList";
 import AchievementToast from "@/components/AchievementToast";
+import ConfettiOverlay from "@/components/ConfettiOverlay";
 import ExpenseModal from "@/components/ExpenseModal";
 import { getJikgwanRecords, deleteJikgwanRecord, getAllExpenses, getExpensesByDate, getBadgesByDate, type JikgwanRecord, type Expense, type Badge } from "@/lib/db";
 import { cachedDailyScores } from "@/lib/gameCache";
@@ -164,6 +165,7 @@ export default function DiaryScreen() {
   const [achievementSheetDate, setAchievementSheetDate] = useState<Date | null>(null);
   const [achievementBadges, setAchievementBadges] = useState<Badge[]>([]);
   const [toastBadges, setToastBadges] = useState<Badge[]>([]);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Handle deep-link target set by setPendingDiaryDeepLink (e.g. from AchievementWidget)
   useFocusEffect(useCallback(() => {
@@ -182,13 +184,24 @@ export default function DiaryScreen() {
   const tabScrollRef = useRef<ScrollView>(null);
   const { width: screenWidth } = useWindowDimensions();
 
+  const pendingToastBadges = useRef<Badge[]>([]);
   const checkBadges = async () => {
     try {
       const { evaluateBadges } = await import("@/lib/achievements");
       const newBadges = await evaluateBadges();
-      if (newBadges.length > 0) setToastBadges(newBadges);
+      if (newBadges.length > 0) {
+        pendingToastBadges.current = newBadges;
+        setShowConfetti(true);
+      }
     } catch {}
   };
+  const handleConfettiFinish = useCallback(() => {
+    setShowConfetti(false);
+    if (pendingToastBadges.current.length > 0) {
+      setToastBadges(pendingToastBadges.current);
+      pendingToastBadges.current = [];
+    }
+  }, []);
 
   // Filter records by search query
   const filteredRecords = useMemo(() => {
@@ -444,7 +457,8 @@ export default function DiaryScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Badge unlock toast */}
+      {/* Badge unlock confetti + toast */}
+      <ConfettiOverlay visible={showConfetti} onFinish={handleConfettiFinish} />
       <AchievementToast
         badges={toastBadges}
         onDismiss={() => setToastBadges([])}
