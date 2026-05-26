@@ -176,6 +176,25 @@ export default function HomeScreen() {
     })
   ).current;
 
+  // Swipe for achievement: down to open, up to close
+  const achievementOpenRef = useRef(achievementOpen);
+  achievementOpenRef.current = achievementOpen;
+  const achievementPan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dy) > 10,
+      onPanResponderRelease: (_, gs) => {
+        if (gs.dy < -80 && achievementOpenRef.current) {
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+          setAchievementOpen(false);
+        } else if (gs.dy > 80 && !achievementOpenRef.current) {
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+          setAchievementOpen(true);
+        }
+      },
+    })
+  ).current;
+
   // Preload current month + adjacent months on mount
   useEffect(() => {
     const current = new Date().getMonth() + 1;
@@ -616,7 +635,7 @@ export default function HomeScreen() {
           </Text>
         </Pressable>
       </View>
-      <View style={[styles.toggleWrapper, achievementOpen ? styles.toggleOpen : styles.toggleHidden]}>
+      <View {...achievementPan.panHandlers} style={[styles.toggleWrapper, achievementOpen ? styles.toggleOpen : styles.toggleHidden]}>
         <AchievementWidget />
       </View>
 
