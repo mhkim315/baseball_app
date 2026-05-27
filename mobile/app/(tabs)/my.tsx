@@ -542,15 +542,23 @@ export default function MyScreen() {
                     setTotemColor(t.color || "");
                     setShowTotemModal(true);
                   }}
-                  onLongPress={() => setShowTotemDeleteConfirm(t)}
                   style={{
                     width: "47%", borderRadius: 16, borderWidth: 1,
                     borderColor: chipColor,
                     backgroundColor: chipColor + "10",
-                    padding: 14, gap: 6,
+                    padding: 14, paddingTop: 8, gap: 6,
                   }}
                 >
-                  <Text style={{ fontSize: 28, textAlign: "center" }}>{t.emoji}</Text>
+                  <View style={{ position: "relative", alignItems: "center" }}>
+                    <Pressable
+                      hitSlop={6}
+                      onPress={(e) => { e.stopPropagation?.(); setShowTotemDeleteConfirm(t); }}
+                      style={{ position: "absolute", right: -4, top: -2, zIndex: 1, width: 22, height: 22, borderRadius: 11, backgroundColor: theme.muted, alignItems: "center", justifyContent: "center" }}
+                    >
+                      <Text style={{ fontSize: 11, color: theme.mutedForeground, lineHeight: 13 }}>✕</Text>
+                    </Pressable>
+                    <Text style={{ fontSize: 28 }}>{t.emoji}</Text>
+                  </View>
                   <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground, textAlign: "center" }} numberOfLines={1}>
                     {t.name}
                   </Text>
