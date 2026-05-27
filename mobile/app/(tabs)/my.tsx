@@ -28,6 +28,14 @@ import {
   setProfileImage,
   getUnlockedEmotions,
   resetAllData,
+  getAllTotems,
+  addTotem,
+  updateTotem,
+  deleteTotem,
+  getJikgwanRecords,
+  getAllTotemStats,
+  type Totem,
+  type TotemWithStats,
 } from "@/lib/db";
 import { ALL_CHARACTERS } from "@/lib/emotions";
 import type { CharacterEmotion } from "@/lib/emotions";
@@ -317,6 +325,16 @@ export default function MyScreen() {
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [unlockedEmotions, setUnlockedEmotions] = useState<string[]>([]);
 
+  // Totem state
+  const [totems, setTotems] = useState<TotemWithStats[]>([]);
+  const [showTotemModal, setShowTotemModal] = useState(false);
+  const [editingTotem, setEditingTotem] = useState<Totem | null>(null);
+  const [totemName, setTotemName] = useState("");
+  const [totemEmoji, setTotemEmoji] = useState("");
+  const [totemDesc, setTotemDesc] = useState("");
+  const [totemColor, setTotemColor] = useState("");
+  const [showTotemDeleteConfirm, setShowTotemDeleteConfirm] = useState<Totem | null>(null);
+
   const { openAchievement } = useLocalSearchParams<{ openAchievement?: string }>();
   const reviewYear = new Date().getFullYear();
   const router = useRouter();
@@ -336,6 +354,9 @@ export default function MyScreen() {
       setProfileImageState(profile);
       const unlocked = await getUnlockedEmotions();
       setUnlockedEmotions(unlocked);
+      const allRecords = await getJikgwanRecords();
+      const totemStats = await getAllTotemStats(allRecords);
+      setTotems(totemStats);
     } catch (e) {
       console.warn("my.tsx loadData failed", e);
     }
@@ -485,6 +506,72 @@ export default function MyScreen() {
         <AchievementSection onPress={() => setShowAchievementModal(true)} />
       </View>
 
+      {/* My Totems */}
+      <View style={styles.section}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <Text style={styles.sectionTitle}>나의 토템</Text>
+          <Pressable onPress={() => {
+            setEditingTotem(null);
+            setTotemName("");
+            setTotemEmoji("");
+            setTotemDesc("");
+            setTotemColor("");
+            setShowTotemModal(true);
+          }}>
+            <Text style={{ fontSize: 14, fontWeight: "600", color: theme.foreground }}>+ 추가</Text>
+          </Pressable>
+        </View>
+        {totems.length === 0 ? (
+          <Text style={[styles.placeholder, { textAlign: "left", paddingVertical: 16 }]}>
+            아직 등록된 토템이 없어요. 토템을 추가해보세요!
+          </Text>
+        ) : (
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+            {totems.map((t) => {
+              const chipColor = t.color || theme.border;
+              const wrPct = t.count > 0 ? Math.round(t.winRate * 100) : 0;
+              const teamColor_ = myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground;
+              return (
+                <Pressable
+                  key={t.id}
+                  onPress={() => {
+                    setEditingTotem(t);
+                    setTotemName(t.name);
+                    setTotemEmoji(t.emoji);
+                    setTotemDesc(t.description || "");
+                    setTotemColor(t.color || "");
+                    setShowTotemModal(true);
+                  }}
+                  onLongPress={() => setShowTotemDeleteConfirm(t)}
+                  style={{
+                    width: "47%", borderRadius: 16, borderWidth: 1,
+                    borderColor: chipColor,
+                    backgroundColor: chipColor + "10",
+                    padding: 14, gap: 6,
+                  }}
+                >
+                  <Text style={{ fontSize: 28, textAlign: "center" }}>{t.emoji}</Text>
+                  <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground, textAlign: "center" }} numberOfLines={1}>
+                    {t.name}
+                  </Text>
+                  <View style={{ flexDirection: "row", justifyContent: "center", gap: 12 }}>
+                    <Text style={{ fontSize: 12, color: theme.mutedForeground }}>{t.count}회</Text>
+                    <Text style={{ fontSize: 12, fontWeight: "600", color: teamColor_ }}>
+                      {wrPct}%
+                    </Text>
+                    {t.currentStreak > 1 && (
+                      <Text style={{ fontSize: 12, color: t.currentStreak > 0 ? "#22c55e" : "#ef4444" }}>
+                        {t.currentStreak}{t.currentStreak > 0 ? "연승" : "연패"}
+                      </Text>
+                    )}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+      </View>
+
       {/* App Info */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>정보</Text>
@@ -600,6 +687,129 @@ export default function MyScreen() {
                 }}
               >
                 <Text style={styles.modalSaveText}>초기화</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Totem Create/Edit Modal */}
+      <Modal visible={showTotemModal} transparent animationType="fade" onRequestClose={() => setShowTotemModal(false)}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>{editingTotem ? "토템 수정" : "토템 추가"}</Text>
+              <Text style={{ fontSize: 12, color: theme.mutedForeground, marginBottom: 12, textAlign: "center" }}>
+                {editingTotem ? "토템 정보를 수정하세요" : "나만의 승리 토템을 만들어보세요!"}
+              </Text>
+
+              <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>이름 *</Text>
+              <TextInput
+                style={styles.input}
+                value={totemName}
+                onChangeText={setTotemName}
+                placeholder="토템 이름"
+                placeholderTextColor="#666"
+                maxLength={30}
+              />
+
+              <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>이모지</Text>
+              <TextInput
+                style={[styles.input, { width: 80, textAlign: "center", fontSize: 24 }]}
+                value={totemEmoji}
+                onChangeText={setTotemEmoji}
+                placeholder="🍀"
+                placeholderTextColor="#666"
+                maxLength={4}
+              />
+
+              <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>설명</Text>
+              <TextInput
+                style={styles.input}
+                value={totemDesc}
+                onChangeText={setTotemDesc}
+                placeholder="이 토템은... (선택사항)"
+                placeholderTextColor="#666"
+                maxLength={100}
+              />
+
+              <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>색상</Text>
+              <TextInput
+                style={[styles.input, { width: 120 }]}
+                value={totemColor}
+                onChangeText={setTotemColor}
+                placeholder="#ff6b6b (선택)"
+                placeholderTextColor="#666"
+                maxLength={7}
+                autoCapitalize="none"
+              />
+
+              <View style={styles.modalButtons}>
+                <Pressable style={styles.modalCancel} onPress={() => setShowTotemModal(false)}>
+                  <Text style={styles.modalCancelText}>취소</Text>
+                </Pressable>
+                <Pressable style={[styles.modalSave, !totemName.trim() && { opacity: 0.4 }]} disabled={!totemName.trim()} onPress={async () => {
+                  if (!totemName.trim()) return;
+                  try {
+                    if (editingTotem) {
+                      await updateTotem(editingTotem.id, {
+                        name: totemName.trim(),
+                        emoji: totemEmoji || "🍀",
+                        description: totemDesc.trim() || null,
+                        color: totemColor.trim() || null,
+                      });
+                    } else {
+                      await addTotem(totemName.trim(), totemEmoji || "🍀", totemDesc.trim() || undefined, totemColor.trim() || undefined);
+                    }
+                    setShowTotemModal(false);
+                    loadData();
+                  } catch (e) {
+                    console.warn("totem save failed", e);
+                  }
+                }}>
+                  <Text style={styles.modalSaveText}>{editingTotem ? "수정" : "추가"}</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Totem Delete Confirm */}
+      <Modal visible={!!showTotemDeleteConfirm} transparent animationType="fade" onRequestClose={() => setShowTotemDeleteConfirm(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>"{showTotemDeleteConfirm?.name}" 삭제</Text>
+            <Text style={{ fontSize: 14, color: theme.mutedForeground, marginBottom: 16, lineHeight: 20, textAlign: "center" }}>
+              토템을 삭제할 때 연결된 기록을{'\n'}어떻게 처리할까요?
+            </Text>
+            <View style={{ gap: 8 }}>
+              <Pressable style={[styles.modalSave]} onPress={async () => {
+                if (!showTotemDeleteConfirm) return;
+                try {
+                  await deleteTotem(showTotemDeleteConfirm.id, true);
+                  setShowTotemDeleteConfirm(null);
+                  loadData();
+                } catch (e) {
+                  console.warn("totem delete failed", e);
+                }
+              }}>
+                <Text style={styles.modalSaveText}>기록 유지 (토템만 제거)</Text>
+              </Pressable>
+              <Pressable style={[styles.modalCancel]} onPress={async () => {
+                if (!showTotemDeleteConfirm) return;
+                try {
+                  await deleteTotem(showTotemDeleteConfirm.id, false);
+                  setShowTotemDeleteConfirm(null);
+                  loadData();
+                } catch (e) {
+                  console.warn("totem delete failed", e);
+                }
+              }}>
+                <Text style={[styles.modalCancelText, { color: "#e74c3c", fontWeight: "600" }]}>기록에서도 제거</Text>
+              </Pressable>
+              <Pressable style={[styles.modalCancel, { marginTop: 4 }]} onPress={() => setShowTotemDeleteConfirm(null)}>
+                <Text style={styles.modalCancelText}>취소</Text>
               </Pressable>
             </View>
           </View>

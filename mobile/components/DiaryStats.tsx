@@ -11,6 +11,7 @@ import { resolveIsWin } from "@/lib/expenseStats";
 import { fetchStandingsJson } from "@/lib/api";
 import { HISTORICAL_STANDINGS } from "@/lib/standingsData";
 import type { JikgwanRecord } from "@/lib/db";
+import { getAllTotemStats, type TotemWithStats } from "@/lib/db";
 
 interface DiaryStatsProps {
   records: JikgwanRecord[];
@@ -132,6 +133,8 @@ export default function DiaryStats({ records, teamId, year }: DiaryStatsProps) {
   const opponentStats = useMemo(() => teamId ? computeOpponentStats(activeRecords, teamId, year) : [], [activeRecords, teamId, year]);
   const streakActive = useMemo(() => computeStreakStats(activeRecords, year), [activeRecords, year]);
   const activeScoring = useMemo(() => teamId ? computeAttendanceScoring(teamRecords, teamId, year) : null, [teamRecords, teamId, year]);
+  const [totemStats, setTotemStats] = useState<TotemWithStats[]>([]);
+  useEffect(() => { getAllTotemStats(activeRecords).then(setTotemStats).catch(() => {}); }, [activeRecords]);
 
   const grayHex = isDark ? "#333" : "#e0e0e0";
   const streakColor = streakActive.currentType === "W" ? "#22c55e" : streakActive.currentType === "L" ? "#ef4444" : theme.mutedForeground;
@@ -552,6 +555,36 @@ export default function DiaryStats({ records, teamId, year }: DiaryStatsProps) {
           {includeJipgwan ? "집관 포함" : "집관 제외"}
         </Text>
       </View>
+
+      {/* Totem stats (toggle-affected) */}
+      {totemStats.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>🍀 토템 승률</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            {totemStats.map((t) => {
+              const chipColor = t.color || theme.border;
+              const wrPct = t.count > 0 ? Math.round(t.winRate * 100) : 0;
+              return (
+                <View key={t.id} style={{
+                  borderRadius: 12, borderWidth: 1, borderColor: chipColor,
+                  backgroundColor: chipColor + "10",
+                  paddingVertical: 10, paddingHorizontal: 14,
+                  alignItems: "center", gap: 2, minWidth: 70,
+                }}>
+                  <Text style={{ fontSize: 18 }}>{t.emoji}</Text>
+                  <Text style={{ fontSize: 11, fontWeight: "600", color: theme.foreground }} numberOfLines={1}>
+                    {t.name}
+                  </Text>
+                  <Text style={{ fontSize: 15, fontWeight: "700", color: teamColor }}>
+                    {wrPct}%
+                  </Text>
+                  <Text style={{ fontSize: 10, color: theme.mutedForeground }}>{t.count}회</Text>
+                </View>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
 
       {/* Win rate contribution — 내 직관 승률 vs 팀 시즌 승률 */}
       {teamId && teamWinRate != null && teamRecords.length >= 5 && (

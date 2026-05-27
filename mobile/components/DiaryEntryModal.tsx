@@ -16,7 +16,7 @@ import ExpenseForm from "@/components/ExpenseForm";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
 import { useTeam } from "@/lib/TeamContext";
 import { addJikgwanRecord, updateJikgwanRecord, getUnlockedEmotions, type JikgwanRecord } from "@/lib/db";
-import { addExpense, getExpensesByRecordId, deleteExpensesByRecordId, EXPENSE_CATEGORIES, type Expense, type ExpenseCategory } from "@/lib/db";
+import { addExpense, getExpensesByRecordId, deleteExpensesByRecordId, EXPENSE_CATEGORIES, type Expense, type ExpenseCategory, getAllTotems, getDiaryTotems, setDiaryTotems, type Totem } from "@/lib/db";
 import { savePhoto, resizePhoto, generatePhotoName } from "@/lib/camera";
 import { cachedScheduleByMonth, cachedDailyScores } from "@/lib/gameCache";
 import { type ScheduleGame, type ScoreEntry } from "@/lib/api";
@@ -107,6 +107,10 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
   const [newExpenseAmt, setNewExpenseAmt] = useState("");
   const [newExpenseMemo, setNewExpenseMemo] = useState("");
 
+  // Totem state
+  const [allTotems, setAllTotems] = useState<Totem[]>([]);
+  const [selectedTotemIds, setSelectedTotemIds] = useState<number[]>([]);
+
   // Custom alert state
   const [simpleAlert, setSimpleAlert] = useState<{
     visible: boolean;
@@ -144,6 +148,8 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
   useEffect(() => {
     if (visible) {
       getUnlockedEmotions().then(setUnlockedEmotions).catch(() => {});
+      getAllTotems().then(setAllTotems).catch(() => {});
+      setSelectedTotemIds([]);
       setCheeredTeam(null);
       setPendingExpenses([]);
       setShowExpenseInput(false);
@@ -167,9 +173,12 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
           setPendingExpenses(exps.map((e) => ({ category: e.category as ExpenseCategory, amount: String(e.amount), memo: e.memo || "" })));
           expensesLoadedRef.current = true;
         }).catch(() => {
-          // If expenses fail to load, mark as not loaded so save handler won't delete them
           expensesLoadedRef.current = false;
         });
+        // Load existing totems
+        getDiaryTotems(editRecord.id).then((totems) => {
+          setSelectedTotemIds(totems.map((t) => t.id));
+        }).catch(() => {});
       } else if (presetGame) {
         setStep("write");
         setSelectedDate(presetDate || new Date());
@@ -504,6 +513,9 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
         // Save expenses for new record
         await saveExpenses(recordId);
       }
+
+      // Save totems
+      await setDiaryTotems(recordId, selectedTotemIds);
 
       // Auto-close on success (no alert needed)
       onSaved();
@@ -1405,6 +1417,54 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                     <Pressable style={styles.expenseAddLink} onPress={() => setShowExpenseInput(true)}>
                       <Text style={styles.expenseAddLinkText}>＋ 지출 추가</Text>
                     </Pressable>
+                  )}
+                </View>
+
+                {/* Totem section */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>나의 토템</Text>
+                  {allTotems.length === 0 ? (
+                    <Text style={{ fontSize: 12, color: theme.mutedForeground, lineHeight: 18 }}>
+                      MY탭에서 토템을 생성하고 선택할 수 있어요
+                    </Text>
+                  ) : (
+                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+                      {allTotems.map((totem) => {
+                        const selected = selectedTotemIds.includes(totem.id);
+                        const borderColor = totem.color || theme.border;
+                        return (
+                          <Pressable
+                            key={totem.id}
+                            onPress={() => {
+                              setSelectedTotemIds((prev) =>
+                                prev.includes(totem.id)
+                                  ? prev.filter((id) => id !== totem.id)
+                                  : [...prev, totem.id]
+                              );
+                            }}
+                            style={[
+                              {
+                                flexDirection: "row", alignItems: "center", gap: 4,
+                                paddingHorizontal: 12, paddingVertical: 8,
+                                borderRadius: 20, borderWidth: 1.5,
+                                borderColor: selected ? borderColor : theme.border,
+                                backgroundColor: selected
+                                  ? (totem.color ? totem.color + "20" : theme.muted)
+                                  : "transparent",
+                              },
+                            ]}
+                          >
+                            <Text style={{ fontSize: 16 }}>{totem.emoji}</Text>
+                            <Text style={{
+                              fontSize: 13, fontWeight: "600",
+                              color: selected ? theme.foreground : theme.mutedForeground,
+                            }}>
+                              {totem.name}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
                   )}
                 </View>
               </View>
