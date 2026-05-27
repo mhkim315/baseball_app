@@ -89,6 +89,7 @@ async function initSchema(database: SQLite.SQLiteDatabase): Promise<void> {
       emoji TEXT DEFAULT '🍀',
       description TEXT DEFAULT NULL,
       color TEXT DEFAULT NULL,
+      hidden INTEGER DEFAULT 0,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
     CREATE TABLE IF NOT EXISTS diary_totems (
@@ -106,6 +107,7 @@ async function initSchema(database: SQLite.SQLiteDatabase): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_diary_totems_totem ON diary_totems(totem_id);
   `);
   await migrateJikgwanSchema(database);
+  await migrateTotemSchema(database);
   // Clean up cache entries older than 30 days on app start
   await database.runAsync(
     "DELETE FROM api_cache WHERE updated_at < ?",
@@ -150,6 +152,22 @@ async function migrateJikgwanSchema(database: SQLite.SQLiteDatabase): Promise<vo
     if (existingNames.has(col.name)) continue;
     await database.execAsync(
       `ALTER TABLE jikgwan_records ADD COLUMN ${col.name} ${col.type} DEFAULT ${col.dflt}`
+    );
+  }
+}
+
+async function migrateTotemSchema(database: SQLite.SQLiteDatabase): Promise<void> {
+  const columns = [
+    { name: "hidden", type: "INTEGER", dflt: "0" },
+  ];
+  const existing = await database.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(totems)"
+  );
+  const existingNames = new Set(existing.map((c) => c.name));
+  for (const col of columns) {
+    if (existingNames.has(col.name)) continue;
+    await database.execAsync(
+      `ALTER TABLE totems ADD COLUMN ${col.name} ${col.type} DEFAULT ${col.dflt}`
     );
   }
 }
@@ -691,16 +709,19 @@ export async function updateTotem(
 export async function deleteTotem(id: number, keepRecords: boolean): Promise<void> {
   const database = await getDb();
   if (keepRecords) {
-    // Remove only diary_totems links
+    // Soft-delete: hide totem but keep diary_totems links → stats preserved
+    await database.runAsync("UPDATE totems SET hidden = 1 WHERE id = ?", id);
+  } else {
+    // Hard-delete: remove diary_totems links and totem record entirely
     await database.runAsync("DELETE FROM diary_totems WHERE totem_id = ?", id);
+    await database.runAsync("DELETE FROM totems WHERE id = ?", id);
   }
-  await database.runAsync("DELETE FROM totems WHERE id = ?", id);
 }
 
 export async function getAllTotems(): Promise<Totem[]> {
   const database = await getDb();
   return database.getAllAsync<Totem>(
-    "SELECT * FROM totems ORDER BY created_at DESC"
+    "SELECT * FROM totems WHERE hidden = 0 ORDER BY created_at DESC"
   );
 }
 
@@ -805,7 +826,10 @@ export async function getTotemStats(
 }
 
 export async function getAllTotemStats(records: JikgwanRecord[]): Promise<TotemWithStats[]> {
-  const totems = await getAllTotems();
+  const database = await getDb();
+  const totems = await database.getAllAsync<Totem>(
+    "SELECT * FROM totems ORDER BY created_at DESC"
+  );
   const results: TotemWithStats[] = [];
   for (const t of totems) {
     const stats = await getTotemStats(t.id, records);
