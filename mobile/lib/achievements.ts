@@ -142,6 +142,87 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
       };
     },
   },
+  // ── 집관 마일스톤 (4) ──
+  {
+    id: "home_10",
+    badgeKey: "home_10",
+    emoji: "📺",
+    title: "집관 10회",
+    description: "TV 집관 10회를 기록했어요",
+    tier: "easy",
+    xp: 10,
+    category: "milestone",
+    progressTarget: 10,
+    check: (records) => {
+      const homeRecords = records.filter((r) => r.is_live === 0).sort((a, b) => a.date.localeCompare(b.date));
+      return {
+        unlocked: homeRecords.length >= 10,
+        progressCurrent: Math.min(homeRecords.length, 10),
+        progressTarget: 10,
+        qualifyingDate: homeRecords.length >= 10 ? homeRecords[9].date : undefined,
+      };
+    },
+  },
+  {
+    id: "home_30",
+    badgeKey: "home_30",
+    emoji: "🖥️",
+    title: "집관 30회",
+    description: "TV 집관 30회를 기록했어요",
+    tier: "medium",
+    xp: 25,
+    category: "milestone",
+    progressTarget: 30,
+    check: (records) => {
+      const homeRecords = records.filter((r) => r.is_live === 0).sort((a, b) => a.date.localeCompare(b.date));
+      return {
+        unlocked: homeRecords.length >= 30,
+        progressCurrent: Math.min(homeRecords.length, 30),
+        progressTarget: 30,
+        qualifyingDate: homeRecords.length >= 30 ? homeRecords[29].date : undefined,
+      };
+    },
+  },
+  {
+    id: "home_50",
+    badgeKey: "home_50",
+    emoji: "💻",
+    title: "집관 50회",
+    description: "TV 집관 50회를 기록했어요",
+    tier: "hard",
+    xp: 50,
+    category: "milestone",
+    progressTarget: 50,
+    check: (records) => {
+      const homeRecords = records.filter((r) => r.is_live === 0).sort((a, b) => a.date.localeCompare(b.date));
+      return {
+        unlocked: homeRecords.length >= 50,
+        progressCurrent: Math.min(homeRecords.length, 50),
+        progressTarget: 50,
+        qualifyingDate: homeRecords.length >= 50 ? homeRecords[49].date : undefined,
+      };
+    },
+  },
+  {
+    id: "home_100",
+    badgeKey: "home_100",
+    emoji: "🏠",
+    title: "집관 100회",
+    description: "TV 집관 100회를 기록했어요",
+    tier: "epic",
+    xp: 100,
+    category: "milestone",
+    progressTarget: 100,
+    check: (records) => {
+      const homeRecords = records.filter((r) => r.is_live === 0).sort((a, b) => a.date.localeCompare(b.date));
+      return {
+        unlocked: homeRecords.length >= 100,
+        progressCurrent: Math.min(homeRecords.length, 100),
+        progressTarget: 100,
+        qualifyingDate: homeRecords.length >= 100 ? homeRecords[99].date : undefined,
+      };
+    },
+  },
   // ── 연승 기록 (3) ──
   {
     id: "streak_3",
