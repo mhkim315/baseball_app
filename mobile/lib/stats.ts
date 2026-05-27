@@ -246,12 +246,24 @@ export function computeStreakStats(records: JikgwanRecord[], year?: number, game
       return (da?.getTime() ?? 0) - (db?.getTime() ?? 0);
     });
 
+  // Deduplicate by date: keep only the last record per date
+  // to prevent multiple entries on the same day inflating the streak
+  const dateMap = new Map<string, JikgwanRecord>();
+  for (const g of games) {
+    dateMap.set(g.date, g);
+  }
+  const uniqueGames = [...dateMap.values()].sort((a, b) => {
+    const da = parseDateStr(a.date);
+    const db = parseDateStr(b.date);
+    return (da?.getTime() ?? 0) - (db?.getTime() ?? 0);
+  });
+
   let longestWin = 0;
   let longestLose = 0;
   let run = 0;
   let runType: "W" | "L" | null = null;
 
-  for (const g of games) {
+  for (const g of uniqueGames) {
     const type = resolveIsWin(g) === 1 ? "W" : "L";
     if (type === runType) {
       run++;
@@ -267,13 +279,13 @@ export function computeStreakStats(records: JikgwanRecord[], year?: number, game
 
   let currentType: "W" | "L" | null = null;
   let currentCount = 0;
-  for (let i = games.length - 1; i >= 0; i--) {
-    const type = resolveIsWin(games[i]) === 1 ? "W" : "L";
-    if (i === games.length - 1) {
+  for (let i = uniqueGames.length - 1; i >= 0; i--) {
+    const type = resolveIsWin(uniqueGames[i]) === 1 ? "W" : "L";
+    if (i === uniqueGames.length - 1) {
       currentType = type;
       currentCount = 1;
     } else {
-      const prevType = resolveIsWin(games[i + 1]) === 1 ? "W" : "L";
+      const prevType = resolveIsWin(uniqueGames[i + 1]) === 1 ? "W" : "L";
       if (type === prevType) {
         currentCount++;
       } else {

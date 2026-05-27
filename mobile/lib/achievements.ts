@@ -39,6 +39,22 @@ export interface LevelInfo {
   progress: number;
 }
 
+function findStreakQualifyingDate(records: JikgwanRecord[], target: number): string | undefined {
+  const games = records
+    .filter((r) => { const iw = resolveIsWin(r); return iw != null && iw !== 0; })
+    .sort((a, b) => a.date.localeCompare(b.date));
+  // Deduplicate by date (same logic as computeStreakStats)
+  const seen = new Map<string, JikgwanRecord>();
+  for (const g of games) seen.set(g.date, g);
+  const unique = [...seen.values()].sort((a, b) => a.date.localeCompare(b.date));
+  let run = 0;
+  for (const g of unique) {
+    if (resolveIsWin(g) === 1) { run++; if (run === target) return g.date; }
+    else { run = 0; }
+  }
+  return undefined;
+}
+
 // --- Badge Definitions (15 total) ---
 
 export const BADGE_DEFINITIONS: BadgeDefinition[] = [
@@ -258,22 +274,11 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     check: (records) => {
       const s = computeStreakStats(records);
       const best = Math.max(s.longestWin, s.currentType === "W" ? s.currentCount : 0);
-      let qualifyingDate: string | undefined;
-      if (best >= 3) {
-        const games = records
-          .filter((r) => { const iw = resolveIsWin(r); return iw != null && iw !== 0; })
-          .sort((a, b) => a.date.localeCompare(b.date));
-        let run = 0;
-        for (const g of games) {
-          if (resolveIsWin(g) === 1) { run++; if (run === 3) { qualifyingDate = g.date; break; } }
-          else { run = 0; }
-        }
-      }
       return {
         unlocked: best >= 3,
         progressCurrent: Math.min(best, 3),
         progressTarget: 3,
-        qualifyingDate,
+        qualifyingDate: best >= 3 ? findStreakQualifyingDate(records, 3) : undefined,
       };
     },
   },
@@ -290,22 +295,11 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     check: (records) => {
       const s = computeStreakStats(records);
       const best = Math.max(s.longestWin, s.currentType === "W" ? s.currentCount : 0);
-      let qualifyingDate: string | undefined;
-      if (best >= 5) {
-        const games = records
-          .filter((r) => { const iw = resolveIsWin(r); return iw != null && iw !== 0; })
-          .sort((a, b) => a.date.localeCompare(b.date));
-        let run = 0;
-        for (const g of games) {
-          if (resolveIsWin(g) === 1) { run++; if (run === 5) { qualifyingDate = g.date; break; } }
-          else { run = 0; }
-        }
-      }
       return {
         unlocked: best >= 5,
         progressCurrent: Math.min(best, 5),
         progressTarget: 5,
-        qualifyingDate,
+        qualifyingDate: best >= 5 ? findStreakQualifyingDate(records, 5) : undefined,
       };
     },
   },
@@ -322,22 +316,11 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     check: (records) => {
       const s = computeStreakStats(records);
       const best = Math.max(s.longestWin, s.currentType === "W" ? s.currentCount : 0);
-      let qualifyingDate: string | undefined;
-      if (best >= 10) {
-        const games = records
-          .filter((r) => { const iw = resolveIsWin(r); return iw != null && iw !== 0; })
-          .sort((a, b) => a.date.localeCompare(b.date));
-        let run = 0;
-        for (const g of games) {
-          if (resolveIsWin(g) === 1) { run++; if (run === 10) { qualifyingDate = g.date; break; } }
-          else { run = 0; }
-        }
-      }
       return {
         unlocked: best >= 10,
         progressCurrent: Math.min(best, 10),
         progressTarget: 10,
-        qualifyingDate,
+        qualifyingDate: best >= 10 ? findStreakQualifyingDate(records, 10) : undefined,
       };
     },
   },
@@ -499,18 +482,12 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     check: (records) => {
       const s = computeStreakStats(records);
       const best = Math.max(s.longestWin, s.currentType === "W" ? s.currentCount : 0);
-      let qualifyingDate: string | undefined;
-      if (best >= 7) {
-        const games = records
-          .filter((r) => { const iw = resolveIsWin(r); return iw != null && iw !== 0; })
-          .sort((a, b) => a.date.localeCompare(b.date));
-        let run = 0;
-        for (const g of games) {
-          if (resolveIsWin(g) === 1) { run++; if (run === 7) { qualifyingDate = g.date; break; } }
-          else { run = 0; }
-        }
-      }
-      return { unlocked: best >= 7, progressCurrent: Math.min(best, 7), progressTarget: 7, qualifyingDate };
+      return {
+        unlocked: best >= 7,
+        progressCurrent: Math.min(best, 7),
+        progressTarget: 7,
+        qualifyingDate: best >= 7 ? findStreakQualifyingDate(records, 7) : undefined,
+      };
     },
   },
   // ── Phase 2: 시크릿 확장 ──
@@ -909,9 +886,11 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     teamId: "lg",
     progressTarget: 3,
     check: (records) => {
-      const lg = records
+      // Deduplicate by date to prevent multiple records on the same day inflating streak
+      const lg = [...records
         .filter(r => r.cheered_team === "lg")
-        .sort((a, b) => a.date.localeCompare(b.date));
+        .reduce((map, r) => { map.set(r.date, r); return map; }, new Map<string, JikgwanRecord>())
+        .values()].sort((a, b) => a.date.localeCompare(b.date));
       let streak = 0, best = 0, bestDate: string | undefined;
       for (const r of lg) {
         if (resolveIsWin(r) === 1) { streak++; if (streak > best) { best = streak; bestDate = r.date; } }
@@ -937,9 +916,11 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     teamId: "doosan",
     progressTarget: 2,
     check: (records) => {
-      const doosan = records
+      // Deduplicate by date to prevent multiple records on the same day inflating streak
+      const doosan = [...records
         .filter(r => r.cheered_team === "doosan")
-        .sort((a, b) => a.date.localeCompare(b.date));
+        .reduce((map, r) => { map.set(r.date, r); return map; }, new Map<string, JikgwanRecord>())
+        .values()].sort((a, b) => a.date.localeCompare(b.date));
       let streak = 0, best = 0, bestDate: string | undefined;
       for (const r of doosan) {
         if (resolveIsWin(r) === -1) { streak++; if (streak > best) { best = streak; bestDate = r.date; } }
