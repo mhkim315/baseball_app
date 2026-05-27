@@ -20,6 +20,7 @@ import {
 } from "@/lib/gameCache";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID, buildGameId, formatDateForApi as formatDateStr } from "@shared/constants";
+import { getInningInfo } from "@shared/gameStatus";
 
 import MyButton from "@/components/MyButton";
 import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
@@ -387,17 +388,9 @@ export default function HomeScreen() {
                   // inning 추론: scoreBoard.inn 배열 길이로 초/말 판단
                   let liveInning = g.liveInning;
                   let isTop = g.isTop;
-                  if (g.status === "live" && detail.scoreBoard?.inn && liveInning == null) {
-                    const inn = detail.scoreBoard.inn;
-                    const aLen = inn.away?.length ?? 0;
-                    const hLen = inn.home?.length ?? 0;
-                    if (aLen > hLen) {
-                      liveInning = aLen;
-                      isTop = true;
-                    } else if (hLen > 0) {
-                      liveInning = aLen;
-                      isTop = false;
-                    }
+                  if (g.status === "live" && liveInning == null) {
+                    const info = getInningInfo(detail.scoreBoard?.inn);
+                    if (info) { liveInning = info.inning; isTop = info.isTop; }
                   }
 
                   return {

@@ -1221,3 +1221,31 @@ Android 런처 아이콘이 시스템 마스크(mask)에 의해 가장자리 ~17
 - 종료 (정상): hasDefinitiveFinish=true → isFinished=true ✓
 - 과거 경기: `!isToday` → 기존 로직 유지 (regression 없음)
 - 시작 직전/후, 데이터 없음: `isToday=true` + `gameHasStarted` true → live ✓
+
+---
+
+## Phase 12: 이닝 표시 통합
+
+> **날짜**: 2026-05-27
+
+### 개요
+게임 상세 페이지에 진행 중인 경기의 이닝 정보(예: "3회초")를 표시. 이닝 추론 로직을 `shared/gameStatus.ts`로 분리하여 홈 탭과 게임 상세가 동일한 함수 사용.
+
+### 변경 사항
+1. **`shared/gameStatus.ts`** 신규 생성
+   - `getInningInfo(inn)` — `scoreBoard.inn` 배열 길이로 회초/회말 추론
+   - `InningInfo` 타입 (`inning`, `isTop`)
+
+2. **홈 탭 리팩터링** (`home.tsx`)
+   - 인라인 이닝 추론 로직(기존 10줄) → `getInningInfo()` 호출 (3줄)
+
+3. **게임 상세 이닝 표시** (`[id].tsx`)
+   - `liveLabel` 추가 — `getInningInfo()` 결과로 "N회초"/"N회말" 생성
+   - 상태 배지에 `"경기 중"` 대신 `liveLabel` 표시
+
+### 변경 파일
+| 파일 | 변경 |
+|------|------|
+| `shared/gameStatus.ts` | 신규: getInningInfo, InningInfo |
+| `mobile/app/(tabs)/home.tsx` | import + 인라인 로직→getInningInfo() 호출 |
+| `mobile/app/game/[id].tsx` | import + liveLabel 계산 + 렌더링 |

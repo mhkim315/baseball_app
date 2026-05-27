@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { parseGameTeamIds } from "@shared/constants";
+import { getInningInfo } from "@shared/gameStatus";
 import {
   fetchGameDetail, fetchStandingsJson,
   type GameDetail, type ScoreEntry, type LineupPlayer, type StandingRow,
@@ -543,9 +544,7 @@ export default function GameDetailScreen() {
   const hasScoreData = gameScore !== null;
   const hasFinishedSignals = !!detail.scoreBoard || (detail.pitchingResult && detail.pitchingResult.length > 0) || (detail.etcRecords && detail.etcRecords.length > 0);
   const isGameActive = hasScoreData || hasFinishedSignals;
-  const hasDefinitiveFinish = !!detail.scoreBoard?.rheb ||
-    (detail.pitchingResult && detail.pitchingResult.length > 0) ||
-    (detail.etcRecords && detail.etcRecords.length > 0);
+  const hasDefinitiveFinish = (detail.pitchingResult && detail.pitchingResult.length > 0);
 
   const [gh, gm] = (detail.gameInfo?.time || "18:30").split(":").map(Number);
   const [y, m, d] = detail.date.split("-").map(Number);
@@ -564,6 +563,8 @@ export default function GameDetailScreen() {
   const showLineupStatus = isBeforeGame;
   const lineupConfirmed = isFuture ? false : (detail.lineupConfirmed ?? false);
   const statusLabel = isCancelled ? "취소" : isFinished ? "경기 종료" : isLive ? "경기 중" : "경기 전";
+  const inningInfo = getInningInfo(detail.scoreBoard?.inn);
+  const liveLabel = inningInfo ? `${inningInfo.inning}회${inningInfo.isTop ? "초" : "말"}` : "경기 중";
   const gs = gameScore;
   const awayWin = isFinished && gs ? gs.away > gs.home : null;
   const homeWin = isFinished && gs ? gs.home > gs.away : null;
@@ -625,7 +626,7 @@ export default function GameDetailScreen() {
               )}
               <View style={[styles.statusBadge, isLive && styles.statusLive]}>
                 <Text style={[styles.statusText, isLive && styles.statusLiveText]}>
-                  {isLive ? "경기 중" : statusLabel}
+                  {isLive ? liveLabel : statusLabel}
                 </Text>
               </View>
             </View>
