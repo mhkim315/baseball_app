@@ -5,7 +5,6 @@ import { useRouter } from "expo-router";
 import DateStrip from "@/components/DateStrip";
 import GameCard from "@/components/GameCard";
 import CalendarGrid from "@/components/CalendarGrid";
-import AchievementWidget from "@/components/AchievementWidget";
 import {
   type TodayGame,
   type ScoreEntry,
@@ -131,7 +130,6 @@ export default function HomeScreen() {
   const [displayTeam, setDisplayTeam] = useState<string | null>(null);
   const { myTeam } = useTeam();
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [achievementOpen, setAchievementOpen] = useState(false);
   const [calGames, setCalGames] = useState<ScheduleGame[]>([]);
   const [calScores, setCalScores] = useState<Record<string, ScoreEntry[]>>({});
   const scheduleCache = useRef<{ month: number; year: number; games: ScheduleGame[] } | null>(null);
@@ -171,28 +169,7 @@ export default function HomeScreen() {
           setCalendarOpen(false);
         } else if (gs.dy > 80 && !calendarOpenRef.current) {
           LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-          setAchievementOpen(false);
           setCalendarOpen(true);
-        }
-      },
-    })
-  ).current;
-
-  // Swipe for achievement: down to open, up to close
-  const achievementOpenRef = useRef(achievementOpen);
-  achievementOpenRef.current = achievementOpen;
-  const achievementPan = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dy) > 10,
-      onPanResponderRelease: (_, gs) => {
-        if (gs.dy < -80 && achievementOpenRef.current) {
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-          setAchievementOpen(false);
-        } else if (gs.dy > 80 && !achievementOpenRef.current) {
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-          setCalendarOpen(false);
-          setAchievementOpen(true);
         }
       },
     })
@@ -621,7 +598,6 @@ export default function HomeScreen() {
       <View style={{ flexDirection: "row", paddingHorizontal: 20 }}>
         <Pressable style={{ flex: 1, paddingVertical: 6 }} onPress={() => {
           LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-          setAchievementOpen(false);
           setCalendarOpen(!calendarOpen);
         }}>
           <Text style={styles.calToggleText}>
@@ -630,17 +606,12 @@ export default function HomeScreen() {
         </Pressable>
         <Text style={[styles.calToggleText, { paddingVertical: 6 }]}>|</Text>
         <Pressable style={{ flex: 1, paddingVertical: 6 }} onPress={() => {
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-          setCalendarOpen(false);
-          setAchievementOpen(!achievementOpen);
+          router.push("/my?openAchievement=1");
         }}>
           <Text style={[styles.calToggleText, { textAlign: "right" }]}>
-            {achievementOpen ? "도전과제 접기 ▲" : "도전과제 보기 ▼"}
+            도전과제 보기 →
           </Text>
         </Pressable>
-      </View>
-      <View {...achievementPan.panHandlers} style={[styles.toggleWrapper, achievementOpen ? styles.toggleOpen : styles.toggleHidden]}>
-        <AchievementWidget />
       </View>
 
       {/* Game list — horizontal paging scroll */}

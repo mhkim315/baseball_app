@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useRouter, useFocusEffect } from "expo-router";
+import { useRouter, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Linking } from "react-native";
 import Constants from "expo-constants";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
@@ -317,8 +317,16 @@ export default function MyScreen() {
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [unlockedEmotions, setUnlockedEmotions] = useState<string[]>([]);
 
+  const { openAchievement } = useLocalSearchParams<{ openAchievement?: string }>();
   const reviewYear = new Date().getFullYear();
   const router = useRouter();
+
+  useEffect(() => {
+    if (openAchievement === "1") {
+      setShowAchievementModal(true);
+      router.replace("/my");
+    }
+  }, [openAchievement, router]);
 
   const loadData = useCallback(async () => {
     try {
