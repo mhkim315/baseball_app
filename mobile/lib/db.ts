@@ -809,7 +809,7 @@ export async function getAllTotemStats(records: JikgwanRecord[]): Promise<TotemW
   const results: TotemWithStats[] = [];
   for (const t of totems) {
     const stats = await getTotemStats(t.id, records);
-    if (stats.count > 0) results.push(stats);
+    results.push(stats);
   }
   return results.sort((a, b) => b.winRate - a.winRate || b.count - a.count);
 }

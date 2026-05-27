@@ -557,11 +557,11 @@ export default function DiaryStats({ records, teamId, year }: DiaryStatsProps) {
       </View>
 
       {/* Totem stats (toggle-affected) */}
-      {totemStats.length > 0 && (
+      {totemStats.some((t) => t.count > 0) && (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>🍀 토템 승률</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            {totemStats.map((t) => {
+            {totemStats.filter((t) => t.count > 0).map((t) => {
               const chipColor = t.color || theme.border;
               const wrPct = t.count > 0 ? Math.round(t.winRate * 100) : 0;
               return (
