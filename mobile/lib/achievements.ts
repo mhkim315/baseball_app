@@ -466,23 +466,23 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     badgeKey: "stadium_all",
     emoji: "🗺️",
     title: "전 구장 정복",
-    description: "KBO 1군 8개 구장을 모두 방문했어요",
+    description: "KBO 1군 9개 구장을 모두 방문했어요",
     tier: "epic",
     xp: 100,
     category: "exploration",
-    progressTarget: 8,
+    progressTarget: 9,
     check: (records) => {
       const sorted = [...records].filter((r) => r.stadium).sort((a, b) => a.date.localeCompare(b.date));
       const stadiums = new Set<string>();
       let qualifyingDate: string | undefined;
       for (const r of sorted) {
         stadiums.add(r.stadium!);
-        if (stadiums.size >= 8) { qualifyingDate = r.date; break; }
+        if (stadiums.size >= 9) { qualifyingDate = r.date; break; }
       }
       return {
-        unlocked: stadiums.size >= 8,
-        progressCurrent: Math.min(stadiums.size, 8),
-        progressTarget: 8,
+        unlocked: stadiums.size >= 9,
+        progressCurrent: Math.min(stadiums.size, 9),
+        progressTarget: 9,
         qualifyingDate,
       };
     },
@@ -532,13 +532,12 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     badgeKey: "all_team_wins",
     emoji: "♟️",
     title: "전 구단 승리",
-    description: "10개 구단 모두 상대로 승리한 경기를 직관했어요",
+    description: "9개 구단 모두 상대로 승리한 경기를 직관했어요",
     tier: "epic",
     xp: 100,
     category: "milestone",
-    progressTarget: 10,
+    progressTarget: 9,
     check: (records) => {
-      const totalTeams = Object.keys(TEAM_COLORS).length;
       const beaten = new Set<string>();
       let qualifyingDate: string | undefined;
       const sorted = [...records].sort((a, b) => a.date.localeCompare(b.date));
@@ -548,11 +547,10 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
         const opp = r.cheered_team === ids.awayId ? ids.homeId : ids.awayId;
         if (opp && !beaten.has(opp)) { beaten.add(opp); qualifyingDate = r.date; }
       }
-      const target = totalTeams;
       return {
-        unlocked: beaten.size >= target,
-        progressCurrent: Math.min(beaten.size, target),
-        progressTarget: target,
+        unlocked: beaten.size >= 9,
+        progressCurrent: Math.min(beaten.size, 9),
+        progressTarget: 9,
         qualifyingDate,
       };
     },
@@ -933,16 +931,16 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     xp: 10,
     category: "secret",
     teamId: "lotte",
-    progressTarget: 1,
+    progressTarget: 3,
     check: (records) => {
-      const match = records.find(r =>
+      const 사직방문 = records.filter(r =>
         r.cheered_team === "lotte" && r.stadium != null && r.stadium.includes("사직")
       );
       return {
-        unlocked: !!match,
-        progressCurrent: match ? 1 : 0,
-        progressTarget: 1,
-        qualifyingDate: match?.date,
+        unlocked: 사직방문.length >= 3,
+        progressCurrent: Math.min(사직방문.length, 3),
+        progressTarget: 3,
+        qualifyingDate: 사직방문.length >= 3 ? 사직방문[2].date : undefined,
       };
     },
   },

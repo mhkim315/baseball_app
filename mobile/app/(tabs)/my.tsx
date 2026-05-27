@@ -616,15 +616,16 @@ export default function MyScreen() {
                     style={[
                       styles.charItem,
                       profileImage?.value === c.id && { borderColor: myTeamColor },
-                      !isUnlocked && { opacity: 0.35 },
                     ]}
                   >
                     <View style={{ position: "relative" }}>
-                      <TeamBadge
-                        teamId={myTeam || DEFAULT_TEAM_ID}
-                        size="md"
-                        emotion={c.id}
-                      />
+                      <View style={!isUnlocked && { opacity: 0.35 }}>
+                        <TeamBadge
+                          teamId={myTeam || DEFAULT_TEAM_ID}
+                          size="md"
+                          emotion={c.id}
+                        />
+                      </View>
                       {!isUnlocked && (
                         <View style={{ position: "absolute", top: 0, right: 0, backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 8, width: 16, height: 16, justifyContent: "center", alignItems: "center" }}>
                           <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>🔒</Text>

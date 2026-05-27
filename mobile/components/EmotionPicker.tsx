@@ -84,16 +84,17 @@ export default function EmotionPicker({ value, onChange, teamId, unlockedEmotion
               style={[
                 styles.item,
                 isSelected && isUnlocked && { backgroundColor: theme.foreground },
-                !isUnlocked && { opacity: 0.35 },
               ]}
               onPress={isUnlocked ? () => onChange(c.id) : undefined}
             >
               <View style={styles.badgeWrap}>
-                <TeamBadge
-                  teamId={teamId}
-                  size="sm"
-                  emotion={c.id}
-                />
+                <View style={!isUnlocked && { opacity: 0.35 }}>
+                  <TeamBadge
+                    teamId={teamId}
+                    size="sm"
+                    emotion={c.id}
+                  />
+                </View>
                 {!isUnlocked && (
                   <View style={styles.lockBadge}>
                     <Text style={styles.lockIcon}>🔒</Text>

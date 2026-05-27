@@ -168,37 +168,26 @@ export default function DiaryScreen() {
   const tabScrollRef = useRef<ScrollView>(null);
   const { width: screenWidth } = useWindowDimensions();
 
-  const pendingToastBadges = useRef<Badge[]>([]);
-  const pendingRewards = useRef<{ emotion: string; label: string }[]>([]);
   const checkBadges = async () => {
     try {
       const { evaluateBadges, grantRandomCharacter } = await import("@/lib/achievements");
       const newBadges = await evaluateBadges();
       if (newBadges.length > 0) {
-        pendingToastBadges.current = newBadges;
         // Grant random character reward for each new badge
         const rewards: { emotion: string; label: string }[] = [];
         for (let i = 0; i < newBadges.length; i++) {
           const reward = await grantRandomCharacter();
           if (reward) rewards.push(reward);
         }
-        if (rewards.length > 0) {
-          pendingRewards.current = rewards;
-        }
+        // Show confetti + toasts simultaneously
+        setToastBadges(newBadges);
+        setToastRewards(rewards);
         setShowConfetti(true);
       }
     } catch {}
   };
   const handleConfettiFinish = useCallback(() => {
     setShowConfetti(false);
-    if (pendingToastBadges.current.length > 0) {
-      setToastBadges(pendingToastBadges.current);
-      pendingToastBadges.current = [];
-    }
-    if (pendingRewards.current.length > 0) {
-      setToastRewards(pendingRewards.current);
-      pendingRewards.current = [];
-    }
   }, []);
 
   // Filter records by search query
@@ -451,6 +440,7 @@ export default function DiaryScreen() {
       <AchievementToast
         badges={toastBadges}
         rewards={toastRewards}
+        teamId={myTeam ?? undefined}
         onDismiss={() => { setToastBadges([]); setToastRewards([]); }}
         onPress={() => { setToastBadges([]); setToastRewards([]); }}
       />
