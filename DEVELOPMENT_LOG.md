@@ -1,6 +1,6 @@
 # Fullcount.kr Mobile App — 개발 작업 문서
 
-> 마지막 업데이트: 2026-05-27
+> 마지막 업데이트: 2026-05-28 (Phase 14)
 > 
 > 이 문서는 이전 대화 컨텍스트가 만료되어도 작업을 이어갈 수 있도록 상세히 기록합니다.
 
@@ -1249,3 +1249,123 @@ Android 런처 아이콘이 시스템 마스크(mask)에 의해 가장자리 ~17
 | `shared/gameStatus.ts` | 신규: getInningInfo, InningInfo |
 | `mobile/app/(tabs)/home.tsx` | import + 인라인 로직→getInningInfo() 호출 |
 | `mobile/app/game/[id].tsx` | import + liveLabel 계산 + 렌더링 |
+
+---
+
+## Phase 13: Live Game Badge Protection (3단계)
+
+> **날짜**: 2026-05-27
+
+### 개요
+경기 중에 직관 기록을 저장하면 현재 진행 중인 점수(예: 3-2)로 `is_win`이 계산되어 저장됨. 최종 점수와 다르면 승/패/무/점수차/연승 등에 의존하는 **31개 배지 + 통계 + DiaryCard/Calendar 표시**가 모두 잘못되는 문제 수정.
+
+### 전략: 3단계 접근
+
+#### Phase 1 — 저장 시점에 `game_status` 저장 (DB + save path)
+
+| 파일 | 변경 |
+|------|------|
+| `mobile/lib/db.ts` | `migrateJikgwanSchema`에 `game_status TEXT` 컬럼 추가, `JikgwanRecord` 인터페이스 확장, `addJikgwanRecord` INSERT 파라미터 추가, `JIKGWAN_ALLOWED_COLUMNS`/`updateJikgwanRecord` 타입에 추가 |
+| `mobile/components/DiaryEntryModal.tsx` | `GameOption`에 `gameStatus` 필드 추가, `loadGames()`에서 score.outcome/schedule.status로 live/finished 추론, `handleSave()`에서 game_status 저장 |
+| `mobile/app/game/[id].tsx` | `handleOpenDiary()`에서 `detail.gameInfo?.status`를 `gameOpt.gameStatus`로 전달 |
+
+#### Phase 2 — `resolveIsWin`에서 live 기록 제외
+
+| 파일 | 변경 |
+|------|------|
+| `mobile/lib/expenseStats.ts` | `resolveIsWin()` 첫 줄에 `if (rec.game_status === "live") return null;` — 1줄로 31개 배지 + 7개 통계 함수 + DiaryCard/Calendar 표시 모두 live 기록 제외 |
+
+#### Phase 3 — 게임 종료 후 자동 백필
+
+| 파일 | 변경 |
+|------|------|
+| `mobile/lib/achievements.ts` | `backfillLiveRecords()` 신규 — `game_status="live"` 기록 조회 → `cachedDailyScores(날짜)`로 최종 점수 확인 → `outcome` 있으면 `score_away`/`score_home`/`is_win`/`game_status="finished"` 업데이트. 날짜별 try-catch로 네트워크 오류 격리 |
+| `mobile/app/(tabs)/home.tsx` | AppState 포그라운드 감지 + 마운트 시 `backfillLiveRecords()` → `evaluateBadges()` 순서 실행 |
+| `mobile/app/(tabs)/diary.tsx` | 일기 저장 후 배지 평가 시 `backfillLiveRecords()` 먼저 실행 |
+
+### 하위 호환성
+| 시나리오 | game_status | resolveIsWin 동작 |
+|----------|------------|-------------------|
+| 새 기록, 경기 중 저장 | `"live"` | return null → 배지/통계 제외 |
+| 새 기록, 경기 종료 후 저장 | `"finished"` | 기존 로직 (정상) |
+| 새 기록, 미래 경기 저장 | `"scheduled"` or null | 기존 로직 (isWin null, 점수없음 → return null) |
+| 기존 기록 (업데이트 전) | null | 기존 로직 그대로 (하위 호환) |
+
+### 기타 수정
+| 파일 | 변경 |
+|------|------|
+| `shared/types.ts` | `ScheduleGame`에 `gameIdx?: number` 추가 (기존 타입 에러 수정) |
+| `mobile/components/CalendarPage.tsx` | `ScoreInfo`에 `gameIdx?: number` 추가 (기존 타입 에러 수정) |
+
+### Verification
+- `npx tsc --noEmit` — 에러 0 ✅
+- 경기 중 저장 → `game_status="live"`로 저장 ✅
+- `resolveIsWin(rec)` → `rec.game_status="live"`면 null 반환 ✅
+- 기존 기록(legacy) → `game_status=null` → 기존 로직 그대로 동작 ✅
+- 앱 재진입 시 `backfillLiveRecords()` → `evaluateBadges()` 자동 실행 ✅
+
+---
+
+## Phase 14: 승리 토템 시스템
+
+> **날짜**: 2026-05-28
+
+### 개요
+사용자 커스터마이징 통계 기능. 개인만의 토템(행운의 아이템, 메이트, 루틴 등)을 등록하고 직관 기록 시 함께한 토템을 선택, 토템별 승률/연승 통계를 제공.
+
+### Data Model
+
+새 테이블:
+- `totems` — `id`, `name`, `emoji`, `description`, `color`, `hidden`(soft-delete), `created_at`
+- `diary_totems` — `id`, `record_id`(FK), `totem_id`(FK), `UNIQUE(record_id, totem_id)`
+
+### DB 함수 (db.ts)
+
+| 함수 | 설명 |
+|------|------|
+| `addTotem(name, emoji?, description?, color?)` | 새 토템 생성 |
+| `updateTotem(id, fields)` | 토템 수정 (TOTEM_ALLOWED_COLUMNS 검증) |
+| `deleteTotem(id, keepRecords)` | keepRecords=true → hidden=1 (soft-delete), false → 실제 DELETE |
+| `getAllTotems()` | `WHERE hidden=0` — MY탭/모달용 |
+| `addDiaryTotem(recordId, totemId)` | 기록-토템 연결 |
+| `removeDiaryTotem(recordId, totemId)` | 연결 해제 |
+| `getDiaryTotems(recordId)` | 특정 기록의 토템 목록 |
+| `setDiaryTotems(recordId, totemIds)` | 일괄 덮어쓰기 (DELETE + INSERT) |
+| `getTotemStats(totemId, records)` | 토템별 승률/횟수/연승 계산 |
+| `getAllTotemStats(records, includeHidden?)` | 전체 토템 통계 (DiaryStats는 hidden 포함, MY탭은 제외) |
+| `deleteDiaryTotemsByRecordId(recordId)` | 기록 삭제 시 연결 정리 |
+
+### 변경 파일
+
+| 파일 | 변경 |
+|------|------|
+| `mobile/lib/db.ts` | `totems`/`diary_totems` 테이블 CREATE, `migrateTotemSchema()`, `hidden` 컬럼 추가, `TOTEM_ALLOWED_COLUMNS` 검증, totem CRUD + stats 함수 11개, `resetAllData`/`deleteJikgwanRecord`에 totem 정리 추가 |
+| `mobile/components/DiaryEntryModal.tsx` | GameOption에 gameStatus 추가, loadGames에서 status 추론, handleSave에서 game_status 저장, 토템 섹션 (칩 선택 UI, 빈 상태 문구, edit 시 기존 선택 복원) |
+| `mobile/components/DiaryStats.tsx` | "토템 승률" 카드 추가 — 가로 스크롤 칩, 집관 포함/제외 토글 연동, `includeHidden=true`로 soft-delete 토템도 통계 표시 |
+| `mobile/app/(tabs)/my.tsx` | "나의 토템" 섹션 — 2열 칩 그리드, create/edit 모달 (이모지 팔레트 36종 + 직접 입력, 색상 팔레트 12종), 삭제 확인 모달 (기록 유지/제거 선택) |
+| `mobile/app/(tabs)/home.tsx` | 도전과제 위젯 onPress → MY탭 도전과제 모달로 이동 |
+| `mobile/components/AchievementWidget.tsx` | onPress를 `router.push("/my?openAchievement=1")`로 변경 |
+
+### 수정된 버그
+
+| 버그 | 원인 | 수정 |
+|------|------|------|
+| deleteTotem 기록 유지 시 stats 사라짐 | diary_totems 연결 + totem 레코드 모두 삭제 | soft-delete: `hidden=1` 설정, diary_totems 유지 |
+| soft-delete 토템이 MY탭에 계속 노출 | `getAllTotemStats()`가 hidden 포함 전체 조회 | `includeHidden` 파라미터 추가, MY탭은 기본값(false) |
+| 토템 생성 후 MY탭에 안 나타남 | `getAllTotemStats`가 count>0인 것만 push | 필터 제거, 모든 토템 결과에 포함 |
+| 토템 삭제 모달 버튼 글자 안 보임 | theme.secondary 배경 + mutedForeground 글자 | 명시적 색상 사용 (myTeamColor+white, muted+red) |
+| 이모지 팔레트에 사람 없음 | 음식 이모지로 구성 | 사람 이모지 12종으로 교체 |
+| 색상이 raw hex 입력 | 자유 입력 방식 | 12색 원형 팔레트 + X 버튼 |
+
+### Code Review 반영
+
+- `updateTotem`에 `TOTEM_ALLOWED_COLUMNS` Set 검증 추가 (SQL 키 인터폴레이션 보호)
+- `getTotemStats`에 `if (!totem) throw` guard (hard-delete된 totem 조회 시 TypeError 방지)
+- DiaryStats `.catch(() => {})` → `console.warn` (silent error 제거)
+
+### Verification
+- `npx tsc --noEmit` — 에러 0 ✅
+- 토템 생성/수정/삭제 (기록 유지/제거) 정상 동작 ✅
+- DiaryEntryModal 토템 선택/해제/저장 ✅
+- DiaryStats 토템 통계 표시 (집관 토글 연동) ✅
+- soft-delete 후 MY탭 미노출 + DiaryStats 통계 유지 ✅
