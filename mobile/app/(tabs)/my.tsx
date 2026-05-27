@@ -714,8 +714,27 @@ export default function MyScreen() {
               />
 
               <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>이모지</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                {["🍀","🧿","🐯","⚾","🏆","👑","💪","🔥","🍺","🥟","🌮","🍕",
+                  "👟","🧢","🎧","🎸","🧸","🎯","🗿","🌙","⭐","💎","🧲","🎩",
+                  "🦄","🌈","👑","🪄","🧨","🎈","🎉","🍜","🧊","☕️","🍩","🍪"].map((e) => (
+                  <Pressable
+                    key={e}
+                    onPress={() => setTotemEmoji(totemEmoji === e ? "" : e)}
+                    style={{
+                      width: 36, height: 36, borderRadius: 10,
+                      alignItems: "center", justifyContent: "center",
+                      backgroundColor: totemEmoji === e ? theme.muted : "transparent",
+                      borderWidth: 1.5,
+                      borderColor: totemEmoji === e ? theme.foreground : theme.border,
+                    }}
+                  >
+                    <Text style={{ fontSize: 18 }}>{e}</Text>
+                  </Pressable>
+                ))}
+              </View>
               <TextInput
-                style={[styles.input, { width: 80, textAlign: "center", fontSize: 24 }]}
+                style={[styles.input, { width: 80, textAlign: "center", fontSize: 24, marginBottom: 8 }]}
                 value={totemEmoji}
                 onChangeText={setTotemEmoji}
                 placeholder="🍀"
@@ -734,15 +753,32 @@ export default function MyScreen() {
               />
 
               <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>색상</Text>
-              <TextInput
-                style={[styles.input, { width: 120 }]}
-                value={totemColor}
-                onChangeText={setTotemColor}
-                placeholder="#ff6b6b (선택)"
-                placeholderTextColor="#666"
-                maxLength={7}
-                autoCapitalize="none"
-              />
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+                {["#ff6b6b","#ffa726","#ffd54f","#66bb6a","#26c6da","#42a5f5",
+                  "#7e57c2","#ec407a","#8d6e63","#78909c","#37474f","#000000"].map((c) => (
+                  <Pressable
+                    key={c}
+                    onPress={() => setTotemColor(totemColor === c ? "" : c)}
+                    style={{
+                      width: 32, height: 32, borderRadius: 16,
+                      backgroundColor: c,
+                      borderWidth: 2.5,
+                      borderColor: totemColor === c ? theme.foreground : (c === "#000000" ? theme.border : "transparent"),
+                    }}
+                  />
+                ))}
+                <Pressable
+                  onPress={() => setTotemColor("")}
+                  style={{
+                    width: 32, height: 32, borderRadius: 16,
+                    borderWidth: 2, borderColor: theme.border,
+                    alignItems: "center", justifyContent: "center",
+                    backgroundColor: !totemColor ? theme.muted : "transparent",
+                  }}
+                >
+                  <Text style={{ fontSize: 12, color: theme.mutedForeground }}>X</Text>
+                </Pressable>
+              </View>
 
               <View style={styles.modalButtons}>
                 <Pressable style={styles.modalCancel} onPress={() => setShowTotemModal(false)}>
