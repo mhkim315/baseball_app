@@ -553,9 +553,9 @@ export default function MyScreen() {
                     <Pressable
                       hitSlop={6}
                       onPress={(e) => { e.stopPropagation?.(); setShowTotemDeleteConfirm(t); }}
-                      style={{ position: "absolute", right: -4, top: -2, zIndex: 1, width: 22, height: 22, borderRadius: 11, backgroundColor: theme.muted, alignItems: "center", justifyContent: "center" }}
+                      style={{ position: "absolute", right: -2, top: -2, zIndex: 1, width: 20, height: 20, borderRadius: 10, backgroundColor: theme.muted, alignItems: "center", justifyContent: "center" }}
                     >
-                      <Text style={{ fontSize: 11, color: theme.mutedForeground, lineHeight: 13 }}>✕</Text>
+                      <Text style={{ fontSize: 12, color: "#ef4444", fontWeight: "700" }}>X</Text>
                     </Pressable>
                     <Text style={{ fontSize: 28 }}>{t.emoji}</Text>
                   </View>
