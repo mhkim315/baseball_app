@@ -1,10 +1,10 @@
-import { getJikgwanRecords, updateJikgwanRecord, getBadges, getDb, checkAttendance, getTotalAttendanceDays, getMyTeam, getInstallDate, type Badge, type JikgwanRecord } from "@/lib/db";
+import { getJikgwanRecords, updateJikgwanRecord, getBadges, getDb, checkAttendance, getTotalAttendanceDays, getMyTeam, getInstallDate, getUnlockedEmotions, type Badge, type JikgwanRecord } from "@/lib/db";
 import { computeStreakStats } from "@/lib/stats";
 import { resolveIsWin } from "@/lib/expenseStats";
 import { parseGameTeamIds } from "@shared/constants";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { cachedDailyScores } from "@/lib/gameCache";
-import { EMOTION_COUNT, CHARACTER_LOCKABLE_SET, ALL_CHARACTERS } from "@/lib/emotions";
+import { CHARACTER_LOCKABLE_SET, ALL_CHARACTERS } from "@/lib/emotions";
 
 // --- Types ---
 
@@ -21,7 +21,7 @@ export interface BadgeDefinition {
   category: "milestone" | "streak" | "attendance" | "exploration" | "secret";
   progressTarget: number;
   teamId?: string;
-  check: (records: JikgwanRecord[], existingBadges: Badge[], attendanceStreak: number, myTeam?: string | null, installDate?: string, totalAttendanceDays?: number) => BadgeEvalResult;
+  check: (records: JikgwanRecord[], existingBadges: Badge[], attendanceStreak: number, myTeam?: string | null, installDate?: string, totalAttendanceDays?: number, unlockedEmotions?: string[]) => BadgeEvalResult;
 }
 
 export interface BadgeEvalResult {
@@ -1527,17 +1527,17 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     badgeKey: "emotion_collector",
     emoji: "🎭",
     title: "감정 수집가",
-    description: `${EMOTION_COUNT}가지 감정을 모두 기록했어요`,
-    tier: "easy",
-    xp: 10,
+    description: `캐릭터 감정 27종을 모두 모았어요`,
+    tier: "hard",
+    xp: 50,
     category: "exploration",
-    progressTarget: EMOTION_COUNT,
-    check: (records) => {
-      const emotions = new Set(records.filter(r => r.emotion).map(r => r.emotion));
+    progressTarget: ALL_CHARACTERS.length,
+    check: (_records, _existingBadges, _attendanceStreak, _myTeam, _installDate, _totalAttendanceDays, unlockedEmotions) => {
+      const count = unlockedEmotions?.length ?? 0;
       return {
-        unlocked: emotions.size >= EMOTION_COUNT,
-        progressCurrent: Math.min(emotions.size, EMOTION_COUNT),
-        progressTarget: EMOTION_COUNT,
+        unlocked: count >= ALL_CHARACTERS.length,
+        progressCurrent: Math.min(count, ALL_CHARACTERS.length),
+        progressTarget: ALL_CHARACTERS.length,
       };
     },
   },
@@ -1977,13 +1977,14 @@ export async function backfillLiveRecords(): Promise<number> {
 // --- Badge Evaluation Engine ---
 
 export async function evaluateBadges(): Promise<Badge[]> {
-  const [records, existingBadges, attendanceStreak, totalAttendanceDays, myTeam, installDate] = await Promise.all([
+  const [records, existingBadges, attendanceStreak, totalAttendanceDays, myTeam, installDate, unlockedEmotions] = await Promise.all([
     getJikgwanRecords(),
     getBadges(),
     checkAttendance(),
     getTotalAttendanceDays(),
     getMyTeam(),
     getInstallDate(),
+    getUnlockedEmotions(),
   ]);
 
   const existingMap = new Map(existingBadges.map((b) => [b.badge_key, b]));
@@ -1999,7 +2000,7 @@ export async function evaluateBadges(): Promise<Badge[]> {
       const existing = existingMap.get(def.badgeKey);
       if (existing?.unlocked_date) continue;
 
-      const result = def.check(records, existingBadges, attendanceStreak, myTeam, installDate, totalAttendanceDays);
+      const result = def.check(records, existingBadges, attendanceStreak, myTeam, installDate, totalAttendanceDays, unlockedEmotions);
 
       if (result.unlocked) {
         await database.runAsync(
