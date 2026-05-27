@@ -832,10 +832,12 @@ export async function getTotemStats(
   };
 }
 
-export async function getAllTotemStats(records: JikgwanRecord[]): Promise<TotemWithStats[]> {
+export async function getAllTotemStats(records: JikgwanRecord[], includeHidden = false): Promise<TotemWithStats[]> {
   const database = await getDb();
   const totems = await database.getAllAsync<Totem>(
-    "SELECT * FROM totems ORDER BY created_at DESC"
+    includeHidden
+      ? "SELECT * FROM totems ORDER BY created_at DESC"
+      : "SELECT * FROM totems WHERE hidden = 0 ORDER BY created_at DESC"
   );
   const results: TotemWithStats[] = [];
   for (const t of totems) {
