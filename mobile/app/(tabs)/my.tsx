@@ -553,9 +553,9 @@ export default function MyScreen() {
                     <Pressable
                       hitSlop={6}
                       onPress={(e) => { e.stopPropagation?.(); setShowTotemDeleteConfirm(t); }}
-                      style={{ position: "absolute", right: -2, top: -2, zIndex: 1, width: 20, height: 20, borderRadius: 10, backgroundColor: theme.muted, alignItems: "center", justifyContent: "center" }}
+                      style={{ position: "absolute", right: -4, top: -2, zIndex: 1, width: 22, height: 22, borderRadius: 11, backgroundColor: theme.muted, alignItems: "center", justifyContent: "center" }}
                     >
-                      <Text style={{ fontSize: 12, color: "#ef4444", fontWeight: "700" }}>X</Text>
+                      <Text style={{ fontSize: 13, color: theme.mutedForeground }}>✕</Text>
                     </Pressable>
                     <Text style={{ fontSize: 28 }}>{t.emoji}</Text>
                   </View>
@@ -830,7 +830,7 @@ export default function MyScreen() {
               토템을 삭제할 때 연결된 기록을{'\n'}어떻게 처리할까요?
             </Text>
             <View style={{ gap: 8 }}>
-              <Pressable style={[styles.modalSave]} onPress={async () => {
+              <Pressable style={[styles.modalSave, { backgroundColor: theme.foreground }]} onPress={async () => {
                 if (!showTotemDeleteConfirm) return;
                 try {
                   await deleteTotem(showTotemDeleteConfirm.id, true);
@@ -840,9 +840,9 @@ export default function MyScreen() {
                   console.warn("totem delete failed", e);
                 }
               }}>
-                <Text style={styles.modalSaveText}>기록 유지 (토템만 제거)</Text>
+                <Text style={[styles.modalSaveText, { color: theme.background }]}>기록 유지 (토템만 제거)</Text>
               </Pressable>
-              <Pressable style={[styles.modalCancel]} onPress={async () => {
+              <Pressable style={{ alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.muted }} onPress={async () => {
                 if (!showTotemDeleteConfirm) return;
                 try {
                   await deleteTotem(showTotemDeleteConfirm.id, false);
@@ -852,10 +852,10 @@ export default function MyScreen() {
                   console.warn("totem delete failed", e);
                 }
               }}>
-                <Text style={[styles.modalCancelText, { color: "#e74c3c", fontWeight: "600" }]}>기록에서도 제거</Text>
+                <Text style={{ fontSize: 14, fontWeight: "600", color: "#ef4444" }}>기록에서도 제거</Text>
               </Pressable>
-              <Pressable style={[styles.modalCancel, { marginTop: 4 }]} onPress={() => setShowTotemDeleteConfirm(null)}>
-                <Text style={styles.modalCancelText}>취소</Text>
+              <Pressable style={{ alignItems: "center", paddingVertical: 10, borderRadius: 12, marginTop: 4 }} onPress={() => setShowTotemDeleteConfirm(null)}>
+                <Text style={{ fontSize: 14, color: theme.mutedForeground }}>취소</Text>
               </Pressable>
             </View>
           </View>
