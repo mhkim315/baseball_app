@@ -524,9 +524,12 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     category: "exploration",
     progressTarget: 1,
     check: (records) => {
-      const dateCount = new Map<string, number>();
-      for (const r of records) dateCount.set(r.date, (dateCount.get(r.date) ?? 0) + 1);
-      const dhDate = [...dateCount.entries()].find(([, c]) => c >= 2);
+      const dateGames = new Map<string, Set<string>>();
+      for (const r of records) {
+        if (!dateGames.has(r.date)) dateGames.set(r.date, new Set());
+        dateGames.get(r.date)!.add(r.game_id);
+      }
+      const dhDate = [...dateGames.entries()].find(([, games]) => games.size >= 2);
       return {
         unlocked: !!dhDate,
         progressCurrent: dhDate ? 1 : 0,

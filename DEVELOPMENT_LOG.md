@@ -1184,7 +1184,13 @@ Android 런처 아이콘이 시스템 마스크(mask)에 의해 가장자리 ~17
 **2. 시각 비교 HTML**
 - `mobile/icon-compare.html` — 현재(빌드 중)/수정(패딩) side-by-side 비교 + 런처 미리보기
 
+**3. 더블헤더 배지 조건 버그 수정**
+- 같은 날 같은 `game_id`로 2개 기록 작성 시 더블헤더가 해금되던 문제 수정
+- `records` 단순 카운트(dateCount) → 같은 날짜 내 **고유 `game_id` 개수**(dateGames Set)로 변경
+- 같은 경기를 2번 기록해도 해금되지 않고, 실제로 다른 2경기를 직관해야 해금됨
+
 ### 변경 파일
 | 파일 | 변경 |
 |------|------|
 | `mobile/assets/adaptive-icon.png` | 1024×1024 꽉 참 → 66% 중앙 패딩 버전으로 교체 |
+| `mobile/lib/achievements.ts` | 더블헤더 check: dateCount → dateGames Set<game_id> |
