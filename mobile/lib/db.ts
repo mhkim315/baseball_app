@@ -686,6 +686,8 @@ export async function addTotem(
   return result.lastInsertRowId ?? 0;
 }
 
+const TOTEM_ALLOWED_COLUMNS = new Set(["name", "emoji", "description", "color"]);
+
 export async function updateTotem(
   id: number,
   fields: { name?: string; emoji?: string; description?: string | null; color?: string | null }
@@ -695,6 +697,10 @@ export async function updateTotem(
   const values: any[] = [];
   for (const [key, value] of Object.entries(fields)) {
     if (value === undefined) continue;
+    if (!TOTEM_ALLOWED_COLUMNS.has(key)) {
+      console.warn(`updateTotem: rejected unknown column "${key}"`);
+      continue;
+    }
     setClauses.push(`${key} = ?`);
     values.push(value ?? null);
   }
@@ -775,6 +781,7 @@ export async function getTotemStats(
     "SELECT * FROM totems WHERE id = ?",
     totemId
   );
+  if (!totem) throw new Error(`getTotemStats: totem ${totemId} not found`);
   const recordIds = new Set(
     (await database.getAllAsync<{ record_id: number }>(
       "SELECT record_id FROM diary_totems WHERE totem_id = ?",
