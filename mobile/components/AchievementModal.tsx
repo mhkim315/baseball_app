@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { View, Text, Pressable, ScrollView, Modal, StyleSheet } from "react-native";
+import { useState, useEffect, useRef } from "react";
+import { View, Text, Pressable, ScrollView, Modal, StyleSheet, useWindowDimensions, type NativeSyntheticEvent, type NativeScrollEvent } from "react-native";
 import { getBadges, getJikgwanRecords, type Badge, type JikgwanRecord } from "@/lib/db";
 import { BADGE_DEFINITIONS, getVisibleBadgeDefinitions, computeLevel } from "@/lib/achievements";
 import { useTheme } from "@/lib/ThemeContext";
@@ -16,6 +16,8 @@ type SubTab = "detail" | "collection";
 export default function AchievementModal({ visible, onClose }: Props) {
   const { theme } = useTheme();
   const { myTeam } = useTeam();
+  const { width: screenWidth } = useWindowDimensions();
+  const scrollRef = useRef<ScrollView>(null);
   const [subTab, setSubTab] = useState<SubTab>("detail");
   const [badges, setBadges] = useState<Badge[]>([]);
   const [records, setRecords] = useState<JikgwanRecord[]>([]);
@@ -30,6 +32,16 @@ export default function AchievementModal({ visible, onClose }: Props) {
         .finally(() => setLoading(false));
     }
   }, [visible]);
+
+  // Scroll to page when subTab button is pressed
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ x: subTab === "detail" ? 0 : screenWidth, animated: true });
+  }, [subTab, screenWidth]);
+
+  const handleMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const page = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
+    setSubTab(page === 0 ? "detail" : "collection");
+  };
 
   const levelInfo = computeLevel(badges);
   const levelEmoji = levelInfo.level >= 7 ? "👑" : levelInfo.level >= 5 ? "🏆" : levelInfo.level >= 3 ? "🥇" : "🥚";
@@ -73,43 +85,59 @@ export default function AchievementModal({ visible, onClose }: Props) {
           ))}
         </View>
 
+        {/* Swipeable pages */}
         {loading ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <Text style={{ color: theme.mutedForeground, fontSize: 14 }}>로딩 중...</Text>
           </View>
-        ) : subTab === "detail" ? (
-          <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
-            <AchievementList records={records} />
-          </ScrollView>
         ) : (
-          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-              <View style={styles.grid}>
-                {visibleDefs.map((def) => {
-                  const unlocked = unlockedSet.has(def.badgeKey);
-                  const badge = badgeMap.get(def.badgeKey);
-                  return (
-                    <Pressable key={def.id} style={styles.gridCell} onPress={() => setDetailBadgeKey(def.badgeKey)}>
-                      <View style={[styles.gridInner, { borderColor: theme.border }, unlocked && { backgroundColor: theme.muted }]}>
-                        <Text style={styles.gridEmoji}>{unlocked ? def.emoji : "🔒"}</Text>
-                        <Text style={[styles.gridTitle, { color: theme.foreground }]} numberOfLines={1}>
-                          {def.category === "secret" && !unlocked ? "???" : def.title}
-                        </Text>
-                        {!unlocked && badge && badge.progress_current > 0 && (
-                          <View style={styles.gridProgressOuter}>
-                            <View style={[styles.gridProgressFill, { width: `${Math.min((badge.progress_current / Math.max(badge.progress_target, 1)) * 100, 100)}%` }]} />
-                          </View>
-                        )}
-                        {badge?.unlocked_date && (
-                          <Text style={[styles.gridDate, { color: theme.mutedForeground }]} numberOfLines={1}>
-                            {badge.unlocked_date.slice(2)}
+          <ScrollView
+            ref={scrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={handleMomentumEnd}
+            style={{ flex: 1 }}
+          >
+            {/* Detail page */}
+            <View style={{ width: screenWidth, flex: 1 }}>
+              <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
+                <AchievementList records={records} />
+              </ScrollView>
+            </View>
+
+            {/* Collection page */}
+            <View style={{ width: screenWidth, flex: 1 }}>
+              <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+                <View style={styles.grid}>
+                  {visibleDefs.map((def) => {
+                    const unlocked = unlockedSet.has(def.badgeKey);
+                    const badge = badgeMap.get(def.badgeKey);
+                    return (
+                      <Pressable key={def.id} style={styles.gridCell} onPress={() => setDetailBadgeKey(def.badgeKey)}>
+                        <View style={[styles.gridInner, { borderColor: theme.border }, unlocked && { backgroundColor: theme.muted }]}>
+                          <Text style={styles.gridEmoji}>{unlocked ? def.emoji : "🔒"}</Text>
+                          <Text style={[styles.gridTitle, { color: theme.foreground }]} numberOfLines={1}>
+                            {def.category === "secret" && !unlocked ? "???" : def.title}
                           </Text>
-                        )}
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </ScrollView>
+                          {!unlocked && badge && badge.progress_current > 0 && (
+                            <View style={styles.gridProgressOuter}>
+                              <View style={[styles.gridProgressFill, { width: `${Math.min((badge.progress_current / Math.max(badge.progress_target, 1)) * 100, 100)}%` }]} />
+                            </View>
+                          )}
+                          {badge?.unlocked_date && (
+                            <Text style={[styles.gridDate, { color: theme.mutedForeground }]} numberOfLines={1}>
+                              {badge.unlocked_date.slice(2)}
+                            </Text>
+                          )}
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+            </View>
+          </ScrollView>
         )}
 
         {/* Badge detail popup */}
