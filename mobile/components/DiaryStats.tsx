@@ -559,7 +559,7 @@ export default function DiaryStats({ records, teamId, year }: DiaryStatsProps) {
       {/* Totem stats (toggle-affected) */}
       {totemStats.some((t) => t.count > 0) && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>🍀 토템 승률</Text>
+          <Text style={styles.cardTitle}>토템 승률</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
             {totemStats.filter((t) => t.count > 0).map((t) => {
               const chipColor = t.color || theme.border;
