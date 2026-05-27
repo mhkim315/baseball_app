@@ -44,7 +44,7 @@ export default function AchievementWidget() {
 
   return (
     <Pressable
-      onPress={() => router.push("/(tabs)/my")}
+      onPress={() => router.push("/my?openAchievement=1")}
       style={[styles.card, { backgroundColor: theme.card, borderColor: levelAccent || theme.border }]}
     >
       {/* Level summary */}
