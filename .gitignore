@@ -117,3 +117,7 @@ server_backup/
 # Server data API config & scripts (internal — do not push)
 server/data_api/
 server/scripts/
+
+# Python bytecode
+__pycache__/
+*.pyc
