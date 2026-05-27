@@ -543,6 +543,9 @@ export default function GameDetailScreen() {
   const hasScoreData = gameScore !== null;
   const hasFinishedSignals = !!detail.scoreBoard || (detail.pitchingResult && detail.pitchingResult.length > 0) || (detail.etcRecords && detail.etcRecords.length > 0);
   const isGameActive = hasScoreData || hasFinishedSignals;
+  const hasDefinitiveFinish = !!detail.scoreBoard?.rheb ||
+    (detail.pitchingResult && detail.pitchingResult.length > 0) ||
+    (detail.etcRecords && detail.etcRecords.length > 0);
 
   const [gh, gm] = (detail.gameInfo?.time || "18:30").split(":").map(Number);
   const [y, m, d] = detail.date.split("-").map(Number);
@@ -550,10 +553,11 @@ export default function GameDetailScreen() {
   const gameHasStarted = new Date() >= startTime;
 
   const isFinished = !isCancelled && !isFuture && gameHasStarted && (
-    detail.gameInfo?.status === "finished" || (isGameActive && !isToday)
+    (detail.gameInfo?.status === "finished" && (!isToday || hasDefinitiveFinish)) ||
+    (isGameActive && !isToday)
   );
   const isLive = !isCancelled && !isFinished && gameHasStarted && (
-    detail.gameInfo?.status === "live" || (isGameActive && isToday)
+    detail.gameInfo?.status === "live" || isToday
   );
   const isBeforeGame = !isFinished && !isLive && !isCancelled;
   const hasLineup = !isBeyondTomorrow && homeLineup.length > 0 && awayLineup.length > 0;

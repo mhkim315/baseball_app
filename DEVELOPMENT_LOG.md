@@ -1194,3 +1194,30 @@ Android 런처 아이콘이 시스템 마스크(mask)에 의해 가장자리 ~17
 |------|------|
 | `mobile/assets/adaptive-icon.png` | 1024×1024 꽉 참 → 66% 중앙 패딩 버전으로 교체 |
 | `mobile/lib/achievements.ts` | 더블헤더 check: dateCount → dateGames Set<game_id> |
+
+---
+
+## Phase 11: Game Detail Live Status Bug Fix
+
+> **날짜**: 2026-05-27
+
+### 개요
+진행 중인 경기에서 홈 탭은 이닝(예: "3회초")을 표시하는데, 게임 상세 페이지는 "경기 종료"를 표시하는 버그 수정.
+
+### 근본 원인
+서버 `/game-detail/{gameId}` API가 다음 두 소스의 불일치로 **진행 중인 경기의 `gameInfo.status`를 `"finished"`로 잘못 반환**:
+- `gameInfo.status` → `today-games.json`에서 못 찾으면 `daily-scores.json`으로 fallback. `daily-scores.json`은 진행 중에도 `awayScore`가 있으면 `"finished"`로 설정 (server/main.py:548)
+- `scoreBoard.inn` → 팀별 `game-records/{date}.json`에서 읽어오므로 정상 (실시간 스크래핑)
+
+홈 탭은 `TodayGame.status`(다른 API) + `score.outcome !== null`(결정적 finished 신호) 사용으로 영향 없음.
+
+### 수정 내용 (`mobile/app/game/[id].tsx`)
+1. **`isFinished`**: 오늘 경기에서 `gameInfo.status === "finished"`를 무조건 신뢰하지 않도록 `hasDefinitiveFinish` 가드 추가
+   - 결정적 종료 신호: `scoreBoard?.rheb`(최종 R/H/E), `pitchingResult`(W/L), `etcRecords`(경기 후 기록)
+2. **`isLive`**: 백업 조건을 `(isGameActive && isToday)` → `isToday`로 변경 (홈 탭과 동일)
+
+### Edge Cases
+- 진행 중 (API 잘못 응답): hasDefinitiveFinish=false → isFinished=false → isLive=true ✓
+- 종료 (정상): hasDefinitiveFinish=true → isFinished=true ✓
+- 과거 경기: `!isToday` → 기존 로직 유지 (regression 없음)
+- 시작 직전/후, 데이터 없음: `isToday=true` + `gameHasStarted` true → live ✓
