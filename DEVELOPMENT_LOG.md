@@ -1112,5 +1112,56 @@ KBO 10개 구단 밈·응원가·팬덤 문화 추가 배지 12종 + 팀 전용 
 - `mobile/lib/achievements.ts` — interface + 12종 배지 + 유틸리티
 - `mobile/components/BadgeCollectionModal.tsx` — myTeam prop, 필터링
 - `mobile/components/AchievementWidget.tsx` — useTeam + 필터링
+
+---
+
+## Phase 9: 캐릭터 27종 확장, 집관 배지, 코드리뷰 버그픽스 (2026-05-27)
+
+### 변경 내용
+
+**1. 캐릭터 아이콘 9종 추가 (18→27)**
+- devastated(멘붕), hot_summer(폭염), karen(까칠), out(퇴장), praying(기도), rain_cancellation(우취), resigned_disgust(체념), thumbs_up(따봉), provocative(도발)
+- `scripts/normalize-images.cjs` EMOTIONS 배열 업데이트, 270개 PNG 재생성
+- `mobile/lib/emotions.ts` CharacterEmotion/ALL_CHARACTERS 확장
+
+**2. 집관(Home Viewing) 배지 5종**
+- `home_first` (튜토리얼, 5xp) — 첫 집관 기록
+- `home_10/30/50/100` — 집관 기록 마일스톤 (is_live=0 카운트)
+
+**3. 토스트 애니메이션 개선**
+- 사라질 때 fade-out + slide-down 동시 진행, 이후 LayoutAnimation으로 간격 축소
+- EXIT_DURATION 250→350ms
+- 토스트 탭 시 도전과제 모달로 이동
+
+**4. 프로필 선택기 스크롤**
+- 캐릭터 27개 표시를 위해 ScrollView(maxHeight: 360) 적용
+
+**5. 코드리뷰 버그픽스 (9건)**
+- `addUnlockedEmotion` — BEGIN IMMEDIATE 트랜잭션으로 동시 해금 경합 제거
+- `busan_galmaegi` — 정렬 누락으로 잘못된 날짜 반환 수정
+- `bodhisattva`/`irresponsible_pleasure` — qualifying date가 마지막 방문일이 아닌 N번째 방문일 사용
+- 지출 금액 NaN 입력 시 알림 표시
+- `diary.tsx` — loadData/checkBadges await 누락 수정
+- `evaluateBadges` — 트랜잭션으로 래핑
+- API onError 로깅 추가 (console.warn)
+- AppState 리스너 추가 (foreground 감지)
+- ErrorBoundary를 Provider 밖으로 이동
+
+**6. AAB 빌드 v1.0.7(8)**
+- EAS Build production 프로파일, Play Store 배포용
+
+### 변경 파일
+- `mobile/lib/emotions.ts` — CharacterEmotion 18→27
+- `mobile/lib/achievements.ts` — 집관 배지 5종 + 버그픽스
+- `mobile/lib/db.ts` — addUnlockedEmotion 트랜잭션, getDb export
+- `mobile/lib/api.ts` — onError 로깅
+- `mobile/components/AchievementToast.tsx` — exit slide-down + duration
+- `mobile/components/DiaryEntryModal.tsx` — 지출 NaN 검증
+- `mobile/app/(tabs)/diary.tsx` — await 추가, AchievementModal 연동
+- `mobile/app/(tabs)/my.tsx` — 프로필 선택기 스크롤
+- `mobile/app/_layout.tsx` — ErrorBoundary 위치, AppState 리스너
+- `scripts/normalize-images.cjs` — EMOTIONS 18→27
+- `client/public/team-characters/` — PNG 90개 추가
+- `mobile/app.json` — version 1.0.7, versionCode 8
 - `mobile/components/AchievementList.tsx` — useTeam + 필터링
 - `mobile/app/(tabs)/my.tsx` — BadgeCollectionSection + Modal myTeam 전달
