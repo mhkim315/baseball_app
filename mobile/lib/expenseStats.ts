@@ -120,7 +120,7 @@ export function computeHomeAwayExpenses(expenses: Expense[], records: JikgwanRec
   const homeTotal = { total: 0, games: new Set<number>() };
   const awayTotal = { total: 0, games: new Set<number>() };
   for (const e of expenses) {
-    const rec = e.record_id != null ? recMap.get(e.record_id) : findRecordByDate(e.date, records);
+    const rec = e.record_id != null ? recMap.get(e.record_id) : findRecordByDate(e.date, filteredRecords);
     if (!rec?.game_id || !rec.cheered_team) continue;
     const rid = e.record_id ?? rec.id;
     const { homeId } = parseGameTeamIds(rec.game_id);
@@ -152,7 +152,7 @@ export function computeWinLossExpenses(expenses: Expense[], records: JikgwanReco
   const l = { total: 0, games: new Set<number>() };
   const d = { total: 0, games: new Set<number>() };
   for (const e of expenses) {
-    const rec = e.record_id != null ? recMap.get(e.record_id) : findRecordByDate(e.date, records);
+    const rec = e.record_id != null ? recMap.get(e.record_id) : findRecordByDate(e.date, filteredRecords);
     if (!rec) continue;
     const rid = e.record_id ?? rec.id;
     const iw = resolveIsWin(rec);
@@ -181,7 +181,7 @@ export function computeStadiumExpenses(expenses: Expense[], records: JikgwanReco
   for (const r of filteredRecords) recMap.set(r.id, r);
   const m = new Map<string, { total: number; games: Set<number> }>();
   for (const e of expenses) {
-    const rec = e.record_id != null ? recMap.get(e.record_id) : findRecordByDate(e.date, records);
+    const rec = e.record_id != null ? recMap.get(e.record_id) : findRecordByDate(e.date, filteredRecords);
     if (!rec?.stadium) continue;
     const rid = e.record_id ?? rec.id;
     if (!m.has(rec.stadium)) m.set(rec.stadium, { total: 0, games: new Set() });
@@ -232,7 +232,7 @@ export function computeResultCategoryExpenses(expenses: Expense[], records: Jikg
   const winMap = new Map<string, number>();
   const lossMap = new Map<string, number>();
   for (const e of expenses) {
-    const rec = e.record_id != null ? recMap.get(e.record_id) : findRecordByDate(e.date, records);
+    const rec = e.record_id != null ? recMap.get(e.record_id) : findRecordByDate(e.date, filteredRecords);
     if (!rec) continue;
     const iw = resolveIsWin(rec);
     if (iw === 1) winMap.set(e.category, (winMap.get(e.category) || 0) + e.amount);

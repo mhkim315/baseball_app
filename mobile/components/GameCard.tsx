@@ -54,7 +54,7 @@ export default function GameCard({
   const homeWon = hasResult ? homeScore! > awayScore! : null;
   const awayWon = hasResult ? awayScore! > homeScore! : null;
   const isDraw = hasResult ? homeScore === awayScore : null;
-  const showScore = (status === "finished" || status === "live" || ((homeScore || 0) + (awayScore || 0) > 0)) && homeScore !== undefined && awayScore !== undefined;
+  const showScore = homeScore !== undefined && awayScore !== undefined;
 
   const statusLabel = cancelled
     ? "취소"

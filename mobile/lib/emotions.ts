@@ -65,7 +65,7 @@ export const ALL_CHARACTERS: CharacterDef[] = [
 export const CHARACTER_BASIC_SET: CharacterEmotion[] = ALL_CHARACTERS.filter(c => c.basic).map(c => c.id);
 export const CHARACTER_LOCKABLE_SET: CharacterEmotion[] = ALL_CHARACTERS.filter(c => !c.basic).map(c => c.id);
 
-export const EMOTION_COUNT = ALL_CHARACTERS.length;
+export const EMOTION_COUNT = EMOTIONS.length;
 
 // Lookup: emotion ID → character image name for TeamBadge (all 16 types)
 export const EMOTION_CHARACTER: Record<string, CharacterEmotion> = {};

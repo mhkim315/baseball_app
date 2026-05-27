@@ -30,7 +30,7 @@ const pendingFetches = new Map<string, Promise<unknown | null>>();
 const RETRY_DELAYS = [5_000, 15_000, 45_000];
 const retryCounts = new Map<string, number>();
 
-function scheduleRetry<T>(key: string, fetcher: () => Promise<T | null>) {
+function scheduleRetry<T>(key: string, fetcher: () => Promise<T | null>, cachedAt?: number) {
   const done = retryCounts.get(key) ?? 0;
   if (done >= RETRY_DELAYS.length) {
     retryCounts.delete(key);
@@ -39,15 +39,21 @@ function scheduleRetry<T>(key: string, fetcher: () => Promise<T | null>) {
   retryCounts.set(key, done + 1);
   setTimeout(async () => {
     try {
+      // Don't write if cache was refreshed since this retry started
+      if (cachedAt) {
+        const current = await db.getCache(key);
+        if (current && current.updatedAt > cachedAt) {
+          retryCounts.delete(key);
+          return;
+        }
+      }
       const fresh = await fetcher();
       if (fresh) {
         await db.setCache(key, JSON.stringify(fresh));
         retryCounts.delete(key);
-      } else {
-        scheduleRetry(key, fetcher);
       }
     } catch {
-      scheduleRetry(key, fetcher);
+      scheduleRetry(key, fetcher, cachedAt);
     }
   }, RETRY_DELAYS[done]);
 }
@@ -98,7 +104,7 @@ async function fetchWithCache<T>(
     if (cached) {
       const parsed = safeParse(cached.data);
       if (parsed) {
-        scheduleRetry(cacheKeyStr, fetcher);
+        scheduleRetry(cacheKeyStr, fetcher, cached.updatedAt);
         return parsed as T;
       }
     }

@@ -581,22 +581,30 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     category: "milestone",
     progressTarget: 5,
     check: (records) => {
-      const sorted = [...records].sort((a, b) => a.date.localeCompare(b.date));
-      const streaks = new Map<string, { current: number; best: number; bestDate: string | undefined }>();
-      let maxStreak = 0;
-      let qualifyingDate: string | undefined;
-      for (const r of sorted) {
+      // Build per-opponent arrays, deduplicated by date
+      const byOpp = new Map<string, Map<string, JikgwanRecord>>();
+      for (const r of records) {
         if (!r.cheered_team || !r.game_id) continue;
         const ids = parseGameTeamIds(r.game_id);
         const opp = r.cheered_team === ids.awayId ? ids.homeId : ids.awayId;
         if (!opp) continue;
-        const iw = resolveIsWin(r);
+        if (!byOpp.has(opp)) byOpp.set(opp, new Map());
+        byOpp.get(opp)!.set(r.date, r);
+      }
+      const streaks = new Map<string, { current: number; best: number; bestDate: string | undefined }>();
+      let maxStreak = 0;
+      let qualifyingDate: string | undefined;
+      for (const [opp, dateMap] of byOpp) {
+        const sorted = [...dateMap.values()].sort((a, b) => a.date.localeCompare(b.date));
         const entry = streaks.get(opp) ?? { current: 0, best: 0, bestDate: undefined };
-        if (iw === 1) {
-          entry.current++;
-          if (entry.current > entry.best) { entry.best = entry.current; entry.bestDate = r.date; }
-        } else {
-          entry.current = 0;
+        for (const r of sorted) {
+          const iw = resolveIsWin(r);
+          if (iw === 1) {
+            entry.current++;
+            if (entry.current > entry.best) { entry.best = entry.current; entry.bestDate = r.date; }
+          } else {
+            entry.current = 0;
+          }
         }
         if (entry.best > maxStreak) { maxStreak = entry.best; qualifyingDate = entry.bestDate; }
         streaks.set(opp, entry);

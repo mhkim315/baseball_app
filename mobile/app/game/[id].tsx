@@ -171,7 +171,7 @@ export default function GameDetailScreen() {
     const gameYear = parseInt(gid.slice(0, 4), 10);
     if (gameYear <= 2025) {
       tryExhibitionFallback();
-      return;
+      return () => { cancelled = true; };
     }
 
     fetchGameDetail(gid).then(async (data) => {

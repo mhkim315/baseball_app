@@ -114,7 +114,7 @@ export function createApi(options: ApiClientOptions) {
       client.get<{ years: number[] }>("/seasons"),
 
     fetchScoreSummary: (year: number): Promise<{ year: number; teams: ScoreSummaryRow[] } | null> =>
-      client.get<{ year: number; teams: ScoreSummaryRow[] }>(`/api/score-summary/${year}`),
+      client.get<{ year: number; teams: ScoreSummaryRow[] }>(`/score-summary/${year}`),
 
     fetchRegularGames: (
       year: number
