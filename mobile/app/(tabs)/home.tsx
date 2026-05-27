@@ -133,13 +133,13 @@ export default function HomeScreen() {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [achievementOpen, setAchievementOpen] = useState(false);
   const [calGames, setCalGames] = useState<ScheduleGame[]>([]);
-  const [calScores, setCalScores] = useState<Record<string, { away: string; home: string; awayScore: number; homeScore: number; outcome?: string | null; cancelled?: boolean }[]>>({});
+  const [calScores, setCalScores] = useState<Record<string, ScoreEntry[]>>({});
   const scheduleCache = useRef<{ month: number; year: number; games: ScheduleGame[] } | null>(null);
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
-  const calCache = useRef<Record<string, { games: ScheduleGame[]; scores: Record<string, any[]> }>>({});
+  const calCache = useRef<Record<string, { games: ScheduleGame[]; scores: Record<string, ScoreEntry[]> }>>({});
   const MAX_CAL_CACHE_ENTRIES = 15;
-  const pruneCalCache = (cache: Record<string, { games: ScheduleGame[]; scores: Record<string, any[]> }>) => {
+  const pruneCalCache = (cache: Record<string, { games: ScheduleGame[]; scores: Record<string, ScoreEntry[]> }>) => {
     const keys = Object.keys(cache);
     if (keys.length <= MAX_CAL_CACHE_ENTRIES) return;
     keys.sort().splice(0, keys.length - MAX_CAL_CACHE_ENTRIES).forEach((k) => delete cache[k]);
@@ -539,7 +539,7 @@ export default function HomeScreen() {
     [myTeam]
   );
 
-  const renderGame = ({ item }: { item: EnhancedGame }) => {
+  const renderGame = useCallback(({ item }: { item: EnhancedGame }) => {
     const isMyTeamGame = myTeam && (item.homeTeam === myTeam || item.awayTeam === myTeam);
     return (
       <GameCard
@@ -562,7 +562,7 @@ export default function HomeScreen() {
         onClick={() => router.push(`/game/${item.id}?ap=${encodeURIComponent(item.awayPitcher || "")}&hp=${encodeURIComponent(item.homePitcher || "")}`)}
       />
     );
-  };
+  }, [myTeam, isDark, router]);
 
   const renderEmpty = (isMonday?: boolean) => (
     <View style={[styles.emptyContainer, isMonday && { paddingVertical: 20 }]}>

@@ -3,8 +3,8 @@ import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemeProvider, useTheme } from "@/lib/ThemeContext";
 import { TeamProvider } from "@/lib/TeamContext";
-import React, { useEffect, useRef } from "react";
-import { View, Text, Pressable, AppState } from "react-native";
+import React from "react";
+import { View, Text, Pressable } from "react-native";
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -46,18 +46,6 @@ class ErrorBoundary extends React.Component<
 
 function RootLayoutInner() {
   const { isDark } = useTheme();
-  const appStateRef = useRef(AppState.currentState);
-
-  useEffect(() => {
-    const sub = AppState.addEventListener("change", (nextState) => {
-      if (appStateRef.current.match(/inactive|background/) && nextState === "active") {
-        // Force refetch by setting a timestamp — screens with useFocusEffect will re-run
-        console.log("App returned to foreground");
-      }
-      appStateRef.current = nextState;
-    });
-    return () => sub.remove();
-  }, []);
 
   return (
     <>
