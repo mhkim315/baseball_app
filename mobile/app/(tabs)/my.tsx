@@ -830,7 +830,7 @@ export default function MyScreen() {
               토템을 삭제할 때 연결된 기록을{'\n'}어떻게 처리할까요?
             </Text>
             <View style={{ gap: 8 }}>
-              <Pressable style={[styles.modalSave, { backgroundColor: theme.foreground }]} onPress={async () => {
+              <Pressable style={{ alignItems: "center", paddingVertical: 14, borderRadius: 12, backgroundColor: myTeamColor }} onPress={async () => {
                 if (!showTotemDeleteConfirm) return;
                 try {
                   await deleteTotem(showTotemDeleteConfirm.id, true);
@@ -840,7 +840,7 @@ export default function MyScreen() {
                   console.warn("totem delete failed", e);
                 }
               }}>
-                <Text style={[styles.modalSaveText, { color: theme.background }]}>기록 유지 (토템만 제거)</Text>
+                <Text style={{ fontSize: 14, fontWeight: "600", color: "#fff" }}>기록 유지 (토템만 제거)</Text>
               </Pressable>
               <Pressable style={{ alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.muted }} onPress={async () => {
                 if (!showTotemDeleteConfirm) return;
