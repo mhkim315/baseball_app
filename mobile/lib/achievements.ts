@@ -1,4 +1,4 @@
-import { getJikgwanRecords, getBadges, upsertBadge, checkAttendance, getTotalAttendanceDays, getMyTeam, getInstallDate, type Badge, type JikgwanRecord } from "@/lib/db";
+import { getJikgwanRecords, getBadges, getDb, checkAttendance, getTotalAttendanceDays, getMyTeam, getInstallDate, type Badge, type JikgwanRecord } from "@/lib/db";
 import { computeStreakStats } from "@/lib/stats";
 import { resolveIsWin } from "@/lib/expenseStats";
 import { parseGameTeamIds } from "@shared/constants";
@@ -1921,37 +1921,44 @@ export async function evaluateBadges(): Promise<Badge[]> {
   const today = new Date();
   const todayStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
 
-  for (const def of BADGE_DEFINITIONS) {
-    const existing = existingMap.get(def.badgeKey);
-    if (existing?.unlocked_date) continue;
+  // Wrap all badge upserts in a transaction so partial crash doesn't corrupt progress
+  const database = await getDb();
+  await database.runAsync("BEGIN IMMEDIATE");
+  try {
+    for (const def of BADGE_DEFINITIONS) {
+      const existing = existingMap.get(def.badgeKey);
+      if (existing?.unlocked_date) continue;
 
-    const result = def.check(records, existingBadges, attendanceStreak, myTeam, installDate, totalAttendanceDays);
+      const result = def.check(records, existingBadges, attendanceStreak, myTeam, installDate, totalAttendanceDays);
 
-    if (result.unlocked) {
-      await upsertBadge({
-        id: def.id,
-        badge_key: def.badgeKey,
-        unlocked_date: result.qualifyingDate ?? todayStr,
-        progress_current: result.progressTarget,
-        progress_target: result.progressTarget,
-      });
-      newlyUnlocked.push({
-        id: def.id,
-        badge_key: def.badgeKey,
-        unlocked_date: result.qualifyingDate ?? todayStr,
-        progress_current: result.progressTarget,
-        progress_target: result.progressTarget,
-        is_notified: 0,
-      });
-    } else if (result.progressCurrent !== existing?.progress_current) {
-      await upsertBadge({
-        id: def.id,
-        badge_key: def.badgeKey,
-        unlocked_date: null,
-        progress_current: result.progressCurrent,
-        progress_target: result.progressTarget,
-      });
+      if (result.unlocked) {
+        await database.runAsync(
+          `INSERT OR REPLACE INTO badges (id, badge_key, unlocked_date, progress_current, progress_target, is_notified)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          def.id, def.badgeKey, result.qualifyingDate ?? todayStr,
+          result.progressTarget, result.progressTarget, 0
+        );
+        newlyUnlocked.push({
+          id: def.id,
+          badge_key: def.badgeKey,
+          unlocked_date: result.qualifyingDate ?? todayStr,
+          progress_current: result.progressTarget,
+          progress_target: result.progressTarget,
+          is_notified: 0,
+        });
+      } else if (result.progressCurrent !== existing?.progress_current) {
+        await database.runAsync(
+          `INSERT OR REPLACE INTO badges (id, badge_key, unlocked_date, progress_current, progress_target, is_notified)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          def.id, def.badgeKey, null,
+          result.progressCurrent, result.progressTarget, 0
+        );
+      }
     }
+    await database.runAsync("COMMIT");
+  } catch (e) {
+    await database.runAsync("ROLLBACK");
+    throw e;
   }
 
   return newlyUnlocked;

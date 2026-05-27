@@ -24,8 +24,8 @@ export const {
 } = createApi({
   baseUrl: API_BASE,
   timeout: 8000,
-  onError: (_path: string, _error: unknown) => {
-    // Mobile: silent failure for now; UI handles error state
+  onError: (path: string, error: unknown) => {
+    console.warn(`API ${path} failed:`, error);
   },
 });
 

@@ -5,7 +5,7 @@ const CACHE_VERSION = 4;
 let db: SQLite.SQLiteDatabase | null = null;
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
-async function getDb(): Promise<SQLite.SQLiteDatabase> {
+export async function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (dbPromise) return dbPromise;
   if (!dbPromise) {
     dbPromise = (async () => {
