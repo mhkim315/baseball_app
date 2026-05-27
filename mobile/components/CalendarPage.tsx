@@ -14,6 +14,7 @@ interface ScoreInfo {
   away: string; home: string;
   awayScore: number; homeScore: number;
   outcome: string | null; cancelled: boolean;
+  gameIdx?: number;
 }
 
 function teamShortName(teamId: string): string {

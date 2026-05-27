@@ -122,6 +122,7 @@ async function migrateJikgwanSchema(database: SQLite.SQLiteDatabase): Promise<vo
     { name: "is_live", type: "INTEGER", dflt: "NULL" },
     { name: "seat", type: "TEXT", dflt: "NULL" },
     { name: "game_type", type: "TEXT", dflt: "NULL" },
+    { name: "game_status", type: "TEXT", dflt: "NULL" },
   ];
   const existing = await database.getAllAsync<{ name: string }>(
     "PRAGMA table_info(jikgwan_records)"
@@ -250,6 +251,7 @@ export interface JikgwanRecord {
   seat: string | null;
   is_cancelled?: number;
   game_type: string | null;  // null=regular, "exhibition", "postseason"
+  game_status: string | null; // "live", "finished", "scheduled", or null (legacy)
 }
 
 export async function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "created_at">): Promise<number> {
@@ -257,8 +259,8 @@ export async function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "creat
 
   const result = await database.runAsync(
     `INSERT INTO jikgwan_records
-      (game_id, date, photo_path, photos, memo, score_away, score_home, emotion, frame_style, stadium, is_win, cheered_team, is_live, seat, game_type)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (game_id, date, photo_path, photos, memo, score_away, score_home, emotion, frame_style, stadium, is_win, cheered_team, is_live, seat, game_type, game_status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     record.game_id || "",
     record.date || "",
     record.photo_path ?? null,
@@ -274,6 +276,7 @@ export async function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "creat
     record.is_live ?? null,
     record.seat ?? null,
     record.game_type ?? null,
+    record.game_status ?? null,
   );
   return result.lastInsertRowId ?? 0;
 }
@@ -297,12 +300,12 @@ export async function getJikgwanRecordsByMonth(year: number, month: number): Pro
 const JIKGWAN_ALLOWED_COLUMNS = new Set([
   "memo", "emotion", "three_line_1", "three_line_2", "three_line_3",
   "frame_style", "is_win", "photos", "cheered_team", "is_live", "seat",
-  "score_away", "score_home", "stadium", "game_id", "game_type",
+  "score_away", "score_home", "stadium", "game_id", "game_type", "game_status",
 ]);
 
 export async function updateJikgwanRecord(
   id: number,
-  fields: Partial<Pick<JikgwanRecord, "memo" | "emotion" | "three_line_1" | "three_line_2" | "three_line_3" | "frame_style" | "is_win" | "photos" | "cheered_team" | "is_live" | "seat" | "score_away" | "score_home" | "stadium" | "game_id" | "game_type">>
+  fields: Partial<Pick<JikgwanRecord, "memo" | "emotion" | "three_line_1" | "three_line_2" | "three_line_3" | "frame_style" | "is_win" | "photos" | "cheered_team" | "is_live" | "seat" | "score_away" | "score_home" | "stadium" | "game_id" | "game_type" | "game_status">>
 ): Promise<void> {
   const database = await getDb();
   const setClauses: string[] = [];

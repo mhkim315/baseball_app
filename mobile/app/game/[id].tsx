@@ -349,6 +349,7 @@ export default function GameDetailScreen() {
       cancelled,
       venue: resolveVenue(detail.homeTeam, detail.gameInfo?.venue),
       time: detail.gameInfo?.time || "",
+      gameStatus: detail.gameInfo?.status,
     };
     const datePrefix = gid.slice(0, 8);
     const gameDate = new Date(

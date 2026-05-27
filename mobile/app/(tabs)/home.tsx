@@ -484,11 +484,17 @@ export default function HomeScreen() {
 
   // Evaluate badges on mount + refresh when app returns to foreground
   useEffect(() => {
-    import("@/lib/achievements").then(({ evaluateBadges }) => evaluateBadges().catch(() => {}));
+    import("@/lib/achievements").then(async ({ backfillLiveRecords, evaluateBadges }) => {
+      await backfillLiveRecords();
+      await evaluateBadges();
+    }).catch(() => {});
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
         load();
-        import("@/lib/achievements").then(({ evaluateBadges }) => evaluateBadges().catch(() => {}));
+        import("@/lib/achievements").then(async ({ backfillLiveRecords, evaluateBadges }) => {
+          await backfillLiveRecords();
+          await evaluateBadges();
+        }).catch(() => {});
       }
     });
     return () => sub.remove();

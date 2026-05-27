@@ -172,7 +172,8 @@ export default function DiaryScreen() {
 
   const checkBadges = async () => {
     try {
-      const { evaluateBadges, grantRandomCharacter } = await import("@/lib/achievements");
+      const { backfillLiveRecords, evaluateBadges, grantRandomCharacter } = await import("@/lib/achievements");
+      await backfillLiveRecords();
       const newBadges = await evaluateBadges();
       if (newBadges.length > 0) {
         // Grant random character reward for each new badge

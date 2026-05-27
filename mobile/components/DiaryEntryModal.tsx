@@ -57,6 +57,7 @@ export interface GameOption {
   time: string;
   isExhibition?: boolean;
   isPostseason?: boolean;
+  gameStatus?: string; // "scheduled" | "live" | "finished" | null
 }
 
 interface DiaryEntryModalProps {
@@ -244,6 +245,15 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
         const score = scoreMap.get(`${g.away} vs ${g.home}#${pairIdx}`) || scoreMap.get(`${g.away} vs ${g.home}#0`);
         const homeTeamId = TEAM_LIST.find((t) => t.shortName === g.home)?.id || "";
         const awayTeamId = TEAM_LIST.find((t) => t.shortName === g.away)?.id || "";
+        // Infer game status: finished if outcome exists, live if scores exist without outcome
+        let gameStatus: string | undefined = g.status;
+        if (score) {
+          if (score.outcome != null) {
+            gameStatus = "finished";
+          } else if (score.awayScore != null || score.homeScore != null) {
+            gameStatus = "live";
+          }
+        }
         return {
           gameId: "",
           homeTeam: homeTeamId,
@@ -255,6 +265,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
           time: g.time || "",
           isExhibition: g.isExhibition,
           isPostseason: g.isPostseason,
+          gameStatus,
         };
       });
 
@@ -466,6 +477,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
           seat: seat.trim() || null,
           stadium: selectedGame?.venue || editRecord.stadium || null,
           game_type: selectedGame?.isPostseason ? "postseason" : selectedGame?.isExhibition ? "exhibition" : (editRecord.game_type ?? null),
+          game_status: selectedGame?.gameStatus || editRecord.game_status || null,
         });
       } else {
         recordId = await addJikgwanRecord({
@@ -487,6 +499,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
           is_live: isLive ? 1 : 0,
           seat: seat.trim() || null,
           game_type: selectedGame?.isPostseason ? "postseason" : selectedGame?.isExhibition ? "exhibition" : null,
+          game_status: selectedGame?.gameStatus || null,
         });
         // Save expenses for new record
         await saveExpenses(recordId);
