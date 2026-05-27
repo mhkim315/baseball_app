@@ -715,9 +715,11 @@ export default function MyScreen() {
 
               <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>이모지</Text>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
-                {["🍀","🧿","🐯","⚾","🏆","👑","💪","🔥","🍺","🥟","🌮","🍕",
-                  "👟","🧢","🎧","🎸","🧸","🎯","🗿","🌙","⭐","💎","🧲","🎩",
-                  "🦄","🌈","👑","🪄","🧨","🎈","🎉","🍜","🧊","☕️","🍩","🍪"].map((e) => (
+                {["🍀","🧿","🐯","⚾","🏆","👑","💪","🔥",
+                  "👨","👩","👦","👧","👶","👴","👵","🧑‍🤝‍🧑",
+                  "👫","🙋","💁","🧏","👟","🧢","🎧","🎸",
+                  "🧸","🎯","🗿","🌙","⭐","💎","🎩","🦄",
+                  "🌈","🪄","🧨","🎉"].map((e) => (
                   <Pressable
                     key={e}
                     onPress={() => setTotemEmoji(totemEmoji === e ? "" : e)}
