@@ -1165,3 +1165,26 @@ KBO 10개 구단 밈·응원가·팬덤 문화 추가 배지 12종 + 팀 전용 
 - `mobile/app.json` — version 1.0.7, versionCode 8
 - `mobile/components/AchievementList.tsx` — useTeam + 필터링
 - `mobile/app/(tabs)/my.tsx` — BadgeCollectionSection + Modal myTeam 전달
+
+---
+
+## Phase 10: Android adaptive-icon 여백 보정
+
+> **날짜**: 2026-05-27
+
+### 개요
+Android 런처 아이콘이 시스템 마스크(mask)에 의해 가장자리 ~17%가 잘리는 문제 수정. 로고 이미지를 66% 축소 후 중앙에 배치하여 safe zone 내에 위치하도록 보정.
+
+### 변경 사항
+**1. 패딩 적용 이미지 생성**
+- `sharp`로 `adaptive-icon.png`(1024×1024)를 66% 리사이즈(676×676) 후 투명 캔버스 중앙에 합성
+- `adaptive-icon-padded.png` 생성 → `adaptive-icon.png`에 덮어쓰기 (참고용 파일은 삭제)
+- `icon.png`(스플래시/로딩용)는 원본 유지 — 마스크 적용되지 않아 잘림 없음
+
+**2. 시각 비교 HTML**
+- `mobile/icon-compare.html` — 현재(빌드 중)/수정(패딩) side-by-side 비교 + 런처 미리보기
+
+### 변경 파일
+| 파일 | 변경 |
+|------|------|
+| `mobile/assets/adaptive-icon.png` | 1024×1024 꽉 참 → 66% 중앙 패딩 버전으로 교체 |
