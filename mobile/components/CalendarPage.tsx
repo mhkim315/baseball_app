@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
-import { getDaysInMonth, getFirstDayOfMonth, DEFAULT_TEAM_ID } from "@shared/constants";
+import { getDaysInMonth, getFirstDayOfMonth, DEFAULT_TEAM_ID, formatDateForApi } from "@shared/constants";
 import { cachedScheduleByMonth, cachedAllDailyScores } from "@/lib/gameCache";
 import { resolveGamesForSchedule, type ResolvedGame } from "@/lib/resolveGames";
 import { useTheme } from "@/lib/ThemeContext";
@@ -79,7 +79,7 @@ export default function CalendarPage() {
   for (let i = 0; i < firstDay; i++) calendarDays.push(null);
   for (let i = 1; i <= daysInMonth; i++) calendarDays.push(i);
 
-  const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`;
+  const todayStr = formatDateForApi(new Date());
 
   const goToPrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const goToNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
@@ -225,7 +225,7 @@ export default function CalendarPage() {
               {calendarDays.map((day, idx) => {
                 if (!day) return <View key={`e-${idx}`} style={styles.calCell} />;
 
-                const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                const dateStr = formatDateForApi(new Date(year, month, day));
                 const dayGames = gamesByDate.get(dateStr) || [];
                 const isToday = dateStr === todayStr;
                 const isFuture = dateStr > todayStr;

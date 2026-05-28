@@ -416,6 +416,7 @@ def get_game_detail(game_id: str):
         return JSONResponse({"error": "Unknown team code"}, status_code=404)
 
     today = load_json("today-games.json")
+    scores = load_json("daily-scores.json")
     game_data = None
     if today:
         for g in today.get("games", []):
@@ -423,42 +424,42 @@ def get_game_detail(game_id: str):
                 game_data = g
                 break
 
-    if not game_data:
-        scores = load_json("daily-scores.json")
-        if scores and date_str in scores.get("dates", {}):
-            for g in scores["dates"][date_str]:
-                if g.get("gameId") == game_id:
-                    game_data = g
-                    break
-            if not game_data:
-                home_kr = TEAM_NAME_MAP.get(home_team)
-                away_kr = TEAM_NAME_MAP.get(away_team)
-                day_games = scores["dates"][date_str]
-                matchup_games = [g for g in day_games if g.get("home") == home_kr and g.get("away") == away_kr]
-                if len(matchup_games) == 1:
-                    game_data = matchup_games[0]
-                elif len(matchup_games) > 1:
-                    # Try exact gameIdx match (suffix is relative index: 0, 1)
-                    game_data = next((g for g in matchup_games if g.get("gameIdx") == game_seq), None)
-                    if not game_data:
-                        # Suffix is global position: count same-matchup games before it
-                        relative_idx = sum(
-                            1 for i, g in enumerate(day_games)
-                            if g.get("home") == home_kr and g.get("away") == away_kr and i < game_seq
-                        )
-                        game_data = matchup_games[relative_idx] if relative_idx < len(matchup_games) else matchup_games[0]
-
-    # DH 감지: game-records 파일 선택을 위해
-    is_dh2 = False
-    if game_seq > 0:
-        scores = load_json("daily-scores.json")
-        if scores and date_str in scores.get("dates", {}):
+    if not game_data and scores and date_str in scores.get("dates", {}):
+        for g in scores["dates"][date_str]:
+            if g.get("gameId") == game_id:
+                game_data = g
+                break
+        if not game_data:
             home_kr = TEAM_NAME_MAP.get(home_team)
             away_kr = TEAM_NAME_MAP.get(away_team)
-            matchup_games = [g for g in scores["dates"][date_str]
-                             if g.get("home") == home_kr and g.get("away") == away_kr]
-            if len(matchup_games) > 1:
-                is_dh2 = True
+            day_games = scores["dates"][date_str]
+            matchup_games = [g for g in day_games if g.get("home") == home_kr and g.get("away") == away_kr]
+            if len(matchup_games) == 1:
+                game_data = matchup_games[0]
+            elif len(matchup_games) > 1:
+                # relative_idx: 이 매치업이 day_games 내에서 몇 번째인지 (0=첫번째)
+                relative_idx = sum(
+                    1 for i, g in enumerate(day_games)
+                    if g.get("home") == home_kr and g.get("away") == away_kr and i < game_seq
+                )
+                game_data = next(
+                    (g for g in matchup_games if g.get("gameIdx") == relative_idx),
+                    matchup_games[relative_idx] if relative_idx < len(matchup_games) else matchup_games[0]
+                )
+
+    # DH 감지: game-records 파일 선택을 위해
+    dh_game_number = 0  # 0=단일/DH1차, 1=DH2차
+    if scores and date_str in scores.get("dates", {}):
+        home_kr = TEAM_NAME_MAP.get(home_team)
+        away_kr = TEAM_NAME_MAP.get(away_team)
+        day_games = scores["dates"][date_str]
+        matchup_games = [g for g in day_games if g.get("home") == home_kr and g.get("away") == away_kr]
+        if len(matchup_games) > 1:
+            relative_idx = sum(
+                1 for i, g in enumerate(day_games)
+                if g.get("home") == home_kr and g.get("away") == away_kr and i < game_seq
+            )
+            dh_game_number = relative_idx  # 0=1차전, 1=2차전
 
     lineup = {"home": [], "away": []}
     starters = {"home": None, "away": None}
@@ -468,7 +469,7 @@ def get_game_detail(game_id: str):
     lineup_confirmed = False
 
     for team_id, side in [(away_team, "away"), (home_team, "home")]:
-        if is_dh2:
+        if dh_game_number >= 1:
             record_path = DATA_DIR / "teams" / team_id / "game-records" / f"{date_str}_dh2.json"
             if not record_path.exists():
                 record_path = DATA_DIR / "teams" / team_id / "game-records" / f"{date_str}.json"

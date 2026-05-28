@@ -419,6 +419,7 @@ def get_game_detail(game_id: str):
     date_str = f"{date_str_raw[:4]}-{date_str_raw[4:6]}-{date_str_raw[6:8]}"
     away_code = m.group(2)
     home_code = m.group(3)
+    game_seq = int(m.group(4))  # 0=single/DH1, 1=DH2
 
     away_team = TEAM_CODE_MAP.get(away_code)
     home_team = TEAM_CODE_MAP.get(home_code)
@@ -441,7 +442,6 @@ def get_game_detail(game_id: str):
                     game_data = g
                     break
             if not game_data:
-                game_seq = int(m.group(4))
                 home_kr = TEAM_NAME_MAP.get(home_team)
                 away_kr = TEAM_NAME_MAP.get(away_team)
                 day_games = scores["dates"][date_str]
@@ -459,6 +459,18 @@ def get_game_detail(game_id: str):
                         )
                         game_data = matchup_games[relative_idx] if relative_idx < len(matchup_games) else matchup_games[0]
 
+    # DH 감지: game-records 파일 선택을 위해
+    is_dh2 = False
+    if game_seq > 0:
+        scores = load_json("daily-scores.json")
+        if scores and date_str in scores.get("dates", {}):
+            home_kr = TEAM_NAME_MAP.get(home_team)
+            away_kr = TEAM_NAME_MAP.get(away_team)
+            matchup_games = [g for g in scores["dates"][date_str]
+                             if g.get("home") == home_kr and g.get("away") == away_kr]
+            if len(matchup_games) > 1:
+                is_dh2 = True
+
     lineup = {"home": [], "away": []}
     starters = {"home": None, "away": None}
     score_board = None
@@ -467,7 +479,12 @@ def get_game_detail(game_id: str):
     lineup_confirmed = False
 
     for team_id, side in [(away_team, "away"), (home_team, "home")]:
-        record_path = DATA_DIR / "teams" / team_id / "game-records" / f"{date_str}.json"
+        if is_dh2:
+            record_path = DATA_DIR / "teams" / team_id / "game-records" / f"{date_str}_dh2.json"
+            if not record_path.exists():
+                record_path = DATA_DIR / "teams" / team_id / "game-records" / f"{date_str}.json"
+        else:
+            record_path = DATA_DIR / "teams" / team_id / "game-records" / f"{date_str}.json"
         if record_path.exists():
             try:
                 with open(record_path, "r", encoding="utf-8") as f:

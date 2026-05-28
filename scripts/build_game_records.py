@@ -57,6 +57,9 @@ def build_for_team(team: dict[str, Any], target_date: str, games_by_date: dict[s
         print(f"{team['id']}: no game on {target_date}")
         return
 
+    # 시간순 정렬 (DH 1차전→2차전 순서 보장)
+    my_games.sort(key=lambda g: g.get("gameDateTime") or g.get("startTime") or "")
+
     for game_idx, my_game in enumerate(my_games):
         naver_game_id = str(my_game.get("gameId") or "")
         if not naver_game_id:

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { TEAM_COLORS } from "@shared/teamColors";
-import { parseGameTeamIds } from "@shared/constants";
+import { parseGameTeamIds, formatDateForApi } from "@shared/constants";
 import { getInningInfo } from "@shared/gameStatus";
 import {
   fetchGameDetail, fetchStandingsJson,
@@ -190,10 +190,10 @@ export default function GameDetailScreen() {
             const score = myGame._raw.score;
             setScoreFallback(score);
             // For DH2+ games, override API detail with correct scores/pitchers
+            // starters는 서버가 _dh2.json을 올바르게 반환하므로 유지
             if (gameSeq > 0) {
               setDetail({
                 ...data,
-                starters: { home: null, away: null },
                 score: { away: score.awayScore, home: score.homeScore },
                 pitchingResult: [
                   ...(score.winPitcher ? [{ name: score.winPitcher, wls: "W" as const }] : []),
@@ -503,13 +503,13 @@ export default function GameDetailScreen() {
   const gameDateStr = `${gid.slice(0, 4)}-${gid.slice(4, 6)}-${gid.slice(6, 8)}`;
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
+  const tomorrowStr = formatDateForApi(tomorrow);
   const isBeyondTomorrow = gameDateStr > tomorrowStr;
   const awayPitcherName = isBeyondTomorrow ? undefined : (ap || "") || detail.starters?.away?.name || undefined;
   const homePitcherName = isBeyondTomorrow ? undefined : (hp || "") || detail.starters?.home?.name || undefined;
 
   const now = new Date();
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const todayStr = formatDateForApi(now);
   const isFuture = detail.date > todayStr;
   const isToday = detail.date === todayStr;
   const isCancelled = detail.gameInfo?.status === "cancelled" || scoreFallback?.cancelled === true || detail.etcRecords?.some(r => r.how?.includes("취소") || r.result?.includes("취소")) === true;

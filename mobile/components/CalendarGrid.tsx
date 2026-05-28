@@ -4,7 +4,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TeamBadge } from "@/components/TeamBadge";
 import YearSelector from "@/components/YearSelector";
-import { getDaysInMonth, getFirstDayOfMonth } from "@shared/constants";
+import { getDaysInMonth, getFirstDayOfMonth, formatDateForApi } from "@shared/constants";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import type { ResolvedGame } from "@/lib/resolveGames";
@@ -44,7 +44,7 @@ export default function CalendarGrid({
   for (let i = 0; i < firstDay; i++) calendarDays.push(null);
   for (let i = 1; i <= daysInMonth; i++) calendarDays.push(i);
 
-  const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`;
+  const todayStr = formatDateForApi(new Date());
 
   const goToPrev = () => {
     const m = propMonth - 1;
@@ -294,7 +294,7 @@ export default function CalendarGrid({
             {calendarDays.map((day, idx) => {
               if (!day) return <View key={`e-${idx}`} style={styles.calCell} />;
 
-              const dateStr = `${propYear}-${String(propMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+              const dateStr = formatDateForApi(new Date(propYear, propMonth, day));
               const dayGames = gamesByDate.get(dateStr) || [];
               const isToday = dateStr === todayStr;
               const isFuture = dateStr > todayStr;
