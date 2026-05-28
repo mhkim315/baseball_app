@@ -7,7 +7,7 @@ import { parseGameTeamIds, getDaysInMonth, getFirstDayOfMonth, formatDate, forma
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
-import { addJikgwanRecord, updateJikgwanRecord, getUnlockedEmotions } from "@/lib/db";
+import { getDb, addJikgwanRecord, updateJikgwanRecord, getUnlockedEmotions } from "@/lib/db";
 import { addExpense, getExpensesByRecordId, deleteExpensesByRecordId, EXPENSE_CATEGORIES } from "@/lib/db";
 import { getAllTotems, getDiaryTotems, setDiaryTotems } from "@/lib/db";
 import type { ExpenseCategory, Totem, JikgwanRecord } from "@/lib/db";
@@ -434,72 +434,68 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
         }
       } catch {}
 
-      const saveExpenses = async (recordId: number) => {
-        for (const exp of expensesToSave) {
-          const amt = parseInt(String(exp.amount).replace(/,/g, ""));
-          if (!amt || amt <= 0) continue;
-          await addExpense({
-            record_id: recordId,
-            date: dateStr,
-            category: exp.category,
-            amount: amt,
-            memo: exp.memo || null,
+      const database = await getDb();
+      await database.withTransactionAsync(async () => {
+        let recordId: number;
+        if (editRecord) {
+          recordId = editRecord.id;
+          if (expensesLoadedRef.current) {
+            try {
+              await deleteExpensesByRecordId(recordId);
+            } catch (e) {
+              console.warn("Failed to delete old expenses (non-critical)", e);
+            }
+          }
+          for (const exp of expensesToSave) {
+            const amt = parseInt(String(exp.amount).replace(/,/g, ""));
+            if (!amt || amt <= 0) continue;
+            await addExpense({ record_id: recordId, date: dateStr, category: exp.category, amount: amt, memo: exp.memo || null });
+          }
+          await updateJikgwanRecord(recordId, {
+            memo: content.trim(),
+            emotion: emotion || null,
+            photos: photosJson,
+            game_id: gameId || editRecord.game_id,
+            score_away: selectedGame?.awayScore != null && !(selectedGame?.awayScore === 0 && selectedGame?.homeScore === 0) ? selectedGame.awayScore : (editRecord.score_away ?? null),
+            score_home: selectedGame?.homeScore != null && !(selectedGame?.homeScore === 0 && selectedGame?.awayScore === 0) ? selectedGame.homeScore : (editRecord.score_home ?? null),
+            is_win: isWin,
+            cheered_team: (cheeredTeam || userTeam || null) as string | null,
+            is_live: isLive ? 1 : 0,
+            seat: seat.trim() || null,
+            stadium: selectedGame?.venue || editRecord.stadium || null,
+            game_type: selectedGame?.isPostseason ? "postseason" : selectedGame?.isExhibition ? "exhibition" : (editRecord.game_type ?? null),
+            game_status: selectedGame?.gameStatus || editRecord.game_status || null,
           });
-        }
-      };
-
-      let recordId: number;
-      if (editRecord) {
-        recordId = editRecord.id;
-        if (expensesLoadedRef.current) {
-          try {
-            await deleteExpensesByRecordId(recordId);
-          } catch (e) {
-            console.warn("Failed to delete old expenses (non-critical)", e);
+        } else {
+          recordId = await addJikgwanRecord({
+            game_id: gameId || "",
+            date: dateStr,
+            photo_path: savedPhotoUris[0] || null,
+            photos: photosJson,
+            memo: content.trim(),
+            score_away: selectedGame?.awayScore != null && !(selectedGame?.awayScore === 0 && selectedGame?.homeScore === 0) ? selectedGame.awayScore : null,
+            score_home: selectedGame?.homeScore != null && !(selectedGame?.homeScore === 0 && selectedGame?.awayScore === 0) ? selectedGame.homeScore : null,
+            emotion: emotion || null,
+            three_line_1: null,
+            three_line_2: null,
+            three_line_3: null,
+            frame_style: "classic",
+            stadium: selectedGame?.venue || null,
+            is_win: isWin != null ? isWin : null,
+            cheered_team: (cheeredTeam || userTeam || null) as string | null,
+            is_live: isLive ? 1 : 0,
+            seat: seat.trim() || null,
+            game_type: selectedGame?.isPostseason ? "postseason" : selectedGame?.isExhibition ? "exhibition" : null,
+            game_status: selectedGame?.gameStatus || null,
+          });
+          for (const exp of expensesToSave) {
+            const amt = parseInt(String(exp.amount).replace(/,/g, ""));
+            if (!amt || amt <= 0) continue;
+            await addExpense({ record_id: recordId, date: dateStr, category: exp.category, amount: amt, memo: exp.memo || null });
           }
         }
-        await saveExpenses(recordId);
-        await updateJikgwanRecord(recordId, {
-          memo: content.trim(),
-          emotion: emotion || null,
-          photos: photosJson,
-          game_id: gameId || editRecord.game_id,
-          score_away: selectedGame?.awayScore != null && !(selectedGame?.awayScore === 0 && selectedGame?.homeScore === 0) ? selectedGame.awayScore : (editRecord.score_away ?? null),
-          score_home: selectedGame?.homeScore != null && !(selectedGame?.homeScore === 0 && selectedGame?.awayScore === 0) ? selectedGame.homeScore : (editRecord.score_home ?? null),
-          is_win: isWin,
-          cheered_team: (cheeredTeam || userTeam || null) as string | null,
-          is_live: isLive ? 1 : 0,
-          seat: seat.trim() || null,
-          stadium: selectedGame?.venue || editRecord.stadium || null,
-          game_type: selectedGame?.isPostseason ? "postseason" : selectedGame?.isExhibition ? "exhibition" : (editRecord.game_type ?? null),
-          game_status: selectedGame?.gameStatus || editRecord.game_status || null,
-        });
-      } else {
-        recordId = await addJikgwanRecord({
-          game_id: gameId || "",
-          date: dateStr,
-          photo_path: savedPhotoUris[0] || null,
-          photos: photosJson,
-          memo: content.trim(),
-          score_away: selectedGame?.awayScore != null && !(selectedGame?.awayScore === 0 && selectedGame?.homeScore === 0) ? selectedGame.awayScore : null,
-          score_home: selectedGame?.homeScore != null && !(selectedGame?.homeScore === 0 && selectedGame?.awayScore === 0) ? selectedGame.homeScore : null,
-          emotion: emotion || null,
-          three_line_1: null,
-          three_line_2: null,
-          three_line_3: null,
-          frame_style: "classic",
-          stadium: selectedGame?.venue || null,
-          is_win: isWin != null ? isWin : null,
-          cheered_team: (cheeredTeam || userTeam || null) as string | null,
-          is_live: isLive ? 1 : 0,
-          seat: seat.trim() || null,
-          game_type: selectedGame?.isPostseason ? "postseason" : selectedGame?.isExhibition ? "exhibition" : null,
-          game_status: selectedGame?.gameStatus || null,
-        });
-        await saveExpenses(recordId);
-      }
-
-      await setDiaryTotems(recordId, selectedTotemIds);
+        await setDiaryTotems(recordId, selectedTotemIds);
+      });
 
       onSaved();
     } catch (e) {

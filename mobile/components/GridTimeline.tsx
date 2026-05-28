@@ -27,12 +27,21 @@ function parsePhotos(record: JikgwanRecord): string[] {
 
 const NUM_COLUMNS = 3;
 
+function chunkRows(items: JikgwanRecord[], cols: number): JikgwanRecord[][] {
+  const rows: JikgwanRecord[][] = [];
+  for (let i = 0; i < items.length; i += cols) {
+    rows.push(items.slice(i, i + cols));
+  }
+  return rows;
+}
+
 export default function GridTimeline({ records, onDelete, onRefresh, refreshing, onPressRecord, scrollTargetDate }: GridTimelineProps) {
   const { theme } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
   const [deleteTarget, setDeleteTarget] = useState<JikgwanRecord | null>(null);
-  const flatListRef = useRef<FlatList<JikgwanRecord>>(null);
+  const flatListRef = useRef<FlatList<JikgwanRecord[]>>(null);
   const cellSize = screenWidth / NUM_COLUMNS;
+  const rows = useMemo(() => chunkRows(records, NUM_COLUMNS), [records]);
 
   useEffect(() => {
     if (!scrollTargetDate || records.length === 0) return;
@@ -57,6 +66,9 @@ export default function GridTimeline({ records, onDelete, onRefresh, refreshing,
   const styles = useMemo(() => StyleSheet.create({
     listContent: {
       paddingBottom: 100,
+    },
+    row: {
+      flexDirection: "row",
     },
     cell: {
       width: cellSize,
@@ -97,45 +109,54 @@ export default function GridTimeline({ records, onDelete, onRefresh, refreshing,
     emptySub: { color: theme.mutedForeground, fontSize: 12, marginTop: 6 },
   }), [theme, cellSize, screenWidth]);
 
-  const renderItem = useCallback(({ item }: { item: JikgwanRecord }) => {
-    const photos = parsePhotos(item);
-    return (
-      <Pressable
-        style={styles.cell}
-        onPress={() => onPressRecord?.(item)}
-        onLongPress={() => handleDelete(item)}
-      >
-        {photos[0] ? (
-          <>
-            <Image source={{ uri: photos[0] }} style={styles.image} />
-            {photos.length > 1 && (
-              <View style={styles.photoBadge}>
-                <Text style={styles.photoBadgeText}>+{photos.length - 1}</Text>
+  const renderRow = useCallback(({ item: row }: { item: JikgwanRecord[] }) => (
+    <View style={styles.row}>
+      {row.map((record) => {
+        const photos = parsePhotos(record);
+        return (
+          <Pressable
+            key={record.id}
+            style={styles.cell}
+            onPress={() => onPressRecord?.(record)}
+            onLongPress={() => handleDelete(record)}
+          >
+            {photos[0] ? (
+              <>
+                <Image source={{ uri: photos[0] }} style={styles.image} />
+                {photos.length > 1 && (
+                  <View style={styles.photoBadge}>
+                    <Text style={styles.photoBadgeText}>+{photos.length - 1}</Text>
+                  </View>
+                )}
+              </>
+            ) : (
+              <View style={styles.placeholder}>
+                <Text style={{ fontSize: 20 }}>📸</Text>
               </View>
             )}
-          </>
-        ) : (
-          <View style={styles.placeholder}>
-            <Text style={{ fontSize: 20 }}>📸</Text>
-          </View>
-        )}
-      </Pressable>
-    );
-  }, [styles, onPressRecord]);
+          </Pressable>
+        );
+      })}
+    </View>
+  ), [styles, onPressRecord]);
 
   return (
     <>
       <FlatList
         ref={flatListRef}
-        data={records}
-        renderItem={renderItem}
-        keyExtractor={(item) => String(item.id)}
-        numColumns={NUM_COLUMNS}
+        data={rows}
+        renderItem={renderRow}
+        keyExtractor={(row, index) => row[0] ? String(row[0].id) : `empty-${index}`}
+        getItemLayout={(_data, index) => ({
+          length: cellSize,
+          offset: cellSize * index,
+          index,
+        })}
         contentContainerStyle={styles.listContent}
         removeClippedSubviews
         windowSize={5}
         onScrollToIndexFailed={(info) => {
-          flatListRef.current?.scrollToOffset({ offset: Math.floor(info.index / NUM_COLUMNS) * cellSize, animated: true });
+          flatListRef.current?.scrollToOffset({ offset: info.index * cellSize, animated: true });
         }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.mutedForeground} />
