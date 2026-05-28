@@ -5,7 +5,7 @@ import { getBadges, type Badge, type JikgwanRecord } from "@/lib/db";
 import { BADGE_DEFINITIONS, getVisibleBadgeDefinitions, computeLevel, type BadgeDefinition, type LevelInfo } from "@/lib/achievements";
 import { useTeam } from "@/lib/TeamContext";
 import { TeamBadge } from "@/components/TeamBadge";
-import { type CharacterEmotion } from "@/lib/emotions";
+import { CHARACTER_BASIC_SET, ALL_CHARACTERS, type CharacterEmotion } from "@/lib/emotions";
 
 interface AchievementListProps {
   records: JikgwanRecord[];
@@ -244,6 +244,23 @@ export default function AchievementList({ records }: AchievementListProps) {
           </View>
         </View>
 
+        {/* Basic emotions (always unlocked) */}
+        <View style={{ flexDirection: "row", gap: 8, marginTop: 14, alignItems: "center" }}>
+          {CHARACTER_BASIC_SET.map((id) => {
+            const def = ALL_CHARACTERS.find((c) => c.id === id);
+            return (
+              <View key={id} style={{ alignItems: "center", gap: 2 }}>
+                {myTeam ? (
+                  <TeamBadge teamId={myTeam} size="sm" emotion={id as CharacterEmotion} />
+                ) : (
+                  <Text style={{ fontSize: 20 }}>🎭</Text>
+                )}
+                <Text style={{ fontSize: 9, color: theme.mutedForeground }}>{def?.label ?? id}</Text>
+              </View>
+            );
+          })}
+          <Text style={{ fontSize: 10, color: theme.mutedForeground, marginLeft: 4 }}>기본 제공</Text>
+        </View>
       </View>
 
       {/* Category Filter */}
