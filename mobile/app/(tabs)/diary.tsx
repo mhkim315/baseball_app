@@ -173,16 +173,20 @@ export default function DiaryScreen() {
 
   const checkBadges = async () => {
     try {
-      const { backfillLiveRecords, evaluateBadges, grantRandomCharacter } = await import("@/lib/achievements");
+      const { backfillLiveRecords, evaluateBadges, grantRandomCharacter, grantBasicEmotions } = await import("@/lib/achievements");
       await backfillLiveRecords();
       const newBadges = await evaluateBadges();
+
+      // First visit: silently persist basic emotions
+      await grantBasicEmotions();
+
+      // Grant random character reward for each new badge
+      const rewards: { emotion: string; label: string }[] = [];
+      for (let i = 0; i < newBadges.length; i++) {
+        const reward = await grantRandomCharacter(newBadges[i].badge_key);
+        if (reward) rewards.push(reward);
+      }
       if (newBadges.length > 0) {
-        // Grant random character reward for each new badge
-        const rewards: { emotion: string; label: string }[] = [];
-        for (let i = 0; i < newBadges.length; i++) {
-          const reward = await grantRandomCharacter(newBadges[i].badge_key);
-          if (reward) rewards.push(reward);
-        }
         // Show confetti + toasts simultaneously
         setToastBadges(newBadges);
         setToastRewards(rewards);

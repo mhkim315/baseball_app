@@ -98,3 +98,21 @@ export async function grantRandomCharacter(badgeKey?: string): Promise<Character
   const def = ALL_CHARACTERS.find((c) => c.id === pick);
   return { emotion: pick, label: def?.label ?? pick };
 }
+
+/**
+ * On first visit, persist the 3 basic emotions (default, sad, joyful).
+ * Subsequent visits do nothing.
+ */
+export async function grantBasicEmotions(): Promise<void> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ value: string }>(
+    "SELECT value FROM user_settings WHERE key = 'unlocked_emotions'"
+  );
+  if (row?.value) return;
+
+  const basic = ["default", "sad", "joyful"];
+  await db.runAsync(
+    "INSERT OR REPLACE INTO user_settings (key, value) VALUES ('unlocked_emotions', ?)",
+    JSON.stringify(basic)
+  );
+}
