@@ -287,16 +287,11 @@ export default function AchievementList({ records }: AchievementListProps) {
                 )}
               </View>
               {unlocked && item.badge?.reward_emotion && myTeam && (
-                <View style={{ flexDirection: "row", gap: 1, alignItems: "center" }}>
-                  {item.badge.reward_emotion.split(",").map((em) => (
-                    <TeamBadge
-                      key={em}
-                      teamId={myTeam}
-                      size="sm"
-                      emotion={em as CharacterEmotion}
-                    />
-                  ))}
-                </View>
+                <TeamBadge
+                  teamId={myTeam}
+                  size="sm"
+                  emotion={item.badge.reward_emotion as CharacterEmotion}
+                />
               )}
             </View>
           );
