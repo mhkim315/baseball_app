@@ -60,6 +60,28 @@ function findStreakQualifyingDate(records: JikgwanRecord[], target: number): str
   return undefined;
 }
 
+function findStreakQualifyingDateLoss(records: JikgwanRecord[], target: number): string | undefined {
+  const games = records
+    .filter((r) => {
+      const iw = resolveIsWin(r);
+      return iw != null && iw !== 0;
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const seen = new Map<string, JikgwanRecord>();
+  for (const g of games) seen.set(g.date, g);
+  const unique = [...seen.values()].sort((a, b) => a.date.localeCompare(b.date));
+  let run = 0;
+  for (const g of unique) {
+    if (resolveIsWin(g) === -1) {
+      run++;
+      if (run === target) return g.date;
+    } else {
+      run = 0;
+    }
+  }
+  return undefined;
+}
+
 // --- Badge Definitions (15 total) ---
 
 export const BADGE_DEFINITIONS: BadgeDefinition[] = [
@@ -1084,20 +1106,20 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     badgeKey: "im_happy",
     emoji: "😇",
     title: "나는 행복합니다",
-    description: "한화 패배를 5회 직관 — 그래도 나는 행복합니다",
-    tier: "easy",
-    xp: 10,
+    description: "한화 직관 8연패 — 그래도 나는 행복합니다",
+    tier: "medium",
+    xp: 25,
     category: "secret",
     teamId: "hanwha",
-    progressTarget: 5,
+    progressTarget: 8,
     check: (records) => {
-      const losses = records.filter((r) => r.cheered_team === "hanwha" && resolveIsWin(r) === -1);
-      const sorted = [...losses].sort((a, b) => a.date.localeCompare(b.date));
+      const hanwhaRecords = records.filter((r) => r.cheered_team === "hanwha");
+      const s = computeStreakStats(hanwhaRecords);
+      const best = Math.max(s.longestLose, s.currentType === "L" ? s.currentCount : 0);
       return {
-        unlocked: losses.length >= 5,
-        progressCurrent: Math.min(losses.length, 5),
-        progressTarget: 5,
-        qualifyingDate: losses.length >= 5 ? sorted[4]?.date : undefined,
+        unlocked: best >= 8,
+        progressCurrent: Math.min(best, 8),
+        progressTarget: 8,
       };
     },
   },
@@ -1788,6 +1810,49 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
         progressCurrent: match ? 1 : 0,
         progressTarget: 1,
         qualifyingDate: match?.date,
+      };
+    },
+  },
+  // ── 패배 관련 (Negative Reinforcement 보완) ──
+  {
+    id: "loss_3",
+    badgeKey: "loss_3",
+    emoji: "😅",
+    title: "그런 날도 있어",
+    description: "직관 3연패를 기록했어요 — 누구에게나 있는 법이죠",
+    tier: "easy",
+    xp: 10,
+    category: "secret",
+    progressTarget: 3,
+    check: (records) => {
+      const s = computeStreakStats(records);
+      const best = Math.max(s.longestLose, s.currentType === "L" ? s.currentCount : 0);
+      return {
+        unlocked: best >= 3,
+        progressCurrent: Math.min(best, 3),
+        progressTarget: 3,
+        qualifyingDate: best >= 3 ? findStreakQualifyingDateLoss(records, 3) : undefined,
+      };
+    },
+  },
+  {
+    id: "loss_5",
+    badgeKey: "loss_5",
+    emoji: "😇",
+    title: "팬질은 원래 고통",
+    description: "직관 5연패를 기록했어요 — 그래도 내일은 이기겠죠",
+    tier: "medium",
+    xp: 25,
+    category: "secret",
+    progressTarget: 5,
+    check: (records) => {
+      const s = computeStreakStats(records);
+      const best = Math.max(s.longestLose, s.currentType === "L" ? s.currentCount : 0);
+      return {
+        unlocked: best >= 5,
+        progressCurrent: Math.min(best, 5),
+        progressTarget: 5,
+        qualifyingDate: best >= 5 ? findStreakQualifyingDateLoss(records, 5) : undefined,
       };
     },
   },
