@@ -14,10 +14,17 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getMyTeam().then((team) => {
-      setMyTeamState(team);
-      setLoading(false);
-    });
+    getMyTeam()
+      .then((team) => {
+        setMyTeamState(team);
+      })
+      .catch((e) => {
+        console.warn("TeamContext: getMyTeam failed", e);
+        setMyTeamState(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const setMyTeam = useCallback((team: string | null) => {

@@ -316,13 +316,10 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
 
   const handleFullGalleryPick = async () => {
     try {
-      const { granted } = await ImagePicker.getMediaLibraryPermissionsAsync();
+      const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!granted) {
-        const { granted: afterRequest } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (!afterRequest) {
-          setSimpleAlert({ visible: true, title: "권한 필요", message: "앨범 접근 권한이 필요합니다" });
-          return;
-        }
+        setSimpleAlert({ visible: true, title: "권한 필요", message: "앨범 접근 권한이 필요합니다" });
+        return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
@@ -335,12 +332,14 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
       }
     } catch (e: any) {
       console.error("handleFullGalleryPick failed", e?.message ?? e);
-      const pending = await ImagePicker.getPendingResultAsync();
-      if (pending && "assets" in pending && pending.assets && pending.assets.length > 0) {
-        console.log("Recovered from Activity destruction via getPendingResultAsync");
-        handlePhotoSelect(pending.assets.map((a) => a.uri));
-        return;
-      }
+      try {
+        const pending = await ImagePicker.getPendingResultAsync();
+        if (pending && "assets" in pending && pending.assets && pending.assets.length > 0) {
+          console.log("Recovered from Activity destruction via getPendingResultAsync");
+          handlePhotoSelect(pending.assets.map((a) => a.uri));
+          return;
+        }
+      } catch {}
       setSimpleAlert({ visible: true, title: "오류", message: "사진을 불러오지 못했습니다" });
     }
   };

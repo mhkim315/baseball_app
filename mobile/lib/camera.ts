@@ -38,9 +38,8 @@ export async function resizePhoto(uri: string, maxWidth = 1200): Promise<string>
       compress: 0.85,
     });
     return result.uri;
-  } catch {
-    console.warn("resizePhoto failed, returning original");
-    return uri;
+  } catch (e) {
+    throw new Error(`사진 리사이즈 실패: ${e instanceof Error ? e.message : String(e)}`);
   }
 }
 

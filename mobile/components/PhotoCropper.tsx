@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import { useTheme } from "@/lib/ThemeContext";
 import { captureRef } from "react-native-view-shot";
+import * as FileSystem from "expo-file-system/legacy";
 
 interface PhotoCropperProps {
   visible: boolean;
@@ -72,7 +73,11 @@ export default function PhotoCropper({ visible, imageUri, onCrop, onCancel }: Ph
     setLoading(true);
     try {
       const uri = await captureRef(guideRef, { format: "jpg", quality: 0.92 });
-      onCrop(uri);
+      const destDir = `${FileSystem.documentDirectory}jikgwan/`;
+      await FileSystem.makeDirectoryAsync(destDir, { intermediates: true });
+      const permUri = `${destDir}crop_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.jpg`;
+      await FileSystem.copyAsync({ from: uri, to: permUri });
+      onCrop(permUri);
     } catch {
       onCrop(imageUri);
     } finally {
