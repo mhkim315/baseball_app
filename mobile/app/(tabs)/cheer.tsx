@@ -3,7 +3,8 @@ import { View, Text, ScrollView, Pressable, StyleSheet, useWindowDimensions, Nat
 import TeamExpander from "@/components/TeamExpander";
 import MyButton from "@/components/MyButton";
 import CheerContent from "@/components/CheerContent";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 import { TEAM_COLORS } from "@shared/teamColors";
 

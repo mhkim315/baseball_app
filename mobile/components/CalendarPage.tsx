@@ -5,7 +5,8 @@ import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID, getDaysInMonth, getFirstDayOfMonth, DEFAULT_TEAM_ID, buildGameId } from "@shared/constants";
 import { cachedScheduleByMonth, cachedDailyScores, cachedAllDailyScores } from "@/lib/gameCache";
 import { type ScheduleGame } from "@/lib/api";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 import YearSelector from "@/components/YearSelector";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { View, Text, Pressable, Image } from "react-native";
-import { teamPrimaryColor, useTheme } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 import { getTicketPolicy } from "@/lib/ticketPolicy";
 import type { StadiumBrief } from "@/lib/api";
 import { IMAGE_BASE, SEAT_IMAGES, SEAT_ASPECT_RATIOS } from "./stadiumHelpers";

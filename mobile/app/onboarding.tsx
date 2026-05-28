@@ -3,7 +3,8 @@ import { View, Text, Image, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { TEAM_LIST } from "@shared/teamColors";
 import { TeamBadge } from "@/components/TeamBadge";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 
 export default function OnboardingScreen() {

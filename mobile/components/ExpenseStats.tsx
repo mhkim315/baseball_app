@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 import { EXPENSE_CATEGORIES, type Expense, type JikgwanRecord } from "@/lib/db";
 import { computeExpenseStats, computeHomeAwayExpenses, computeWinLossExpenses, computeStadiumExpenses, computeResultCategoryExpenses, formatAmount } from "@/lib/expenseStats";
 

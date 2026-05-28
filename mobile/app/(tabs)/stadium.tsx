@@ -4,7 +4,8 @@ import TeamExpander from "@/components/TeamExpander";
 import StadiumPage from "@/components/StadiumPage";
 import MyButton from "@/components/MyButton";
 import { TEAM_COLORS } from "@shared/teamColors";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 
 export default function StadiumTab() {

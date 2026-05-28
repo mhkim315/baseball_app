@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { View, Text, Pressable, Modal, StyleSheet } from "react-native";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TeamBadge } from "@/components/TeamBadge";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 
 interface TeamExpanderProps {
   currentTeamId: string;

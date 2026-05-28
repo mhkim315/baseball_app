@@ -1,7 +1,8 @@
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { TeamBadge } from "@/components/TeamBadge";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 import { gameEmotions } from "./useDiaryForm";
 import type { GameOption } from "./useDiaryForm";
 

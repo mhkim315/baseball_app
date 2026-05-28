@@ -11,7 +11,8 @@ import {
 import { TeamBadge } from "@/components/TeamBadge";
 import { cachedDailyScores, cachedScheduleByMonth } from "@/lib/gameCache";
 import DiaryEntryModal, { type GameOption } from "@/components/DiaryEntryModal";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 import { resolveVenue } from "@/lib/stadiumData";
 
 

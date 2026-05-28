@@ -4,7 +4,8 @@ import { TEAM_COLORS } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID, buildGameId, formatDateForApi as formatDateStr } from "@shared/constants";
 import { cachedCheeringSongs, cachedCheeringPlayers, cachedTodayGames, cachedGameDetail, cachedDailyScores } from "@/lib/gameCache";
 import type { CheerSection, PlayerCheer, TodayGame, ScoreEntry } from "@/lib/api";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 
 const IMAGE_BASE = "https://fullcount.kr";
 

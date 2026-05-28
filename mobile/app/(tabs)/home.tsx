@@ -23,7 +23,8 @@ import { TEAM_NAME_TO_ID, buildGameId, formatDateForApi as formatDateStr } from 
 import { getInningInfo } from "@shared/gameStatus";
 
 import MyButton from "@/components/MyButton";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 
 // Enable LayoutAnimation on Android

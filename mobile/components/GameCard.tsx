@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { TeamBadge } from "@/components/TeamBadge";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 
 interface GameCardProps {
   homeTeam: string;

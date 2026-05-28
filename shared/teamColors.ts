@@ -94,3 +94,10 @@ export const TEAM_COLORS: Record<string, TeamColor> = {
 };
 
 export const TEAM_LIST = Object.values(TEAM_COLORS);
+
+export function teamPrimaryColor(teamId: string | null | undefined, isDark: boolean): string {
+  if (!teamId) return "#888";
+  const team = TEAM_COLORS[teamId];
+  if (!team) return "#888";
+  return isDark ? team.primaryLight || team.primary : team.primary;
+}

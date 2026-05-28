@@ -2,15 +2,6 @@ import { createContext, useContext, useEffect, useState, useCallback, type React
 import { useColorScheme } from "react-native";
 import { theme as lightTheme, darkTheme, type Theme } from "@/lib/theme";
 import { getSetting, setSetting } from "@/lib/db";
-import { TEAM_COLORS } from "@shared/teamColors";
-
-export function teamPrimaryColor(teamId: string | null | undefined, isDark: boolean): string {
-  if (!teamId) return "#888";
-  const team = TEAM_COLORS[teamId];
-  if (!team) return "#888";
-  return isDark ? team.primaryLight || team.primary : team.primary;
-}
-
 interface ThemeContextValue {
   theme: Theme;
   isDark: boolean;

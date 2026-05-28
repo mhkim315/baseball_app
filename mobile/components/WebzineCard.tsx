@@ -4,7 +4,8 @@ import { TeamBadge } from "@/components/TeamBadge";
 import { EMOTION_CHARACTER, type CharacterEmotion } from "@/lib/emotions";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { parseGameTeamIds, getWinBadge } from "@shared/constants";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 import type { JikgwanRecord, Expense } from "@/lib/db";
 import { formatAmount, getCategoryIcons, resolveIsWin } from "@/lib/expenseStats";
 

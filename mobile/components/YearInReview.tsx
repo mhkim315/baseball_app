@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
 import { useTheme } from "@/lib/ThemeContext";
 import { useTeam } from "@/lib/TeamContext";
-import { teamPrimaryColor } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 import { getJikgwanRecords, getBadges, getAllExpenses, type JikgwanRecord, type Badge } from "@/lib/db";
 import { computeSeasonSummary, computeLevel, BADGE_DEFINITIONS, type SeasonSummary } from "@/lib/achievements";
 import { TEAM_COLORS } from "@shared/teamColors";

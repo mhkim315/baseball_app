@@ -1,7 +1,8 @@
 import { Tabs } from "expo-router";
 import { View, StyleSheet } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 
 const ICON_PATHS: Record<string, string> = {

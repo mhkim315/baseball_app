@@ -6,7 +6,8 @@ import { TeamBadge } from "@/components/TeamBadge";
 import YearSelector from "@/components/YearSelector";
 import { getDaysInMonth, getFirstDayOfMonth } from "@shared/constants";
 import type { ScheduleGame } from "@/lib/api";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 

@@ -6,7 +6,8 @@ import { fetchStandingsJson, type StandingRow } from "@/lib/api";
 import { HISTORICAL_STANDINGS } from "@/lib/standingsData";
 import YearSelector from "@/components/YearSelector";
 import MyButton from "@/components/MyButton";
-import { useTheme, teamPrimaryColor } from "@/lib/ThemeContext";
+import { useTheme } from "@/lib/ThemeContext";
+import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 
 function parseWLT(wlt: string | undefined | null): { wins: number; draws: number; losses: number } {
