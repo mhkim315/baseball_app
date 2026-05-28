@@ -100,29 +100,14 @@ export async function grantRandomCharacter(badgeKey?: string): Promise<Character
 }
 
 /**
- * On first visit, persist the 3 basic emotions (default, sad, joyful).
- * Subsequent visits do nothing.
+ * Persist the 3 basic emotions and link them to the "첫방문" badge.
  */
 export async function grantBasicEmotions(): Promise<void> {
+  const basic = ["default", "sad", "joyful"];
   const db = await getDb();
-
-  // Persist basic emotions if not yet done
-  const row = await db.getFirstAsync<{ value: string }>(
-    "SELECT value FROM user_settings WHERE key = 'unlocked_emotions'"
+  await db.runAsync(
+    "INSERT OR REPLACE INTO user_settings (key, value) VALUES ('unlocked_emotions', ?)",
+    JSON.stringify(basic)
   );
-  if (!row?.value) {
-    const basic = ["default", "sad", "joyful"];
-    await db.runAsync(
-      "INSERT OR REPLACE INTO user_settings (key, value) VALUES ('unlocked_emotions', ?)",
-      JSON.stringify(basic)
-    );
-  }
-
-  // Link the 3 basic emotions to the "첫방문" badge if not yet set
-  const badge = await db.getFirstAsync<{ reward_emotion: string | null }>(
-    "SELECT reward_emotion FROM badges WHERE badge_key = 'attend_first'"
-  );
-  if (badge && !badge.reward_emotion) {
-    await setBadgeRewardEmotion("attend_first", "default,sad,joyful");
-  }
+  await setBadgeRewardEmotion("attend_first", basic.join(","));
 }

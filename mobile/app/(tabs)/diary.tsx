@@ -175,9 +175,6 @@ export default function DiaryScreen() {
     try {
       const { backfillLiveRecords, evaluateBadges, grantRandomCharacter, grantBasicEmotions } = await import("@/lib/achievements");
       await backfillLiveRecords();
-
-      // First visit: persist basic emotions BEFORE badge evaluation
-      // (evaluateBadges internally calls getUnlockedEmotions which also persists)
       await grantBasicEmotions();
 
       const newBadges = await evaluateBadges();
