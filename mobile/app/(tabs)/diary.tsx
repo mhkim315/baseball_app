@@ -175,9 +175,10 @@ export default function DiaryScreen() {
     try {
       const { backfillLiveRecords, evaluateBadges, grantRandomCharacter, grantBasicEmotions } = await import("@/lib/achievements");
       await backfillLiveRecords();
-      await grantBasicEmotions();
-
       const newBadges = await evaluateBadges();
+
+      // Link basic emotions to attend_first badge (badge row must exist first)
+      await grantBasicEmotions();
 
       // Grant random character reward for each new badge
       const rewards: { emotion: string; label: string }[] = [];
