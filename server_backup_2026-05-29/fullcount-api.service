@@ -1,0 +1,19 @@
+
+[Unit]
+Description=Fullcount API Server
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=opc
+WorkingDirectory=/home/opc/fullcount_backend
+ExecStart=/home/opc/fullcount_backend/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+Environment=DATABASE_URL=postgresql://fullcount_user:fullcount_pass_2026@localhost/fullcount_db
+Environment=DATA_DIR=/home/opc/fullcount_backend/repo/data
+
+[Install]
+WantedBy=multi-user.target

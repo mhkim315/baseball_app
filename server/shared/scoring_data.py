@@ -1,5 +1,5 @@
 # Historical scoring averages (2020-2025) — fully finalized, no fetch needed
-_HISTORICAL_SCORING: dict[int, dict[str, dict[str, float | int]]] = {
+_HISTORICAL_SCORING: "dict[int, dict[str, dict[str, float]]]" = {
   2020: {
     "KIA": {"avgRuns": 4.9, "totalRuns": 430, "totalGames": 87},
     "KT": {"avgRuns": 5.7, "totalRuns": 492, "totalGames": 87},

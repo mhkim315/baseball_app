@@ -233,7 +233,14 @@ def backfill_game_records(year: int) -> None:
         d_iso = f"{ds[:4]}-{ds[4:6]}-{ds[6:8]}"
         for team in teams:
             rec_path = ROOT / "data" / "teams" / team["id"] / "game-records" / f"{d_iso}.json"
-            if rec_path.exists():
+            rec_path_dh2 = ROOT / "data" / "teams" / team["id"] / "game-records" / f"{d_iso}_dh2.json"
+            # DH 날짜: .json + _dh2.json 둘 다 있어야 skip
+            team_day_games = [g for g in games_by_date.get(d_iso, [])
+                              if g.get("categoryId") == "kbo"
+                              and (team.get("scheduleName") in (g.get("homeTeamName"), g.get("awayTeamName"))
+                                   or team.get("kboCode") in (g.get("homeTeamCode"), g.get("awayTeamCode")))]
+            has_dh = len(team_day_games) > 1
+            if rec_path.exists() and (not has_dh or rec_path_dh2.exists()):
                 skipped += 1
                 continue
 
