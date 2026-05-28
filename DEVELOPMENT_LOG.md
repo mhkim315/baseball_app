@@ -1397,3 +1397,61 @@ Android 런처 아이콘이 시스템 마스크(mask)에 의해 가장자리 ~17
 | `mobile/components/diary/useDiaryForm.ts` | 권한 체크 간소화, `getPendingResultAsync`에 try-catch 추가 |
 | `mobile/components/PhotoCropper.tsx` | `FileSystem` import, crop 후 `documentDirectory`로 즉시 복사 |
 | `mobile/lib/camera.ts` | `resizePhoto` catch에서 throw로 변경 |
+
+---
+
+## Phase 15: resolveGames() 통합 — 데이터 흐름 아키텍처 개선
+
+> **날짜**: 2026-05-28
+> **브랜치**: `feature/resolve-games`
+
+### 개요
+
+4개 파일에 중복된 스케줄-점수 매칭 로직을 단일 `resolveGames()` 함수로 통합하고, game/[id]의 DH 점수 폴백 버그를 수정.
+
+### 변경 내역
+
+#### Phase 1 — `resolveGames.ts` 구현 (신규)
+
+- `mobile/lib/resolveGames.ts`:
+  - `ResolvedGame` 통합 인터페이스 (평탄화 필드 + `_raw` 원본 참조)
+  - `resolveGames(schedule, scores, dateFilter, options?)` — 특정 날짜의 스케줄-점수 매칭
+  - `resolveGamesForSchedule(schedule, scoresByDate, options?)` — 다중 날짜 편의 래퍼
+  - 알고리즘: `pairCount Map`으로 동일 매치업 카운트 → `pairIdx`로 DH 인덱싱
+  - `matchingScores.find(s => (s.gameIdx ?? 0) === pairIdx + 1) || matchingScores[pairIdx]`
+  - `gameId`는 항상 `buildGameId()` 결과 사용 (API ID 불신)
+  - `dhGameNumber`: 1-based (서버 convention), 0 = 단일경기
+  - TodayGame enrichment: 투수, 상태, gameId 우선 적용
+  - `_raw: { schedule?, score?, today? }`로 원본 참조 보존
+
+#### Phase 2~6 — Consumer 마이그레이션 5건
+
+| 파일 | 주요 변경 | 제거된 로직 |
+|------|----------|-----------|
+| `mobile/app/(tabs)/home.tsx` | `EnhancedGame` → `ResolvedGame`, ~60줄 매칭 제거 | `pairCount`, `matchingScores.find(...)` |
+| `mobile/components/CalendarGrid.tsx` | `CalendarScore` 제거, props 단순화 (`resolvedGames` 단일 prop) | DH label/score 매칭, non-DH find 3블록 |
+| `mobile/components/CalendarPage.tsx` | `ScoreInfo` 제거 | DH score matching, non-DH find |
+| `mobile/components/DiaryCalendar.tsx` | props 통일 (`resolvedGames: ResolvedGame[]`) | pairCount DH 매칭 루프 |
+| `mobile/app/game/[id].tsx` | `resolveGames()`로 DH 버그 수정 | global→per-matchup 변환, `.find()` fallback |
+
+### 코드리뷰 수정
+
+Opus 코드리뷰에서 발견된 버그 2건 수정:
+
+| 버그 | 파일 | 원인 | 수정 |
+|------|------|------|------|
+| 팀 미설정 시 캘린더 빈 화면 | `DiaryCalendar.tsx` | `teamId`가 null이면 `myGamesByDate`에 아무것도 추가 안 함 | `if (!teamId \|\| ...)`로 조건 완화 |
+
+### Verification
+
+- `npx tsc --noEmit` — 에러 0 ✅
+- 단일경기/더블헤더/취소/라이브/시범경기/포스트시즌 엣지 케이스 처리 ✅
+- gameId 항상 `buildGameId()`로 생성 (API 포맷 변경 내성) ✅
+- DH 2차전 gameSeq 인덱스 resolveGames 배열 인덱스와 일치 ✅
+
+### 커밋
+
+| 해시 | 설명 |
+|------|------|
+| `4a8fc6f` | `@refactor: resolveGames() 통합 — 데이터 흐름 아키텍처 개선` (6개 파일) |
+| `(current)` | `@fix: resolveGames "전체" 팀 필터링 버그 수정` (CalendarGrid + DiaryCalendar) |

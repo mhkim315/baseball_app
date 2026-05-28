@@ -29,7 +29,7 @@ export default function CalendarGrid({
 
   const filteredGames = selectedTeam
     ? resolvedGames.filter((g) => g.homeTeam === selectedTeam || g.awayTeam === selectedTeam)
-    : resolvedGames;
+    : [];
 
   const gamesByDate = new Map<string, ResolvedGame[]>();
   for (const g of filteredGames) {
