@@ -10,6 +10,7 @@ import {
 } from "@/lib/api";
 import { TeamBadge } from "@/components/TeamBadge";
 import { cachedDailyScores, cachedScheduleByMonth } from "@/lib/gameCache";
+import { resolveGames } from "@/lib/resolveGames";
 import DiaryEntryModal, { type GameOption } from "@/components/DiaryEntryModal";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
@@ -75,31 +76,15 @@ export default function GameDetailScreen() {
 
 
         const { awayId, homeId } = parseGameTeamIds(gid);
-        const awayShort = TEAM_COLORS[awayId]?.shortName;
-        const homeShort = TEAM_COLORS[homeId]?.shortName;
         const parts = gid.split("-");
         const suffix = parts[parts.length - 1];
         const gameSeq = parseInt(suffix, 10);
 
-        // Calculate relative DH index within same-matchup games on this date
-        // (suffix is global index in the day, but score's gameIdx is per-matchup: 0, 1)
-        const allDaySchedule = schedule?.games?.filter(g => g.date === dateStr) || [];
-        let relativeIdx = 0, matchFound = false;
-        for (let i = 0, matchupCount = 0; i < allDaySchedule.length; i++) {
-          if (allDaySchedule[i].away === awayShort && allDaySchedule[i].home === homeShort) {
-            if (i === gameSeq) { relativeIdx = matchupCount; matchFound = true; break; }
-            matchupCount++;
-          }
-        }
-        const matchingCount = allDaySchedule.filter(g => g.away === awayShort && g.home === homeShort).length;
-        const finalGameIdx = matchFound ? (matchingCount > 1 ? relativeIdx + 1 : 0) : (isNaN(gameSeq) ? 0 : gameSeq);
-
-        const scoreEntry = scores?.games?.find(
-          (s) => s.away === awayShort && s.home === homeShort && (s.gameIdx ?? 0) === finalGameIdx
-        );
-        const scheduleEntry = allDaySchedule[gameSeq] || schedule?.games?.find(
-          (g) => g.away === awayShort && g.home === homeShort
-        );
+        // Use resolveGames for correct DH matching
+        const allResolved = resolveGames(schedule?.games || [], scores?.games || [], dateStr);
+        const myEntry = allResolved[gameSeq];
+        const scoreEntry = myEntry?._raw.score ?? null;
+        const scheduleEntry = myEntry?._raw.schedule ?? null;
 
         if (scoreEntry) {
           if (scoreEntry.cancelled) {
@@ -195,52 +180,38 @@ export default function GameDetailScreen() {
           setIsExhibition(true);
         }
         if (scores?.games) {
-          const homeName = TEAM_COLORS[data.homeTeam]?.shortName || "";
-          const awayName = TEAM_COLORS[data.awayTeam]?.shortName || "";
-          const { awayId: gAwayId, homeId: gHomeId } = parseGameTeamIds(gid);
-          const fallbackHomeName = TEAM_COLORS[gHomeId]?.shortName || "";
-          const fallbackAwayName = TEAM_COLORS[gAwayId]?.shortName || "";
-          const gameSeq = (() => {
-            const parts = gid.split("-");
-            const suffix = parts[parts.length - 1];
-            const n = parseInt(suffix, 10);
-            return isNaN(n) ? 0 : n;
-          })();
-          // Calculate relative DH index within same-matchup games on this date
-          const allDaySchedule = schedule?.games?.filter(g => g.date === dateStr) || [];
-          let relativeIdx = 0, matchFound = false;
-          for (let i = 0, matchupCount = 0; i < allDaySchedule.length; i++) {
-            if (allDaySchedule[i].away === (awayName || fallbackAwayName) && allDaySchedule[i].home === (homeName || fallbackHomeName)) {
-              if (i === gameSeq) { relativeIdx = matchupCount; matchFound = true; break; }
-              matchupCount++;
-            }
-          }
-          const matchingCount = allDaySchedule.filter(g => g.away === (awayName || fallbackAwayName) && g.home === (homeName || fallbackHomeName)).length;
-          const finalGameIdx = matchFound ? (matchingCount > 1 ? relativeIdx + 1 : 0) : (isNaN(gameSeq) ? 0 : gameSeq);
-          const exactMatch =
-            scores.games.find(
-              (s: ScoreEntry) => s.home === homeName && s.away === awayName && (s.gameIdx ?? 0) === finalGameIdx
-            ) ||
-            scores.games.find(
-              (s: ScoreEntry) => s.home === fallbackHomeName && s.away === fallbackAwayName && (s.gameIdx ?? 0) === finalGameIdx
-            );
-          const match = exactMatch || scores.games.find(
-            (s: ScoreEntry) => s.home === (homeName || fallbackHomeName) && s.away === (awayName || fallbackAwayName)
-          );
-          if (match) {
-            setScoreFallback(match);
-            // For DH2+ games, override API detail with correct scores/pitchers from daily scores
-            if (gameSeq > 0 && exactMatch) {
+          const resolved = resolveGames(schedule?.games || [], scores?.games || [], dateStr);
+          const parts = gid.split("-");
+          const suffix = parts[parts.length - 1];
+          const gameSeq = parseInt(suffix, 10);
+          const myGame = !isNaN(gameSeq) ? resolved[gameSeq] : undefined;
+
+          if (myGame?._raw.score) {
+            const score = myGame._raw.score;
+            setScoreFallback(score);
+            // For DH2+ games, override API detail with correct scores/pitchers
+            if (gameSeq > 0) {
               setDetail({
                 ...data,
                 starters: { home: null, away: null },
-                score: { away: exactMatch.awayScore, home: exactMatch.homeScore },
+                score: { away: score.awayScore, home: score.homeScore },
                 pitchingResult: [
-                  ...(exactMatch.winPitcher ? [{ name: exactMatch.winPitcher, wls: "W" as const }] : []),
-                  ...(exactMatch.losePitcher ? [{ name: exactMatch.losePitcher, wls: "L" as const }] : []),
+                  ...(score.winPitcher ? [{ name: score.winPitcher, wls: "W" as const }] : []),
+                  ...(score.losePitcher ? [{ name: score.losePitcher, wls: "L" as const }] : []),
                 ],
               });
             }
+          } else if (myGame && myGame.awayScore != null && myGame.homeScore != null) {
+            setScoreFallback({
+              away: myGame.awayTeam,
+              home: myGame.homeTeam,
+              awayScore: myGame.awayScore,
+              homeScore: myGame.homeScore,
+              outcome: null,
+              cancelled: myGame.status === "cancelled",
+              winPitcher: myGame.winPitcher ?? null,
+              losePitcher: myGame.losePitcher ?? null,
+            });
           }
         }
         setLoading(false);

@@ -1369,3 +1369,31 @@ Android 런처 아이콘이 시스템 마스크(mask)에 의해 가장자리 ~17
 - DiaryEntryModal 토템 선택/해제/저장 ✅
 - DiaryStats 토템 통계 표시 (집관 토글 연동) ✅
 - soft-delete 후 MY탭 미노출 + DiaryStats 통계 유지 ✅
+
+## Phase 14.5: 초기화/백그라운드 안정성 수정 (2026-05-28)
+
+### 커밋: e174aab — 앱 초기화 후 데이터 로딩 실패 및 사진 첨부 불가 문제 수정
+
+### 수정된 버그
+
+| 버그 | 원인 | 수정 |
+|------|------|------|
+| 앱 초기화 후 무한 로딩 스피너 | `TeamContext`에서 `getMyTeam()` reject 시 `.catch()` 없어 `loading`이 영원히 `true` | `.catch()`로 `setMyTeamState(null)`, `.finally()`로 `setLoading(false)` |
+| 초기화 직후 갤러리 안 열리고 "권한 필요" 알림 | 권한 체크 2단계(`get`→`request`)가 Android 초기화 직후 `false` 반환 | `requestMediaLibraryPermissionsAsync` 직접 호출로 간소화 |
+| 사진 크롭 후 저장 시 "사진 저장 실패" | `react-native-view-shot` `captureRef`가 만드는 캐시 URI가 시간 경과로 만료 | crop 즉시 `documentDirectory/jikgwan/`로 복사하여 영구 URI 사용 |
+| `resizePhoto`가 에러를 삼켜 디버깅 어려움 | catch 블록에서 `return uri` (유효하지 않은 URI 그대로 반환) | 명시적 `throw new Error`로 변경 |
+
+### 알려진 이슈 (미해결)
+
+| 이슈 | 설명 | 상태 |
+|------|------|------|
+| 백그라운드 복귀 후 갤러리 실패 | Android가 오래된 Activity를 파괴한 후 복귀 시 `launchImageLibraryAsync` 자체가 실패할 수 있음. `getPendingResultAsync` 복구는 직전에 갤러리를 열었던 경우에만 유효하므로, 백그라운드 복귀 후 첫 갤러리 열기는 복구 불가 | 추후 `AppState` 리스너로 Activity 상태 감지 후 retry/지연 호출 검토 |
+
+### 변경 파일
+
+| 파일 | 변경 |
+|------|------|
+| `mobile/lib/TeamContext.tsx` | `useEffect`에 `.catch()` + `.finally()` 추가 |
+| `mobile/components/diary/useDiaryForm.ts` | 권한 체크 간소화, `getPendingResultAsync`에 try-catch 추가 |
+| `mobile/components/PhotoCropper.tsx` | `FileSystem` import, crop 후 `documentDirectory`로 즉시 복사 |
+| `mobile/lib/camera.ts` | `resizePhoto` catch에서 throw로 변경 |

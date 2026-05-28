@@ -18,8 +18,8 @@ import {
   cachedAllDailyScores,
   cachedTodayGames,
 } from "@/lib/gameCache";
-import { TEAM_COLORS } from "@shared/teamColors";
-import { TEAM_NAME_TO_ID, buildGameId, formatDateForApi as formatDateStr } from "@shared/constants";
+import { resolveGames, resolveGamesForSchedule, type ResolvedGame } from "@/lib/resolveGames";
+import { formatDateForApi as formatDateStr } from "@shared/constants";
 import { getInningInfo } from "@shared/gameStatus";
 
 import MyButton from "@/components/MyButton";
@@ -37,26 +37,6 @@ function isToday(date: Date): boolean {
   return date.getFullYear() === now.getFullYear() &&
     date.getMonth() === now.getMonth() &&
     date.getDate() === now.getDate();
-}
-
-interface EnhancedGame {
-  id: string;
-  homeTeam: string;
-  awayTeam: string;
-  time: string;
-  venue: string;
-  status: "scheduled" | "live" | "finished";
-  homeScore?: number;
-  awayScore?: number;
-  homePitcher?: string;
-  awayPitcher?: string;
-  winPitcher?: string | null;
-  losePitcher?: string | null;
-  cancelled?: boolean;
-  liveInning?: number;
-  isTop?: boolean;
-  isExhibition?: boolean;
-  isPostseason?: boolean;
 }
 
 export default function HomeScreen() {
@@ -126,21 +106,20 @@ export default function HomeScreen() {
   }), [theme]);
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [gamesByDate, setGamesByDate] = useState<Record<string, EnhancedGame[]>>({});
+  const [gamesByDate, setGamesByDate] = useState<Record<string, ResolvedGame[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [displayTeam, setDisplayTeam] = useState<string | null>(null);
   const { myTeam } = useTeam();
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [achievementOpen, setAchievementOpen] = useState(false);
-  const [calGames, setCalGames] = useState<ScheduleGame[]>([]);
-  const [calScores, setCalScores] = useState<Record<string, ScoreEntry[]>>({});
+  const [calResolvedGames, setCalResolvedGames] = useState<ResolvedGame[]>([]);
   const scheduleCache = useRef<{ month: number; year: number; games: ScheduleGame[] } | null>(null);
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
-  const calCache = useRef<Record<string, { games: ScheduleGame[]; scores: Record<string, ScoreEntry[]> }>>({});
+  const calCache = useRef<Record<string, ResolvedGame[]>>({});
   const MAX_CAL_CACHE_ENTRIES = 15;
-  const pruneCalCache = (cache: Record<string, { games: ScheduleGame[]; scores: Record<string, ScoreEntry[]> }>) => {
+  const pruneCalCache = (cache: Record<string, ResolvedGame[]>) => {
     const keys = Object.keys(cache);
     if (keys.length <= MAX_CAL_CACHE_ENTRIES) return;
     keys.sort().splice(0, keys.length - MAX_CAL_CACHE_ENTRIES).forEach((k) => delete cache[k]);
@@ -202,7 +181,6 @@ export default function HomeScreen() {
   // Preload current month + adjacent months on mount
   useEffect(() => {
     const current = new Date().getMonth() + 1;
-    // Load all scores in one call first, then build per-month caches from it
     const preloadAll = async () => {
       const [allScores] = await Promise.all([
         cachedAllDailyScores(),
@@ -212,7 +190,7 @@ export default function HomeScreen() {
       ]);
 
       const cy = new Date().getFullYear();
-      const fetchAndCache = async (month: number) => {
+      const buildAndCache = async (month: number) => {
         if (month < 1 || month > 12) return;
         const schedule = await cachedScheduleByMonth(month, cy);
         const gamesList = schedule?.games || [];
@@ -222,16 +200,16 @@ export default function HomeScreen() {
           const games = allScores?.[date];
           if (games) scoresRecord[date] = games;
         }
-        calCache.current[`${cy}:${month}`] = { games: gamesList, scores: scoresRecord };
+        const resolved = resolveGamesForSchedule(gamesList, scoresRecord);
+        calCache.current[`${cy}:${month}`] = resolved;
         pruneCalCache(calCache.current);
         if (month === current) {
-          setCalGames(gamesList);
-          setCalScores(scoresRecord);
+          setCalResolvedGames(resolved);
         }
       };
-      fetchAndCache(current);
-      fetchAndCache(current - 1);
-      fetchAndCache(current + 1);
+      buildAndCache(current);
+      buildAndCache(current - 1);
+      buildAndCache(current + 1);
     };
     preloadAll();
   }, []);
@@ -270,123 +248,35 @@ export default function HomeScreen() {
         const todayData = rest[3] as { games: TodayGame[]; nextGames?: TodayGame[] } | null;
         const schedule = [...(scheduleGames as ScheduleGame[]), ...(adjGames as ScheduleGame[])];
 
-        const result: Record<string, EnhancedGame[]> = {};
+        const result: Record<string, ResolvedGame[]> = {};
         for (let i = 0; i < 3; i++) {
           const ds = dates[i];
-          const dayGames = schedule.filter((g) => g.date === ds);
           const scoreEntries: ScoreEntry[] = scoresList[i]?.games || [];
           const isFuture = ds > todayStr;
           const isToday = ds === todayStr;
 
-          // Pitcher map and status from todayGames (today) or nextGames (tomorrow)
-          const pitcherMap = new Map<string, { away?: string; home?: string }>();
-          const gameIdMap = new Map<string, string>();
-          const gameStatusMap = new Map<string, string>();
-          const gameTimeMap = new Map<string, string>();
-          if (isToday && todayData?.games) {
-            for (const g of todayData.games) {
-              const key = `${ds}-${g.away.id}-${g.home.id}`;
-              pitcherMap.set(key, {
-                away: g.away.starter?.name !== "미정" ? g.away.starter?.name : undefined,
-                home: g.home.starter?.name !== "미정" ? g.home.starter?.name : undefined,
-              });
-              gameIdMap.set(key, g.id);
-              if (g.status) gameStatusMap.set(key, g.status);
-              if (g.time) gameTimeMap.set(key, g.time);
-            }
-          } else {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const tomorrowStr = formatDateStr(tomorrow);
-            if (ds === tomorrowStr && todayData?.nextGames) {
-              for (const ng of todayData.nextGames) {
-                const key = `${ng.date}-${ng.away.id}-${ng.home.id}`;
-                pitcherMap.set(key, {
-                  away: ng.away.starter?.name !== "미정" ? ng.away.starter?.name : undefined,
-                  home: ng.home.starter?.name !== "미정" ? ng.home.starter?.name : undefined,
-                });
-                gameIdMap.set(key, ng.id);
-                if (ng.status) gameStatusMap.set(key, ng.status);
-                if (ng.time) gameTimeMap.set(key, ng.time);
-              }
-            }
-          }
-
-          const pairCount = new Map<string, number>();
-          const enhanced: EnhancedGame[] = dayGames.map((g, gi) => {
-            const homeId = TEAM_NAME_TO_ID[g.home] || "";
-            const awayId = TEAM_NAME_TO_ID[g.away] || "";
-            const pairKey = `${g.away}|${g.home}`;
-            const pairIdx = pairCount.get(pairKey) || 0;
-            pairCount.set(pairKey, pairIdx + 1);
-            const matchingScores = scoreEntries.filter((s) => s.home === g.home && s.away === g.away);
-            const score = matchingScores.find(s => (s.gameIdx ?? 0) === pairIdx + 1) || matchingScores[pairIdx];
-            const gameKey = `${ds}-${awayId}-${homeId}`;
-            const pitchers = pitcherMap.get(gameKey);
-            const apiGameId = gameIdMap.get(gameKey);
-            const serverStatus = gameStatusMap.get(gameKey);
-            const serverTime = gameTimeMap.get(gameKey);
-
-            const timeStr = serverTime || g.time || "18:30";
-            const [h, m] = timeStr.split(":").map(Number);
-            const startTime = new Date();
-            startTime.setHours(h ?? 18, m ?? 30, 0, 0);
-            const gameHasStarted = new Date() >= startTime;
-
-            let status: "scheduled" | "live" | "finished" = "scheduled";
-            if (score?.cancelled) {
-              status = "finished";
-            } else if (score && !isFuture && score.outcome !== null) {
-              status = "finished";
-            } else if (serverStatus === "live" && !isFuture && gameHasStarted) {
-              status = "live";
-            } else if (isToday && !score?.cancelled && gameHasStarted) {
-              status = "live";
-            }
-
-            // Past exhibition games have no score data — mark as finished
-            if (status === "scheduled" && !isFuture && g.isExhibition) {
-              status = "finished";
-            }
-
-            const gameDate = ds.replace(/-/g, "");
-            const isDHPair = (pairCount.get(pairKey) ?? 0) > 1;
-            return {
-              id: isDHPair ? buildGameId(awayId, homeId, gameDate, String(gi)) : (apiGameId || buildGameId(awayId, homeId, gameDate, String(gi))),
-              homeTeam: homeId,
-              awayTeam: awayId,
-              time: serverTime || g.time || "18:30",
-              venue: (g.venue || "").replace(/\s*\(.*?\)\s*$/, "").trim(),
-              status,
-              homeScore: score?.homeScore,
-              awayScore: score?.awayScore,
-              homePitcher: pitchers?.home,
-              awayPitcher: pitchers?.away,
-              winPitcher: score?.winPitcher,
-              losePitcher: score?.losePitcher,
-              cancelled: score?.cancelled,
-              isExhibition: g.isExhibition,
-            };
+          const todayGamesForDate = isToday ? todayData?.games : undefined;
+          const nextGamesForDate = !isToday ? todayData?.nextGames : undefined;
+          const resolved = resolveGames(schedule, scoreEntries, ds, {
+            todayGames: todayGamesForDate,
+            nextGames: nextGamesForDate,
           });
 
-
-
           // Fallback: fetch game-detail for live games and missing pitchers
-          const gamesNeedingDetail = enhanced.filter(
+          const gamesNeedingDetail = resolved.filter(
             (g) => !isFuture && !g.isExhibition && (g.status === "live" || !g.homePitcher || !g.awayPitcher)
           );
           if (gamesNeedingDetail.length > 0) {
             Promise.all(
-              gamesNeedingDetail.map((g) => fetchGameDetail(g.id).catch(() => null))
+              gamesNeedingDetail.map((g) => fetchGameDetail(g.gameId).catch(() => null))
             ).then((results) => {
               if (cancelled) return;
               setGamesByDate((prev) => ({
                 ...prev,
                 [ds]: (prev[ds] || []).map((g) => {
-                  const detail = results.find((r) => r?.gameId === g.id);
+                  const detail = results.find((r) => r?.gameId === g.gameId);
                   if (!detail) return g;
 
-                  // inning 추론: scoreBoard.inn 배열 길이로 초/말 판단
                   let liveInning = g.liveInning;
                   let isTop = g.isTop;
                   if (g.status === "live" && liveInning == null) {
@@ -398,18 +288,15 @@ export default function HomeScreen() {
                     ...g,
                     liveInning,
                     isTop,
-                    homePitcher:
-                      g.homePitcher || (detail.starters?.home?.name || undefined),
-                    awayPitcher:
-                      g.awayPitcher || (detail.starters?.away?.name || undefined),
+                    homePitcher: g.homePitcher || (detail.starters?.home?.name || undefined),
+                    awayPitcher: g.awayPitcher || (detail.starters?.away?.name || undefined),
                   };
                 }),
               }));
             }).catch(() => {});
           }
 
-
-          result[ds] = enhanced;
+          result[ds] = resolved;
         }
         setGamesByDate(result);
         hasEverLoaded.current = true;
@@ -436,11 +323,10 @@ export default function HomeScreen() {
     const month = calMonth + 1;
     const cacheKey = `${calYear}:${month}`;
 
-    // Restore from cache if available (year+month must match)
+    // Restore from cache if available
     const cached = calCache.current[cacheKey];
     if (cached) {
-      setCalGames(cached.games);
-      setCalScores(cached.scores);
+      setCalResolvedGames(cached);
     }
 
     // Fetch this month (will update if cache exists)
@@ -456,11 +342,11 @@ export default function HomeScreen() {
       for (let i = 0; i < myDates.length; i++) {
         if (scoreResults[i]?.games) scoresRecord[myDates[i]] = scoreResults[i]!.games;
       }
-      calCache.current[cacheKey] = { games: gamesList, scores: scoresRecord };
+      const resolved = resolveGamesForSchedule(gamesList, scoresRecord);
+      calCache.current[cacheKey] = resolved;
       pruneCalCache(calCache.current);
       if (!cancelled) {
-        setCalGames(gamesList);
-        setCalScores(scoresRecord);
+        setCalResolvedGames(resolved);
       }
       // Preload adjacent months in background (same year)
       for (const adj of [month - 1, month + 1]) {
@@ -474,7 +360,7 @@ export default function HomeScreen() {
             for (let i = 0; i < dts.length; i++) {
               if (srs[i]?.games) src[dts[i]] = srs[i]!.games;
             }
-            calCache.current[adjKey] = { games: gl, scores: src };
+            calCache.current[adjKey] = resolveGamesForSchedule(gl, src);
             pruneCalCache(calCache.current);
           }).catch((e) => { console.warn('adjacent month preload failed', e); });
         }
@@ -527,7 +413,7 @@ export default function HomeScreen() {
   }, [selectedDate, screenWidth]);
 
   const sortGames = useCallback(
-    (games: EnhancedGame[]) => {
+    (games: ResolvedGame[]) => {
       return [...games].sort((a, b) => {
         if (myTeam) {
           const aIsMyTeam = (a.homeTeam === myTeam || a.awayTeam === myTeam) ? 0 : 1;
@@ -540,7 +426,7 @@ export default function HomeScreen() {
     [myTeam]
   );
 
-  const renderGame = useCallback(({ item }: { item: EnhancedGame }) => {
+  const renderGame = useCallback(({ item }: { item: ResolvedGame }) => {
     const isMyTeamGame = myTeam && (item.homeTeam === myTeam || item.awayTeam === myTeam);
     return (
       <GameCard
@@ -548,19 +434,19 @@ export default function HomeScreen() {
         awayTeam={item.awayTeam}
         time={item.time}
         stadium={item.venue}
-        status={item.status}
+        status={item.status === "cancelled" ? "finished" : item.status}
         homeScore={item.homeScore}
         awayScore={item.awayScore}
         homePitcher={item.homePitcher}
         awayPitcher={item.awayPitcher}
         winPitcher={item.winPitcher}
         losePitcher={item.losePitcher}
-        cancelled={item.cancelled}
+        cancelled={item.status === "cancelled"}
         liveInning={item.liveInning}
         isTop={item.isTop}
         highlighted={isMyTeamGame ? teamPrimaryColor(myTeam, isDark) : undefined}
         dense={!isMyTeamGame}
-        onClick={() => router.push(`/game/${item.id}?ap=${encodeURIComponent(item.awayPitcher || "")}&hp=${encodeURIComponent(item.homePitcher || "")}`)}
+        onClick={() => router.push(`/game/${item.gameId}?ap=${encodeURIComponent(item.awayPitcher || "")}&hp=${encodeURIComponent(item.homePitcher || "")}`)}
       />
     );
   }, [myTeam, isDark, router]);
@@ -605,8 +491,7 @@ export default function HomeScreen() {
         <CalendarGrid
           year={calYear}
           month={calMonth}
-          games={calGames}
-          scores={calScores}
+          resolvedGames={calResolvedGames}
           loading={loading}
           selectedTeam={displayTeam || myTeam}
           myTeam={myTeam}
@@ -674,7 +559,7 @@ export default function HomeScreen() {
                     key={slot}
                     data={pageGames}
                     renderItem={renderGame}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={(item) => item.gameId}
                     contentContainerStyle={styles.listContent}
                     ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
                   />

@@ -1,14 +1,13 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { View, Text, Pressable, StyleSheet, ActivityIndicator, Animated } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
+import { TEAM_COLORS, teamPrimaryColor } from "@shared/teamColors";
 import { parseGameTeamIds, getWinBadge, getDaysInMonth, getFirstDayOfMonth } from "@shared/constants";
 import { EMOTION_CHARACTER, type CharacterEmotion } from "@/lib/emotions";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme } from "@/lib/ThemeContext";
-import { teamPrimaryColor } from "@shared/teamColors";
 import { cachedScheduleByMonth, cachedDailyScores } from "@/lib/gameCache";
-import { type ScheduleGame, type ScoreEntry } from "@/lib/api";
+import { resolveGamesForSchedule, type ResolvedGame } from "@/lib/resolveGames";
 import type { JikgwanRecord, Expense } from "@/lib/db";
 import { getBadges } from "@/lib/db";
 import { BADGE_DEFINITIONS } from "@/lib/achievements";
@@ -40,8 +39,7 @@ export default function DiaryCalendar({
   expenses,
 }: DiaryCalendarProps) {
   const { theme, isDark } = useTheme();
-  const [games, setGames] = useState<ScheduleGame[]>([]);
-  const [scoresByDate, setScoresByDate] = useState<Record<string, ScoreEntry[]>>({});
+  const [resolvedGames, setResolvedGames] = useState<ResolvedGame[]>([]);
   const [loading, setLoading] = useState(false);
   const [badgeMap, setBadgeMap] = useState<Map<string, string[]>>(new Map());
 
@@ -65,38 +63,45 @@ export default function DiaryCalendar({
     }).catch(() => {});
   }, [year, month, isAchievement]);
 
-  const teamName = teamId ? TEAM_LIST.find((t) => t.id === teamId)?.shortName || "" : "";
-
   // Fetch schedule + scores for the month
   useEffect(() => {
-    if (!teamName) return;
+    if (!teamId) return;
     let cancelled = false;
     setLoading(true);
     cachedScheduleByMonth(month + 1, year).then(async (schedule) => {
       if (cancelled) return;
       const gamesList = schedule?.games || [];
-      setGames(gamesList);
-      const myDates = [...new Set(
-        gamesList
-          .filter((g) => teamName && (g.away === teamName || g.home === teamName))
-          .map((g) => g.date)
-      )];
+      const allDates = [...new Set(gamesList.map((g) => g.date))];
       const scoreResults = await Promise.all(
-        myDates.map((d) => cachedDailyScores(d).catch(() => null))
+        allDates.map((d) => cachedDailyScores(d).catch(() => null))
       );
       if (cancelled) return;
-      const scores: Record<string, ScoreEntry[]> = {};
-      for (let i = 0; i < myDates.length; i++) {
+      const scoresByDate: Record<string, any[]> = {};
+      for (let i = 0; i < allDates.length; i++) {
         if (scoreResults[i]?.games) {
-          scores[myDates[i]] = scoreResults[i]!.games;
+          scoresByDate[allDates[i]] = scoreResults[i]!.games;
         }
       }
-      setScoresByDate(scores);
+      const resolved = resolveGamesForSchedule(gamesList, scoresByDate);
+      if (!cancelled) {
+        setResolvedGames(resolved);
+        setLoading(false);
+      }
     }).catch(() => {}).finally(() => {
       if (!cancelled) setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [year, month, teamName]);
+  }, [year, month, teamId]);
+
+  // Filter games for user's team
+  const myGamesByDate = new Map<string, ResolvedGame[]>();
+  for (const g of resolvedGames) {
+    if (teamId && (g.homeTeam === teamId || g.awayTeam === teamId)) {
+      const list = myGamesByDate.get(g.date) || [];
+      list.push(g);
+      myGamesByDate.set(g.date, list);
+    }
+  }
 
   // Record map (used by all modes)
   const recordMap = new Map<string, JikgwanRecord[]>();
@@ -115,16 +120,6 @@ export default function DiaryCalendar({
     }
     return set;
   }, [records]);
-
-  // Filter games for user's team, grouped by date
-  const myGamesByDate = new Map<string, ScheduleGame[]>();
-  for (const g of games) {
-    if (teamName && (g.away === teamName || g.home === teamName)) {
-      const list = myGamesByDate.get(g.date) || [];
-      list.push(g);
-      myGamesByDate.set(g.date, list);
-    }
-  }
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
@@ -344,35 +339,29 @@ export default function DiaryCalendar({
 
           const dayRecords = recordMap.get(dateStr);
           const dayGames = myGamesByDate.get(apiDateStr) || [];
-          const dayScores = scoresByDate[apiDateStr] || [];
 
-          // Game result from scores (handles DH)
+          // Game result from ResolvedGame (handles DH automatically)
           interface GameResult { opponent: string; result: { label: string; color: string; textColor?: string } | null; }
           let gameResults: GameResult[] = [];
           const isDH = dayGames.length > 1;
           if (dayGames.length > 0 && !isFuture) {
-            if (dayScores.length > 0) {
-              const pairCount = new Map<string, number>();
-              for (const g of dayGames) {
-                const pairKey = `${g.away}|${g.home}`;
-                const pairIdx = pairCount.get(pairKey) ?? 0;
-                pairCount.set(pairKey, pairIdx + 1);
-                const matchingScores = dayScores.filter((s) => s.away === g.away && s.home === g.home);
-                const score = matchingScores.find((s) => (s.gameIdx ?? 0) === pairIdx + 1) || matchingScores[pairIdx];
-                if (score && !score.cancelled && score.outcome != null) {
-                  const isHome = g.home === teamName;
-                  const our = isHome ? score.homeScore : score.awayScore;
-                  const their = isHome ? score.awayScore : score.homeScore;
-                  const opponent = isHome ? g.away : g.home;
-                  const result = our > their ? getWinBadge(1) : our < their ? getWinBadge(-1) : getWinBadge(0);
-                  gameResults.push({ opponent, result });
-                } else if (score && score.cancelled) {
-                  const isHome = g.home === teamName;
-                  gameResults.push({ opponent: isHome ? g.away : g.home, result: { label: "취", color: "#888" } });
+            for (const rg of dayGames) {
+              const isHome = rg.homeTeam === teamId;
+              const oppTeamId = isHome ? rg.awayTeam : rg.homeTeam;
+              const opponent = TEAM_COLORS[oppTeamId]?.shortName || oppTeamId;
+              if (rg.status === "cancelled") {
+                gameResults.push({ opponent, result: { label: "취", color: "#888" } });
+              } else if (rg.outcome != null && rg.homeScore != null && rg.awayScore != null) {
+                const our = isHome ? rg.homeScore : rg.awayScore;
+                const their = isHome ? rg.awayScore : rg.homeScore;
+                const result = our > their ? getWinBadge(1) : our < their ? getWinBadge(-1) : getWinBadge(0);
+                gameResults.push({ opponent, result });
+              } else if (!teamId) {
+                const oppName = `${rg._raw.schedule?.away || ""} vs ${rg._raw.schedule?.home || ""}`;
+                if (!gameResults.some((gr) => gr.opponent === oppName)) {
+                  gameResults.push({ opponent: oppName, result: null });
                 }
               }
-            } else if (!teamName) {
-              gameResults.push({ opponent: `${dayGames[0].away} vs ${dayGames[0].home}`, result: null });
             }
           }
           const gameOpponent = gameResults[0]?.opponent;

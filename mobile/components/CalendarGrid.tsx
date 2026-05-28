@@ -5,36 +5,17 @@ import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { TeamBadge } from "@/components/TeamBadge";
 import YearSelector from "@/components/YearSelector";
 import { getDaysInMonth, getFirstDayOfMonth } from "@shared/constants";
-import type { ScheduleGame } from "@/lib/api";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
+import type { ResolvedGame } from "@/lib/resolveGames";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
-function teamShortName(teamId: string): string {
-  return TEAM_LIST.find((t) => t.id === teamId)?.shortName || "";
-}
-
-function cleanVenue(venue: string): string {
-  return venue.replace(/\s*\(.*?\)\s*$/, "").trim();
-}
-
-interface CalendarScore {
-  away: string; home: string;
-  awayScore: number; homeScore: number;
-  outcome?: string | null; cancelled?: boolean;
-  gameIdx?: number;
-}
-
-const WIN_SCORE = "#3b82d9";
-const LOSS_SCORE = "#d94a4a";
-
 export default function CalendarGrid({
-  year: propYear, month: propMonth, games, scores, loading, selectedTeam, myTeam, onSelectDate, onMonthChange, onTeamChange, onYearChange,
+  year: propYear, month: propMonth, resolvedGames, loading, selectedTeam, myTeam, onSelectDate, onMonthChange, onTeamChange, onYearChange,
 }: {
   year: number; month: number;
-  games: ScheduleGame[];
-  scores: Record<string, CalendarScore[]>;
+  resolvedGames: ResolvedGame[];
   loading: boolean;
   selectedTeam: string | null;
   myTeam?: string | null;
@@ -45,14 +26,12 @@ export default function CalendarGrid({
 }) {
   const { theme, isDark } = useTheme();
   const [teamPickerOpen, setTeamPickerOpen] = useState(false);
-  const teamName = teamShortName(selectedTeam || "");
-  const teamColor = TEAM_COLORS[selectedTeam || ""];
 
-  const filteredGames = teamName
-    ? games.filter((g) => g.away === teamName || g.home === teamName)
+  const filteredGames = selectedTeam
+    ? resolvedGames.filter((g) => g.homeTeam === selectedTeam || g.awayTeam === selectedTeam)
     : [];
 
-  const gamesByDate = new Map<string, ScheduleGame[]>();
+  const gamesByDate = new Map<string, ResolvedGame[]>();
   for (const g of filteredGames) {
     const list = gamesByDate.get(g.date) || [];
     list.push(g);
@@ -79,7 +58,7 @@ export default function CalendarGrid({
     else onMonthChange(propYear, m);
   };
 
-  const hasDH = filteredGames.some((g) => (gamesByDate.get(g.date)?.length ?? 0) > 1);
+  const hasDH = filteredGames.some((g) => g.isDoubleHeader);
 
   const monthTranslateX = useRef(new Animated.Value(0)).current;
 
@@ -225,6 +204,24 @@ export default function CalendarGrid({
     calVenue: { fontSize: 9, color: theme.mutedForeground },
   }), [theme]);
 
+  function resultLabel(rg: ResolvedGame): string | null {
+    if (rg.status === "cancelled") return null;
+    if (rg.outcome == null || rg.homeScore == null || rg.awayScore == null) return null;
+    const isHome = rg.homeTeam === selectedTeam;
+    const our = isHome ? rg.homeScore : rg.awayScore;
+    const their = isHome ? rg.awayScore : rg.homeScore;
+    if (our > their) return "승";
+    if (our < their) return "패";
+    return "무";
+  }
+
+  function resultColor(label: string | null): string {
+    if (label === "승") return "#3b82f6";
+    if (label === "패") return "#ef4444";
+    if (label === "무") return "#f59e0b";
+    return "#888";
+  }
+
   return (
     <View style={styles.container}>
       <GestureDetector gesture={monthPanGesture}>
@@ -300,19 +297,17 @@ export default function CalendarGrid({
               const dateStr = `${propYear}-${String(propMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
               const dayGames = gamesByDate.get(dateStr) || [];
               const isToday = dateStr === todayStr;
-              const dayScores = scores[dateStr] || [];
               const isFuture = dateStr > todayStr;
               const hasGames = dayGames.length > 0;
-              const isDH = dayGames.length > 1;
+              const isDH = hasGames && dayGames.length > 1;
 
               // Win/Loss/Draw summary
               let winCount = 0, lossCount = 0, drawCount = 0;
-              for (const s of dayScores) {
-                if (s.outcome == null || s.cancelled) continue;
-                if (teamName && s.home !== teamName && s.away !== teamName) continue;
-                const isHm = s.home === teamName;
-                const our = isHm ? s.homeScore : s.awayScore;
-                const their = isHm ? s.awayScore : s.homeScore;
+              for (const rg of dayGames) {
+                if (rg.status === "cancelled" || rg.outcome == null) continue;
+                const isHome = rg.homeTeam === selectedTeam;
+                const our = isHome ? (rg.homeScore ?? 0) : (rg.awayScore ?? 0);
+                const their = isHome ? (rg.awayScore ?? 0) : (rg.homeScore ?? 0);
                 if (our > their) winCount++;
                 else if (our < their) lossCount++;
                 else drawCount++;
@@ -320,24 +315,10 @@ export default function CalendarGrid({
 
               const hasResult = winCount + lossCount + drawCount > 0;
               const cellBg = hasGames && !isFuture && hasResult ? theme.muted : undefined;
-              const hasHome = dayGames.some((g) => g.home === teamName);
+              const hasHome = dayGames.some((rg) => rg.homeTeam === selectedTeam);
 
-              // Result labels (승/패/무 dots like web)
-              const labelPairCount = new Map<string, number>();
-              const dayLabels: string[] = dayGames.map((g) => {
-                const pairKey = `${g.away}|${g.home}`;
-                const pairIdx = labelPairCount.get(pairKey) || 0;
-                labelPairCount.set(pairKey, pairIdx + 1);
-                const matchingScores = dayScores.filter((sc) => sc.away === g.away && sc.home === g.home);
-                const s = matchingScores.find(sc => (sc.gameIdx ?? 0) === pairIdx + 1) || matchingScores[pairIdx];
-                if (!s || s.cancelled || s.outcome == null || (s.awayScore === 0 && s.homeScore === 0)) return "";
-                const homeWon = s.homeScore > s.awayScore;
-                const tied = s.homeScore === s.awayScore;
-                if (tied) return "무";
-                const isHm = g.home === teamName;
-                if ((isHm && homeWon) || (!isHm && !homeWon)) return "승";
-                return "패";
-              }).filter(Boolean);
+              // Result labels
+              const dayLabels = dayGames.map((rg) => resultLabel(rg)).filter(Boolean);
 
               return (
                 <Pressable
@@ -357,9 +338,7 @@ export default function CalendarGrid({
                         dayLabels.map((label, li) => (
                           <View
                             key={li}
-                            style={[styles.calDayDot, {
-                              backgroundColor: label === "승" ? "#3b82f6" : label === "패" ? "#ef4444" : "#f59e0b",
-                            }]}
+                            style={[styles.calDayDot, { backgroundColor: resultColor(label) }]}
                           >
                             <Text style={styles.calDayDotText}>{label}</Text>
                           </View>
@@ -372,106 +351,85 @@ export default function CalendarGrid({
                   {isDH ? (
                     (() => {
                       const g0 = dayGames[0];
-                      const isHome = g0.home === teamName;
-                      const oppName = isHome ? g0.away : g0.home;
-                      const dhScores = dayScores.filter(x => x.away === g0.away && x.home === g0.home)
-                        .sort((a, b) => (a.gameIdx ?? 0) - (b.gameIdx ?? 0));
+                      const isHome = g0.homeTeam === selectedTeam;
+                      const oppName = g0.homeTeam === selectedTeam
+                        ? TEAM_COLORS[g0.awayTeam]?.shortName || g0.awayTeam
+                        : TEAM_COLORS[g0.homeTeam]?.shortName || g0.homeTeam;
                       return (
                         <View style={styles.calGame}>
                           <Text style={styles.calOpp} numberOfLines={1}>{oppName}</Text>
                           <View style={{ flexDirection: "row", gap: 4, marginTop: 1 }}>
-                            {dayGames.slice(0, 2).map((g, i) => {
-                              const s = dhScores[i];
-                              let label: string | null = null;
-                              if (s?.cancelled) {
-                                label = "취";
-                              } else if (s && !s.cancelled && s.outcome != null) {
-                                if (s.outcome === "W") label = "승";
-                                else if (s.outcome === "L") label = "패";
-                                else if (s.outcome === "T") label = "무";
+                            {dayGames.slice(0, 2).map((rg, i) => {
+                              const label = resultLabel(rg);
+                              if (label) {
+                                return (
+                                  <View key={i} style={{
+                                    backgroundColor: resultColor(label),
+                                    width: 16, height: 16, borderRadius: 8,
+                                    alignItems: "center", justifyContent: "center",
+                                  }}>
+                                    <Text style={{ fontSize: 8, fontWeight: "700", color: "#fff" }}>
+                                      {rg.status === "cancelled" ? "취" : label}
+                                    </Text>
+                                  </View>
+                                );
                               }
-                              if (!label) {
-                                if (g.isExhibition && !isFuture) {
-                                  return (
-                                    <View key={i} style={{
-                                      backgroundColor: "#888",
-                                      width: 16, height: 16, borderRadius: 8,
-                                      alignItems: "center", justifyContent: "center",
-                                    }}>
-                                      <Text style={{ fontSize: 8, fontWeight: "700", color: "#fff" }}>종</Text>
-                                    </View>
-                                  );
-                                }
-                                return <View key={i} style={{ width: 16, height: 16 }} />;
+                              if (rg.isExhibition && !isFuture) {
+                                return (
+                                  <View key={i} style={{
+                                    backgroundColor: "#888",
+                                    width: 16, height: 16, borderRadius: 8,
+                                    alignItems: "center", justifyContent: "center",
+                                  }}>
+                                    <Text style={{ fontSize: 8, fontWeight: "700", color: "#fff" }}>종</Text>
+                                  </View>
+                                );
                               }
-                              const bgColor = label === "승" ? "#3b82f6" : label === "패" ? "#ef4444" : label === "무" ? "#f59e0b" : "#888";
-                              return (
-                                <View key={i} style={{
-                                  backgroundColor: bgColor,
-                                  width: 16, height: 16, borderRadius: 8,
-                                  alignItems: "center", justifyContent: "center",
-                                }}>
-                                  <Text style={{ fontSize: 8, fontWeight: "700", color: "#fff" }}>
-                                    {label}
-                                  </Text>
-                                </View>
-                              );
+                              return <View key={i} style={{ width: 16, height: 16 }} />;
                             })}
                           </View>
                         </View>
                       );
                     })()
                   ) : (
-                    (() => {
-                      const nonDHPairCount = new Map<string, number>();
-                      return dayGames.slice(0, 2).map((g, gi) => {
-                      const isHome = g.home === teamName;
-                      const pairKey = `${g.away}|${g.home}`;
-                      const pairIdx = nonDHPairCount.get(pairKey) || 0;
-                      nonDHPairCount.set(pairKey, pairIdx + 1);
-                      const matchingScores = dayScores.filter((s) => s.away === g.away && s.home === g.home);
-                      const score = matchingScores.find(s => (s.gameIdx ?? 0) === pairIdx + 1) || matchingScores[pairIdx];
-                      const oppName = isHome ? g.away : g.home;
-
-                      let resultColor: string | undefined;
-                      if (score && !isFuture && score.outcome != null && !score.cancelled) {
-                        const our = isHome ? score.homeScore : score.awayScore;
-                        const their = isHome ? score.awayScore : score.homeScore;
-                        if (our > their) resultColor = WIN_SCORE;
-                        else if (our < their) resultColor = LOSS_SCORE;
-                        else resultColor = "#d97706";
-                      }
+                    dayGames.slice(0, 2).map((rg, gi) => {
+                      const isHome = rg.homeTeam === selectedTeam;
+                      const oppName = isHome
+                        ? TEAM_COLORS[rg.awayTeam]?.shortName || rg.awayTeam
+                        : TEAM_COLORS[rg.homeTeam]?.shortName || rg.homeTeam;
+                      const label = resultLabel(rg);
+                      const color = resultColor(label);
 
                       return (
                         <View key={gi} style={styles.calGame}>
                           <View>
-                            <Text style={styles.calOpp} numberOfLines={1}>
-                              {oppName}
-                            </Text>
+                            <Text style={styles.calOpp} numberOfLines={1}>{oppName}</Text>
                           </View>
                           <View>
-                            {score?.cancelled ? (
+                            {rg.status === "cancelled" ? (
                               <Text style={styles.calCancelled}>취소</Text>
-                            ) : score && !isFuture && score.outcome != null ? (
-                              <View style={[styles.scoreChip, { backgroundColor: (resultColor || theme.mutedForeground) + "18" }]}>
+                            ) : rg.homeScore != null && rg.awayScore != null && !isFuture && rg.outcome != null ? (
+                              <View style={[styles.scoreChip, { backgroundColor: (label ? color : theme.mutedForeground) + "18" }]}>
                                 <Text style={[
                                   styles.calScore,
-                                  { color: resultColor || theme.mutedForeground },
-                                  (score.awayScore >= 10 || score.homeScore >= 10) && styles.calScoreSm,
+                                  { color: label ? color : theme.mutedForeground },
+                                  (rg.awayScore >= 10 || rg.homeScore >= 10) && styles.calScoreSm,
                                 ]}>
-                                  {score.awayScore}:{score.homeScore}
+                                  {rg.awayScore}:{rg.homeScore}
                                 </Text>
                               </View>
-                            ) : g.isExhibition && !isFuture ? (
+                            ) : rg.isExhibition && !isFuture ? (
                               <Text style={styles.calCancelled}>종료</Text>
                             ) : (
-                              <Text style={styles.calVenue} numberOfLines={1}>{cleanVenue(g.venue) || g.time?.slice(0, 5) || ""}</Text>
+                              <Text style={styles.calVenue} numberOfLines={1}>
+                                {rg.venue || rg.time.slice(0, 5) || ""}
+                              </Text>
                             )}
                           </View>
                         </View>
                       );
                     })
-                  })())}
+                  )}
                 </Pressable>
               );
             })}
@@ -509,4 +467,3 @@ export default function CalendarGrid({
     </View>
   );
 }
-

@@ -2,33 +2,21 @@ import { useState, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
-import { TEAM_NAME_TO_ID, getDaysInMonth, getFirstDayOfMonth, DEFAULT_TEAM_ID, buildGameId } from "@shared/constants";
-import { cachedScheduleByMonth, cachedDailyScores, cachedAllDailyScores } from "@/lib/gameCache";
-import { type ScheduleGame } from "@/lib/api";
+import { getDaysInMonth, getFirstDayOfMonth, DEFAULT_TEAM_ID } from "@shared/constants";
+import { cachedScheduleByMonth, cachedAllDailyScores } from "@/lib/gameCache";
+import { resolveGamesForSchedule, type ResolvedGame } from "@/lib/resolveGames";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import YearSelector from "@/components/YearSelector";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
-interface ScoreInfo {
-  away: string; home: string;
-  awayScore: number; homeScore: number;
-  outcome: string | null; cancelled: boolean;
-  gameIdx?: number;
-}
-
-function teamShortName(teamId: string): string {
-  return TEAM_LIST.find((t) => t.id === teamId)?.shortName || "";
-}
-
 export default function CalendarPage() {
   const { theme, isDark } = useTheme();
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedTeam, setSelectedTeam] = useState(DEFAULT_TEAM_ID);
-  const [games, setGames] = useState<ScheduleGame[]>([]);
-  const [scoresByDate, setScoresByDate] = useState<Record<string, ScoreInfo[]>>({});
+  const [resolvedGames, setResolvedGames] = useState<ResolvedGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -41,29 +29,26 @@ export default function CalendarPage() {
     let cancelled = false;
     setLoading(true);
     setError(false);
-    // Clear stale data immediately to prevent showing previous year's data
-    setGames([]);
-    setScoresByDate({});
+    setResolvedGames([]);
     cachedScheduleByMonth(month + 1, year).then(async (schedule) => {
       if (cancelled) return;
       const gamesList = schedule?.games || [];
       if (cancelled) return;
-      setGames(gamesList);
       const allScores = await cachedAllDailyScores(year);
       if (cancelled || !allScores) {
         if (!cancelled) setLoading(false);
         return;
       }
-      const scores: Record<string, ScoreInfo[]> = {};
-      const allDates = [...new Set(gamesList.map((g) => g.date))];
-      for (const date of allDates) {
-        const games = allScores[date];
-        if (games) {
-          scores[date] = games;
+      const scoresByDate: Record<string, ResolvedGame[]> = {};
+      // Build scoresByDate from allScores for dates in this month
+      for (const [date, games] of Object.entries(allScores)) {
+        if (date.startsWith(`${year}-`)) {
+          scoresByDate[date] = games as any;
         }
       }
       if (!cancelled) {
-        setScoresByDate(scores);
+        const resolved = resolveGamesForSchedule(gamesList, allScores as Record<string, any[]>);
+        setResolvedGames(resolved);
         setLoading(false);
       }
     }).catch(() => {
@@ -77,14 +62,11 @@ export default function CalendarPage() {
 
   const retry = () => setRetryKey((k) => k + 1);
 
-  const teamName = TEAM_LIST.find((t) => t.id === selectedTeam)?.shortName || "";
-  const teamColor = TEAM_COLORS[selectedTeam];
-
-  const filteredGames = teamName
-    ? games.filter((g) => g.away === teamName || g.home === teamName)
+  const filteredGames = selectedTeam
+    ? resolvedGames.filter((g) => g.homeTeam === selectedTeam || g.awayTeam === selectedTeam)
     : [];
 
-  const gamesByDate = new Map<string, ScheduleGame[]>();
+  const gamesByDate = new Map<string, ResolvedGame[]>();
   for (const g of filteredGames) {
     const list = gamesByDate.get(g.date) || [];
     list.push(g);
@@ -148,6 +130,26 @@ export default function CalendarPage() {
     calScore: { fontSize: 9, fontWeight: "600" },
     calVenue: { fontSize: 8, color: theme.mutedForeground },
   }), [theme]);
+
+  const homeTeamName = TEAM_LIST.find((t) => t.id === selectedTeam)?.shortName || "";
+
+  function resultLabel(rg: ResolvedGame): string | null {
+    if (rg.status === "cancelled") return null;
+    if (rg.outcome == null || rg.homeScore == null || rg.awayScore == null) return null;
+    const isHome = rg.homeTeam === selectedTeam;
+    const our = isHome ? rg.homeScore : rg.awayScore;
+    const their = isHome ? rg.awayScore : rg.homeScore;
+    if (our > their) return "승";
+    if (our < their) return "패";
+    return "무";
+  }
+
+  function outcomeColor(label: string | null): string {
+    if (label === "승") return "#1565c0";
+    if (label === "패") return "#d32f2f";
+    if (label === "무") return theme.mutedForeground;
+    return theme.mutedForeground;
+  }
 
   return (
     <View style={styles.container}>
@@ -226,20 +228,17 @@ export default function CalendarPage() {
                 const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                 const dayGames = gamesByDate.get(dateStr) || [];
                 const isToday = dateStr === todayStr;
-                const dayScores = scoresByDate[dateStr] || [];
                 const isFuture = dateStr > todayStr;
-
-                // Compute win/loss colors (single game days only)
-                let cellBg = "transparent";
-                const homeTeamName = TEAM_LIST.find((t) => t.id === selectedTeam)?.shortName || "";
                 const isDH = dayGames.length > 1 && !isFuture;
 
+                // Compute win/loss colors
+                let cellBg = "transparent";
                 if (!isDH) {
                   let hasWin = false, hasLoss = false;
-                  for (const s of dayScores) {
-                    if (s.outcome == null || s.cancelled) continue;
-                    const isHome = s.home === homeTeamName;
-                    const won = isHome ? s.homeScore > s.awayScore : s.awayScore > s.homeScore;
+                  for (const rg of dayGames) {
+                    if (rg.status === "cancelled" || rg.outcome == null) continue;
+                    const isHome = rg.homeTeam === selectedTeam;
+                    const won = isHome ? (rg.homeScore ?? 0) > (rg.awayScore ?? 0) : (rg.awayScore ?? 0) > (rg.homeScore ?? 0);
                     if (won) hasWin = true; else hasLoss = true;
                   }
                   if (hasWin && !hasLoss) cellBg = "#e3f2fd";
@@ -248,25 +247,7 @@ export default function CalendarPage() {
 
                 const handlePress = () => {
                   if (isFuture || dayGames.length === 0 || isDH) return;
-                  const g = dayGames[0];
-                  const homeId = TEAM_NAME_TO_ID[g.home] || "";
-                  const awayId = TEAM_NAME_TO_ID[g.away] || "";
-                  const gameId = buildGameId(awayId, homeId, dateStr.replace(/-/g, ""));
-                  if (gameId) router.push(`/game/${gameId}`);
-                };
-
-                const outcomeLabel = (outcome: string | null): string | null => {
-                  if (outcome === "W") return "승";
-                  if (outcome === "L") return "패";
-                  if (outcome === "T") return "무";
-                  return null;
-                };
-
-                const outcomeColor = (outcome: string | null, isHome: boolean): string => {
-                  if (outcome === "W") return "#1565c0";
-                  if (outcome === "L") return "#d32f2f";
-                  if (outcome === "T") return theme.mutedForeground;
-                  return theme.mutedForeground;
+                  if (dayGames[0].gameId) router.push(`/game/${dayGames[0].gameId}`);
                 };
 
                 return (
@@ -282,35 +263,29 @@ export default function CalendarPage() {
                     </View>
 
                     {isDH ? (
-                      // DH layout: single opponent row with result badges
                       (() => {
                         const g0 = dayGames[0];
-                        const isHome = g0.home === homeTeamName;
-                        const oppName = isHome ? g0.away : g0.home;
+                        const isHome = g0.homeTeam === selectedTeam;
+                        const oppName = isHome
+                          ? TEAM_COLORS[g0.awayTeam]?.shortName || g0.awayTeam
+                          : TEAM_COLORS[g0.homeTeam]?.shortName || g0.homeTeam;
                         const col = teamPrimaryColor(selectedTeam, isDark);
                         return (
                           <View style={[styles.calGame, isHome && { borderLeftWidth: 2, borderLeftColor: col }]}>
                             <Text style={[styles.calOpp, { color: theme.foreground }]} numberOfLines={1}>{oppName}</Text>
                             <View style={{ flexDirection: "row", gap: 2, flexWrap: "wrap" }}>
-                              {dayGames.slice(0, 2).map((g, i) => {
-                                const matchingScores = dayScores.filter(x => x.away === g.away && x.home === g.home);
-                                const s = matchingScores.find(x => (x.gameIdx ?? 0) === i + 1) || matchingScores[i];
-                                const label = s && !s.cancelled ? outcomeLabel(s.outcome) : null;
+                              {dayGames.slice(0, 2).map((rg, i) => {
+                                const label = resultLabel(rg);
                                 return (
                                   <Pressable key={i} onPress={() => {
-                                    const homeId = TEAM_NAME_TO_ID[g.home] || "";
-                                    const awayId = TEAM_NAME_TO_ID[g.away] || "";
-                                    const allDateGames = games.filter(x => x.date === dateStr);
-                                    const globalIdx = allDateGames.indexOf(g);
-                                    const badgeGameId = buildGameId(awayId, homeId, dateStr.replace(/-/g, ""), globalIdx >= 0 ? String(globalIdx) : "0");
-                                    if (badgeGameId) router.push(`/game/${badgeGameId}`);
+                                    if (rg.gameId) router.push(`/game/${rg.gameId}`);
                                   }}>
                                     <View style={{
-                                      backgroundColor: label === "승" ? "#1565c0" : label === "패" ? "#d32f2f" : label === "무" ? theme.muted : "#888",
+                                      backgroundColor: label ? outcomeColor(label) : "#888",
                                       borderRadius: 3, paddingHorizontal: 3, paddingVertical: 1,
                                     }}>
                                       <Text style={{ fontSize: 9, fontWeight: "700", color: "#fff" }}>
-                                        {i + 1}차{s?.cancelled ? "취" : label || ""}
+                                        {i + 1}차{rg.status === "cancelled" ? "취" : label || ""}
                                       </Text>
                                     </View>
                                   </Pressable>
@@ -321,28 +296,29 @@ export default function CalendarPage() {
                         );
                       })()
                     ) : (
-                      // Single game layout
-                      dayGames.slice(0, 2).map((g, i) => {
-                        const isHome = g.home === homeTeamName;
-                        const score = dayScores.find(s => s.away === g.away && s.home === g.home);
-                        const oppName = isHome ? g.away : g.home;
+                      dayGames.slice(0, 2).map((rg, i) => {
+                        const isHome = rg.homeTeam === selectedTeam;
+                        const oppName = isHome
+                          ? TEAM_COLORS[rg.awayTeam]?.shortName || rg.awayTeam
+                          : TEAM_COLORS[rg.homeTeam]?.shortName || rg.homeTeam;
                         const col = teamPrimaryColor(selectedTeam, isDark);
+                        const label = resultLabel(rg);
 
                         return (
                           <View key={i} style={[styles.calGame, isHome && { borderLeftWidth: 2, borderLeftColor: col }]}>
-                            <Text style={[styles.calOpp, { color: score ? theme.foreground : theme.mutedForeground }]} numberOfLines={1}>
+                            <Text style={[styles.calOpp, { color: rg.outcome != null ? theme.foreground : theme.mutedForeground }]} numberOfLines={1}>
                               {oppName}
                             </Text>
-                            {score && !isFuture && score.outcome != null ? (
+                            {rg.homeScore != null && rg.awayScore != null && !isFuture && rg.outcome != null ? (
                               <Text style={[
                                 styles.calScore,
-                                { color: score.cancelled ? theme.mutedForeground : (!isHome ? (score.awayScore > score.homeScore ? "#1565c0" : "#d32f2f") : (score.homeScore > score.awayScore ? "#1565c0" : "#d32f2f")) },
-                                score.cancelled && { textDecorationLine: "line-through" },
+                                { color: rg.status === "cancelled" ? theme.mutedForeground : outcomeColor(label) },
+                                rg.status === "cancelled" && { textDecorationLine: "line-through" },
                               ]}>
-                                {score.awayScore}:{score.homeScore}
+                                {rg.awayScore}:{rg.homeScore}
                               </Text>
                             ) : (
-                              (!score || score.outcome == null) && <Text style={styles.calVenue} numberOfLines={1}>{g.venue?.slice(0, 2) || ""}</Text>
+                              <Text style={styles.calVenue} numberOfLines={1}>{rg.venue?.slice(0, 2) || ""}</Text>
                             )}
                           </View>
                         );
@@ -358,4 +334,3 @@ export default function CalendarPage() {
     </View>
   );
 }
-
