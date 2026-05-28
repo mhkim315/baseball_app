@@ -340,7 +340,7 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
           return;
         }
       } catch {}
-      setSimpleAlert({ visible: true, title: "오류", message: "사진을 불러오지 못했습니다" });
+      setSimpleAlert({ visible: true, title: "오류", message: "사진을 불러오지 못했습니다\n앱을 재시작해 주세요" });
     }
   };
 
