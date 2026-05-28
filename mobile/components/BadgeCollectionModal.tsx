@@ -53,7 +53,7 @@ function BadgeDetailPopup({ badge, def, levelTitle, onClose }: {
         </View>
         {badge?.unlocked_date ? (
           <Text style={[detailStyles.unlockedDate, { color: theme.mutedForeground }]}>
-            획득일: {badge.unlocked_date}
+            {def.emoji} 획득일: {badge.unlocked_date}
           </Text>
         ) : badge ? (
           <View style={{ marginTop: 12, gap: 4 }}>
