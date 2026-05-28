@@ -348,18 +348,15 @@ export default function MyScreen() {
   }, [openAchievement, router]);
 
   const loadData = useCallback(async () => {
+    try { const nick = await getNickname(); setNicknameState(nick ?? ""); } catch (e) { console.warn("getNickname failed", e); }
+    try { const profile = await getProfileImage(); setProfileImageState(profile); } catch (e) { console.warn("getProfileImage failed", e); }
+    try { const unlocked = await getUnlockedEmotions(); setUnlockedEmotions(unlocked); } catch (e) { console.warn("getUnlockedEmotions failed", e); }
     try {
-      const nick = await getNickname();
-      setNicknameState(nick ?? "");
-      const profile = await getProfileImage();
-      setProfileImageState(profile);
-      const unlocked = await getUnlockedEmotions();
-      setUnlockedEmotions(unlocked);
       const allRecords = await getJikgwanRecords();
       const totemStats = await getAllTotemStats(allRecords);
       setTotems(totemStats);
     } catch (e) {
-      console.warn("my.tsx loadData failed", e);
+      console.warn("getJikgwanRecords/getAllTotemStats failed", e);
     }
   }, []);
 

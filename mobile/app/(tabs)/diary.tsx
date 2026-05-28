@@ -254,11 +254,15 @@ export default function DiaryScreen() {
 
   // Shared year state for calendar + stats
   const [diaryYear, setDiaryYear] = useState(now.getFullYear());
+  const [loadState, setLoadState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const generationRef = useRef(0);
 
   const loadData = useCallback(async () => {
     const gen = ++generationRef.current;
+    setLoadState("loading");
+    setLoadError(null);
     try {
       const [data, exps] = await Promise.all([
         getJikgwanRecords(),
@@ -309,8 +313,11 @@ export default function DiaryScreen() {
       setRecords(data);
       setExpenses(exps);
       setScrollTargetDate(null);
+      setLoadState("success");
     } catch (e) {
       console.warn("diary.tsx loadData failed", e);
+      setLoadState("error");
+      setLoadError(e instanceof Error ? e.message : "데이터를 불러오지 못했습니다");
     }
   }, []);
 
@@ -569,6 +576,19 @@ export default function DiaryScreen() {
           {/* Tab 1: Timeline */}
           <View style={{ width: screenWidth }}>
             {filteredRecords.length === 0 ? (
+              loadState === "error" ? (
+                <View style={{ paddingVertical: 60, alignItems: "center", paddingHorizontal: 32, gap: 16 }}>
+                  <Text style={{ fontSize: 16, color: theme.mutedForeground, textAlign: "center", lineHeight: 24 }}>
+                    데이터를 불러오지 못했습니다{loadError ? `\n(${loadError})` : ""}
+                  </Text>
+                  <Pressable
+                    style={{ paddingHorizontal: 28, paddingVertical: 10, borderRadius: 12, backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border }}
+                    onPress={loadData}
+                  >
+                    <Text style={{ fontSize: 14, fontWeight: "600", color: theme.foreground }}>다시 시도</Text>
+                  </Pressable>
+                </View>
+              ) : (
               <View style={{ paddingVertical: 60, alignItems: "center", paddingHorizontal: 32 }}>
                 <Text style={{ fontSize: 16, color: theme.mutedForeground, textAlign: "center", lineHeight: 24 }}>
                   {records.length === 0
@@ -576,6 +596,7 @@ export default function DiaryScreen() {
                     : (searchQuery ? "검색 결과가 없어요" : "해당 조건의 기록이 없어요")}
                 </Text>
               </View>
+              )
             ) : timelineViewMode === "list" ? (
               <DiaryTimeline
                 records={filteredRecords}

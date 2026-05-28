@@ -188,8 +188,17 @@ export async function getAllTotemStats(records: JikgwanRecord[], includeHidden =
   );
   const results: TotemWithStats[] = [];
   for (const t of totems) {
-    const stats = await getTotemStats(t.id, records);
-    results.push(stats);
+    try {
+      const stats = await getTotemStats(t.id, records);
+      results.push(stats);
+    } catch (e) {
+      console.warn(`getTotemStats failed for totem ${t.id}`, e);
+      results.push({
+        ...t,
+        count: 0, wins: 0, draws: 0, losses: 0,
+        winRate: 0, currentStreak: 0,
+      });
+    }
   }
   return results.sort((a, b) => b.winRate - a.winRate || b.count - a.count);
 }
