@@ -7,6 +7,7 @@ import {
   getInstallDate,
   getUnlockedEmotions,
   addUnlockedEmotion,
+  setBadgeRewardEmotion,
   getDb,
   type Badge,
 } from "@/lib/db";
@@ -85,12 +86,15 @@ export async function evaluateBadges(): Promise<Badge[]> {
 /**
  * Unlock a random locked character and return its information.
  */
-export async function grantRandomCharacter(): Promise<CharacterReward | null> {
+export async function grantRandomCharacter(badgeKey?: string): Promise<CharacterReward | null> {
   const unlocked = await getUnlockedEmotions();
   const lockable = CHARACTER_LOCKABLE_SET.filter((c) => !unlocked.includes(c));
   if (lockable.length === 0) return null;
   const pick = lockable[Math.floor(Math.random() * lockable.length)];
   await addUnlockedEmotion(pick);
+  if (badgeKey) {
+    await setBadgeRewardEmotion(badgeKey, pick);
+  }
   const def = ALL_CHARACTERS.find((c) => c.id === pick);
   return { emotion: pick, label: def?.label ?? pick };
 }

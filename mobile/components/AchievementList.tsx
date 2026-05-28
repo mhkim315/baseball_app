@@ -4,6 +4,8 @@ import { useTheme } from "@/lib/ThemeContext";
 import { getBadges, type Badge, type JikgwanRecord } from "@/lib/db";
 import { BADGE_DEFINITIONS, getVisibleBadgeDefinitions, computeLevel, type BadgeDefinition, type LevelInfo } from "@/lib/achievements";
 import { useTeam } from "@/lib/TeamContext";
+import { TeamBadge } from "@/components/TeamBadge";
+import { type CharacterEmotion } from "@/lib/emotions";
 
 interface AchievementListProps {
   records: JikgwanRecord[];
@@ -27,7 +29,6 @@ export default function AchievementList({ records }: AchievementListProps) {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [catFilter, setCatFilter] = useState<CatKey>("all");
-
   // Load badges on mount
   useEffect(() => {
     getBadges().then((data) => {
@@ -242,6 +243,7 @@ export default function AchievementList({ records }: AchievementListProps) {
             <Text style={styles.statLabel}>남음</Text>
           </View>
         </View>
+
       </View>
 
       {/* Category Filter */}
@@ -274,7 +276,7 @@ export default function AchievementList({ records }: AchievementListProps) {
                 <Text style={styles.badgeTitle}>{def.category === "secret" && !unlocked ? "???" : def.title}</Text>
                 <Text style={styles.badgeDesc}>{def.category === "secret" && !unlocked ? "???" : def.description}</Text>
                 {unlocked && item.badge?.unlocked_date && (
-                  <Text style={styles.badgeDate}>{def.emoji} 획득일: {item.badge.unlocked_date}</Text>
+                  <Text style={styles.badgeDate}>획득일: {item.badge.unlocked_date}</Text>
                 )}
                 {!unlocked && (
                   <>
@@ -285,6 +287,13 @@ export default function AchievementList({ records }: AchievementListProps) {
                   </>
                 )}
               </View>
+              {unlocked && item.badge?.reward_emotion && myTeam && (
+                <TeamBadge
+                  teamId={myTeam}
+                  size="sm"
+                  emotion={item.badge.reward_emotion as CharacterEmotion}
+                />
+              )}
             </View>
           );
         })}

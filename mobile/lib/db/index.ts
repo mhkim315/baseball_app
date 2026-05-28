@@ -14,6 +14,7 @@ export {
 export type { Badge } from "./badges";
 export {
   getBadges, getBadgesByDate, upsertBadge, checkAttendance, getTotalAttendanceDays,
+  setBadgeRewardEmotion,
 } from "./badges";
 export type { Totem, TotemWithStats } from "./totems";
 export {

@@ -7,6 +7,15 @@ export interface Badge {
   progress_current: number;
   progress_target: number;
   is_notified: number;
+  reward_emotion?: string | null;
+}
+
+export async function setBadgeRewardEmotion(badgeKey: string, emotion: string): Promise<void> {
+  const database = await getDb();
+  await database.runAsync(
+    "UPDATE badges SET reward_emotion = ? WHERE badge_key = ?",
+    emotion, badgeKey
+  );
 }
 
 export async function getBadges(): Promise<Badge[]> {

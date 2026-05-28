@@ -180,7 +180,7 @@ export default function DiaryScreen() {
         // Grant random character reward for each new badge
         const rewards: { emotion: string; label: string }[] = [];
         for (let i = 0; i < newBadges.length; i++) {
-          const reward = await grantRandomCharacter();
+          const reward = await grantRandomCharacter(newBadges[i].badge_key);
           if (reward) rewards.push(reward);
         }
         // Show confetti + toasts simultaneously

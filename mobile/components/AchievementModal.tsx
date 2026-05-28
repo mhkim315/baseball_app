@@ -164,7 +164,7 @@ export default function AchievementModal({ visible, onClose }: Props) {
                     </View>
                   </View>
                   {detailBadge?.unlocked_date ? (
-                    <Text style={{ fontSize: 12, color: theme.mutedForeground, marginTop: 4 }}>{detailDef.emoji} 획득일: {detailBadge.unlocked_date}</Text>
+                    <Text style={{ fontSize: 12, color: theme.mutedForeground, marginTop: 4 }}>획득일: {detailBadge.unlocked_date}</Text>
                   ) : detailBadge ? (
                     <View style={{ marginTop: 12, gap: 4, width: "100%" }}>
                       <View style={{ height: 6, borderRadius: 3, backgroundColor: theme.muted, overflow: "hidden" }}>

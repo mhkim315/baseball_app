@@ -108,6 +108,7 @@ async function initSchema(database: SQLite.SQLiteDatabase): Promise<void> {
   `);
   await migrateJikgwanSchema(database);
   await migrateTotemSchema(database);
+  await migrateBadgesSchema(database);
   // Clean up cache entries older than 30 days on app start
   await database.runAsync(
     "DELETE FROM api_cache WHERE updated_at < ?",
@@ -168,6 +169,22 @@ async function migrateTotemSchema(database: SQLite.SQLiteDatabase): Promise<void
     if (existingNames.has(col.name)) continue;
     await database.execAsync(
       `ALTER TABLE totems ADD COLUMN ${col.name} ${col.type} DEFAULT ${col.dflt}`
+    );
+  }
+}
+
+async function migrateBadgesSchema(database: SQLite.SQLiteDatabase): Promise<void> {
+  const columns = [
+    { name: "reward_emotion", type: "TEXT", dflt: "NULL" },
+  ];
+  const existing = await database.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(badges)"
+  );
+  const existingNames = new Set(existing.map((c) => c.name));
+  for (const col of columns) {
+    if (existingNames.has(col.name)) continue;
+    await database.execAsync(
+      `ALTER TABLE badges ADD COLUMN ${col.name} ${col.type} DEFAULT ${col.dflt}`
     );
   }
 }
