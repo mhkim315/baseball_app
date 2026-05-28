@@ -115,4 +115,7 @@ export async function grantBasicEmotions(): Promise<void> {
     "INSERT OR REPLACE INTO user_settings (key, value) VALUES ('unlocked_emotions', ?)",
     JSON.stringify(basic)
   );
+
+  // Link the 3 basic emotions to the "첫방문" badge
+  await setBadgeRewardEmotion("attend_first", basic.join(","));
 }
