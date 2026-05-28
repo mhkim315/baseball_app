@@ -93,10 +93,10 @@ export default function DiaryCalendar({
     return () => { cancelled = true; };
   }, [year, month, teamId]);
 
-  // Filter games for user's team
+  // Filter games for user's team (null teamId = show all)
   const myGamesByDate = new Map<string, ResolvedGame[]>();
   for (const g of resolvedGames) {
-    if (teamId && (g.homeTeam === teamId || g.awayTeam === teamId)) {
+    if (!teamId || g.homeTeam === teamId || g.awayTeam === teamId) {
       const list = myGamesByDate.get(g.date) || [];
       list.push(g);
       myGamesByDate.set(g.date, list);
