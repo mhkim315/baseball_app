@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   View, Text, Pressable, StyleSheet, type DimensionValue,
   Animated, KeyboardAvoidingView, Platform, BackHandler, PanResponder,
+  Modal,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/lib/ThemeContext";
@@ -137,24 +138,26 @@ export default function BottomSheet({
   if (!shouldRender) return null;
 
   return (
-    <View style={styles.overlay}>
-      {/* Backdrop — tap to close */}
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: backdropOpacity, backgroundColor: "rgba(0,0,0,0.5)" }]}>
-        <Pressable style={{ flex: 1 }} onPress={handleClose} />
-      </Animated.View>
-
-      {/* Sheet */}
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ justifyContent: "flex-end" }}>
-        <Animated.View style={[styles.sheet, { transform: [{ translateY: sheetTranslateY }], paddingBottom: Math.max(insets.bottom, 8) }]}>
-          {showHandle && (
-            <View style={styles.handleRow} {...sheetPan.panHandlers}>
-              <View style={styles.handle} />
-            </View>
-          )}
-
-          {children}
+    <Modal transparent visible={shouldRender} onRequestClose={handleClose} statusBarTranslucent>
+      <View style={styles.overlay}>
+        {/* Backdrop — tap to close */}
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: backdropOpacity, backgroundColor: "rgba(0,0,0,0.5)" }]}>
+          <Pressable style={{ flex: 1 }} onPress={handleClose} />
         </Animated.View>
-      </KeyboardAvoidingView>
-    </View>
+
+        {/* Sheet */}
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ justifyContent: "flex-end" }}>
+          <Animated.View style={[styles.sheet, { transform: [{ translateY: sheetTranslateY }], paddingBottom: Math.max(insets.bottom, 8) }]}>
+            {showHandle && (
+              <View style={styles.handleRow} {...sheetPan.panHandlers}>
+                <View style={styles.handle} />
+              </View>
+            )}
+
+            {children}
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
   );
 }
