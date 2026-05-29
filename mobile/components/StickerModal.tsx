@@ -38,11 +38,14 @@ interface StickerModalProps {
   rheb?: RHEB | null;
 }
 
-const BG_OPTIONS: { key: "transparent" | "sketchbook" | "retro" | "postit"; label: string }[] = [
+type BgKey = "transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon";
+const BG_OPTIONS: { key: BgKey; label: string }[] = [
   { key: "transparent", label: "투명" },
   { key: "sketchbook", label: "스케치북" },
   { key: "retro", label: "레트로" },
   { key: "postit", label: "포스트잇" },
+  { key: "grid", label: "모눈노트" },
+  { key: "neon", label: "네온" },
 ];
 
 export default function StickerModal({
@@ -54,7 +57,7 @@ export default function StickerModal({
   const viewRef = useRef<View>(null);
 
   // Editor controls
-  const [background, setBackground] = useState<"transparent" | "sketchbook" | "retro" | "postit">("transparent");
+  const [background, setBackground] = useState<"transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon">("transparent");
   const [stroke, setStroke] = useState(true);
   const [strokeColor, setStrokeColor] = useState("#ffffff");
   const [showBadge, setShowBadge] = useState(true);

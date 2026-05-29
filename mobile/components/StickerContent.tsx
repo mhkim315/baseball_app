@@ -25,7 +25,7 @@ interface Props {
   scoreBoard?: ScoreBoardInn | null;
   rheb?: { away: { r: number; h: number; e: number }; home: { r: number; h: number; e: number } } | null;
   gameResult: "win" | "lose" | "draw";
-  background: "transparent" | "sketchbook" | "retro" | "postit";
+  background: "transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon";
   stroke: boolean;
   showBadge: boolean;
   showScoreboard?: boolean;
@@ -167,6 +167,66 @@ function PostitOverlay() {
   );
 }
 
+
+function NeonOverlay() {
+  const frame = { borderRadius: 12, margin: 8 };
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {/* Ambient glow on surface — large faint colored circles at corners */}
+      <View style={{ position: "absolute", top: -10, left: -10, width: 80, height: 80, borderRadius: 40, backgroundColor: "rgba(255,20,147,0.06)" }} />
+      <View style={{ position: "absolute", top: -10, right: -10, width: 80, height: 80, borderRadius: 40, backgroundColor: "rgba(255,20,147,0.06)" }} />
+      <View style={{ position: "absolute", bottom: -10, left: -10, width: 80, height: 80, borderRadius: 40, backgroundColor: "rgba(0,229,255,0.06)" }} />
+      <View style={{ position: "absolute", bottom: -10, right: -10, width: 80, height: 80, borderRadius: 40, backgroundColor: "rgba(0,229,255,0.06)" }} />
+
+      {/* Neon tube frame — outer glow layer */}
+      <View style={[StyleSheet.absoluteFill, frame, { borderWidth: 6, borderColor: "rgba(255,20,147,0.12)" }]} />
+      {/* Neon tube frame — inner glow layer */}
+      <View style={[StyleSheet.absoluteFill, frame, { borderWidth: 3, borderColor: "rgba(255,20,147,0.3)" }]} />
+      {/* Neon tube frame — bright core (pink top/right, cyan bottom/left) */}
+      <View style={[StyleSheet.absoluteFill, frame, {
+        borderWidth: 1.5,
+        borderColor: "#ff1493",
+        borderBottomColor: "#00e5ff",
+        borderLeftColor: "#00e5ff",
+        shadowColor: "#ff1493",
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 8,
+      }]} />
+      {/* Inner ambient light — subtle gradient-like fill */}
+      <View style={[StyleSheet.absoluteFill, frame, { backgroundColor: "rgba(255,20,147,0.02)", borderWidth: 0 }]} />
+    </View>
+  );
+}
+
+function GridOverlay() {
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {/* Vertical lines */}
+      {Array.from({ length: 10 }).map((_, i) => (
+        <View key={`v-${i}`} style={{
+          position: "absolute", left: i * 30, top: 0, bottom: 0,
+          width: 0.5, backgroundColor: "rgba(100,150,255,0.15)",
+        }} />
+      ))}
+      {/* Horizontal lines */}
+      {Array.from({ length: 20 }).map((_, i) => (
+        <View key={`h-${i}`} style={{
+          position: "absolute", top: i * 15, left: 0, right: 0,
+          height: 0.5, backgroundColor: "rgba(100,150,255,0.15)",
+        }} />
+      ))}
+      {/* Thicker margin lines */}
+      {Array.from({ length: 3 }).map((_, i) => (
+        <View key={`vm-${i}`} style={{
+          position: "absolute", left: (i + 1) * 90, top: 0, bottom: 0,
+          width: 0.5, backgroundColor: "rgba(200,50,50,0.2)",
+        }} />
+      ))}
+    </View>
+  );
+}
+
 export default function StickerContent(props: Props) {
   const {
     awayTeam, homeTeam, awayTeamColor, homeTeamColor,
@@ -212,9 +272,11 @@ export default function StickerContent(props: Props) {
       style={{
         width: 300,
         backgroundColor: background === "transparent" ? "transparent"
-          : background === "sketchbook" ? "#fff"
+          : background === "grid" ? "#f5f0e8"
+          : background === "neon" ? "#1a1a1a"
           : background === "retro" ? "#faf3e8"
-          : "#fff9c4",
+          : background === "postit" ? "#fff9c4"
+          : "#fff",
         borderRadius: 16,
         overflow: "hidden",
         elevation: background === "transparent" ? 0 : 8,
@@ -227,6 +289,8 @@ export default function StickerContent(props: Props) {
       {background === "sketchbook" && <SketchbookOverlay />}
       {background === "retro" && <RetroOverlay />}
       {background === "postit" && <PostitOverlay />}
+      {background === "grid" && <GridOverlay />}
+      {background === "neon" && <NeonOverlay />}
 
       <View style={{ padding: 24, paddingBottom: 20 }}>
         {/* ── Header: Date + Watermark ── */}
