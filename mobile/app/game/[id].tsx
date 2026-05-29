@@ -170,22 +170,16 @@ export default function GameDetailScreen() {
           cachedDailyScores(dateStr).catch(() => null),
         ]);
         if (cancelled) return;
-        if (schedule?.games?.some((g) => {
-          if (!g.isExhibition || g.date !== dateStr) return false;
-          const { awayId, homeId } = parseGameTeamIds(gid);
-          const awayShort = TEAM_COLORS[awayId]?.shortName;
-          const homeShort = TEAM_COLORS[homeId]?.shortName;
-          return g.away === awayShort && g.home === homeShort;
-        })) {
-          setIsExhibition(true);
-        }
-        if (scores?.games) {
-          const resolved = resolveGames(schedule?.games || [], scores?.games || [], dateStr);
-          const parts = gid.split("-");
-          const suffix = parts[parts.length - 1];
-          const gameSeq = parseInt(suffix, 10);
-          const myGame = !isNaN(gameSeq) ? resolved[gameSeq] : undefined;
 
+        // resolveGames는 scores가 null이어도 schedule 데이터로 isExhibition 판정 가능
+        const resolved = resolveGames(schedule?.games || [], scores?.games || [], dateStr);
+        const parts = gid.split("-");
+        const suffix = parts[parts.length - 1];
+        const gameSeq = parseInt(suffix, 10);
+        const myGame = !isNaN(gameSeq) ? resolved[gameSeq] : undefined;
+        if (myGame?.isExhibition) setIsExhibition(true);
+
+        if (scores?.games) {
           if (myGame?._raw.score) {
             const score = myGame._raw.score;
             setScoreFallback(score);
@@ -312,6 +306,8 @@ export default function GameDetailScreen() {
     if (!detail) return;
     const cancelled = detail.gameInfo?.status === "cancelled" ||
       detail.etcRecords?.some(r => r.how?.includes("취소") || r.result?.includes("취소")) === true;
+    const gidParts = gid.split("-");
+    const gameIdxSuffix = gidParts.length > 2 ? parseInt(gidParts[gidParts.length - 1], 10) : 0;
     const gameOpt: GameOption = {
       gameId: detail.gameId || gid,
       homeTeam: detail.homeTeam,
@@ -322,6 +318,7 @@ export default function GameDetailScreen() {
       venue: resolveVenue(detail.homeTeam, detail.gameInfo?.venue),
       time: detail.gameInfo?.time || "",
       gameStatus: detail.gameInfo?.status,
+      pairIdx: isNaN(gameIdxSuffix) ? undefined : gameIdxSuffix,
     };
     const datePrefix = gid.slice(0, 8);
     const gameDate = new Date(

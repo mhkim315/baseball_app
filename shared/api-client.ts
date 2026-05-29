@@ -1,3 +1,6 @@
+import * as z from "zod";
+import { safeValidate } from "./schemas";
+
 export interface ApiClientOptions {
   /** API 서버의 기본 URL (예: "/api" 또는 "https://api.fullcount.kr") */
   baseUrl: string;
@@ -27,7 +30,7 @@ export class ApiClient {
     return false;
   }
 
-  async get<T>(path: string): Promise<T | null> {
+  async get<T>(path: string, schema?: z.ZodType<T>): Promise<T | null> {
     const url = `${this.baseUrl}${path}`;
 
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
@@ -37,7 +40,9 @@ export class ApiClient {
         const res = await fetch(url, { signal: controller.signal });
         clearTimeout(timer);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return (await res.json()) as T;
+        const json = await res.json();
+        if (schema) return safeValidate(schema, json, path);
+        return json as T;
       } catch (error) {
         clearTimeout(timer);
         if (attempt < this.maxRetries && this.isRetryable(error)) {

@@ -1,4 +1,10 @@
 import { ApiClient, type ApiClientOptions } from "./api-client";
+import {
+  DailyScoresResponseSchema,
+  ScheduleByMonthResponseSchema,
+  TodayGamesResponseSchema,
+  GameDetailSchema,
+} from "./schemas";
 import type {
   StandingsData,
   TeamData,
@@ -86,9 +92,7 @@ export function createApi(options: ApiClientOptions) {
     fetchDailyScores: (
       date: string
     ): Promise<{ date: string; games: ScoreEntry[] } | null> =>
-      client.get<{ date: string; games: ScoreEntry[] }>(
-        `/daily-scores/${date}`
-      ),
+      client.get(`/daily-scores/${date}`, DailyScoresResponseSchema) as Promise<{ date: string; games: ScoreEntry[] } | null>,
 
     fetchAllDailyScores: (): Promise<{
       dates: Record<string, ScoreEntry[]>;
@@ -106,9 +110,10 @@ export function createApi(options: ApiClientOptions) {
       month: number;
       games: ScheduleGame[];
     } | null> =>
-      client.get<{ year: number; month: number; games: ScheduleGame[] }>(
-        `/schedule/${month}${year != null ? `?year=${year}` : ""}`
-      ),
+      client.get(
+        `/schedule/${month}${year != null ? `?year=${year}` : ""}`,
+        ScheduleByMonthResponseSchema,
+      ) as Promise<{ year: number; month: number; games: ScheduleGame[] } | null>,
 
     fetchSeasons: (): Promise<{ years: number[] } | null> =>
       client.get<{ years: number[] }>("/seasons"),
@@ -122,9 +127,9 @@ export function createApi(options: ApiClientOptions) {
       client.get<{ year: number; games: any[] }>(`/regular-games/${year}`),
 
     fetchTodayGames: (): Promise<{ date: string; games: TodayGame[]; nextGames?: TodayGame[] } | null> =>
-      client.get<{ date: string; games: TodayGame[]; nextGames?: TodayGame[] }>("/today-games"),
+      client.get("/today-games", TodayGamesResponseSchema) as Promise<{ date: string; games: TodayGame[]; nextGames?: TodayGame[] } | null>,
 
     fetchGameDetail: (gameId: string): Promise<GameDetail | null> =>
-      client.get<GameDetail>(`/game-detail/${gameId}`),
+      client.get(`/game-detail/${gameId}`, GameDetailSchema) as Promise<GameDetail | null>,
   };
 }

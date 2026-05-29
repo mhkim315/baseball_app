@@ -4,13 +4,15 @@ import os
 import sys
 import random
 import logging
-from datetime import datetime, timedelta, date, time
+import time
+from datetime import datetime, timedelta, date, time as dt_time
 from pathlib import Path
 from collections import defaultdict
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy import create_engine, text
 
@@ -20,13 +22,22 @@ from shared.scoring_data import _HISTORICAL_SCORING
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("fullcount")
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://fullcount_user:CHANGE_ME@localhost/fullcount_db")
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is required")
 engine = create_engine(DATABASE_URL)
 
 DATA_DIR = Path(os.getenv("DATA_DIR", "/home/opc/fullcount_backend/repo/data"))
 
 app = FastAPI(title="Fullcount API")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- Rate limiting ---
 
@@ -42,6 +53,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
         now = datetime.now()
         window_start = now - self.window
+        
+        # Cleanup to prevent memory leak
+        if len(self.requests) > 10000:
+            for ip in list(self.requests.keys()):
+                self.requests[ip] = [t for t in self.requests[ip] if t > window_start]
+                if not self.requests[ip]:
+                    del self.requests[ip]
+                    
         ip_requests = self.requests[client_ip]
         ip_requests[:] = [t for t in ip_requests if t > window_start]
         if len(ip_requests) >= self.max_requests:
@@ -62,18 +81,29 @@ def serialize_row(row):
     for k, v in d.items():
         if isinstance(v, date):
             d[k] = v.isoformat()
-        elif isinstance(v, time):
+        elif isinstance(v, dt_time):
             d[k] = v.strftime("%H:%M")
     return d
 
 
+_JSON_CACHE = {}
+_JSON_CACHE_TTL = 60  # seconds
+
 def load_json(filename):
+    now = time.time()
+    if filename in _JSON_CACHE:
+        cached_data, timestamp = _JSON_CACHE[filename]
+        if now - timestamp < _JSON_CACHE_TTL:
+            return cached_data
+
     path = DATA_DIR / filename
     if not path.exists():
         return None
     try:
         with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+            _JSON_CACHE[filename] = (data, now)
+            return data
     except json.JSONDecodeError:
         return None
 

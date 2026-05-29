@@ -28,6 +28,7 @@ export interface GameOption {
   isExhibition?: boolean;
   isPostseason?: boolean;
   gameStatus?: string;
+  pairIdx?: number;
 }
 
 export const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -260,6 +261,7 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
           isExhibition: g.isExhibition,
           isPostseason: g.isPostseason,
           gameStatus,
+          pairIdx,
         };
       });
 
@@ -429,7 +431,7 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
       let gameId = "";
       try {
         if (selectedGame?.awayTeam && selectedGame?.homeTeam) {
-          gameId = buildGameId(selectedGame.awayTeam, selectedGame.homeTeam, datePrefix);
+          gameId = buildGameId(selectedGame.awayTeam, selectedGame.homeTeam, datePrefix, String(selectedGame.pairIdx ?? 0));
         }
       } catch {}
 
