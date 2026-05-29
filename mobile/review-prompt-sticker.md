@@ -189,6 +189,14 @@ zIndex: -1
 > CSS `boxShadow` → RN: `shadowColor`/`shadowOffset`/`shadowOpacity`/`shadowRadius` (iOS) + `elevation` (Android).
 > CSS `background` → RN: `backgroundColor`.
 > 이 ViewShot 방식은 프로젝트 내 첫 사용이므로 Android 실기기 QA 필수.
+>
+> **ViewShot 해상도**: 모달 내 300px 미리보기를 그대로 캡처하면 고해상도 화면에서 글씨가 깨질 수 있음.
+> ViewShot `width` 옵션으로 600px로 캡처하면 선명도 확보 가능. 미리보기는 `scale(0.5)`로 축소하여 표시.
+>
+> **무승부 + 연승 공존**: 무승부 경기여도 내 직관 연승이 유지 중이면 `#무승부`와 `#직관N연승`을 함께 표시.
+>
+> **인스타 전용 fallback (Phase 2)**: expo-sharing은 인스타 피드/DM으로 유도될 수 있음.
+> 추후 Meta 공식 SDK(딥링크)로 인스타 스토리 전용 공유를 고려.
 
 #### 2c. 경기 상세 진입점 — `app/game/[id].tsx` (수정, ~10줄)
 
