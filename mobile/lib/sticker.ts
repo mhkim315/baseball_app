@@ -38,7 +38,7 @@ export async function computeTeamStreak(year: number, teamId: string): Promise<T
   if (!allScores) return { type: null, count: 0, prevType: null, prevCount: 0 };
 
   // Collect all non-draw results, newest first
-  const results: { date: string; isWin: boolean }[] = [];
+  const results: { date: string; gameIdx: number; isWin: boolean }[] = [];
 
   for (const [date, entries] of Object.entries(allScores)) {
     if (isExhibitionDate(date)) continue;
@@ -49,6 +49,7 @@ export async function computeTeamStreak(year: number, teamId: string): Promise<T
       if (entry.awayScore === entry.homeScore) continue;
       results.push({
         date,
+        gameIdx: entry.gameIdx || 0,
         isWin: entry.away === teamName
           ? entry.awayScore > entry.homeScore
           : entry.homeScore > entry.awayScore,
@@ -60,10 +61,18 @@ export async function computeTeamStreak(year: number, teamId: string): Promise<T
     return { type: null, count: 0, prevType: null, prevCount: 0 };
   }
 
-  // Sort newest first, deduplicate by date
-  results.sort((a, b) => b.date.localeCompare(a.date));
+  // Sort newest first, then gameIdx descending (Game 2 before Game 1), deduplicate by date+gameIdx
+  results.sort((a, b) => {
+    if (a.date === b.date) return b.gameIdx - a.gameIdx;
+    return b.date.localeCompare(a.date);
+  });
   const seen = new Set<string>();
-  const unique = results.filter((r) => { if (seen.has(r.date)) return false; seen.add(r.date); return true; });
+  const unique = results.filter((r) => { 
+    const key = `${r.date}-${r.gameIdx}`;
+    if (seen.has(key)) return false; 
+    seen.add(key); 
+    return true; 
+  });
 
   // 역순(최신→과거) 탐색: 현재 streak 계산
   let count = 1;

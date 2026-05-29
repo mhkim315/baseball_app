@@ -62,8 +62,8 @@ export default function StickerModal({
   const [customTag, setCustomTag] = useState("");
 
   // Colors & display names
-  const awayColor = TEAM_COLORS[awayTeam]?.color ?? "#111";
-  const homeColor = TEAM_COLORS[homeTeam]?.color ?? "#111";
+  const awayColor = TEAM_COLORS[awayTeam]?.primary ?? "#111";
+  const homeColor = TEAM_COLORS[homeTeam]?.primary ?? "#111";
   const awayDisplay = TEAM_COLORS[awayTeam]?.shortName ?? awayTeam;
   const homeDisplay = TEAM_COLORS[homeTeam]?.shortName ?? homeTeam;
 
@@ -90,13 +90,27 @@ export default function StickerModal({
 
         const teamRecords = allRecords.filter((r) => r.cheered_team === homeTeam);
         const myStreakResult = computeStreakStats(teamRecords, year);
-        const totalGames = teamStats.overall.wins + teamStats.overall.draws + teamStats.overall.losses;
-        const isFirstGame = totalGames === 0;
-        const isFirstWin = teamStats.overall.wins === 0 && !isFirstGame;
+
+        // 1. 올해 기준 직관 기록 (isFirstWin, isFirstGame 용도)
+        const teamRecordsThisYear = teamRecords.filter(r => r.date.startsWith(String(year)));
+        const winsThisYear = teamRecordsThisYear.filter(r => r.is_win).length;
+        const isFirstGame = teamRecordsThisYear.length === 0;
+        const isFirstWin = winsThisYear === 0 && !isFirstGame;
+
+        // 2. 현재 경기 결과를 내 연승에 수동 반영 (DB 저장 전이므로)
+        let myCurrentType = myStreakResult.currentType;
+        let myCurrentCount = myStreakResult.currentCount;
+        if (actualResult === "win") {
+          if (myCurrentType === "W") myCurrentCount++;
+          else { myCurrentType = "W"; myCurrentCount = 1; }
+        } else if (actualResult === "lose") {
+          if (myCurrentType === "L") myCurrentCount++;
+          else { myCurrentType = "L"; myCurrentCount = 1; }
+        }
 
         const hashtags = resolveHashtags(
           teamStreak,
-          { type: myStreakResult.currentType, count: myStreakResult.currentCount },
+          { type: myCurrentType as "W" | "L" | null, count: myCurrentCount },
           actualResult,
           { isHome: true, isFirstWin, isFirstGame },
         );
@@ -167,7 +181,7 @@ export default function StickerModal({
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
           {/* ── Sticker Preview ── */}
           <View style={[s.previewArea, { backgroundColor: theme.muted }]}>
             {loading ? (
