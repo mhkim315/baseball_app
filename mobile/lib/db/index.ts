@@ -23,6 +23,10 @@ export {
   getTotemStats, getAllTotemStats, deleteDiaryTotemsByRecordId,
 } from "./totems";
 export { getCache, setCache, deleteCache, evictOldCacheEntries } from "./cache";
+export type { Collection } from "./collections";
+export {
+  addCollection, updateCollection, deleteCollection, getAllCollections, parseCollectionPhotos,
+} from "./collections";
 export {
   getSetting, setSetting, getMyTeam, setMyTeam,
   getNickname, setNickname, getInstallDate,

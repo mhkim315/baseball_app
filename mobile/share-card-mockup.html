@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #222; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: -apple-system, 'Noto Sans KR', sans-serif; }
+
+  .card { width: 500px; height: 500px; border-radius: 24px; overflow: hidden; position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4); margin: 20px; }
+
+  /* === Theme A: LG (크림+핀스트라입) === */
+  .card-lg { background: linear-gradient(135deg, #c30452 0%, #8a0035 40%, #5c0022 100%); }
+  .card-lg .top-section { padding: 32px 32px 0; }
+  .card-lg .score-section { background: rgba(255,255,255,0.12); backdrop-filter: blur(8px); margin: 0 24px; border-radius: 20px; padding: 16px; }
+
+  /* === Theme B: KIA (레드+네이비) === */
+  .card-ht { background: linear-gradient(135deg, #ec0a0b 0%, #b00809 40%, #6b0505 100%); }
+  .card-ht .top-section { padding: 32px 32px 0; }
+  .card-ht .score-section { background: rgba(255,255,255,0.12); backdrop-filter: blur(8px); margin: 0 24px; border-radius: 20px; padding: 16px; }
+
+  /* === Common styles === */
+  .team-row { display: flex; align-items: center; justify-content: center; gap: 24px; }
+
+  .team-block { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; }
+  .team-img { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.15); }
+  .team-name { font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.9); letter-spacing: -0.5px; }
+
+  .score-display { font-size: 48px; font-weight: 800; color: white; letter-spacing: 2px; min-width: 80px; text-align: center; }
+  .score-vs { font-size: 18px; color: rgba(255,255,255,0.5); font-weight: 600; }
+  .score-winner { font-size: 14px; color: #ffd700; font-weight: 600; text-align: center; margin-top: 4px; }
+
+  .game-meta { text-align: center; margin-top: 16px; }
+  .game-meta .date { font-size: 14px; color: rgba(255,255,255,0.7); }
+  .game-meta .venue { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+  .game-meta .status { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+  /* === Divider === */
+  .divider { height: 1px; background: rgba(255,255,255,0.15); margin: 16px 24px; }
+
+  /* === Stats section === */
+  .stats-section { padding: 0 24px; }
+  .stat-title { font-size: 12px; color: rgba(255,255,255,0.5); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; text-align: center; }
+
+  .stat-grid { display: flex; gap: 12px; justify-content: center; }
+  .stat-item { text-align: center; flex: 1; background: rgba(255,255,255,0.08); border-radius: 12px; padding: 10px 8px; }
+  .stat-label { font-size: 10px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+  .stat-value { font-size: 20px; font-weight: 700; color: white; }
+  .stat-sub { font-size: 11px; color: rgba(255,255,255,0.5); }
+  .stat-highlight { color: #ffd700; }
+
+  /* === Badge === */
+  .badge-row { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+  .badge { background: rgba(255,215,0,0.2); border: 1px solid rgba(255,215,0,0.3); border-radius: 20px; padding: 4px 14px; font-size: 12px; color: #ffd700; font-weight: 600; }
+
+  /* === Footer === */
+  .footer { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; }
+  .footer-text { font-size: 13px; color: rgba(255,255,255,0.4); letter-spacing: 2px; font-weight: 300; }
+
+  /* Labels */
+  .preview-label { text-align: center; color: #888; font-size: 12px; margin: 40px 0 10px; letter-spacing: 2px; }
+  .row { display: flex; flex-wrap: wrap; justify-content: center; }
+</style>
+</head>
+<body>
+
+<div class="preview-label">LG 트윈스 테마 (원정 승리)</div>
+<div class="row">
+  <div class="card card-lg">
+    <div class="top-section">
+      <div class="score-section">
+        <div class="team-row">
+          <div class="team-block">
+            <img src="https://fullcount.kr/team-characters/lg_joyful.png" class="team-img" alt="LG">
+            <div class="team-name">LG</div>
+          </div>
+          <div class="score-display">
+            5 : 3
+          </div>
+          <div class="team-block">
+            <img src="https://fullcount.kr/team-characters/doosan_sad.png" class="team-img" alt="두산">
+            <div class="team-name">두산</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-meta">
+        <div class="date">2026.05.26 (화) 18:30</div>
+        <div class="venue">잠실 야구장</div>
+        <div class="status">경기 종료 · 승: 손주영 패: 곽빈</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="stats-section">
+        <div class="stat-title">내 직관 기록 (2026)</div>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-label">시즌</div>
+            <div class="stat-value">15전</div>
+            <div class="stat-sub">11승 3패 1무</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">잠실</div>
+            <div class="stat-value">8전</div>
+            <div class="stat-sub">7승 1패</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">승률</div>
+            <div class="stat-value stat-highlight">.733</div>
+            <div class="stat-sub">🔥 상위 5%</div>
+          </div>
+        </div>
+
+        <div class="badge-row">
+          <span class="badge">🏆 잠실 무패</span>
+          <span class="badge">🔥 5연승 중</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-text">#fullcount</div>
+    </div>
+  </div>
+</div>
+
+<div class="preview-label">한화 이글스 테마 (홈 승리)</div>
+<div class="row">
+  <div class="card card-ht">
+    <div class="top-section">
+      <div class="score-section">
+        <div class="team-row">
+          <div class="team-block">
+            <img src="https://fullcount.kr/team-characters/hanwha_joyful.png" class="team-img" alt="한화">
+            <div class="team-name">한화</div>
+          </div>
+          <div class="score-display">
+            7 : 2
+          </div>
+          <div class="team-block">
+            <img src="https://fullcount.kr/team-characters/kia_sad.png" class="team-img" alt="KIA">
+            <div class="team-name">KIA</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-meta">
+        <div class="date">2026.05.25 (월) 18:30</div>
+        <div class="venue">한화생명 볼파크</div>
+        <div class="status">경기 종료 · 승: 문동주 패: 네일</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="stats-section">
+        <div class="stat-title">내 직관 기록 (2026)</div>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-label">시즌</div>
+            <div class="stat-value">8전</div>
+            <div class="stat-sub">5승 2패 1무</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">대전</div>
+            <div class="stat-value">3전</div>
+            <div class="stat-sub">3승 0패</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">승률</div>
+            <div class="stat-value stat-highlight">.625</div>
+            <div class="stat-sub">아직 시즌 초반</div>
+          </div>
+        </div>
+
+        <div class="badge-row">
+          <span class="badge">🏆 대전 무패</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-text">#fullcount</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

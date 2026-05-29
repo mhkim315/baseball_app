@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { getDaysInMonth, getFirstDayOfMonth, DEFAULT_TEAM_ID, formatDateForApi } from "@shared/constants";
 import { cachedScheduleByMonth, cachedAllDailyScores } from "@/lib/gameCache";
-import { resolveGamesForSchedule, type ResolvedGame } from "@/lib/resolveGames";
+import { resolveGamesForSchedule, type ResolvedGame, getResultLabel, getResultColor } from "@/lib/resolveGames";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import YearSelector from "@/components/YearSelector";
@@ -133,24 +133,6 @@ export default function CalendarPage() {
 
   const homeTeamName = TEAM_LIST.find((t) => t.id === selectedTeam)?.shortName || "";
 
-  function resultLabel(rg: ResolvedGame): string | null {
-    if (rg.status === "cancelled") return null;
-    if (rg.outcome == null || rg.homeScore == null || rg.awayScore == null) return null;
-    const isHome = rg.homeTeam === selectedTeam;
-    const our = isHome ? rg.homeScore : rg.awayScore;
-    const their = isHome ? rg.awayScore : rg.homeScore;
-    if (our > their) return "승";
-    if (our < their) return "패";
-    return "무";
-  }
-
-  function outcomeColor(label: string | null): string {
-    if (label === "승") return "#1565c0";
-    if (label === "패") return "#d32f2f";
-    if (label === "무") return theme.mutedForeground;
-    return theme.mutedForeground;
-  }
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -275,13 +257,13 @@ export default function CalendarPage() {
                             <Text style={[styles.calOpp, { color: theme.foreground }]} numberOfLines={1}>{oppName}</Text>
                             <View style={{ flexDirection: "row", gap: 2, flexWrap: "wrap" }}>
                               {dayGames.slice(0, 2).map((rg, i) => {
-                                const label = resultLabel(rg);
+                                const label = getResultLabel(rg, selectedTeam);
                                 return (
                                   <Pressable key={i} onPress={() => {
                                     if (rg.gameId) router.push(`/game/${rg.gameId}`);
                                   }}>
                                     <View style={{
-                                      backgroundColor: label ? outcomeColor(label) : "#888",
+                                      backgroundColor: label ? getResultColor(label) : "#888",
                                       borderRadius: 3, paddingHorizontal: 3, paddingVertical: 1,
                                     }}>
                                       <Text style={{ fontSize: 9, fontWeight: "700", color: "#fff" }}>
@@ -302,7 +284,7 @@ export default function CalendarPage() {
                           ? TEAM_COLORS[rg.awayTeam]?.shortName || rg.awayTeam
                           : TEAM_COLORS[rg.homeTeam]?.shortName || rg.homeTeam;
                         const col = teamPrimaryColor(selectedTeam, isDark);
-                        const label = resultLabel(rg);
+                        const label = getResultLabel(rg, selectedTeam);
 
                         return (
                           <View key={i} style={[styles.calGame, isHome && { borderLeftWidth: 2, borderLeftColor: col }]}>
@@ -312,7 +294,7 @@ export default function CalendarPage() {
                             {rg.homeScore != null && rg.awayScore != null && !isFuture && rg.outcome != null ? (
                               <Text style={[
                                 styles.calScore,
-                                { color: rg.status === "cancelled" ? theme.mutedForeground : outcomeColor(label) },
+                                { color: rg.status === "cancelled" ? theme.mutedForeground : getResultColor(label) },
                                 rg.status === "cancelled" && { textDecorationLine: "line-through" },
                               ]}>
                                 {rg.awayScore}:{rg.homeScore}

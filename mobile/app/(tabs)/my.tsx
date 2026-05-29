@@ -43,6 +43,11 @@ import type { CharacterEmotion } from "@/lib/emotions";
 import YearInReview from "@/components/YearInReview";
 import AchievementSection from "@/components/AchievementSection";
 import AchievementModal from "@/components/AchievementModal";
+import CollectionSection from "@/components/CollectionSection";
+import CollectionModal from "@/components/CollectionModal";
+import TotemSection from "@/components/TotemSection";
+import EmojiPicker from "@/components/EmojiPicker";
+import ColorPicker from "@/components/ColorPicker";
 
 export default function MyScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -324,11 +329,13 @@ export default function MyScreen() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showYearInReview, setShowYearInReview] = useState(false);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
+  const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [unlockedEmotions, setUnlockedEmotions] = useState<string[]>([]);
 
   // Totem state
   const [totems, setTotems] = useState<TotemWithStats[]>([]);
   const [showTotemModal, setShowTotemModal] = useState(false);
+  const [showTotemList, setShowTotemList] = useState(false);
   const [editingTotem, setEditingTotem] = useState<Totem | null>(null);
   const [totemName, setTotemName] = useState("");
   const [totemEmoji, setTotemEmoji] = useState("");
@@ -502,80 +509,10 @@ export default function MyScreen() {
         </Pressable>
 
         <AchievementSection onPress={() => setShowAchievementModal(true)} />
-      </View>
 
-      {/* My Totems */}
-      <View style={styles.section}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <Text style={styles.sectionTitle}>나의 토템</Text>
-          <Pressable onPress={() => {
-            setEditingTotem(null);
-            setTotemName("");
-            setTotemEmoji("");
-            setTotemDesc("");
-            setTotemColor("");
-            setShowTotemModal(true);
-          }}>
-            <Text style={{ fontSize: 14, fontWeight: "600", color: theme.foreground }}>+ 추가</Text>
-          </Pressable>
-        </View>
-        {totems.length === 0 ? (
-          <Text style={[styles.placeholder, { textAlign: "left", paddingVertical: 16 }]}>
-            아직 등록된 토템이 없어요. 토템을 추가해보세요!
-          </Text>
-        ) : (
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-            {totems.map((t) => {
-              const chipColor = t.color || theme.border;
-              const wrPct = t.count > 0 ? Math.round(t.winRate * 100) : 0;
-              const teamColor_ = myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground;
-              return (
-                <Pressable
-                  key={t.id}
-                  onPress={() => {
-                    setEditingTotem(t);
-                    setTotemName(t.name);
-                    setTotemEmoji(t.emoji);
-                    setTotemDesc(t.description || "");
-                    setTotemColor(t.color || "");
-                    setShowTotemModal(true);
-                  }}
-                  style={{
-                    width: "47%", borderRadius: 16, borderWidth: 1,
-                    borderColor: chipColor,
-                    backgroundColor: chipColor + "10",
-                    padding: 14, paddingTop: 8, gap: 6,
-                  }}
-                >
-                  <View style={{ position: "relative", alignItems: "center" }}>
-                    <Pressable
-                      hitSlop={6}
-                      onPress={(e) => { e.stopPropagation?.(); setShowTotemDeleteConfirm(t); }}
-                      style={{ position: "absolute", right: -4, top: -2, zIndex: 1, width: 22, height: 22, borderRadius: 11, backgroundColor: theme.muted, alignItems: "center", justifyContent: "center" }}
-                    >
-                      <Text style={{ fontSize: 13, color: theme.mutedForeground }}>✕</Text>
-                    </Pressable>
-                    <Text style={{ fontSize: 28 }}>{t.emoji}</Text>
-                  </View>
-                  <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground, textAlign: "center" }} numberOfLines={1}>
-                    {t.name}
-                  </Text>
-                  <View style={{ flexDirection: "row", justifyContent: "center", gap: 12 }}>
-                    <Text style={{ fontSize: 12, color: theme.mutedForeground }}>{t.count}회</Text>
-                    <Text style={{ fontSize: 12, fontWeight: "600", color: teamColor_ }}>
-                      {wrPct}%
-                    </Text>
-                    {t.currentStreak > 1 && (
-                      <Text style={{ fontSize: 12, color: t.currentStreak > 0 ? "#22c55e" : "#ef4444" }}>
-                        {t.currentStreak}{t.currentStreak > 0 ? "연승" : "연패"}
-                      </Text>
-                    )}
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-        )}
+        <CollectionSection onPress={() => setShowCollectionModal(true)} />
+
+        <TotemSection onPress={() => setShowTotemList(true)} />
       </View>
 
       {/* App Info */}
@@ -699,6 +636,93 @@ export default function MyScreen() {
         </View>
       </Modal>
 
+      {/* Totem List Modal */}
+      <Modal visible={showTotemList} transparent animationType="slide" onRequestClose={() => setShowTotemList(false)}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" }}>
+            <View style={{ maxHeight: "85%", borderTopLeftRadius: 24, borderTopRightRadius: 24, borderWidth: 1, borderBottomWidth: 0, borderColor: theme.border, padding: 24, paddingBottom: 40, backgroundColor: theme.card }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <Text style={{ fontSize: 18, fontWeight: "bold", color: theme.foreground }}>나의 토템</Text>
+                <View style={{ flexDirection: "row", gap: 12 }}>
+                  <Pressable onPress={() => {
+                    setEditingTotem(null);
+                    setTotemName("");
+                    setTotemEmoji("");
+                    setTotemDesc("");
+                    setTotemColor("");
+                    setShowTotemModal(true);
+                  }}>
+                    <Text style={{ fontSize: 22, color: theme.foreground }}>+</Text>
+                  </Pressable>
+                  <Pressable onPress={() => setShowTotemList(false)}>
+                    <Text style={{ fontSize: 22, color: theme.mutedForeground }}>✕</Text>
+                  </Pressable>
+                </View>
+              </View>
+              {totems.length === 0 ? (
+                <Text style={{ fontSize: 13, color: theme.mutedForeground, paddingVertical: 32, textAlign: "center" }}>
+                  아직 등록된 토템이 없어요.{'\n'}토템을 추가해보세요!
+                </Text>
+              ) : (
+                <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                    {totems.map((t) => {
+                      const chipColor = t.color || theme.border;
+                      const wrPct = t.count > 0 ? Math.round(t.winRate * 100) : 0;
+                      const teamColor_ = myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground;
+                      return (
+                        <Pressable
+                          key={t.id}
+                          onPress={() => {
+                            setEditingTotem(t);
+                            setTotemName(t.name);
+                            setTotemEmoji(t.emoji);
+                            setTotemDesc(t.description || "");
+                            setTotemColor(t.color || "");
+                            setShowTotemModal(true);
+                          }}
+                          style={{
+                            width: "47%", borderRadius: 16, borderWidth: 1,
+                            borderColor: chipColor,
+                            backgroundColor: chipColor + "10",
+                            padding: 14, paddingTop: 8, gap: 6,
+                          }}
+                        >
+                          <View style={{ position: "relative", alignItems: "center" }}>
+                            <Pressable
+                              hitSlop={6}
+                              onPress={(e) => { e.stopPropagation?.(); setShowTotemDeleteConfirm(t); }}
+                              style={{ position: "absolute", right: -4, top: -2, zIndex: 1, width: 22, height: 22, borderRadius: 11, backgroundColor: theme.muted, alignItems: "center", justifyContent: "center" }}
+                            >
+                              <Text style={{ fontSize: 13, color: theme.mutedForeground }}>✕</Text>
+                            </Pressable>
+                            <Text style={{ fontSize: 28 }}>{t.emoji}</Text>
+                          </View>
+                          <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground, textAlign: "center" }} numberOfLines={1}>
+                            {t.name}
+                          </Text>
+                          <View style={{ flexDirection: "row", justifyContent: "center", gap: 12 }}>
+                            <Text style={{ fontSize: 12, color: theme.mutedForeground }}>{t.count}회</Text>
+                            <Text style={{ fontSize: 12, fontWeight: "600", color: teamColor_ }}>
+                              {wrPct}%
+                            </Text>
+                            {t.currentStreak > 1 && (
+                              <Text style={{ fontSize: 12, color: t.currentStreak > 0 ? "#22c55e" : "#ef4444" }}>
+                                {t.currentStreak}{t.currentStreak > 0 ? "연승" : "연패"}
+                              </Text>
+                            )}
+                          </View>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </ScrollView>
+              )}
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
       {/* Totem Create/Edit Modal */}
       <Modal visible={showTotemModal} transparent animationType="fade" onRequestClose={() => setShowTotemModal(false)}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
@@ -720,35 +744,7 @@ export default function MyScreen() {
               />
 
               <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>이모지</Text>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
-                {["🍀","🧿","🐯","⚾","🏆","👑","💪","🔥",
-                  "👨","👩","👦","👧","👶","👴","👵","🧑‍🤝‍🧑",
-                  "👫","🙋","💁","🧏","👟","🧢","🎧","🎸",
-                  "🧸","🎯","🗿","🌙","⭐","💎","🎩","🦄",
-                  "🌈","🪄","🧨","🎉"].map((e) => (
-                  <Pressable
-                    key={e}
-                    onPress={() => setTotemEmoji(totemEmoji === e ? "" : e)}
-                    style={{
-                      width: 36, height: 36, borderRadius: 10,
-                      alignItems: "center", justifyContent: "center",
-                      backgroundColor: totemEmoji === e ? theme.muted : "transparent",
-                      borderWidth: 1.5,
-                      borderColor: totemEmoji === e ? theme.foreground : theme.border,
-                    }}
-                  >
-                    <Text style={{ fontSize: 18 }}>{e}</Text>
-                  </Pressable>
-                ))}
-              </View>
-              <TextInput
-                style={[styles.input, { width: 80, textAlign: "center", fontSize: 24, marginBottom: 8 }]}
-                value={totemEmoji}
-                onChangeText={setTotemEmoji}
-                placeholder="🍀"
-                placeholderTextColor="#666"
-                maxLength={4}
-              />
+              <EmojiPicker selected={totemEmoji} onSelect={setTotemEmoji} />
 
               <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>설명</Text>
               <TextInput
@@ -761,32 +757,7 @@ export default function MyScreen() {
               />
 
               <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>색상</Text>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
-                {["#ff6b6b","#ffa726","#ffd54f","#66bb6a","#26c6da","#42a5f5",
-                  "#7e57c2","#ec407a","#8d6e63","#78909c","#37474f","#000000"].map((c) => (
-                  <Pressable
-                    key={c}
-                    onPress={() => setTotemColor(totemColor === c ? "" : c)}
-                    style={{
-                      width: 32, height: 32, borderRadius: 16,
-                      backgroundColor: c,
-                      borderWidth: 2.5,
-                      borderColor: totemColor === c ? theme.foreground : (c === "#000000" ? theme.border : "transparent"),
-                    }}
-                  />
-                ))}
-                <Pressable
-                  onPress={() => setTotemColor("")}
-                  style={{
-                    width: 32, height: 32, borderRadius: 16,
-                    borderWidth: 2, borderColor: theme.border,
-                    alignItems: "center", justifyContent: "center",
-                    backgroundColor: !totemColor ? theme.muted : "transparent",
-                  }}
-                >
-                  <Text style={{ fontSize: 12, color: theme.mutedForeground }}>X</Text>
-                </Pressable>
-              </View>
+              <ColorPicker selected={totemColor} onSelect={setTotemColor} />
 
               <View style={styles.modalButtons}>
                 <Pressable style={styles.modalCancel} onPress={() => setShowTotemModal(false)}>
@@ -913,6 +884,9 @@ export default function MyScreen() {
 
       {/* Achievement Modal */}
       <AchievementModal visible={showAchievementModal} onClose={() => setShowAchievementModal(false)} />
+
+      {/* Collection Modal */}
+      <CollectionModal visible={showCollectionModal} onClose={() => setShowCollectionModal(false)} />
     </ScrollView>
   );
 }

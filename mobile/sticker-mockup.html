@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+<title>🎟️ 스티커 샘플 — KT vs 두산</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; font-family: 'Noto Sans KR', -apple-system, sans-serif; }
+  .container { max-width: 420px; width: 100%; }
+
+  h2 { color: #fff; font-size: 18px; margin-bottom: 16px; text-align: center; opacity: 0.8; }
+  .caption { color: #888; font-size: 12px; text-align: center; margin: 8px 0 24px; line-height: 1.6; }
+
+  /* ====== Phone Frame ====== */
+  .phone { background: #0f0f23; border-radius: 40px; padding: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+  .screen { background: #fff; border-radius: 30px; overflow: hidden; min-height: 700px; position: relative; }
+
+  /* ====== Home Tab Header ====== */
+  .home-header { display: flex; justify-content: space-between; align-items: center; padding: 50px 20px 12px; }
+  .home-header h1 { font-size: 24px; font-weight: 900; color: #111; }
+  .header-icons { display: flex; gap: 16px; }
+  .sticker-btn { width: 36px; height: 36px; border-radius: 10px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; border: none; }
+
+  /* ====== Sticker Editor Modal (overlay) ====== */
+  .editor-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; z-index: 10; }
+  .editor-sheet { background: #fff; border-radius: 24px 24px 0 0; padding: 24px; width: 100%; max-height: 85%; overflow-y: auto; }
+  .editor-handle { width: 36px; height: 4px; border-radius: 2px; background: #ddd; margin: 0 auto 16px; }
+
+  .editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .editor-header h3 { font-size: 18px; font-weight: 900; }
+  .close-btn { font-size: 22px; color: #999; background: none; border: none; cursor: pointer; }
+
+  /* ====== Game Selector ====== */
+  .game-chip { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px; border: 2px solid #e5e7eb; cursor: pointer; }
+  .game-chip.selected { border-color: #000; background: #f9fafb; }
+  .game-chip .vs { font-size: 12px; font-weight: 700; color: #999; }
+  .game-chip .team { font-weight: 700; font-size: 14px; }
+  .game-chip .score { font-weight: 900; font-size: 14px; }
+  .game-chip .badge { font-size: 11px; padding: 2px 8px; border-radius: 6px; background: #fee2e2; color: #dc2626; font-weight: 600; }
+  .game-chip .badge.win { background: #dcfce7; color: #16a34a; }
+
+  /* ====== Sticker Preview (the actual sticker!) ====== */
+  .sticker-preview-area { margin: 20px 0; display: flex; justify-content: center; background: #c0c0c0; padding: 32px; border-radius: 16px; }
+
+  .sticker-card {
+    width: 300px;
+    transition: all 0.2s;
+  }
+
+  /* ----- Sticker variants ----- */
+  .sticker-bg-transparent { /* no bg at all — only text floats on gray */ }
+  .sticker-bg-masking {
+    background: #fff; position: relative;
+    border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  .sticker-bg-masking::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(200,200,200,0.15) 8px, rgba(200,200,200,0.15) 10px);
+    pointer-events: none;
+  }
+  .sticker-bg-receipt { background: #fffbf0; position: relative;
+    border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  .sticker-bg-receipt::before {
+    content: '';
+    position: absolute; inset: 0;
+    border: 2px dashed #d4d4d4;
+    border-radius: 14px;
+    margin: 6px;
+    pointer-events: none;
+  }
+
+  .sticker-inner { position: relative; padding: 24px 20px 20px; }
+
+  /* ----- Sticker content ----- */
+  .sticker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .sticker-date { font-size: 11px; color: #888; font-weight: 500; }
+
+  .sticker-scoreboard { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+
+  .sticker-team { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; }
+  .sticker-team .name { font-size: 18px; font-weight: 900; letter-spacing: -0.5px; white-space: nowrap; }
+  .sticker-team .record { font-size: 10px; color: #888; font-weight: 500; }
+
+  .sticker-score-wrap { display: flex; align-items: center; gap: 6px; }
+  .sticker-score { font-size: 36px; font-weight: 900; line-height: 1; }
+  .sticker-score.winner { position: relative; }
+  .sticker-score.winner::after { content: '🏆'; font-size: 14px; position: absolute; top: -8px; right: -18px; }
+  .sticker-colon { font-size: 24px; font-weight: 300; color: #ccc; }
+
+
+  /* ====== Innings Scoreboard ====== */
+  .sticker-innings { margin-top: 2px; margin-bottom: 10px; }
+  .innings-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  .innings-table thead th { color: #999; font-weight: 600; padding: 3px 3px; text-align: center; font-size: 9px; border-bottom: 1px solid #eee; white-space: nowrap; }
+  .innings-table tbody td { text-align: center; padding: 3px 3px; font-weight: 600; font-size: 11px; white-space: nowrap; }
+  .innings-table .team-col { text-align: left; font-weight: 900; font-size: 12px; padding-right: 8px; min-width: 36px; white-space: nowrap; }
+  .innings-table .r-col { font-weight: 900; font-size: 12px; }
+  .innings-table .h-col, .innings-table .e-col { color: #bbb; font-size: 9px; }
+  .innings-table thead .r-col { color: #666; }
+  .innings-table thead .h-col, .innings-table thead .e-col { color: #ccc; }
+  .innings-table tbody tr:last-child td { padding-bottom: 0; }
+  /* ----- User Stats Badge ----- */
+  .sticker-user-badge { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 6px; }
+  .sticker-user-badge .label, .sticker-user-badge .value { white-space: nowrap; }
+  .sticker-user-badge .emoji { font-size: 20px; }
+  .sticker-user-badge .label { font-size: 11px; color: #666; }
+  .sticker-user-badge .value { font-size: 14px; font-weight: 900; color: #111; }
+
+  /* Editable hashtags */
+  .editable-tag { outline: none; cursor: text; border-radius: 3px; padding: 0 2px; min-width: 24px; display: inline-block; }
+  .editable-tag:focus { background: rgba(0,0,0,0.06); box-shadow: 0 0 0 1.5px rgba(0,0,0,0.15); }
+  .tag-hash { user-select: none; }
+  .tag-wrapper.placeholder .editable-tag:empty:before,
+  .tag-wrapper.placeholder .editable-tag:focus:empty:before { content: attr(data-placeholder); color: #ccc; font-weight: 400; }
+
+  /* ----- Stroke effect ----- */
+  .stroke-sample { text-shadow: 2px 0 0 #fff, -2px 0 0 #fff, 0 2px 0 #fff, 0 -2px 0 #fff, 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff; }
+
+  /* ====== Controls ====== */
+  .controls { display: flex; flex-direction: column; gap: 16px; }
+  .control-group label { font-size: 12px; font-weight: 600; color: #555; margin-bottom: 6px; display: block; }
+  .color-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .color-dot { width: 32px; height: 32px; border-radius: 16px; border: 2px solid transparent; cursor: pointer; }
+  .color-dot.active { border-color: #000; }
+  .color-dot.none { border-color: #ddd; display: flex; align-items: center; justify-content: center; background: #fff; font-size: 12px; color: #999; }
+
+  .bg-row { display: flex; gap: 8px; }
+  .bg-option { padding: 6px 14px; border-radius: 20px; border: 1.5px solid #ddd; font-size: 12px; font-weight: 600; cursor: pointer; background: #fff; }
+  .bg-option.active { border-color: #000; background: #111; color: #fff; }
+
+  .stroke-toggle { display: flex; align-items: center; gap: 8px; }
+  .stroke-toggle input[type="checkbox"] { width: 18px; height: 18px; }
+
+  .copy-btn { margin-top: 8px; width: 100%; padding: 14px; border-radius: 14px; background: #000; color: #fff; font-size: 15px; font-weight: 700; border: none; cursor: pointer; }
+  .copy-btn:active { opacity: 0.8; }
+
+  /* ====== Stroke — 모든 글자 요소에 흰색 테두리 ====== */
+  /* sticker-with-stroke는 sticker-inner와 동일 요소, 자손 전체에 적용 */
+  .sticker-with-stroke * {
+    text-shadow: 2px 0 0 #fff, -2px 0 0 #fff, 0 2px 0 #fff, 0 -2px 0 #fff;
+  }
+  /* 주요 텍스트는 더 두껍게 */
+  .sticker-score, .name {
+    text-shadow: 3px 0 0 #fff, -3px 0 0 #fff, 0 3px 0 #fff, 0 -3px 0 #fff, 1px 1px 0 #fff, -1px -1px 0 #fff;
+  }
+
+  /* ====== Separator between views ====== */
+  .divider { text-align: center; padding: 20px 0 8px; color: #555; font-size: 11px; font-weight: 600; letter-spacing: 2px; }
+
+  .kt-color { color: #EB1F25; }
+  .doosan-color { color: #131230; }
+  .bg-kt { background: #000; color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>🎟️ 포스트게임 Stat Badge — 샘플 렌더링</h2>
+  <p class="caption">2026.05.28(목) KT 위즈 vs 두산 베어스 수원kt위즈파크<br>실제 데이터 기반 시뮬레이션 (유저: LG 응원, 직관 승률 67%)</p>
+
+  <!-- ====== PHONE SCREEN ====== -->
+  <div class="phone">
+    <div class="screen" style="position: relative;">
+
+      <!-- Home Tab (greyed out background) -->
+      <div style="opacity: 0.3; pointer-events: none; filter: blur(1px);">
+        <div class="home-header">
+          <h1>홈</h1>
+          <div class="header-icons">
+            <button class="sticker-btn">🪄</button>
+          </div>
+        </div>
+        <div style="padding: 20px;">
+          <div style="height: 160px; background: #f3f4f6; border-radius: 16px; margin-bottom: 12px;"></div>
+          <div style="height: 60px; background: #f3f4f6; border-radius: 16px; margin-bottom: 8px;"></div>
+          <div style="height: 60px; background: #f3f4f6; border-radius: 16px;"></div>
+        </div>
+      </div>
+
+      <!-- ====== Sticker Editor Modal (bottom sheet) ====== -->
+      <div class="editor-overlay">
+        <div class="editor-sheet">
+
+          <!-- Handle -->
+          <div class="editor-handle"></div>
+
+          <!-- Editor Header -->
+          <div class="editor-header">
+            <h3>스티커 만들기</h3>
+            <button class="close-btn">✕</button>
+          </div>
+
+          <!-- Game Selector -->
+          <div class="game-chip selected" style="margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+              <div>
+                <div style="font-weight: 900; font-size: 15px; color: #EB1F25;">KT</div>
+                <div style="font-size: 11px; color: #888;">5위</div>
+              </div>
+              <div class="vs">VS</div>
+              <div>
+                <div style="font-weight: 900; font-size: 15px; color: #131230;">두산</div>
+                <div style="font-size: 11px; color: #888;">3위</div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 22px; font-weight: 900;">3 : 7</div>
+              <div style="font-size: 11px; color: #888;">종료</div>
+            </div>
+            <span class="badge win">직관 ✅</span>
+          </div>
+
+          <!-- ====== Sticker Preview ====== -->
+          <div class="sticker-preview-area">
+
+            <!-- Sticker: 투명 배경 (기본) — only text, no bg -->
+            <div class="sticker-bg-transparent" id="sticker">
+              <div class="sticker-inner sticker-with-stroke">
+
+                <!-- Date + Watermark row -->
+                <div class="sticker-header">
+                  <span class="sticker-date">2026.05.28(목)</span>
+                  <span style="font-size: 10px; color: #bbb; font-weight: 500;">@fullcount.kr</span>
+                </div>
+
+                <!-- Scoreboard -->
+                <div class="sticker-scoreboard">
+                  <div class="sticker-team">
+                    <span class="name kt-color">KT</span>
+                    <span class="record">5위</span>
+                  </div>
+                  <div class="sticker-score-wrap">
+                    <span class="sticker-score" style="color: #999;">3</span>
+                    <span class="sticker-colon">:</span>
+                    <span class="sticker-score winner" style="color: #111;">7</span>
+                  </div>
+                  <div class="sticker-team">
+                    <span class="name doosan-color">두산</span>
+                    <span class="record">3위</span>
+                  </div>
+                </div>
+
+                <!-- Innings Scoreboard -->
+                <div class="sticker-innings">
+                  <table class="innings-table">
+                    <thead>
+                      <tr>
+                        <th class="team-col"></th>
+                        <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
+                        <th class="r-col">R</th><th class="h-col">H</th><th class="e-col">E</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="kt-row">
+                        <td class="team-col kt-color">KT</td>
+                        <td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>2</td><td>0</td><td>0</td><td>0</td>
+                        <td class="r-col" style="color:#999;">3</td><td>7</td><td>1</td>
+                      </tr>
+                      <tr class="doosan-row">
+                        <td class="team-col doosan-color">두산</td>
+                        <td>2</td><td>0</td><td>0</td><td>3</td><td>1</td><td>1</td><td>0</td><td>0</td><td></td>
+                        <td class="r-col" style="color:#111;">7</td><td>11</td><td>0</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- User stats -->
+                <div class="sticker-user-badge" id="userBadge">
+                  <span class="emoji">🏆</span>
+                  <div>
+                    <span class="label">직관 승률</span>
+                    <span class="value">67%</span>
+                    <span style="font-size: 11px; color: #999; margin-left: 6px;">(6승 3패)</span>
+                    <br>
+                    <span style="display: flex; flex-wrap: wrap; gap: 4px;">
+                      <span class="tag-wrapper" data-default="5연승"><span class="tag-hash">#</span><span contenteditable="true" class="editable-tag" style="color:#dc2626;font-weight:700;font-size:11px;">5연승</span></span>
+                      <span class="tag-wrapper" data-default="직관3연승"><span class="tag-hash">#</span><span contenteditable="true" class="editable-tag" style="color:#2563eb;font-weight:700;font-size:11px;">직관3연승</span></span>
+                      <span class="tag-wrapper placeholder" data-default=""><span class="tag-hash">#</span><span contenteditable="true" class="editable-tag" data-placeholder="태그입력" style="color:#7e57c2;font-weight:700;font-size:11px;"></span></span>
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <p style="font-size: 11px; color: #999; text-align: center; margin-bottom: 16px;">
+            배경이 투명한 PNG로 클립보드에 복사됩니다. 인스타 스토리에 붙여넣기 해보세요!
+          </p>
+
+          <!-- Controls -->
+          <div class="controls">
+
+            <!-- Text Color -->
+            <div class="control-group">
+              <label>글자 색상</label>
+              <div class="color-row">
+                <div class="color-dot active" style="background: #000;"></div>
+                <div class="color-dot" style="background: #fff; border-color: #ccc;"></div>
+                <div class="color-dot" style="background: #EB1F25;"></div>
+                <div class="color-dot" style="background: #131230;"></div>
+                <div class="color-dot" style="background: #C30452;"></div>
+                <div class="color-dot" style="background: #16a34a;"></div>
+                <div class="color-dot" style="background: #2563eb;"></div>
+                <div class="color-dot" style="background: #9333ea;"></div>
+                <div class="color-dot none">X</div>
+              </div>
+            </div>
+
+            <!-- Background -->
+            <div class="control-group">
+              <label>배경</label>
+              <div class="bg-row">
+                <div class="bg-option active">투명</div>
+                <div class="bg-option">마스킹 테이프</div>
+                <div class="bg-option">찢어진 영수증</div>
+              </div>
+            </div>
+
+            <!-- Stroke -->
+            <div class="control-group">
+              <div class="stroke-toggle">
+                <input type="checkbox" checked id="stroke-check">
+                <label for="stroke-check" style="font-size: 13px; font-weight: 500; margin: 0;">외곽선 (투명 배경 시인성 보장)</label>
+              </div>
+            </div>
+
+            <!-- Custom hashtag inline hint -->
+            <div class="control-group">
+              <p style="font-size: 11px; color: #999; text-align: center; margin: 0;">스티커의 해시태그를 클릭하여 직접 수정하세요</p>
+            </div>
+
+            <!-- Toggle user badge -->
+            <div class="control-group">
+              <div class="stroke-toggle">
+                <input type="checkbox" checked id="badge-toggle">
+                <label for="badge-toggle" style="font-size: 13px; font-weight: 500; margin: 0;">승률 · 해시태그 표시</label>
+              </div>
+            </div>
+
+            <!-- Win/Loss toggle -->
+            <div class="control-group">
+              <label>경기 결과</label>
+              <div class="bg-row">
+                <div class="bg-option active" data-result="win" id="resultWin">승리</div>
+                <div class="bg-option" data-result="loss" id="resultLoss">패배</div>
+              </div>
+            </div>
+
+            <!-- Copy Button -->
+            <button class="copy-btn">📋 인스타 스티커 복사</button>
+          </div>
+
+        </div><!-- /editor-sheet -->
+      </div><!-- /editor-overlay -->
+
+    </div><!-- /screen -->
+  </div><!-- /phone -->
+
+  <!-- ====== 배경 Variant 미리보기 (별도) ====== -->
+  <div style="margin-top: 40px;">
+    <h2>3가지 배경 Variant</h2>
+    <p class="caption">기본 투명(좌) · 마스킹 테이프(중) · 찢어진 영수증(우)</p>
+    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; background: #c0c0c0; padding: 24px; border-radius: 16px;">
+
+      <!-- 투명 — 글자만 -->
+      <div class="sticker-bg-transparent" style="width: 220px;">
+        <div class="sticker-inner sticker-with-stroke">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span class="sticker-date" style="margin:0;">2026.05.28 수원</span>
+            <span style="font-size:9px;color:#bbb;">@fullcount.kr</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-weight:900; color:#EB1F25; font-size:13px;">KT</span>
+            <span><span style="font-size:24px; font-weight:900; color:#999;">3</span><span style="font-size:24px; font-weight:300; color:#ccc;">:</span><span style="font-size:24px; font-weight:900; color:#111;">7</span></span>
+            <span style="font-weight:900; color:#131230; font-size:13px;">두산</span>
+          </div>
+          <table class="innings-table" style="font-size:8px;">
+            <thead><tr><th></th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>R</th></tr></thead>
+            <tbody>
+              <tr><td style="font-size:9px;color:#EB1F25;">KT</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>2</td><td>0</td><td>0</td><td>0</td><td style="font-weight:900; color:#999;">3</td></tr>
+              <tr><td style="font-size:9px;color:#131230;">두산</td><td>2</td><td>0</td><td>0</td><td>3</td><td>1</td><td>1</td><td>0</td><td>0</td><td></td><td style="font-weight:900; color:#111;">7</td></tr>
+            </tbody>
+          </table>
+          <div class="sticker-user-badge" style="margin-top: 6px; padding: 5px 8px; gap: 4px;">
+            <span style="font-size: 14px;">🏆</span>
+            <div>
+              <span style="font-size: 9px; color: #666;">직관 승률</span>
+              <span style="font-size: 11px; font-weight: 900; color: #111;">67%</span>
+              <span style="font-size: 9px; color: #999;">(6승 3패)</span>
+              <br>
+              <span style="display: flex; flex-wrap: wrap; gap: 2px;">
+                <span style="font-size: 9px; color: #dc2626; font-weight: 700;">#5연승</span>
+                <span style="font-size: 9px; color: #2563eb; font-weight: 700;">#직관3연승</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 마스킹 테이프 -->
+      <div class="sticker-bg-masking" style="width: 220px;">
+        <div class="sticker-inner sticker-with-stroke">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span class="sticker-date" style="margin:0;">2026.05.28 수원</span>
+            <span style="font-size:9px;color:#bbb;">@fullcount.kr</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-weight:900; color:#EB1F25; font-size:13px;">KT</span>
+            <span><span style="font-size:24px; font-weight:900; color:#999;">3</span><span style="font-size:24px; font-weight:300; color:#ccc;">:</span><span style="font-size:24px; font-weight:900; color:#111;">7</span></span>
+            <span style="font-weight:900; color:#131230; font-size:13px;">두산</span>
+          </div>
+          <table class="innings-table" style="font-size:8px;">
+            <thead><tr><th></th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>R</th></tr></thead>
+            <tbody>
+              <tr><td style="font-size:9px;color:#EB1F25;">KT</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>2</td><td>0</td><td>0</td><td>0</td><td style="font-weight:900; color:#999;">3</td></tr>
+              <tr><td style="font-size:9px;color:#131230;">두산</td><td>2</td><td>0</td><td>0</td><td>3</td><td>1</td><td>1</td><td>0</td><td>0</td><td></td><td style="font-weight:900; color:#111;">7</td></tr>
+            </tbody>
+          </table>
+          <div class="sticker-user-badge" style="margin-top: 6px; padding: 5px 8px; gap: 4px;">
+            <span style="font-size: 14px;">🏆</span>
+            <div>
+              <span style="font-size: 9px; color: #666;">직관 승률</span>
+              <span style="font-size: 11px; font-weight: 900; color: #111;">67%</span>
+              <span style="font-size: 9px; color: #999;">(6승 3패)</span>
+              <br>
+              <span style="display: flex; flex-wrap: wrap; gap: 2px;">
+                <span style="font-size: 9px; color: #dc2626; font-weight: 700;">#5연승</span>
+                <span style="font-size: 9px; color: #2563eb; font-weight: 700;">#직관3연승</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 영수증 -->
+      <div class="sticker-bg-receipt" style="width: 220px;">
+        <div class="sticker-inner sticker-with-stroke">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span class="sticker-date" style="margin:0;">2026.05.28 수원</span>
+            <span style="font-size:9px;color:#bbb;">@fullcount.kr</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-weight:900; color:#EB1F25; font-size:13px;">KT</span>
+            <span><span style="font-size:24px; font-weight:900; color:#999;">3</span><span style="font-size:24px; font-weight:300; color:#ccc;">:</span><span style="font-size:24px; font-weight:900; color:#111;">7</span></span>
+            <span style="font-weight:900; color:#131230; font-size:13px;">두산</span>
+          </div>
+          <table class="innings-table" style="font-size:8px;">
+            <thead><tr><th></th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>R</th></tr></thead>
+            <tbody>
+              <tr><td style="font-size:9px;color:#EB1F25;">KT</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>2</td><td>0</td><td>0</td><td>0</td><td style="font-weight:900;">3</td></tr>
+              <tr><td style="font-size:9px;color:#131230;">두산</td><td>2</td><td>0</td><td>0</td><td>3</td><td>1</td><td>1</td><td>0</td><td>0</td><td></td><td style="font-weight:900; color:#111;">7</td></tr>
+            </tbody>
+          </table>
+          <div class="sticker-user-badge" style="margin-top: 6px; padding: 5px 8px; gap: 4px;">
+            <span style="font-size: 14px;">🏆</span>
+            <div>
+              <span style="font-size: 9px; color: #666;">직관 승률</span>
+              <span style="font-size: 11px; font-weight: 900; color: #111;">67%</span>
+              <span style="font-size: 9px; color: #999;">(6승 3패)</span>
+              <br>
+              <span style="display: flex; flex-wrap: wrap; gap: 2px;">
+                <span style="font-size: 9px; color: #dc2626; font-weight: 700;">#5연승</span>
+                <span style="font-size: 9px; color: #2563eb; font-weight: 700;">#직관3연승</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+<script>
+document.getElementById('badge-toggle').addEventListener('change', function() {
+  document.getElementById('userBadge').style.display = this.checked ? 'flex' : 'none';
+});
+
+function setResult(mode) {
+  const winBtn = document.getElementById('resultWin');
+  const lossBtn = document.getElementById('resultLoss');
+  winBtn.classList.toggle('active', mode === 'win');
+  lossBtn.classList.toggle('active', mode === 'loss');
+  const tags = document.querySelectorAll('.tag-wrapper');
+  tags.forEach(function(tag, i) {
+    if (mode === 'loss') {
+      if (i < 2) tag.style.display = 'none';
+      else { tag.style.display = 'inline'; tag.querySelector('.editable-tag').textContent = ''; }
+    } else {
+      if (i < 2) { tag.style.display = 'inline'; tag.querySelector('.editable-tag').textContent = tag.getAttribute('data-default'); }
+      else { tag.style.display = 'inline'; }
+    }
+  });
+}
+
+document.getElementById('resultWin').addEventListener('click', function() { setResult('win'); });
+document.getElementById('resultLoss').addEventListener('click', function() { setResult('loss'); });
+</script>
+</body>
+</html>

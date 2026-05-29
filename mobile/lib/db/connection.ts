@@ -103,12 +103,20 @@ async function initSchema(database: SQLite.SQLiteDatabase): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_jikgwan_date ON jikgwan_records(date);
     CREATE INDEX IF NOT EXISTS idx_expenses_record_id ON expenses(record_id);
     CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
+    CREATE TABLE IF NOT EXISTS collections (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT DEFAULT NULL,
+      photos TEXT DEFAULT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
     CREATE INDEX IF NOT EXISTS idx_diary_totems_record ON diary_totems(record_id);
     CREATE INDEX IF NOT EXISTS idx_diary_totems_totem ON diary_totems(totem_id);
   `);
   await migrateJikgwanSchema(database);
   await migrateTotemSchema(database);
   await migrateBadgesSchema(database);
+  await migrateCollectionSchema(database);
   // Clean up cache entries older than 30 days on app start
   await database.runAsync(
     "DELETE FROM api_cache WHERE updated_at < ?",
@@ -189,6 +197,22 @@ async function migrateBadgesSchema(database: SQLite.SQLiteDatabase): Promise<voi
   }
 }
 
+async function migrateCollectionSchema(database: SQLite.SQLiteDatabase): Promise<void> {
+  const columns = [
+    { name: "photos", type: "TEXT", dflt: "NULL" },
+  ];
+  const existing = await database.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(collections)"
+  );
+  const existingNames = new Set(existing.map((c) => c.name));
+  for (const col of columns) {
+    if (existingNames.has(col.name)) continue;
+    await database.execAsync(
+      `ALTER TABLE collections ADD COLUMN ${col.name} ${col.type} DEFAULT ${col.dflt}`
+    );
+  }
+}
+
 export async function resetAllData(): Promise<void> {
   const database = await getDb();
   await database.execAsync(`
@@ -201,5 +225,6 @@ export async function resetAllData(): Promise<void> {
     DELETE FROM attendance;
     DELETE FROM totems;
     DELETE FROM diary_totems;
+    DELETE FROM collections;
   `);
 }

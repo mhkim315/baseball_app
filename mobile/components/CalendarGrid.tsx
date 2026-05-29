@@ -7,7 +7,7 @@ import YearSelector from "@/components/YearSelector";
 import { getDaysInMonth, getFirstDayOfMonth, formatDateForApi } from "@shared/constants";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
-import type { ResolvedGame } from "@/lib/resolveGames";
+import { type ResolvedGame, getResultLabel, getResultColor } from "@/lib/resolveGames";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -204,24 +204,6 @@ export default function CalendarGrid({
     calVenue: { fontSize: 9, color: theme.mutedForeground },
   }), [theme]);
 
-  function resultLabel(rg: ResolvedGame): string | null {
-    if (rg.status === "cancelled") return null;
-    if (rg.outcome == null || rg.homeScore == null || rg.awayScore == null) return null;
-    const isHome = rg.homeTeam === selectedTeam;
-    const our = isHome ? rg.homeScore : rg.awayScore;
-    const their = isHome ? rg.awayScore : rg.homeScore;
-    if (our > their) return "승";
-    if (our < their) return "패";
-    return "무";
-  }
-
-  function resultColor(label: string | null): string {
-    if (label === "승") return "#3b82f6";
-    if (label === "패") return "#ef4444";
-    if (label === "무") return "#f59e0b";
-    return "#888";
-  }
-
   return (
     <View style={styles.container}>
       <GestureDetector gesture={monthPanGesture}>
@@ -318,7 +300,7 @@ export default function CalendarGrid({
               const hasHome = dayGames.some((rg) => rg.homeTeam === selectedTeam);
 
               // Result labels
-              const dayLabels = dayGames.map((rg) => resultLabel(rg)).filter(Boolean);
+              const dayLabels = dayGames.map((rg) => getResultLabel(rg, selectedTeam)).filter(Boolean);
 
               return (
                 <Pressable
@@ -338,7 +320,7 @@ export default function CalendarGrid({
                         dayLabels.map((label, li) => (
                           <View
                             key={li}
-                            style={[styles.calDayDot, { backgroundColor: resultColor(label) }]}
+                            style={[styles.calDayDot, { backgroundColor: getResultColor(label) }]}
                           >
                             <Text style={styles.calDayDotText}>{label}</Text>
                           </View>
@@ -360,11 +342,11 @@ export default function CalendarGrid({
                           <Text style={styles.calOpp} numberOfLines={1}>{oppName}</Text>
                           <View style={{ flexDirection: "row", gap: 4, marginTop: 1 }}>
                             {dayGames.slice(0, 2).map((rg, i) => {
-                              const label = resultLabel(rg);
+                              const label = getResultLabel(rg, selectedTeam);
                               if (label) {
                                 return (
                                   <View key={i} style={{
-                                    backgroundColor: resultColor(label),
+                                    backgroundColor: getResultColor(label),
                                     width: 16, height: 16, borderRadius: 8,
                                     alignItems: "center", justifyContent: "center",
                                   }}>
@@ -397,8 +379,8 @@ export default function CalendarGrid({
                       const oppName = isHome
                         ? TEAM_COLORS[rg.awayTeam]?.shortName || rg.awayTeam
                         : TEAM_COLORS[rg.homeTeam]?.shortName || rg.homeTeam;
-                      const label = resultLabel(rg);
-                      const color = resultColor(label);
+                      const label = getResultLabel(rg, selectedTeam);
+                      const color = getResultColor(label);
 
                       return (
                         <View key={gi} style={styles.calGame}>

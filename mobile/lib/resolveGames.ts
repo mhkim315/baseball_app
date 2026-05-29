@@ -185,3 +185,22 @@ export function resolveGamesForSchedule(
   }
   return result;
 }
+
+/** 승/무/패 판정 — targetTeam 기준으로 결과 반환 */
+export function getResultLabel(rg: ResolvedGame, targetTeam: string | null): string | null {
+  if (!targetTeam || rg.status === "cancelled") return null;
+  if (rg.outcome == null || rg.homeScore == null || rg.awayScore == null) return null;
+  const isHome = rg.homeTeam === targetTeam;
+  const our = isHome ? rg.homeScore : rg.awayScore;
+  const their = isHome ? rg.awayScore : rg.homeScore;
+  if (our > their) return "승";
+  if (our < their) return "패";
+  return "무";
+}
+
+export function getResultColor(label: string | null): string {
+  if (label === "승") return "#3b82f6";
+  if (label === "패") return "#ef4444";
+  if (label === "무") return "#f59e0b";
+  return "#888";
+}
