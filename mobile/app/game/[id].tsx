@@ -560,6 +560,10 @@ export default function GameDetailScreen() {
   const awayWin = isFinished && gs ? gs.away > gs.home : null;
   const homeWin = isFinished && gs ? gs.home > gs.away : null;
   const isDraw = isFinished && gs ? gs.away === gs.home : false;
+  // 스티커는 경기当日 + 다음날 24시까지만 생성 가능
+  const gameDateOnly = new Date(y, m - 1, d);
+  const daysSinceGame = Math.floor((Date.now() - gameDateOnly.getTime()) / (1000 * 60 * 60 * 24));
+  const canMakeSticker = isFinished && gs && daysSinceGame <= 1;
   const awayEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : awayWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";
   const homeEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : homeWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";
 
@@ -858,7 +862,7 @@ export default function GameDetailScreen() {
           <Text style={styles.diaryRecordText}>직관 기록하기</Text>
         </Pressable>
 
-        {isFinished && gs && (
+        {canMakeSticker && (
           <Pressable style={styles.stickerBtn} onPress={handleOpenSticker}>
             <Text style={styles.stickerBtnText}>스티커 만들기</Text>
           </Pressable>
@@ -866,9 +870,13 @@ export default function GameDetailScreen() {
 
         {/* Footer */}
         <Text style={styles.footer}>
-          {hasLineup
-            ? (lineupConfirmed ? "라인업은 경기 시작 전에 확정돼요" : "예상 라인업은 전날 경기 데이터를 기반으로 해요")
-            : ""}
+          {isFinished && canMakeSticker
+            ? "스티커를 만들어 공유해보세요"
+            : isFinished
+              ? "경기가 종료되었습니다"
+              : hasLineup
+              ? (lineupConfirmed ? "라인업은 경기 시작 전에 확정돼요" : "예상 라인업은 전날 경기 데이터를 기반으로 해요")
+              : ""}
         </Text>
       </ScrollView>
 

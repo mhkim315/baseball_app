@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView, StyleSheet, ActivityIndicator } from "react-native";
 import BottomSheet from "@/components/BottomSheet";
 import StickerContent from "@/components/StickerContent";
 import { captureRef } from "react-native-view-shot";
@@ -10,6 +10,9 @@ import { getTeamDiaryStats, getJikgwanRecords } from "@/lib/db";
 import { computeStreakStats } from "@/lib/stats";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { useTheme } from "@/lib/ThemeContext";
+import { useTeam } from "@/lib/TeamContext";
+import ColorPicker from "@/components/ColorPicker";
+import SimpleAlert from "@/components/SimpleAlert";
 
 interface ScoreBoardInn {
   away: (number | null)[];
@@ -35,10 +38,11 @@ interface StickerModalProps {
   rheb?: RHEB | null;
 }
 
-const BG_OPTIONS: { key: "transparent" | "masking" | "receipt"; label: string }[] = [
+const BG_OPTIONS: { key: "transparent" | "sketchbook" | "retro" | "postit"; label: string }[] = [
   { key: "transparent", label: "투명" },
-  { key: "masking", label: "마스킹 테이프" },
-  { key: "receipt", label: "찢어진 영수증" },
+  { key: "sketchbook", label: "스케치북" },
+  { key: "retro", label: "레트로" },
+  { key: "postit", label: "포스트잇" },
 ];
 
 export default function StickerModal({
@@ -46,13 +50,18 @@ export default function StickerModal({
   awayRank, homeRank, date, scoreBoard, rheb,
 }: StickerModalProps) {
   const { theme } = useTheme();
+  const { myTeam } = useTeam();
   const viewRef = useRef<View>(null);
 
   // Editor controls
-  const [background, setBackground] = useState<"transparent" | "masking" | "receipt">("transparent");
+  const [background, setBackground] = useState<"transparent" | "sketchbook" | "retro" | "postit">("transparent");
   const [stroke, setStroke] = useState(true);
+  const [strokeColor, setStrokeColor] = useState("#ffffff");
   const [showBadge, setShowBadge] = useState(true);
+  const [showScoreboard, setShowScoreboard] = useState(true);
   const [capturing, setCapturing] = useState(false);
+  const [textColor, setTextColor] = useState("");
+  const [badgeColor, setBadgeColor] = useState<string | null>(null);
 
   // Sticker data
   const [loading, setLoading] = useState(true);
@@ -60,6 +69,7 @@ export default function StickerModal({
   const [teamTag, setTeamTag] = useState("");
   const [myTag, setMyTag] = useState("");
   const [customTag, setCustomTag] = useState("");
+  const [alert, setAlert] = useState<{ visible: boolean; title: string; message: string }>({ visible: false, title: "", message: "" });
 
   // Colors & display names
   const awayColor = TEAM_COLORS[awayTeam]?.primary ?? "#111";
@@ -122,8 +132,14 @@ export default function StickerModal({
             draws: teamStats.overall.draws,
             losses: teamStats.overall.losses,
           });
-          setTeamTag(hashtags.teamTag);
-          setMyTag(hashtags.myTag);
+          const isOtherGame = myTeam && homeTeam !== myTeam && awayTeam !== myTeam;
+          if (isOtherGame) {
+            setTeamTag("책임없는쾌락");
+            setMyTag("아무나이겨라");
+          } else {
+            setTeamTag(hashtags.teamTag);
+            setMyTag(hashtags.myTag);
+          }
           setCustomTag("");
           setLoading(false);
         }
@@ -137,24 +153,27 @@ export default function StickerModal({
   }, [visible, homeTeam, date, actualResult]);
 
   // Handle copy to clipboard
-  const handleCopy = useCallback(async () => {
+  const handleCopyClipboard = useCallback(async () => {
     setCapturing(true);
     try {
       const base64 = await captureRef(viewRef.current, { format: "png", result: "base64" });
-      try {
-        await Clipboard.setImageAsync(`data:image/png;base64,${base64}`);
-        Alert.alert("완료", "클립보드에 복사되었습니다.\n인스타그램 스토리에 붙여넣기 하세요.");
-      } catch {
-        console.warn("Clipboard.setImageAsync failed, falling back to share");
-        try {
-          const uri = await captureRef(viewRef.current, { format: "png", result: "tmpfile" });
-          await Sharing.shareAsync(uri, { mimeType: "image/png" });
-        } catch {
-          Alert.alert("오류", "스티커 공유에 실패했습니다.");
-        }
-      }
+      await Clipboard.setImageAsync(base64);
+      setAlert({ visible: true, title: "완료", message: "클립보드에 복사되었습니다.\n인스타그램 스토리에 붙여넣기 하세요." });
     } catch {
-      Alert.alert("오류", "스티커 생성에 실패했습니다.");
+      setAlert({ visible: true, title: "오류", message: "클립보드 복사에 실패했습니다." });
+    } finally {
+      setCapturing(false);
+    }
+  }, []);
+
+  // Handle share
+  const handleShare = useCallback(async () => {
+    setCapturing(true);
+    try {
+      const uri = await captureRef(viewRef.current, { format: "png", result: "tmpfile" });
+      await Sharing.shareAsync(uri, { mimeType: "image/png" });
+    } catch {
+      setAlert({ visible: true, title: "오류", message: "스티커 공유에 실패했습니다." });
     } finally {
       setCapturing(false);
     }
@@ -164,17 +183,21 @@ export default function StickerModal({
   const handleClose = useCallback(() => {
     setBackground("transparent");
     setStroke(true);
+    setStrokeColor("#ffffff");
     setShowBadge(true);
+    setShowScoreboard(true);
+    setTextColor("");
+    setBadgeColor(null);
     setCapturing(false);
     setCustomTag("");
     onClose();
   }, [onClose]);
 
   return (
+    <>
     <BottomSheet visible={visible} onClose={handleClose} maxHeight="88%">
-      <View style={{ flex: 1 }}>
-        {/* Header */}
-        <View style={s.header}>
+      {/* Header */}
+      <View style={s.header}>
           <Text style={s.headerTitle}>스티커 만들기</Text>
           <Pressable onPress={handleClose} hitSlop={12}>
             <Text style={s.closeBtn}>✕</Text>
@@ -205,7 +228,11 @@ export default function StickerModal({
                   gameResult={actualResult}
                   background={background}
                   stroke={stroke}
+                  strokeColor={strokeColor}
                   showBadge={showBadge}
+                  showScoreboard={showScoreboard}
+                  textColor={textColor || undefined}
+                  badgeBackgroundColor={badgeColor === null ? undefined : (badgeColor || "")}
                   teamTag={teamTag}
                   myTag={myTag}
                   customTag={customTag}
@@ -244,6 +271,50 @@ export default function StickerModal({
             </Pressable>
           </View>
 
+          {stroke && (
+            <View style={[s.chipRow, { marginBottom: 20, paddingLeft: 2 }]}>
+              {(["#ffffff", "#999999", "#111111"] as const).map((c) => (
+                <Pressable
+                  key={c}
+                  onPress={() => setStrokeColor(c)}
+                  style={{
+                    width: 28, height: 28, borderRadius: 14,
+                    backgroundColor: c,
+                    borderWidth: 2.5,
+                    borderColor: strokeColor === c ? theme.foreground : (c === "#ffffff" ? "#ddd" : "transparent"),
+                  }}
+                />
+              ))}
+              <Pressable
+                onPress={() => setStrokeColor("")}
+                style={{
+                  width: 28, height: 28, borderRadius: 14,
+                  borderWidth: 2, borderColor: !strokeColor ? theme.foreground : theme.border,
+                  alignItems: "center", justifyContent: "center",
+                  backgroundColor: !strokeColor ? theme.muted : "transparent",
+                }}
+              >
+                <Text style={{ fontSize: 11, fontWeight: "700", color: theme.mutedForeground }}>X</Text>
+              </Pressable>
+            </View>
+          )}
+
+          {/* Scoreboard toggle */}
+          <View style={[s.toggleRow]}>
+            <Text style={s.controlLabel}>스코어보드</Text>
+            <Pressable style={[s.toggle, showScoreboard && s.toggleActive]} onPress={() => setShowScoreboard(!showScoreboard)}>
+              <Text style={[s.toggleText, showScoreboard && s.toggleTextActive]}>
+                {showScoreboard ? "ON" : "OFF"}
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Text color */}
+          <View style={s.controlSection}>
+            <Text style={s.controlLabel}>글자 색상</Text>
+            <ColorPicker selected={textColor} onSelect={setTextColor} showDefault />
+          </View>
+
           {/* Badge toggle */}
           <View style={[s.toggleRow, { marginBottom: 16 }]}>
             <Text style={s.controlLabel}>승률 · 해시태그</Text>
@@ -253,6 +324,13 @@ export default function StickerModal({
               </Text>
             </Pressable>
           </View>
+
+          {/* Badge background color */}
+          {showBadge && (
+            <View style={{ marginBottom: 16 }}>
+              <ColorPicker selected={badgeColor ?? ""} onSelect={setBadgeColor} showDefault defaultLabel="없음" defaultActive={badgeColor === ""} />
+            </View>
+          )}
 
           {/* Hashtag edit inputs */}
           {showBadge && (
@@ -294,26 +372,41 @@ export default function StickerModal({
             </View>
           )}
 
-          {/* Copy button */}
-          <Pressable
-            style={[s.copyBtn, (capturing || loading) && s.copyBtnDisabled]}
-            onPress={handleCopy}
-            disabled={capturing || loading}
-          >
-            {capturing ? (
-              <View style={s.copyBtnInner}>
-                <ActivityIndicator color="#fff" size="small" />
-                <Text style={s.copyBtnText}> 생성 중...</Text>
-              </View>
-            ) : (
-              <Text style={s.copyBtnText}>📋 인스타 스티커 복사</Text>
-            )}
-          </Pressable>
+          {/* Action buttons */}
+          {capturing ? (
+            <View style={s.copyBtn}>
+              <ActivityIndicator color="#fff" size="small" />
+            </View>
+          ) : (
+            <View style={s.actionRow}>
+              <Pressable
+                style={[s.actionBtn, s.clipboardBtn]}
+                onPress={handleCopyClipboard}
+                disabled={loading}
+              >
+                <Text style={s.actionBtnText}>📋 클립보드 복사</Text>
+              </Pressable>
+              <Pressable
+                style={[s.actionBtn, s.shareBtn]}
+                onPress={handleShare}
+                disabled={loading}
+              >
+                <Text style={s.actionBtnText}>📤 공유하기</Text>
+              </Pressable>
+            </View>
+          )}
 
-          <Text style={s.hint}>스티커가 클립보드에 복사됩니다. 인스타그램 스토리에 붙여넣기 하세요.</Text>
+          <Text style={s.hint}>스티커를 클립보드에 복사해서 인스타그램 스토리에 붙여넣기 하세요.</Text>
         </ScrollView>
-      </View>
     </BottomSheet>
+
+    <SimpleAlert
+      visible={alert.visible}
+      title={alert.title}
+      message={alert.message}
+      onClose={() => setAlert({ ...alert, visible: false })}
+    />
+    </>
   );
 }
 
@@ -387,8 +480,23 @@ const s = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
-  copyBtnDisabled: { opacity: 0.6 },
-  copyBtnInner: { flexDirection: "row", alignItems: "center" },
-  copyBtnText: { fontSize: 16, fontWeight: "700", color: "#fff" },
+  actionRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 8,
+  },
+  actionBtn: {
+    flex: 1,
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  clipboardBtn: {
+    backgroundColor: "#111",
+  },
+  shareBtn: {
+    backgroundColor: "#555",
+  },
+  actionBtnText: { fontSize: 14, fontWeight: "700", color: "#fff" },
   hint: { fontSize: 11, color: "#bbb", textAlign: "center" },
 });

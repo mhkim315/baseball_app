@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   View, Text, Pressable, Modal, TextInput, ScrollView,
-  Image, Alert, StyleSheet, KeyboardAvoidingView, Platform,
+  Image, StyleSheet, KeyboardAvoidingView, Platform, Dimensions,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useTheme } from "@/lib/ThemeContext";
@@ -10,19 +10,21 @@ import { useTeam } from "@/lib/TeamContext";
 import {
   addCollection, updateCollection, deleteCollection,
   getAllCollections, parseCollectionPhotos,
-  addTotem,
+  addTotem, getAllTotems,
   type Collection,
 } from "@/lib/db";
 import { resizePhoto, savePhoto, generatePhotoName, deletePhoto } from "@/lib/camera";
 import EmojiPicker from "@/components/EmojiPicker";
 import ColorPicker from "@/components/ColorPicker";
+import SimpleAlert from "@/components/SimpleAlert";
 
 interface Props {
   visible: boolean;
   onClose: () => void;
+  onSave?: () => void;
 }
 
-export default function CollectionModal({ visible, onClose }: Props) {
+export default function CollectionModal({ visible, onClose, onSave }: Props) {
   const { theme } = useTheme();
   const { myTeam } = useTeam();
   const teamColor = myTeam ? teamPrimaryColor(myTeam, false) : "#888";
@@ -37,6 +39,9 @@ export default function CollectionModal({ visible, onClose }: Props) {
   const [fullscreenUri, setFullscreenUri] = useState<string | null>(null);
   const [totemEmoji, setTotemEmoji] = useState("");
   const [totemColor, setTotemColor] = useState("");
+  const [alert, setAlert] = useState<{ visible: boolean; title: string; message: string }>({ visible: false, title: "", message: "" });
+  const [confirmAlert, setConfirmAlert] = useState<{ visible: boolean; title: string; message: string; onConfirm: () => void }>({ visible: false, title: "", message: "", onConfirm: () => {} });
+  const [registering, setRegistering] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -52,6 +57,7 @@ export default function CollectionModal({ visible, onClose }: Props) {
       load();
       setView("list");
       setCurrent(null);
+      setRegistering(false);
     }
   }, [visible, load]);
 
@@ -66,7 +72,7 @@ export default function CollectionModal({ visible, onClose }: Props) {
     try {
       const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!granted) {
-        Alert.alert("권한 필요", "사진 라이브러리 접근 권한이 필요합니다.");
+        setAlert({ visible: true, title: "권한 필요", message: "사진 라이브러리 접근 권한이 필요합니다." });
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -98,47 +104,68 @@ export default function CollectionModal({ visible, onClose }: Props) {
       await load();
       setView("list");
       resetForm();
+      onSave?.();
     } catch (e) {
       console.warn("collection save failed", e);
     }
   };
 
   const handleDelete = (c: Collection) => {
-    Alert.alert(
-      `"${c.name}" 삭제`,
-      "이 컬렉션을 삭제할까요? 등록된 토템은 유지됩니다.",
-      [
-        { text: "취소", style: "cancel" },
-        { text: "삭제", style: "destructive", onPress: async () => {
-          try {
-            const photos = parseCollectionPhotos(c);
-            for (const uri of photos) {
-              await deletePhoto(uri);
-            }
-            await deleteCollection(c.id);
-            await load();
-            setView("list");
-          } catch (e) {
-            console.warn("deleteCollection failed", e);
+    setConfirmAlert({
+      visible: true,
+      title: `"${c.name}" 삭제`,
+      message: "이 컬렉션을 삭제할까요? 등록된 토템은 유지됩니다.",
+      onConfirm: async () => {
+        try {
+          const photos = parseCollectionPhotos(c);
+          for (const uri of photos) {
+            await deletePhoto(uri);
           }
-        }},
-      ]
-    );
+          await deleteCollection(c.id);
+          await load();
+          setView("list");
+          onSave?.();
+        } catch (e) {
+          console.warn("deleteCollection failed", e);
+        }
+      },
+    });
   };
 
   const handleTotemRegister = async () => {
-    if (!current) return;
+    if (!current || registering) return;
+    setRegistering(true);
     const name = current.name.trim();
     const emoji = totemEmoji || "🍀";
     try {
       await addTotem(name, emoji, current.description ?? undefined, totemColor || undefined);
-      Alert.alert("완료", `"${name}"이(가) 토템으로 등록되었습니다.`);
+      setAlert({ visible: true, title: "완료", message: `"${name}"이(가) 토템으로 등록되었습니다.` });
       setView("detail");
       setTotemEmoji("");
       setTotemColor("");
+      onSave?.();
     } catch (e) {
       console.warn("addTotem failed", e);
+    } finally {
+      setRegistering(false);
     }
+  };
+
+  const handleOpenTotemPopup = async () => {
+    if (!current) return;
+    const name = current.name.trim();
+    try {
+      const existing = await getAllTotems();
+      if (existing.some((t) => t.name === name)) {
+        setAlert({ visible: true, title: "알림", message: `"${name}"은(는) 이미 등록된 토템입니다.` });
+        return;
+      }
+    } catch (e) {
+      console.warn("getAllTotems failed", e);
+    }
+    setTotemEmoji("");
+    setTotemColor("");
+    setView("totemPopup");
   };
 
   const openDetail = (c: Collection) => {
@@ -319,7 +346,7 @@ export default function CollectionModal({ visible, onClose }: Props) {
           <View style={{ gap: 8, marginTop: 24 }}>
             <Pressable
               style={{ alignItems: "center", paddingVertical: 14, borderRadius: 12, backgroundColor: teamColor }}
-              onPress={() => { setTotemEmoji(""); setTotemColor(""); setView("totemPopup"); }}
+              onPress={handleOpenTotemPopup}
             >
               <Text style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>토템으로 등록</Text>
             </Pressable>
@@ -362,10 +389,11 @@ export default function CollectionModal({ visible, onClose }: Props) {
           <Text style={{ fontSize: 14, color: theme.mutedForeground }}>취소</Text>
         </Pressable>
         <Pressable
-          style={{ flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.foreground }}
+          style={{ flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: registering ? theme.muted : theme.foreground }}
           onPress={handleTotemRegister}
+          disabled={registering}
         >
-          <Text style={{ fontSize: 14, fontWeight: "600", color: theme.background }}>등록</Text>
+          <Text style={{ fontSize: 14, fontWeight: "600", color: registering ? theme.mutedForeground : theme.background }}>{registering ? "등록 중..." : "등록"}</Text>
         </Pressable>
       </View>
     </View>
@@ -374,7 +402,7 @@ export default function CollectionModal({ visible, onClose }: Props) {
   return (
     <>
       <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "padding"}>
           <View style={styles.overlay}>
             <View style={[styles.content, { backgroundColor: theme.card, borderColor: theme.border }]}>
               {view === "list" && renderList()}
@@ -397,6 +425,25 @@ export default function CollectionModal({ visible, onClose }: Props) {
           )}
         </Pressable>
       </Modal>
+
+      {/* Simple alert */}
+      <SimpleAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, visible: false })}
+      />
+
+      {/* Confirm delete alert */}
+      <SimpleAlert
+        visible={confirmAlert.visible}
+        title={confirmAlert.title}
+        message={confirmAlert.message}
+        confirmText="삭제"
+        onConfirm={confirmAlert.onConfirm}
+        cancelText="취소"
+        onClose={() => setConfirmAlert({ ...confirmAlert, visible: false })}
+      />
     </>
   );
 }
@@ -408,7 +455,8 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   content: {
-    maxHeight: "85%",
+    flex: 1,
+    maxHeight: Dimensions.get("window").height * 0.85,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,

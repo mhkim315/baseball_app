@@ -1,22 +1,14 @@
-import { useState, useEffect } from "react";
 import { View, Text, Pressable } from "react-native";
-import { getAllTotems, type Totem } from "@/lib/db";
+import type { Totem } from "@/lib/db";
 import { useTheme } from "@/lib/ThemeContext";
 
 interface Props {
   onPress: () => void;
+  totems: Totem[];
 }
 
-export default function TotemSection({ onPress }: Props) {
+export default function TotemSection({ onPress, totems }: Props) {
   const { theme } = useTheme();
-  const [totems, setTotems] = useState<Totem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getAllTotems().then(setTotems).catch(() => {}).finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return null;
 
   return (
     <Pressable

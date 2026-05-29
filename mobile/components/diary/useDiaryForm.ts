@@ -395,7 +395,14 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
       }
       const photosJson = savedPhotoUris.length > 0 ? JSON.stringify(savedPhotoUris) : null;
 
-      const targetTeam = cheeredTeam || userTeam;
+      // 타팀 경기 감지 — 유저팀이 아닌 경기에서는 cheeredTeam null을 유지
+      const gameTeams = selectedGame
+        ? { h: selectedGame.homeTeam, a: selectedGame.awayTeam }
+        : editRecord?.game_id
+          ? (() => { const r = parseGameTeamIds(editRecord.game_id); return { h: r.homeId, a: r.awayId }; })()
+          : null;
+      const isMyGame = !!gameTeams && (gameTeams.h === userTeam || gameTeams.a === userTeam);
+      const targetTeam = cheeredTeam || (isMyGame ? userTeam : null);
       let isWin: number | null = null;
 
       const isFutureGame = (() => {
@@ -460,7 +467,7 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
             score_away: selectedGame?.awayScore != null && !(selectedGame?.awayScore === 0 && selectedGame?.homeScore === 0) ? selectedGame.awayScore : (editRecord.score_away ?? null),
             score_home: selectedGame?.homeScore != null && !(selectedGame?.homeScore === 0 && selectedGame?.awayScore === 0) ? selectedGame.homeScore : (editRecord.score_home ?? null),
             is_win: isWin,
-            cheered_team: (cheeredTeam || userTeam || null) as string | null,
+            cheered_team: (cheeredTeam || (isMyGame ? userTeam : null)) as string | null,
             is_live: isLive ? 1 : 0,
             seat: seat.trim() || null,
             stadium: selectedGame?.venue || editRecord.stadium || null,
@@ -483,7 +490,7 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
             frame_style: "classic",
             stadium: selectedGame?.venue || null,
             is_win: isWin != null ? isWin : null,
-            cheered_team: (cheeredTeam || userTeam || null) as string | null,
+            cheered_team: (cheeredTeam || (isMyGame ? userTeam : null)) as string | null,
             is_live: isLive ? 1 : 0,
             seat: seat.trim() || null,
             game_type: selectedGame?.isPostseason ? "postseason" : selectedGame?.isExhibition ? "exhibition" : null,

@@ -11,6 +11,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from "react-native";
 import { useRouter, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Linking } from "react-native";
@@ -512,7 +513,7 @@ export default function MyScreen() {
 
         <CollectionSection onPress={() => setShowCollectionModal(true)} />
 
-        <TotemSection onPress={() => setShowTotemList(true)} />
+        <TotemSection onPress={() => setShowTotemList(true)} totems={totems} />
       </View>
 
       {/* App Info */}
@@ -638,9 +639,8 @@ export default function MyScreen() {
 
       {/* Totem List Modal */}
       <Modal visible={showTotemList} transparent animationType="slide" onRequestClose={() => setShowTotemList(false)}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" }}>
-            <View style={{ maxHeight: "85%", borderTopLeftRadius: 24, borderTopRightRadius: 24, borderWidth: 1, borderBottomWidth: 0, borderColor: theme.border, padding: 24, paddingBottom: 40, backgroundColor: theme.card }}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" }}>
+          <View style={{ height: Dimensions.get("window").height * 0.85, borderTopLeftRadius: 24, borderTopRightRadius: 24, borderWidth: 1, borderBottomWidth: 0, borderColor: theme.border, padding: 24, paddingBottom: 40, backgroundColor: theme.card }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <Text style={{ fontSize: 18, fontWeight: "bold", color: theme.foreground }}>나의 토템</Text>
                 <View style={{ flexDirection: "row", gap: 12 }}>
@@ -720,8 +720,7 @@ export default function MyScreen() {
               )}
             </View>
           </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        </Modal>
 
       {/* Totem Create/Edit Modal */}
       <Modal visible={showTotemModal} transparent animationType="fade" onRequestClose={() => setShowTotemModal(false)}>
@@ -886,7 +885,7 @@ export default function MyScreen() {
       <AchievementModal visible={showAchievementModal} onClose={() => setShowAchievementModal(false)} />
 
       {/* Collection Modal */}
-      <CollectionModal visible={showCollectionModal} onClose={() => setShowCollectionModal(false)} />
+      <CollectionModal visible={showCollectionModal} onClose={() => setShowCollectionModal(false)} onSave={loadData} />
     </ScrollView>
   );
 }

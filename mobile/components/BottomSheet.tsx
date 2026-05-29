@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
-  View, Text, Pressable, StyleSheet, type DimensionValue,
-  Animated, KeyboardAvoidingView, Platform, BackHandler, PanResponder,
-  Modal,
+  View, Text, Pressable, StyleSheet,
+  Animated, BackHandler, PanResponder,
+  Modal, Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/lib/ThemeContext";
@@ -31,6 +31,15 @@ export default function BottomSheet({
   const sheetTranslateY = useRef(new Animated.Value(500)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const [shouldRender, setShouldRender] = useState(false);
+
+  // Convert percentage maxHeight to pixel value — Modal 내부에서 백분율 해석이 안전하지 않음
+  const sheetPixelMax = useMemo(() => {
+    if (typeof maxHeight === "string" && maxHeight.endsWith("%")) {
+      const pct = parseFloat(maxHeight) / 100;
+      return Dimensions.get("window").height * pct;
+    }
+    return 0;
+  }, [maxHeight]);
 
   // Wrap onClose in ref to avoid stale closures in useEffect/useCallback
   const onCloseRef = useRef(onClose);
@@ -120,16 +129,13 @@ export default function BottomSheet({
 
   const styles = useMemo(() => StyleSheet.create({
     overlay: {
-      position: "absolute",
-      top: 0, left: 0, right: 0, bottom: 0,
-      zIndex: 999,
+      flex: 1,
       justifyContent: "flex-end",
     },
     sheet: {
       backgroundColor: theme.background,
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
-      maxHeight: maxHeight as DimensionValue,
     },
     handleRow: { alignItems: "center", paddingVertical: 16 },
     handle: { width: 48, height: 5, borderRadius: 3, backgroundColor: theme.border },
@@ -146,17 +152,15 @@ export default function BottomSheet({
         </Animated.View>
 
         {/* Sheet */}
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ justifyContent: "flex-end" }}>
-          <Animated.View style={[styles.sheet, { transform: [{ translateY: sheetTranslateY }], paddingBottom: Math.max(insets.bottom, 8) }]}>
-            {showHandle && (
-              <View style={styles.handleRow} {...sheetPan.panHandlers}>
-                <View style={styles.handle} />
-              </View>
-            )}
+        <Animated.View style={[styles.sheet, { maxHeight: sheetPixelMax, transform: [{ translateY: sheetTranslateY }], paddingBottom: Math.max(insets.bottom, 8) }]}>
+          {showHandle && (
+            <View style={styles.handleRow} {...sheetPan.panHandlers}>
+              <View style={styles.handle} />
+            </View>
+          )}
 
-            {children}
-          </Animated.View>
-        </KeyboardAvoidingView>
+          {children}
+        </Animated.View>
       </View>
     </Modal>
   );

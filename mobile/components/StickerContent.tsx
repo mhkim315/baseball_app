@@ -21,15 +21,17 @@ interface Props {
   homeScore: number;
   awayRank?: string;
   homeRank?: string;
-  awayRecord?: string;
-  homeRecord?: string;
   date: string;
   scoreBoard?: ScoreBoardInn | null;
   rheb?: { away: { r: number; h: number; e: number }; home: { r: number; h: number; e: number } } | null;
   gameResult: "win" | "lose" | "draw";
-  background: "transparent" | "masking" | "receipt";
+  background: "transparent" | "sketchbook" | "retro" | "postit";
   stroke: boolean;
   showBadge: boolean;
+  showScoreboard?: boolean;
+  textColor?: string;
+  strokeColor?: string;
+  badgeBackgroundColor?: string;
   teamTag: string;
   myTag: string;
   customTag: string;
@@ -39,16 +41,20 @@ interface Props {
 const COLORS = {
   win: "#111",
   lose: "#999",
-  watermark: "#bbb",
-  divider: "#eee",
 };
 
-function MaskingOverlay() {
+function toRgba(hex: string, a: number): string {
+  const h = hex.length === 4 ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}` : hex;
+  const r = parseInt(h.slice(1, 3), 16);
+  const g = parseInt(h.slice(3, 5), 16);
+  const b = parseInt(h.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function SketchbookOverlay() {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <View style={{ flex: 1, backgroundColor: "#fff" }} />
-      <View style={StyleSheet.absoluteFill}>
-        {Array.from({ length: 200 }).map((_, i) => (
+      {Array.from({ length: 200 }).map((_, i) => (
           <View
             key={i}
             style={{
@@ -62,23 +68,102 @@ function MaskingOverlay() {
             }}
           />
         ))}
-      </View>
     </View>
   );
 }
 
-function ReceiptOverlay() {
+function RetroOverlay() {
   return (
-    <View
-      style={[StyleSheet.absoluteFill, {
-        borderWidth: 2,
-        borderColor: "#d4d4d4",
-        borderStyle: "dashed",
-        borderRadius: 14,
-        margin: 6,
-      }]}
-      pointerEvents="none"
-    />
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {/* Warm paper base tone */}
+      <View style={{ flex: 1, backgroundColor: "#f8efd9" }} />
+      {/* Aged paper grain dots — heavier texture */}
+      <View style={StyleSheet.absoluteFill}>
+        {Array.from({ length: 16 }).map((_, r) => (
+          <View key={r} style={{ flexDirection: "row" }}>
+            {Array.from({ length: 16 }).map((_, c) => (
+              <View
+                key={c}
+                style={{
+                  width: 19, height: 19,
+                  opacity: (r + c) % 2 === 0 ? 0.05 : 0.02,
+                  backgroundColor: (r + c) % 2 === 0 ? "#8b6914" : "#a0782c",
+                }}
+              />
+            ))}
+          </View>
+        ))}
+      </View>
+      {/* Paper fiber texture — uneven strands */}
+      <View style={StyleSheet.absoluteFill}>
+        {[7,23,41,59,73,91,107,121,139,157,173,191,209,227,241,259,277,
+          14,31,52,67,86,98,118,134,153,169,188,204,223,239,258,274,
+          5,29,47,64,82,103,125,142,161,179,197,215,233,251,269,283,
+        ].map((x, i) => (
+          <View
+            key={i}
+            style={{
+              position: "absolute",
+              left: x,
+              top: 8 + 11.5 * i,
+              width: (i % 4) + 1,
+              height: 1.5,
+              backgroundColor: "rgba(80,50,20,0.04)",
+              transform: [{ rotate: `${(i * 47 + 13) % 360}deg` }],
+            }}
+          />
+        ))}
+      </View>
+      {/* Speckles — tiny darker spots */}
+      <View style={StyleSheet.absoluteFill}>
+        {[33,68,105,142,178,215,252,19,56,93,130,167,204,241,278,8,45,82,119,156,193,230,267].map((x, i) => (
+          <View key={i} style={{
+            position: "absolute", left: x, top: 10 + 17.5 * i,
+            width: 1.5, height: 1.5, borderRadius: 1,
+            backgroundColor: "rgba(60,40,10,0.06)",
+          }} />
+        ))}
+      </View>
+      {/* Faded border */}
+      <View
+        style={[StyleSheet.absoluteFill, {
+          borderWidth: 1.5,
+          borderColor: "#c4a882",
+          borderRadius: 14,
+          margin: 6,
+        }]}
+      />
+    </View>
+  );
+}
+
+function PostitOverlay() {
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {/* Adhesive strip at top */}
+      <View style={{
+        position: "absolute", top: 0, left: 0, right: 0,
+        height: 14,
+        backgroundColor: "rgba(200,180,100,0.25)",
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+      }} />
+      {/* Subtle adhesive line */}
+      <View style={{
+        position: "absolute", top: 14, left: 8, right: 8,
+        height: 1,
+        backgroundColor: "rgba(180,160,80,0.2)",
+      }} />
+      {/* Fold shadow at bottom-right */}
+      <View style={{
+        position: "absolute", bottom: 0, right: 0,
+        width: 0, height: 0,
+        borderLeftWidth: 28, borderBottomWidth: 28,
+        borderLeftColor: "transparent",
+        borderBottomColor: "rgba(0,0,0,0.06)",
+        zIndex: 1,
+      }} />
+    </View>
   );
 }
 
@@ -86,25 +171,39 @@ export default function StickerContent(props: Props) {
   const {
     awayTeam, homeTeam, awayTeamColor, homeTeamColor,
     awayScore, homeScore, awayRank, homeRank,
-    awayRecord, homeRecord, date, scoreBoard, rheb,
-    gameResult, background, stroke, showBadge,
-    teamTag, myTag, customTag, stats,
+    date, scoreBoard, rheb,
+    gameResult, background, stroke, showBadge, showScoreboard, textColor, strokeColor,
+    teamTag, myTag, customTag, stats, badgeBackgroundColor,
   } = props;
+
+  const tc = textColor || "#333";
+  const isCustomColor = !!textColor;
 
   const isHomeWin = homeScore > awayScore;
   const isAwayWin = awayScore > homeScore;
-  const winnerColor = COLORS.win;
-  const loserColor = COLORS.lose;
-  const homeScoreColor = isHomeWin ? winnerColor : isAwayWin ? loserColor : COLORS.win;
-  const awayScoreColor = isAwayWin ? winnerColor : isHomeWin ? loserColor : COLORS.win;
-  const teamColor = isHomeWin ? homeTeamColor : homeTeamColor;
+  // When textColor is set, ALL text uses that color (no team-specific colors)
+  const winColor = isCustomColor ? textColor : COLORS.win;
+  const loseColor = isCustomColor ? textColor : COLORS.lose;
+  const homeScoreColor = isHomeWin ? winColor : isAwayWin ? loseColor : winColor;
+  const awayScoreColor = isAwayWin ? winColor : isHomeWin ? loseColor : winColor;
+  const awayTeamColor_ = isCustomColor ? textColor : awayTeamColor;
+  const homeTeamColor_ = isCustomColor ? textColor : homeTeamColor;
+  const tagColor = isCustomColor ? tc : "#dc2626";
+  const myTagColor = isCustomColor ? tc : "#2563eb";
+  const customTagColor = isCustomColor ? tc : "#7e57c2";
+  const badgeTextColor = isCustomColor ? tc : "#666";
+  const badgeValueColor = isCustomColor ? tc : "#111";
+  const badgeRecordColor = isCustomColor ? tc : "#999";
   const maxInnings = Math.max(scoreBoard?.away.length ?? 0, scoreBoard?.home.length ?? 0);
 
-  const strokeStyle = stroke
-    ? { textShadowColor: "#fff", textShadowOffset: { width: 0, height: 0 } as const, textShadowRadius: 1 }
+  const hasStroke = stroke && strokeColor;
+  const sc = strokeColor || "#ffffff";
+
+  const strokeStyle = hasStroke
+    ? { textShadowColor: sc, textShadowOffset: { width: 0, height: 0 } as const, textShadowRadius: 1 }
     : {};
-  const thickStroke = stroke
-    ? { textShadowColor: "#fff", textShadowOffset: { width: 0, height: 0 } as const, textShadowRadius: 2 }
+  const thickStroke = hasStroke
+    ? { textShadowColor: sc, textShadowOffset: { width: 0, height: 0 } as const, textShadowRadius: 2 }
     : {};
 
   return (
@@ -113,8 +212,9 @@ export default function StickerContent(props: Props) {
       style={{
         width: 300,
         backgroundColor: background === "transparent" ? "transparent"
-          : background === "masking" ? "#fff"
-          : "#fffbf0",
+          : background === "sketchbook" ? "#fff"
+          : background === "retro" ? "#faf3e8"
+          : "#fff9c4",
         borderRadius: 16,
         overflow: "hidden",
         elevation: background === "transparent" ? 0 : 8,
@@ -124,24 +224,25 @@ export default function StickerContent(props: Props) {
         shadowRadius: background === "transparent" ? 0 : 20,
       }}
     >
-      {background === "masking" && <MaskingOverlay />}
-      {background === "receipt" && <ReceiptOverlay />}
+      {background === "sketchbook" && <SketchbookOverlay />}
+      {background === "retro" && <RetroOverlay />}
+      {background === "postit" && <PostitOverlay />}
 
       <View style={{ padding: 24, paddingBottom: 20 }}>
         {/* ── Header: Date + Watermark ── */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <Text style={[{ fontSize: 11, color: "#999", fontWeight: "500" }, strokeStyle]}>{date}</Text>
-          <Text style={[{ fontSize: 10, color: COLORS.watermark, fontWeight: "500" }, strokeStyle]}>@fullcount.kr</Text>
+          <Text style={[{ fontSize: 11, color: tc, fontWeight: "700" }, strokeStyle]}>{date}</Text>
+          <Text style={[{ fontSize: 10, color: toRgba(tc, 0.4), fontWeight: "700" }, strokeStyle]}>@fullcount.kr</Text>
         </View>
 
         {/* ── Scoreboard ── */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           {/* Away team */}
           <View style={{ flex: 1, alignItems: "center" }}>
-            <Text style={[{ fontSize: 18, fontWeight: "900", color: awayTeamColor, letterSpacing: -0.5 }, thickStroke]}>
+            <Text style={[{ fontSize: 18, fontWeight: "900", color: awayTeamColor_, letterSpacing: -0.5 }, thickStroke]}>
               {awayTeam}
             </Text>
-            {awayRank && <Text style={[{ fontSize: 10, color: "#999", fontWeight: "500" }, strokeStyle]}>{awayRank}</Text>}
+            {awayRank && <Text style={[{ fontSize: 10, color: toRgba(tc, 0.6), fontWeight: "700" }, strokeStyle]}>{awayRank}위</Text>}
           </View>
 
           {/* Score */}
@@ -149,7 +250,7 @@ export default function StickerContent(props: Props) {
             <Text style={[{ fontSize: 36, fontWeight: "900", lineHeight: 40, color: awayScoreColor }, thickStroke]}>
               {awayScore}
             </Text>
-            <Text style={{ fontSize: 24, fontWeight: "300", color: "#ccc" }}>:</Text>
+            <Text style={{ fontSize: 24, fontWeight: "700", color: toRgba(tc, 0.3) }}>:</Text>
             <Text style={[{ fontSize: 36, fontWeight: "900", lineHeight: 40, color: homeScoreColor }, thickStroke]}>
               {homeScore}
             </Text>
@@ -157,38 +258,38 @@ export default function StickerContent(props: Props) {
 
           {/* Home team */}
           <View style={{ flex: 1, alignItems: "center" }}>
-            <Text style={[{ fontSize: 18, fontWeight: "900", color: homeTeamColor, letterSpacing: -0.5 }, thickStroke]}>
+            <Text style={[{ fontSize: 18, fontWeight: "900", color: homeTeamColor_, letterSpacing: -0.5 }, thickStroke]}>
               {homeTeam}
             </Text>
-            {homeRank && <Text style={[{ fontSize: 10, color: "#999", fontWeight: "500" }, strokeStyle]}>{homeRank}</Text>}
+            {homeRank && <Text style={[{ fontSize: 10, color: toRgba(tc, 0.6), fontWeight: "700" }, strokeStyle]}>{homeRank}위</Text>}
           </View>
         </View>
 
         {/* ── Innings Scoreboard ── */}
-        {scoreBoard && (
+        {scoreBoard && showScoreboard !== false && (
           <View style={{ marginBottom: 10 }}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               {/* Team label column */}
               <View style={{ width: 36, paddingRight: 8 }}>
-                <Text style={[{ fontSize: 9, color: "#999", fontWeight: "600" }, strokeStyle]}></Text>
+                <Text style={[{ fontSize: 9, color: "#999", fontWeight: "700" }, strokeStyle]}></Text>
               </View>
               {/* Inning headers 1-9 */}
               {Array.from({ length: maxInnings }, (_, i) => (
-                <Text key={`h-${i}`} style={[s.innCell, s.innHeader, strokeStyle]}>{i + 1}</Text>
+                <Text key={`h-${i}`} style={[s.innCell, s.innHeader, { color: tc, borderBottomColor: toRgba(tc, 0.2) }, strokeStyle]}>{i + 1}</Text>
               ))}
               {/* R, H, E */}
-              <Text style={[s.innCell, s.innHeader, s.rCol, strokeStyle]}>R</Text>
-              <Text style={[s.innCell, s.innHeader, s.heCol, strokeStyle]}>H</Text>
-              <Text style={[s.innCell, s.innHeader, s.heCol, strokeStyle]}>E</Text>
+              <Text style={[s.innCell, s.innHeader, s.rCol, { color: tc, borderBottomColor: toRgba(tc, 0.2) }, strokeStyle]}>R</Text>
+              <Text style={[s.innCell, s.innHeader, s.heCol, { color: tc, borderBottomColor: toRgba(tc, 0.2) }, strokeStyle]}>H</Text>
+              <Text style={[s.innCell, s.innHeader, s.heCol, { color: tc, borderBottomColor: toRgba(tc, 0.2) }, strokeStyle]}>E</Text>
             </View>
 
             {/* Away row */}
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={[s.teamCol, { color: awayTeamColor }, thickStroke]}>{awayTeam}</Text>
+              <Text style={[s.teamCol, { color: awayTeamColor_ }, thickStroke]}>{awayTeam}</Text>
               {Array.from({ length: maxInnings }, (_, i) => {
                 const val = scoreBoard.away[i];
                 return (
-                  <Text key={`a-${i}`} style={[s.innCell, s.innVal, strokeStyle]}>
+                  <Text key={`a-${i}`} style={[s.innCell, s.innVal, { color: tc }, strokeStyle]}>
                     {val != null ? val : ""}
                   </Text>
                 );
@@ -196,27 +297,26 @@ export default function StickerContent(props: Props) {
               <Text style={[s.innCell, s.innVal, s.rCol, { color: awayScoreColor }, thickStroke]}>
                 {rheb?.away.r ?? awayScore}
               </Text>
-              <Text style={[s.innCell, s.heVal, strokeStyle]}>{rheb?.away.h ?? ""}</Text>
-              <Text style={[s.innCell, s.heVal, strokeStyle]}>{rheb?.away.e ?? ""}</Text>
+              <Text style={[s.innCell, s.heVal, { color: tc }, strokeStyle]}>{rheb?.away.h ?? ""}</Text>
+              <Text style={[s.innCell, s.heVal, { color: tc }, strokeStyle]}>{rheb?.away.e ?? ""}</Text>
             </View>
 
             {/* Home row */}
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={[s.teamCol, { color: homeTeamColor }, thickStroke]}>{homeTeam}</Text>
+              <Text style={[s.teamCol, { color: homeTeamColor_ }, thickStroke]}>{homeTeam}</Text>
               {Array.from({ length: maxInnings }, (_, i) => {
                 const val = scoreBoard.home[i];
-                const isEmpty = val == null && i >= (scoreBoard.away.length ?? 0);
                 return (
-                  <Text key={`h-${i}`} style={[s.innCell, s.innVal, strokeStyle]}>
-                    {val != null ? val : isEmpty ? "" : ""}
+                  <Text key={`h-${i}`} style={[s.innCell, s.innVal, { color: tc }, strokeStyle]}>
+                    {val != null ? val : ""}
                   </Text>
                 );
               })}
               <Text style={[s.innCell, s.innVal, s.rCol, { color: homeScoreColor }, thickStroke]}>
                 {rheb?.home.r ?? homeScore}
               </Text>
-              <Text style={[s.innCell, s.heVal, strokeStyle]}>{rheb?.home.h ?? ""}</Text>
-              <Text style={[s.innCell, s.heVal, strokeStyle]}>{rheb?.home.e ?? ""}</Text>
+              <Text style={[s.innCell, s.heVal, { color: tc }, strokeStyle]}>{rheb?.home.h ?? ""}</Text>
+              <Text style={[s.innCell, s.heVal, { color: tc }, strokeStyle]}>{rheb?.home.e ?? ""}</Text>
             </View>
           </View>
         )}
@@ -225,30 +325,32 @@ export default function StickerContent(props: Props) {
         {showBadge && stats && (
           <View style={{
             marginTop: 12, padding: 10, borderRadius: 10,
-            backgroundColor: "#f8fafc", borderWidth: 1, borderColor: "#e2e8f0",
+            backgroundColor: badgeBackgroundColor === "" ? "transparent" : (badgeBackgroundColor || "#f8fafc"),
+            borderWidth: badgeBackgroundColor ? 0 : 1,
+            borderColor: badgeBackgroundColor ? "transparent" : "#e2e8f0",
             flexDirection: "row", alignItems: "center", gap: 6,
           }}>
-            <Text style={[{ fontSize: 16 }, strokeStyle]}>🏆</Text>
+            <Text style={[{ fontSize: 16 }]}>🏆</Text>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "baseline", flexWrap: "wrap" }}>
-                <Text style={[{ fontSize: 11, color: "#666" }, strokeStyle]}>직관 승률 </Text>
-                <Text style={[{ fontSize: 14, fontWeight: "900", color: "#111" }, thickStroke]}>
+                <Text style={[{ fontSize: 11, color: badgeTextColor, fontWeight: "700" }]}>직관 승률 </Text>
+                <Text style={[{ fontSize: 14, fontWeight: "900", color: badgeValueColor }]}>
                   {Math.round(stats.winRate * 100)}%
                 </Text>
-                <Text style={[{ fontSize: 11, color: "#999", marginLeft: 6 }, strokeStyle]}>
+                <Text style={[{ fontSize: 11, color: badgeRecordColor, marginLeft: 6, fontWeight: "700" }]}>
                   ({stats.wins}승 {stats.losses}패{stats.draws > 0 ? ` ${stats.draws}무` : ""})
                 </Text>
               </View>
               {/* Hashtags */}
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 2 }}>
                 {teamTag ? (
-                  <Text style={[{ fontSize: 11, color: "#dc2626", fontWeight: "700" }, strokeStyle]}>#{teamTag}</Text>
+                  <Text style={[{ fontSize: 11, color: tagColor, fontWeight: "700" }]}>#{teamTag}</Text>
                 ) : null}
                 {myTag ? (
-                  <Text style={[{ fontSize: 11, color: "#2563eb", fontWeight: "700" }, strokeStyle]}>#{myTag}</Text>
+                  <Text style={[{ fontSize: 11, color: myTagColor, fontWeight: "700" }]}>#{myTag}</Text>
                 ) : null}
                 {customTag ? (
-                  <Text style={[{ fontSize: 11, color: "#7e57c2", fontWeight: "700" }, strokeStyle]}>#{customTag}</Text>
+                  <Text style={[{ fontSize: 11, color: customTagColor, fontWeight: "700" }]}>#{customTag}</Text>
                 ) : null}
               </View>
             </View>
@@ -260,11 +362,11 @@ export default function StickerContent(props: Props) {
 }
 
 const s = StyleSheet.create({
-  innCell: { textAlign: "center", paddingHorizontal: 3, paddingVertical: 3, fontSize: 10, fontWeight: "600" },
-  innHeader: { color: "#999", fontSize: 9, fontWeight: "600", borderBottomWidth: 1, borderBottomColor: "#eee" },
-  innVal: { fontSize: 11, fontWeight: "600" },
-  teamCol: { textAlign: "left", fontWeight: "900", fontSize: 12, paddingRight: 8, minWidth: 36 },
-  rCol: { fontWeight: "900", fontSize: 12 },
-  heCol: { color: "#ccc", fontSize: 9 },
-  heVal: { color: "#bbb", fontSize: 9, fontWeight: "500" },
+  innCell: { flex: 1, textAlign: "center", paddingVertical: 3, fontSize: 10, fontWeight: "700" },
+  innHeader: { color: "#999", fontSize: 10, fontWeight: "700", borderBottomWidth: 1, borderBottomColor: "#eee" },
+  innVal: { fontSize: 10, fontWeight: "700" },
+  teamCol: { textAlign: "left", fontWeight: "900", fontSize: 12, paddingRight: 8, width: 36 },
+  rCol: { fontWeight: "900", fontSize: 10 },
+  heCol: { color: "#ccc", fontSize: 10, fontWeight: "700" },
+  heVal: { color: "#bbb", fontSize: 10, fontWeight: "700" },
 });
