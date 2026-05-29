@@ -12,6 +12,7 @@ import { TeamBadge } from "@/components/TeamBadge";
 import { cachedDailyScores, cachedScheduleByMonth } from "@/lib/gameCache";
 import { resolveGames } from "@/lib/resolveGames";
 import DiaryEntryModal, { type GameOption } from "@/components/DiaryEntryModal";
+import StickerModal from "@/components/StickerModal";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { resolveVenue } from "@/lib/stadiumData";
@@ -53,6 +54,7 @@ export default function GameDetailScreen() {
   const [showDiaryModal, setShowDiaryModal] = useState(false);
   const [diaryGamePreset, setDiaryGamePreset] = useState<GameOption | null>(null);
   const [diaryPresetDate, setDiaryPresetDate] = useState<Date | null>(null);
+  const [showStickerModal, setShowStickerModal] = useState(false);
 
   const load = useCallback(() => {
     if (!gid) return;
@@ -331,6 +333,11 @@ export default function GameDetailScreen() {
     setShowDiaryModal(true);
   }, [detail, gid]);
 
+  const handleOpenSticker = useCallback(() => {
+    if (!detail) return;
+    setShowStickerModal(true);
+  }, [detail]);
+
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
     activityContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
@@ -452,6 +459,20 @@ export default function GameDetailScreen() {
       fontSize: 16,
       fontWeight: "700",
       color: theme.background,
+    },
+
+    // Sticker button
+    stickerBtn: {
+      backgroundColor: theme.muted,
+      borderRadius: 16,
+      paddingVertical: 14,
+      alignItems: "center",
+      marginTop: 8,
+    },
+    stickerBtnText: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: theme.foreground,
     },
 
     // Footer
@@ -837,6 +858,12 @@ export default function GameDetailScreen() {
           <Text style={styles.diaryRecordText}>직관 기록하기</Text>
         </Pressable>
 
+        {isFinished && gs && (
+          <Pressable style={styles.stickerBtn} onPress={handleOpenSticker}>
+            <Text style={styles.stickerBtnText}>스티커 만들기</Text>
+          </Pressable>
+        )}
+
         {/* Footer */}
         <Text style={styles.footer}>
           {hasLineup
@@ -851,6 +878,20 @@ export default function GameDetailScreen() {
         onSaved={() => { setShowDiaryModal(false); router.push("/(tabs)/diary"); }}
         presetGame={diaryGamePreset}
         presetDate={diaryPresetDate}
+      />
+
+      <StickerModal
+        visible={showStickerModal}
+        onClose={() => setShowStickerModal(false)}
+        awayTeam={detail?.awayTeam ?? ""}
+        homeTeam={detail?.homeTeam ?? ""}
+        awayScore={gs?.away ?? 0}
+        homeScore={gs?.home ?? 0}
+        awayRank={previewData ? String(previewData.awayRank) : undefined}
+        homeRank={previewData ? String(previewData.homeRank) : undefined}
+        date={detail?.date ?? ""}
+        scoreBoard={detail?.scoreBoard?.inn ? { away: detail.scoreBoard.inn.away, home: detail.scoreBoard.inn.home } : null}
+        rheb={detail?.scoreBoard?.rheb ?? null}
       />
     </View>
   );
