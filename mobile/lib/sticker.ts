@@ -132,8 +132,11 @@ export function resolveHashtags(
     isHome: boolean | null;
     isFirstWin: boolean;
     isFirstGame: boolean;
+    statsMode?: "live" | "broadcast";
   },
 ): HashtagResult {
+  const modeLabel = context.statsMode === "broadcast" ? "집관" : "직관";
+
   // ── 패배: 모든 자동 태그 숨김 ──
   if (gameResult === "lose") {
     return { teamTag: "", myTag: "" };
@@ -150,20 +153,20 @@ export function resolveHashtags(
     } else if (teamStreak.type === "W" && teamStreak.count >= 1) {
       teamTag = `${teamStreak.count + 1}연승가자!`;
     }
-    // 내 태그: 현재 직관 streak 유지
+    // 내 태그: 현재 mode streak 유지
     if (myStreak.type === "W" && myStreak.count >= 2) {
-      myTag = `직관${myStreak.count}연승`;
+      myTag = `${modeLabel}${myStreak.count}연승`;
     }
     return { teamTag, myTag };
   }
 
   // ── 나의 태그 (승리/무승부 공통) ──
   if (context.isFirstGame) {
-    myTag = "첫직관";
+    myTag = `첫${modeLabel}`;
   } else if (context.isFirstWin) {
-    myTag = "직관첫승";
+    myTag = `${modeLabel}첫승`;
   } else if (myStreak.type === "W" && myStreak.count >= 2) {
-    myTag = `직관${myStreak.count}연승`;
+    myTag = `${modeLabel}${myStreak.count}연승`;
   } else if (myStreak.type === "W" && myStreak.count === 1) {
     if (context.isHome === true) myTag = "홈승리";
     else if (context.isHome === false) myTag = "원정승리";

@@ -251,7 +251,7 @@ export default function StickerModal({
       rawTeamStreak,
       { type: myStreakResult.currentType as "W" | "L" | null, count: myStreakResult.currentCount },
       actualResult,
-      { isHome: true, isFirstWin, isFirstGame },
+      { isHome: true, isFirstWin, isFirstGame, statsMode },
     );
 
     const isOtherGame = myTeam && homeTeam !== myTeam && awayTeam !== myTeam;
