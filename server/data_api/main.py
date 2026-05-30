@@ -8,6 +8,7 @@ import time
 from datetime import datetime, timedelta, date, time as dt_time
 from pathlib import Path
 from collections import defaultdict
+from typing import Optional
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -316,7 +317,7 @@ def get_schedule(year: int = None):
     return data
 
 
-def _get_schedule_for_month(month: int, year: int | None = None) -> dict | None:
+def _get_schedule_for_month(month: int, year: Optional[int] = None) -> Optional[dict]:
     """Return schedule dict for month/year, or None if data unavailable."""
     if month < 1 or month > 12:
         return None
@@ -436,7 +437,7 @@ TEAM_NAME_MAP = {
 GAME_ID_REGEX = re.compile(r"(\d{8})-([A-Z]{2})([A-Z]{2})-(\d)")
 
 
-def _build_game_detail(game_id: str) -> dict | None:
+def _build_game_detail(game_id: str) -> Optional[dict]:
     """Build game detail dict from game ID. Returns None if data unavailable."""
     m = GAME_ID_REGEX.match(game_id)
     if not m:
