@@ -316,15 +316,14 @@ def get_schedule(year: int = None):
     return data
 
 
-@app.get("/schedule/{month}")
-def get_schedule_by_month(month: int, year: int = None):
+def _get_schedule_for_month(month: int, year: int | None = None) -> dict | None:
+    """Return schedule dict for month/year, or None if data unavailable."""
     if month < 1 or month > 12:
-        return JSONResponse({"error": "Invalid month. Must be 1-12"}, status_code=400)
-
+        return None
     if year is not None:
         path = DATA_DIR / "seasons" / str(year) / "regular-season.json"
         if not path.exists():
-            return JSONResponse({"error": "Data not found"}, status_code=404)
+            return None
         with open(path, "r", encoding="utf-8") as f:
             reg = json.load(f)
         result = []
@@ -335,22 +334,30 @@ def get_schedule_by_month(month: int, year: int = None):
                 d = int(ds[6:8])
                 if m == month:
                     result.append({
-                        "date": ds,
-                        "month": m,
-                        "day": d,
+                        "date": ds, "month": m, "day": d,
                         "venue": g.get("venue", ""),
                         "away": g.get("away", ""),
                         "home": g.get("home", ""),
                         "time": g.get("time"),
                     })
         return {"year": year, "month": month, "games": result}
-
-    year = date.today().year
-    data = load_json(f"kbo_schedule_{year}.json")
+    # No year provided — use current year's schedule JSON
+    year_default = date.today().year
+    data = load_json(f"kbo_schedule_{year_default}.json")
     if data is None:
-        return JSONResponse({"error": "Data not found"}, status_code=404)
+        return None
     games = [g for g in data.get("games", []) if g.get("month") == month]
     return {"year": data.get("year"), "month": month, "games": games}
+
+
+@app.get("/schedule/{month}")
+def get_schedule_by_month(month: int, year: int = None):
+    if month < 1 or month > 12:
+        return JSONResponse({"error": "Invalid month. Must be 1-12"}, status_code=400)
+    result = _get_schedule_for_month(month, year)
+    if result is not None:
+        return result
+    return JSONResponse({"error": "Data not found"}, status_code=404)
 
 @app.get("/seasons")
 def get_seasons():
@@ -429,21 +436,21 @@ TEAM_NAME_MAP = {
 GAME_ID_REGEX = re.compile(r"(\d{8})-([A-Z]{2})([A-Z]{2})-(\d)")
 
 
-@app.get("/game-detail/{game_id}")
-def get_game_detail(game_id: str):
+def _build_game_detail(game_id: str) -> dict | None:
+    """Build game detail dict from game ID. Returns None if data unavailable."""
     m = GAME_ID_REGEX.match(game_id)
     if not m:
-        return JSONResponse({"error": "Invalid game ID format"}, status_code=400)
+        return None
     date_str_raw = m.group(1)
     date_str = f"{date_str_raw[:4]}-{date_str_raw[4:6]}-{date_str_raw[6:8]}"
     away_code = m.group(2)
     home_code = m.group(3)
-    game_seq = int(m.group(4))  # 0=single/DH1, 1=DH2
+    game_seq = int(m.group(4))
 
     away_team = TEAM_CODE_MAP.get(away_code)
     home_team = TEAM_CODE_MAP.get(home_code)
     if not away_team or not home_team:
-        return JSONResponse({"error": "Unknown team code"}, status_code=404)
+        return None
 
     today = load_json("today-games.json")
     scores = load_json("daily-scores.json")
@@ -467,7 +474,6 @@ def get_game_detail(game_id: str):
             if len(matchup_games) == 1:
                 game_data = matchup_games[0]
             elif len(matchup_games) > 1:
-                # relative_idx: 이 매치업이 day_games 내에서 몇 번째인지 (0=첫번째)
                 relative_idx = sum(
                     1 for i, g in enumerate(day_games)
                     if g.get("home") == home_kr and g.get("away") == away_kr and i < game_seq
@@ -477,8 +483,7 @@ def get_game_detail(game_id: str):
                     matchup_games[relative_idx] if relative_idx < len(matchup_games) else matchup_games[0]
                 )
 
-    # DH 감지: game-records 파일 선택을 위해
-    dh_game_number = 0  # 0=단일/DH1차, 1=DH2차
+    dh_game_number = 0
     if scores and date_str in scores.get("dates", {}):
         home_kr = TEAM_NAME_MAP.get(home_team)
         away_kr = TEAM_NAME_MAP.get(away_team)
@@ -489,7 +494,7 @@ def get_game_detail(game_id: str):
                 1 for i, g in enumerate(day_games)
                 if g.get("home") == home_kr and g.get("away") == away_kr and i < game_seq
             )
-            dh_game_number = relative_idx  # 0=1차전, 1=2차전
+            dh_game_number = relative_idx
 
     lineup = {"home": [], "away": []}
     starters = {"home": None, "away": None}
@@ -600,6 +605,64 @@ def get_game_detail(game_id: str):
                 }
 
     return result
+
+
+@app.get("/game-detail/{game_id}")
+def get_game_detail(game_id: str):
+    result = _build_game_detail(game_id)
+    if result is not None:
+        return result
+    # Return 400/404 for invalid format or unknown teams (re-run regex parsing for error messages)
+    m = GAME_ID_REGEX.match(game_id)
+    if not m:
+        return JSONResponse({"error": "Invalid game ID format"}, status_code=400)
+    if not TEAM_CODE_MAP.get(m.group(2)) or not TEAM_CODE_MAP.get(m.group(3)):
+        return JSONResponse({"error": "Unknown team code"}, status_code=404)
+    return JSONResponse({"error": "Game detail not found"}, status_code=404)
+
+
+# --- Onboarding data (consolidated endpoint) ---
+
+
+@app.get("/onboarding-data")
+def get_onboarding_data():
+    """Consolidated data for onboarding — replaces 8 individual API calls with 1."""
+    today = load_json("today-games.json")
+    if today is None:
+        return JSONResponse({"error": "Data not found"}, status_code=404)
+
+    today_date = date.today()
+
+    # Recent 14 days of scores
+    scores = load_json("daily-scores.json")
+    recent_scores: dict[str, list] = {}
+    if scores:
+        dates_dict = scores.get("dates", {})
+        for i in range(14):
+            d = (today_date - timedelta(days=i)).isoformat()
+            if d in dates_dict:
+                recent_scores[d] = dates_dict[d]
+
+    # Current month schedule
+    current_month = today_date.month
+    current_year = today_date.year
+    schedule = _get_schedule_for_month(current_month, current_year)
+
+    # Game details for today's games (partial failure allowed)
+    game_details: dict[str, dict] = {}
+    for game in today.get("games", []):
+        game_id = game.get("id")
+        if game_id:
+            detail = _build_game_detail(game_id)
+            if detail:
+                game_details[game_id] = detail
+
+    return {
+        "todayGames": today,
+        "recentScores": recent_scores,
+        "schedule": schedule,
+        "todayGameDetails": game_details,
+    }
 
 
 # --- Score summary (cached) ---

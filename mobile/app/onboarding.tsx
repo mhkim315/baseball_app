@@ -6,7 +6,7 @@ import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
-import { prefetchInitialData } from "@/lib/prefetch";
+import { prefetchOnboardingData } from "@/lib/prefetch";
 
 export default function OnboardingScreen() {
   const { theme, isDark } = useTheme();
@@ -15,7 +15,7 @@ export default function OnboardingScreen() {
   const [selectedTeam, setSelectedTeam] = useState<string>("");
 
   useEffect(() => {
-    prefetchInitialData();
+    prefetchOnboardingData();
   }, []);
 
   const handleStart = async () => {

@@ -180,6 +180,13 @@ export interface TeamTicketPolicy {
   tiers: TicketTier[];
 }
 
+export interface OnboardingData {
+  todayGames: { date: string; games: TodayGame[]; nextGames?: TodayGame[] };
+  recentScores: Record<string, ScoreEntry[]>;
+  schedule: { year: number; month: number; games: ScheduleGame[] } | null;
+  todayGameDetails: Record<string, GameDetail>;
+}
+
 export interface ScheduleGame {
   date: string;
   month: number;
