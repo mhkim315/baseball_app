@@ -8,6 +8,7 @@ import {
   computeOpponentStats,
   computeHomeAwayStats,
   computeDayOfWeekStats,
+  computeAttendanceScoring,
 } from "@/lib/stats";
 
 // ─── Helpers ────────────────────────────────────────────────
@@ -369,5 +370,120 @@ describe("computeDayOfWeekStats", () => {
     for (const s of stats) {
       expect(s.total).toBe(0);
     }
+  });
+});
+
+// ─── computeAttendanceScoring ───────────────────────────────
+
+describe("computeAttendanceScoring", () => {
+  beforeEach(() => resetId());
+
+  function homeWin(our: number, opp: number, overrides = {}) {
+    // doosan at home (game_id: SKOB → away=SK, home=OB=doosan)
+    return baseRecord({
+      game_id: gid("SK", "OB"),
+      cheered_team: "doosan",
+      score_home: our, score_away: opp,
+      is_win: null,
+      ...overrides,
+    });
+  }
+  function awayWin(our: number, opp: number, overrides = {}) {
+    // doosan away (game_id: OBLG → away=OB=doosan, home=LG)
+    return baseRecord({
+      game_id: gid("OB", "LG"),
+      cheered_team: "doosan",
+      score_home: opp, score_away: our,
+      is_win: null,
+      ...overrides,
+    });
+  }
+
+  it("returns null when fewer than 5 games", () => {
+    const records = [homeWin(5, 3, { id: 1, date: "2026.05.01" })];
+    expect(computeAttendanceScoring(records, "doosan")).toBeNull();
+  });
+
+  it("returns null with 0 records", () => {
+    expect(computeAttendanceScoring([], "doosan")).toBeNull();
+  });
+
+  it("computes avg runs for home and away combined", () => {
+    const records = [
+      homeWin(5, 3, { id: 1, date: "2026.05.01" }),
+      homeWin(4, 2, { id: 2, date: "2026.05.02" }),
+      homeWin(3, 1, { id: 3, date: "2026.05.03" }),
+      awayWin(6, 4, { id: 4, date: "2026.05.04" }), // doosan scored 6, opponent 4
+      awayWin(2, 1, { id: 5, date: "2026.05.05" }), // doosan scored 2, opponent 1
+    ];
+    // our runs: 5+4+3+6+2 = 20, opponent: 3+2+1+4+1 = 11
+    const s = computeAttendanceScoring(records, "doosan");
+    expect(s).not.toBeNull();
+    expect(s!.ourAvgRuns).toBeCloseTo(4, 1);
+    expect(s!.opponentAvgRuns).toBeCloseTo(2.2, 1);
+    expect(s!.gameCount).toBe(5);
+  });
+
+  it("filters by cheered_team correctly", () => {
+    const records = [
+      homeWin(5, 3, { id: 1, date: "2026.05.01" }),
+      // lg home vs doosan → lg wins, cheered_team=lg (not counted for doosan)
+      baseRecord({
+        id: 2, date: "2026.05.02",
+        game_id: gid("OB", "LG"),
+        cheered_team: "lg",
+        score_home: 5, score_away: 3,
+        is_win: null,
+      }),
+    ];
+    expect(computeAttendanceScoring(records, "doosan")).toBeNull(); // only 1 doosan game
+  });
+});
+
+// ─── computeStreakStats edge cases ──────────────────────────
+
+describe("computeStreakStats — edge cases", () => {
+  beforeEach(() => resetId());
+
+  it("handles records in reverse DB order (date DESC, id DESC)", () => {
+    // Simulates what getJikgwanRecords() returns
+    const records = [
+      loss({ id: 6, date: "2026.05.06", game_id: gid("OB", "LG", "20260506") }),
+      loss({ id: 5, date: "2026.05.05", game_id: gid("OB", "LG", "20260505") }),
+      win({ id: 4, date: "2026.05.04", game_id: gid("OB", "LG", "20260504") }),
+      win({ id: 3, date: "2026.05.03", game_id: gid("OB", "LG", "20260503") }),
+      win({ id: 2, date: "2026.05.02", game_id: gid("OB", "LG", "20260502") }),
+      win({ id: 1, date: "2026.05.01", game_id: gid("OB", "LG", "20260501") }),
+    ];
+    const s = computeStreakStats(records);
+    expect(s.currentType).toBe("L");
+    expect(s.currentCount).toBe(2);
+    expect(s.longestWin).toBe(4);
+    expect(s.longestLose).toBe(2);
+  });
+
+  it("deduplicates same game_id (same game recorded multiple times)", () => {
+    // same game appears twice with different ids (user re-saved?)
+    const records = [
+      win({ id: 1, date: "2026.05.01", game_id: gid("OB", "LG", "20260501") }),
+      win({ id: 2, date: "2026.05.01", game_id: gid("OB", "LG", "20260501") }), // duplicate
+      win({ id: 3, date: "2026.05.02", game_id: gid("OB", "LG", "20260502") }),
+    ];
+    const s = computeStreakStats(records);
+    expect(s.currentCount).toBe(2); // not 3
+    expect(s.longestWin).toBe(2);
+  });
+
+  it("all losses streak", () => {
+    const records = [
+      loss({ id: 1, date: "2026.05.01", game_id: gid("OB", "LG", "20260501") }),
+      loss({ id: 2, date: "2026.05.02", game_id: gid("OB", "LG", "20260502") }),
+      loss({ id: 3, date: "2026.05.03", game_id: gid("OB", "LG", "20260503") }),
+    ];
+    const s = computeStreakStats(records);
+    expect(s.currentType).toBe("L");
+    expect(s.currentCount).toBe(3);
+    expect(s.longestWin).toBe(0);
+    expect(s.longestLose).toBe(3);
   });
 });
