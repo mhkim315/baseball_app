@@ -542,12 +542,13 @@ export default function GameDetailScreen() {
   const startTime = new Date(y, m - 1, d, gh, gm, 0, 0);
   const gameHasStarted = new Date() >= startTime;
 
-  const isFinished = !isCancelled && !isFuture && gameHasStarted && (
-    (detail.gameInfo?.status === "finished" && (!isToday || hasDefinitiveFinish)) ||
-    (isGameActive && !isToday)
+  const isFinished = !isCancelled && !isFuture && (
+    detail.gameInfo?.status === "finished" && (!isToday || hasDefinitiveFinish) ||
+    (isGameActive && !isToday && gameHasStarted)
   );
-  const isLive = !isCancelled && !isFinished && gameHasStarted && (
-    detail.gameInfo?.status === "live" || isToday
+  const isLive = !isCancelled && !isFinished && (
+    detail.gameInfo?.status === "live" && !isFuture ||
+    (isToday && gameHasStarted)
   );
   const isBeforeGame = !isFinished && !isLive && !isCancelled;
   const hasLineup = !isBeyondTomorrow && homeLineup.length > 0 && awayLineup.length > 0;

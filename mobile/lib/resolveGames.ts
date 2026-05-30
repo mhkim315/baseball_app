@@ -122,8 +122,7 @@ export function resolveGames(
     } else if (
       today?.status &&
       isLiveStatus(today.status) &&
-      !isFuture &&
-      gameHasStarted
+      !isFuture
     ) {
       status = "live";
     } else if (isToday && !score?.cancelled && gameHasStarted) {
