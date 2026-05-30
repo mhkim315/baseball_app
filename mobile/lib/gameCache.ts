@@ -294,7 +294,7 @@ export async function cachedTodayGames(): Promise<{ games: TodayGame[]; nextGame
 
 // Game detail — moderate TTL
 export async function cachedGameDetail(gameId: string): Promise<GameDetail | null> {
-  return fetchWithCache(cacheKey("game", gameId), 600_000, () =>
+  return fetchWithCache(cacheKey("game", gameId), 300_000, () =>
     apiGameDetail(gameId)
   );
 }

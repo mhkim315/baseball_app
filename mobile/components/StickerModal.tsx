@@ -7,6 +7,7 @@ import * as Clipboard from "expo-clipboard";
 import * as Sharing from "expo-sharing";
 import { computeTeamStreak, resolveHashtags, type TeamStreakInfo } from "@/lib/sticker";
 import { getJikgwanRecords } from "@/lib/db";
+import { getInningInfo } from "@shared/gameStatus";
 import type { JikgwanRecord } from "@/lib/db";
 import { computeStreakStats, computeDiaryStats } from "@/lib/stats";
 import { resolveIsWin } from "@/lib/expenseStats";
@@ -38,6 +39,9 @@ interface StickerModalProps {
   date: string;
   scoreBoard?: ScoreBoardInn | null;
   rheb?: RHEB | null;
+  isLive?: boolean;
+  isFinished?: boolean;
+  liveInning?: { inning: number; isTop: boolean } | null;
 }
 
 type BgKey = "transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon";
@@ -53,10 +57,62 @@ const BG_OPTIONS: { key: BgKey; label: string }[] = [
 export default function StickerModal({
   visible, onClose, awayTeam, homeTeam, awayScore, homeScore,
   awayRank, homeRank, date, scoreBoard, rheb,
+  isLive, isFinished, liveInning,
 }: StickerModalProps) {
   const { theme } = useTheme();
   const { myTeam } = useTeam();
   const viewRef = useRef<View>(null);
+
+  // Live Score Controls
+  const [localScoreBoard, setLocalScoreBoard] = useState<ScoreBoardInn | null>(null);
+  const [localAwayScore, setLocalAwayScore] = useState(0);
+  const [localHomeScore, setLocalHomeScore] = useState(0);
+  const [liveTimestamp, setLiveTimestamp] = useState("");
+
+  useEffect(() => {
+    if (scoreBoard) {
+      setLocalScoreBoard(JSON.parse(JSON.stringify(scoreBoard)));
+      setLocalAwayScore(awayScore);
+      setLocalHomeScore(homeScore);
+    } else {
+      setLocalScoreBoard(null);
+      setLocalAwayScore(awayScore);
+      setLocalHomeScore(homeScore);
+    }
+  }, [scoreBoard, awayScore, homeScore]);
+
+  const adjustScore = useCallback((team: "away" | "home") => {
+    setLocalScoreBoard((prev) => {
+      if (!prev) return prev;
+      const info = getInningInfo(prev);
+      if (!info) return prev;
+
+      const battingSide = info.isTop ? "away" : "home";
+      const next = JSON.parse(JSON.stringify(prev)) as ScoreBoardInn;
+
+      if (team === battingSide) {
+        // Case 1: 공격팀 득점 -> 같은 이닝 유지
+        const arr = next[team];
+        const currentScore = arr[arr.length - 1] ?? 0;
+        arr[arr.length - 1] = currentScore + 1;
+      } else {
+        // Case 2: 수비팀 득점 -> 공수교대
+        next[team].push(1);
+      }
+      return next;
+    });
+
+    if (team === "away") setLocalAwayScore((prev) => prev + 1);
+    if (team === "home") setLocalHomeScore((prev) => prev + 1);
+  }, []);
+
+  const handleResetScore = useCallback(() => {
+    if (scoreBoard) {
+      setLocalScoreBoard(JSON.parse(JSON.stringify(scoreBoard)));
+      setLocalAwayScore(awayScore);
+      setLocalHomeScore(homeScore);
+    }
+  }, [scoreBoard, awayScore, homeScore]);
 
   // Editor controls
   const [background, setBackground] = useState<"transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon">("transparent");
@@ -86,10 +142,11 @@ export default function StickerModal({
   const homeDisplay = TEAM_COLORS[homeTeam]?.shortName ?? homeTeam;
 
   // Determine actual game result from scores (home team perspective)
-  const actualResult = useMemo((): "win" | "lose" | "draw" => {
+  const actualResult = useMemo((): "win" | "lose" | "draw" | null => {
+    if (isLive) return null;
     if (homeScore === awayScore) return "draw";
     return homeScore > awayScore ? "win" : "lose";
-  }, [homeScore, awayScore]);
+  }, [homeScore, awayScore, isLive]);
 
   // Target team: myTeam if playing in this game, otherwise homeTeam
   const targetTeam = useMemo(() => {
@@ -101,6 +158,8 @@ export default function StickerModal({
   useEffect(() => {
     if (!visible) return;
     setLoading(true);
+    const now = new Date();
+    setLiveTimestamp(`${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`);
     let cancelled = false;
 
     (async () => {
@@ -159,7 +218,7 @@ export default function StickerModal({
       three_line_3: null,
       frame_style: "",
       stadium: null,
-      is_win: actualResult === "win" ? 1 : actualResult === "draw" ? 0 : -1,
+      is_win: actualResult === "win" ? 1 : actualResult === "draw" ? 0 : actualResult === "lose" ? -1 : null,
       cheered_team: targetTeam,
       is_live: statsMode === "live" ? 1 : 0,
       seat: null,
@@ -193,8 +252,8 @@ export default function StickerModal({
       setTeamTag("책임없는쾌락");
       setMyTag("아무나이겨라");
     } else {
-      setTeamTag(hashtags.teamTag);
-      setMyTag(hashtags.myTag);
+      setTeamTag(hashtags.teamTag || (isLive ? "직관중" : ""));
+      setMyTag(hashtags.myTag || (isLive ? "야구장" : ""));
     }
     setCustomTag("");
   }, [loading, allRecords, statsMode, actualResult, rawTeamStreak, targetTeam, homeTeam, myTeam, awayTeam, date]);
@@ -266,14 +325,19 @@ export default function StickerModal({
                   homeTeam={homeDisplay}
                   awayTeamColor={awayColor}
                   homeTeamColor={homeColor}
-                  awayScore={awayScore}
-                  homeScore={homeScore}
+                  awayScore={localAwayScore}
+                  homeScore={localHomeScore}
                   awayRank={awayRank}
                   homeRank={homeRank}
                   date={date}
-                  scoreBoard={scoreBoard ?? null}
+                  scoreBoard={localScoreBoard ?? null}
                   rheb={rheb ?? null}
                   gameResult={actualResult}
+                  liveInningLabel={isLive && localScoreBoard ? (() => {
+                    const i = getInningInfo(localScoreBoard);
+                    return i ? `${i.inning}회${i.isTop ? "초" : "말"}` : undefined;
+                  })() : undefined}
+                  liveTimestamp={isLive ? liveTimestamp : undefined}
                   background={background}
                   stroke={stroke}
                   strokeColor={strokeColor}
@@ -290,6 +354,59 @@ export default function StickerModal({
               </View>
             )}
           </View>
+
+          {/* ── Live Score Control ── */}
+          {isLive && localScoreBoard && (
+            <View style={{ marginBottom: 24, padding: 16, backgroundColor: theme.muted, borderRadius: 12 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground }}>라이브 스코어 조정</Text>
+                <Pressable onPress={handleResetScore} hitSlop={12}>
+                  <Text style={{ fontSize: 12, color: theme.mutedForeground, fontWeight: "600" }}>↺ 리셋</Text>
+                </Pressable>
+              </View>
+
+              {localScoreBoard && (() => {
+                const info = getInningInfo(localScoreBoard);
+                if (!info) return null;
+                const label = `${info.inning}회${info.isTop ? "초" : "말"}`;
+                return (
+                  <View style={{ alignItems: "center", marginBottom: 12 }}>
+                    <View style={{ backgroundColor: "#e53935", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 4 }}>
+                      <Text style={{ fontSize: 13, fontWeight: "800", color: "#fff" }}>{label}</Text>
+                    </View>
+                  </View>
+                );
+              })()}
+
+              <View style={{ flexDirection: "row", gap: 16 }}>
+                {/* Away Control */}
+                <View style={{ flex: 1, backgroundColor: theme.background, borderRadius: 8, padding: 12, alignItems: "center" }}>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: awayColor, marginBottom: 8 }}>
+                    {awayDisplay}
+                  </Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                    <Text style={{ fontSize: 18, fontWeight: "900", color: theme.foreground, width: 24, textAlign: "center" }}>{localAwayScore}</Text>
+                    <Pressable onPress={() => adjustScore("away")} style={s.scoreBtn}>
+                      <Text style={s.scoreBtnText}>+</Text>
+                    </Pressable>
+                  </View>
+                </View>
+
+                {/* Home Control */}
+                <View style={{ flex: 1, backgroundColor: theme.background, borderRadius: 8, padding: 12, alignItems: "center" }}>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: homeColor, marginBottom: 8 }}>
+                    {homeDisplay}
+                  </Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                    <Text style={{ fontSize: 18, fontWeight: "900", color: theme.foreground, width: 24, textAlign: "center" }}>{localHomeScore}</Text>
+                    <Pressable onPress={() => adjustScore("home")} style={s.scoreBtn}>
+                      <Text style={s.scoreBtnText}>+</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
 
           {/* ── Controls ── */}
           {/* Background selector */}
@@ -514,6 +631,19 @@ const s = StyleSheet.create({
   chipActive: { backgroundColor: "#111" },
   chipText: { fontSize: 13, fontWeight: "600", color: "#555" },
   chipTextActive: { color: "#fff" },
+  scoreBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#f0f0f0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scoreBtnText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
+  },
   toggle: {
     paddingHorizontal: 16,
     paddingVertical: 8,

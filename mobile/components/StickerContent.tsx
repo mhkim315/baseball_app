@@ -24,7 +24,9 @@ interface Props {
   date: string;
   scoreBoard?: ScoreBoardInn | null;
   rheb?: { away: { r: number; h: number; e: number }; home: { r: number; h: number; e: number } } | null;
-  gameResult: "win" | "lose" | "draw";
+  gameResult: "win" | "lose" | "draw" | null;
+  liveInningLabel?: string;
+  liveTimestamp?: string;
   background: "transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon";
   stroke: boolean;
   showBadge: boolean;
@@ -245,8 +247,8 @@ export default function StickerContent(props: Props) {
   // When textColor is set, ALL text uses that color (no team-specific colors)
   const winColor = isCustomColor ? textColor : COLORS.win;
   const loseColor = isCustomColor ? textColor : COLORS.lose;
-  const homeScoreColor = isHomeWin ? winColor : isAwayWin ? loseColor : winColor;
-  const awayScoreColor = isAwayWin ? winColor : isHomeWin ? loseColor : winColor;
+  const homeScoreColor = gameResult === null ? winColor : (isHomeWin ? winColor : isAwayWin ? loseColor : winColor);
+  const awayScoreColor = gameResult === null ? winColor : (isAwayWin ? winColor : isHomeWin ? loseColor : winColor);
   const awayTeamColor_ = isCustomColor ? textColor : awayTeamColor;
   const homeTeamColor_ = isCustomColor ? textColor : homeTeamColor;
   const tagColor = isCustomColor ? tc : "#dc2626";
@@ -296,7 +298,17 @@ export default function StickerContent(props: Props) {
       <View style={{ padding: 24, paddingBottom: 20 }}>
         {/* ── Header: Date + Watermark ── */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <Text style={[{ fontSize: 11, color: tc, fontWeight: "700" }, strokeStyle]}>{date}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Text style={[{ fontSize: 11, color: tc, fontWeight: "700" }, strokeStyle]}>{date}</Text>
+            {props.liveTimestamp && (
+              <Text style={[{ fontSize: 11, color: tc, fontWeight: "700" }, strokeStyle]}>{props.liveTimestamp}</Text>
+            )}
+            {props.liveInningLabel && (
+              <View style={{ backgroundColor: "#dc2626", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ fontSize: 9, color: "#fff", fontWeight: "900" }}>{props.liveInningLabel}</Text>
+              </View>
+            )}
+          </View>
           <Text style={[{ fontSize: 10, color: toRgba(tc, 0.4), fontWeight: "700" }, strokeStyle]}>@fullcount.kr</Text>
         </View>
 
@@ -393,21 +405,25 @@ export default function StickerContent(props: Props) {
             backgroundColor: badgeBackgroundColor === "" ? "transparent" : (badgeBackgroundColor || "#f8fafc"),
             borderWidth: badgeBackgroundColor ? 0 : 1,
             borderColor: badgeBackgroundColor ? "transparent" : "#e2e8f0",
-            flexDirection: "row", alignItems: "center", gap: 6,
+            flexDirection: "row", alignItems: "flex-start", gap: 6,
           }}>
-            <Text style={[{ fontSize: 16 }]}>🏆</Text>
+            {gameResult !== null && stats && (
+              <Text style={[{ fontSize: 16, marginTop: 2 }]}>🏆</Text>
+            )}
             <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: "row", alignItems: "baseline", flexWrap: "wrap" }}>
-                <Text style={[{ fontSize: 11, color: badgeTextColor, fontWeight: "700" }]}>{statsMode === "broadcast" ? "집관 승률 " : "직관 승률 "}</Text>
-                <Text style={[{ fontSize: 14, fontWeight: "900", color: badgeValueColor }]}>
-                  {Math.round(stats.winRate * 100)}%
-                </Text>
-                <Text style={[{ fontSize: 11, color: badgeRecordColor, marginLeft: 6, fontWeight: "700" }]}>
-                  ({stats.wins}승 {stats.losses}패{stats.draws > 0 ? ` ${stats.draws}무` : ""})
-                </Text>
-              </View>
+              {gameResult !== null && (
+                <View style={{ flexDirection: "row", alignItems: "baseline", flexWrap: "wrap" }}>
+                  <Text style={[{ fontSize: 11, color: badgeTextColor, fontWeight: "700" }]}>{statsMode === "broadcast" ? "집관 승률 " : "직관 승률 "}</Text>
+                  <Text style={[{ fontSize: 14, fontWeight: "900", color: badgeValueColor }]}>
+                    {Math.round(stats.winRate * 100)}%
+                  </Text>
+                  <Text style={[{ fontSize: 11, color: badgeRecordColor, marginLeft: 6, fontWeight: "700" }]}>
+                    ({stats.wins}승 {stats.losses}패{stats.draws > 0 ? ` ${stats.draws}무` : ""})
+                  </Text>
+                </View>
+              )}
               {/* Hashtags */}
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 2 }}>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: gameResult !== null ? 2 : 0 }}>
                 {teamTag ? (
                   <Text style={[{ fontSize: 11, color: tagColor, fontWeight: "700" }]}>#{teamTag}</Text>
                 ) : null}

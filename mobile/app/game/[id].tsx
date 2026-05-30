@@ -564,7 +564,7 @@ export default function GameDetailScreen() {
   // 스티커는 경기当日 + 다음날 24시까지만 생성 가능
   const gameDateOnly = new Date(y, m - 1, d);
   const daysSinceGame = Math.floor((Date.now() - gameDateOnly.getTime()) / (1000 * 60 * 60 * 24));
-  const canMakeSticker = isFinished && gs && daysSinceGame <= 1;
+  const canMakeSticker = (isFinished || isLive) && !!gs;
   const awayEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : awayWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";
   const homeEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : homeWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";
 
@@ -901,6 +901,9 @@ export default function GameDetailScreen() {
         date={detail?.date ?? ""}
         scoreBoard={detail?.scoreBoard?.inn ? { away: detail.scoreBoard.inn.away, home: detail.scoreBoard.inn.home } : null}
         rheb={detail?.scoreBoard?.rheb ?? null}
+        isLive={isLive}
+        isFinished={isFinished}
+        liveInning={inningInfo ?? null}
       />
     </View>
   );

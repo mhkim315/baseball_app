@@ -127,7 +127,7 @@ export interface HashtagResult {
 export function resolveHashtags(
   teamStreak: TeamStreakInfo,
   myStreak: { type: "W" | "L" | null; count: number },
-  gameResult: "win" | "lose" | "draw",
+  gameResult: "win" | "lose" | "draw" | null,
   context: {
     isHome: boolean | null;
     isFirstWin: boolean;
@@ -141,6 +141,21 @@ export function resolveHashtags(
 
   let teamTag = "";
   let myTag = "";
+
+  // ── 라이브 게임 (null): 결과 의존 태그 제외, 승리 시 예측 태그 ──
+  if (gameResult === null) {
+    // 팀 태그: 현재 streak 기준 승리 시 예상 결과
+    if (teamStreak.type === "L" && teamStreak.count >= 2) {
+      teamTag = "연패탈출가자";
+    } else if (teamStreak.type === "W" && teamStreak.count >= 1) {
+      teamTag = `${teamStreak.count + 1}연승가자!`;
+    }
+    // 내 태그: 현재 직관 streak 유지
+    if (myStreak.type === "W" && myStreak.count >= 2) {
+      myTag = `직관${myStreak.count}연승`;
+    }
+    return { teamTag, myTag };
+  }
 
   // ── 나의 태그 (승리/무승부 공통) ──
   if (context.isFirstGame) {
