@@ -82,7 +82,7 @@ export interface StreakStat {
 
 const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
 
-function parseDateStr(dateStr: string): Date | null {
+export function parseDateStr(dateStr: string): Date | null {
   const normalized = dateStr.replace(/-/g, ".");
   const parts = normalized.split(".");
   if (parts.length !== 3) return null;
@@ -95,7 +95,7 @@ function opponentTeam(gameId: string, cheeredTeam: string): string {
   return awayId === cheeredTeam ? homeId : awayId;
 }
 
-function filterByYear(records: JikgwanRecord[], year?: number): JikgwanRecord[] {
+export function filterByYear(records: JikgwanRecord[], year?: number): JikgwanRecord[] {
   return year ? records.filter((r) => r.date.startsWith(`${year}.`)) : records;
 }
 
