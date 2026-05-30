@@ -561,10 +561,11 @@ export default function GameDetailScreen() {
   const awayWin = isFinished && gs ? gs.away > gs.home : null;
   const homeWin = isFinished && gs ? gs.home > gs.away : null;
   const isDraw = isFinished && gs ? gs.away === gs.home : false;
-  // 스티커는 경기当日 + 다음날 24시까지만 생성 가능
   const gameDateOnly = new Date(y, m - 1, d);
   const daysSinceGame = Math.floor((Date.now() - gameDateOnly.getTime()) / (1000 * 60 * 60 * 24));
-  const canMakeSticker = (isFinished || isLive) && !!gs;
+  const canMakeSticker = (isFinished || isLive) && !!gs && (
+    isToday || (daysSinceGame === 1 && new Date().getHours() < 14)
+  );
   const awayEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : awayWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";
   const homeEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : homeWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";
 
