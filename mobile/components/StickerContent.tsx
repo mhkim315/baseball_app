@@ -205,26 +205,44 @@ function NeonOverlay() {
 function StadiumOverlay() {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {/* Grass base */}
-      <View style={{ flex: 1, backgroundColor: "#1a3a1a" }} />
+      {/* Grass base — vivid green */}
+      <View style={{ flex: 1, backgroundColor: "#2d5a27" }} />
       {/* Mowed grass stripes */}
       {Array.from({ length: 10 }).map((_, i) => (
         <View key={i} style={{
           position: "absolute", top: i * 30, left: 0, right: 0,
-          height: 15, backgroundColor: i % 2 === 0 ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)",
+          height: 15, backgroundColor: i % 2 === 0 ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
         }} />
       ))}
-      {/* Dirt arc — infield edge suggestion */}
+      {/* Infield diamond — brown dirt rotated square */}
       <View style={{
-        position: "absolute", bottom: -30, left: -10, right: -10,
-        height: 100, backgroundColor: "rgba(139,90,43,0.15)",
-        borderTopLeftRadius: 120, borderTopRightRadius: 120,
+        position: "absolute", top: 120, left: 70,
+        width: 160, height: 160,
+        backgroundColor: "rgba(139,90,43,0.12)",
+        transform: [{ rotate: "45deg" }],
+        borderRadius: 8,
       }} />
-      {/* Stadium lights */}
-      <View style={{ position: "absolute", top: -10, left: -10, width: 100, height: 100, borderRadius: 50, backgroundColor: "rgba(255,220,100,0.07)" }} />
-      <View style={{ position: "absolute", top: -10, right: -10, width: 100, height: 100, borderRadius: 50, backgroundColor: "rgba(255,220,100,0.07)" }} />
-      <View style={{ position: "absolute", top: 20, left: 40, width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,220,100,0.04)" }} />
-      <View style={{ position: "absolute", top: 20, right: 40, width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,220,100,0.04)" }} />
+      {/* Infill dirt — center circle (pitcher's mound) */}
+      <View style={{
+        position: "absolute", top: 170, left: 120,
+        width: 60, height: 60, borderRadius: 30,
+        backgroundColor: "rgba(120,80,40,0.1)",
+      }} />
+      {/* Home plate area — slightly wider dirt */}
+      <View style={{
+        position: "absolute", bottom: -10, left: 80, right: 80,
+        height: 60, backgroundColor: "rgba(139,90,43,0.15)",
+        borderTopLeftRadius: 60, borderTopRightRadius: 60,
+      }} />
+      {/* Foul lines */}
+      <View style={{ position: "absolute", bottom: 20, left: 30, width: 1, height: 180, backgroundColor: "rgba(255,255,255,0.06)", transform: [{ rotate: "-45deg" }] }} />
+      <View style={{ position: "absolute", bottom: 20, right: 30, width: 1, height: 180, backgroundColor: "rgba(255,255,255,0.06)", transform: [{ rotate: "45deg" }] }} />
+      {/* Outfield grass darker arc */}
+      <View style={{
+        position: "absolute", top: -30, left: 20, right: 20,
+        height: 100, backgroundColor: "rgba(0,0,0,0.05)",
+        borderBottomLeftRadius: 200, borderBottomRightRadius: 200,
+      }} />
     </View>
   );
 }
@@ -345,7 +363,7 @@ export default function StickerContent(props: Props) {
           : background === "neon" ? "#1a1a1a"
           : background === "retro" ? "#faf3e8"
           : background === "postit" ? "#fff9c4"
-          : background === "stadium" ? "#1a3a1a"
+          : background === "stadium" ? "#2d5a27"
           : background === "ticket" ? "#faf0e4"
           : "#fff",
         borderRadius: 16,
