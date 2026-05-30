@@ -33,9 +33,9 @@ export async function prefetchInitialData(): Promise<void> {
   }
 }
 
-// ─── Onboarding Prefetch (단일 API 호출) ──────────────────────
+// ─── Consolidated Prefetch (단일 API 호출) ──────────────────
 
-let onboardingPrefetchPromise: Promise<void> | null = null;
+let consolidationPrefetchPromise: Promise<void> | null = null;
 
 /** Write onboarding response into SQLite cache so cachedXxx() functions hit instantly. */
 async function writeToCache(data: OnboardingData): Promise<void> {
@@ -62,24 +62,40 @@ async function writeToCache(data: OnboardingData): Promise<void> {
 }
 
 /**
- * 단일 `/onboarding-data` API 호출로 온보딩 데이터를 가져와
+ * 단일 `/onboarding-data` API 호출로 데이터를 가져와
  * 로컬 SQLite 캐시에 주입한다. 실패 시 기존 `prefetchInitialData()`로 fallback.
  */
-export async function prefetchOnboardingData(): Promise<void> {
-  if (onboardingPrefetchPromise) return onboardingPrefetchPromise;
-
-  onboardingPrefetchPromise = (async () => {
-    try {
-      const data = await fetchOnboardingData();
-      if (data) {
-        await writeToCache(data);
-        return;
-      }
-    } catch {
-      // Fallback to individual calls
+async function fetchAndCacheOnboarding(): Promise<void> {
+  try {
+    const data = await fetchOnboardingData();
+    if (data) {
+      await writeToCache(data);
+      return;
     }
-    await prefetchInitialData();
-  })();
+  } catch {
+    // Fallback to individual calls
+  }
+  await prefetchInitialData();
+}
 
-  return onboardingPrefetchPromise;
+/**
+ * 온보딩 시 호출. 중복 호출을 module-level promise로 방지.
+ */
+export async function prefetchOnboardingData(): Promise<void> {
+  if (consolidationPrefetchPromise) return consolidationPrefetchPromise;
+  consolidationPrefetchPromise = fetchAndCacheOnboarding();
+  return consolidationPrefetchPromise;
+}
+
+/**
+ * 앱 재진입 시 cache canary 검사 후 필요한 경우에만 데이터 갱신.
+ * today:{date} 캐시가 TTL 내에 있으면 스킵, 만료되었으면 /onboarding-data 호출.
+ */
+export async function prefetchOnAppInit(): Promise<void> {
+  const today = new Date().toISOString().slice(0, 10);
+  const cached = await db.getCache(`today:${today}`);
+  if (cached && Date.now() - cached.updatedAt < 300_000) {
+    return; // 캐시가 아직 유효함
+  }
+  await fetchAndCacheOnboarding();
 }

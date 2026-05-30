@@ -3,7 +3,7 @@ import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useTeam } from "@/lib/TeamContext";
 import { useTheme } from "@/lib/ThemeContext";
-import { prefetchOnboardingData } from "@/lib/prefetch";
+import { prefetchOnboardingData, prefetchOnAppInit } from "@/lib/prefetch";
 
 export default function IndexScreen() {
   const { theme } = useTheme();
@@ -14,6 +14,8 @@ export default function IndexScreen() {
     if (loading) return;
     if (!myTeam) {
       prefetchOnboardingData();
+    } else {
+      prefetchOnAppInit();
     }
     router.replace(myTeam ? "/(tabs)/home" : "/onboarding");
   }, [myTeam, loading, router]);
