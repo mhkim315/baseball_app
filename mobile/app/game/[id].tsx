@@ -904,6 +904,7 @@ export default function GameDetailScreen() {
         isLive={isLive}
         isFinished={isFinished}
         liveInning={inningInfo ?? null}
+        gameId={gid}
       />
     </View>
   );

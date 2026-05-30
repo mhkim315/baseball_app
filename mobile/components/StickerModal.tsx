@@ -42,6 +42,7 @@ interface StickerModalProps {
   isLive?: boolean;
   isFinished?: boolean;
   liveInning?: { inning: number; isTop: boolean } | null;
+  gameId?: string;
 }
 
 type BgKey = "transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon";
@@ -57,7 +58,7 @@ const BG_OPTIONS: { key: BgKey; label: string }[] = [
 export default function StickerModal({
   visible, onClose, awayTeam, homeTeam, awayScore, homeScore,
   awayRank, homeRank, date, scoreBoard, rheb,
-  isLive, isFinished, liveInning,
+  isLive, isFinished, liveInning, gameId,
 }: StickerModalProps) {
   const { theme } = useTheme();
   const { myTeam } = useTeam();
@@ -204,7 +205,7 @@ export default function StickerModal({
     // 현재 경기를 가상 레코드로 추가 → 기존 통계 함수에 그대로 전달
     const virtualRecord: JikgwanRecord = {
       id: 0,
-      game_id: "",
+      game_id: gameId ?? "",
       date,
       photo_path: null,
       photos: null,
@@ -225,7 +226,9 @@ export default function StickerModal({
       game_type: null,
       game_status: null,
     };
-    const augmentedRecords = [...modeRecords, virtualRecord];
+    // 오늘 경기의 기존 다이어리 기록 제외 → virtualRecord로만 반영 (중복 방지)
+    const filteredRecords = gameId ? modeRecords.filter((r) => r.game_id !== gameId) : modeRecords;
+    const augmentedRecords = [...filteredRecords, virtualRecord];
 
     // 승률 = computeDiaryStats (가상 레코드 포함)
     const diaryStats = computeDiaryStats(augmentedRecords, year);
