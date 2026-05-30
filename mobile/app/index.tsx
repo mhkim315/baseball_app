@@ -13,11 +13,13 @@ export default function IndexScreen() {
   useEffect(() => {
     if (loading) return;
     if (!myTeam) {
-      prefetchOnboardingData();
+      prefetchOnboardingData().finally(() => {
+        router.replace("/onboarding");
+      });
     } else {
       prefetchOnAppInit();
+      router.replace("/(tabs)/home");
     }
-    router.replace(myTeam ? "/(tabs)/home" : "/onboarding");
   }, [myTeam, loading, router]);
 
   const styles = useMemo(() => StyleSheet.create({

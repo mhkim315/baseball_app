@@ -40,24 +40,27 @@ export function computeAttendanceScoring(
   year?: number,
   gameType?: string | null
 ): AttendanceScoring | null {
-  const filtered = filterByGameType(filterByYear(records, year), gameType)
+  const scored = filterByGameType(filterByYear(records, year), gameType)
     .filter((r) => r.cheered_team === cheeredTeam && r.score_home != null && r.score_away != null);
-  if (filtered.length < 5) return null;
+  if (scored.length < 5) return null;
   let ourTotal = 0, opponentTotal = 0;
-  for (const r of filtered) {
+  for (const r of scored) {
+    const homeScore = r.score_home;
+    const awayScore = r.score_away;
+    if (homeScore == null || awayScore == null) continue;
     const { homeId } = parseGameTeamIds(r.game_id);
     if (homeId === cheeredTeam) {
-      ourTotal += r.score_home!;
-      opponentTotal += r.score_away!;
+      ourTotal += homeScore;
+      opponentTotal += awayScore;
     } else {
-      ourTotal += r.score_away!;
-      opponentTotal += r.score_home!;
+      ourTotal += awayScore;
+      opponentTotal += homeScore;
     }
   }
   return {
-    ourAvgRuns: ourTotal / filtered.length,
-    opponentAvgRuns: opponentTotal / filtered.length,
-    gameCount: filtered.length,
+    ourAvgRuns: ourTotal / scored.length,
+    opponentAvgRuns: opponentTotal / scored.length,
+    gameCount: scored.length,
   };
 }
 
@@ -80,7 +83,8 @@ export interface StreakStat {
 const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
 
 function parseDateStr(dateStr: string): Date | null {
-  const parts = dateStr.split(".");
+  const normalized = dateStr.replace(/-/g, ".");
+  const parts = normalized.split(".");
   if (parts.length !== 3) return null;
   const [y, m, d] = parts.map(Number);
   return new Date(y, m - 1, d);
@@ -246,13 +250,14 @@ export function computeStreakStats(records: JikgwanRecord[], year?: number, game
       return (da?.getTime() ?? 0) - (db?.getTime() ?? 0);
     });
 
-  // Deduplicate by date: keep only the last record per date
-  // to prevent multiple entries on the same day inflating the streak
-  const dateMap = new Map<string, JikgwanRecord>();
+  // Deduplicate by game_id (or date as fallback) to prevent
+  // multiple entries on the same day inflating the streak.
+  // Using game_id ensures doubleheader games each count separately.
+  const seen = new Map<string, JikgwanRecord>();
   for (const g of games) {
-    dateMap.set(g.date, g);
+    seen.set(g.game_id || g.date, g);
   }
-  const uniqueGames = [...dateMap.values()].sort((a, b) => {
+  const uniqueGames = [...seen.values()].sort((a, b) => {
     const da = parseDateStr(a.date);
     const db = parseDateStr(b.date);
     return (da?.getTime() ?? 0) - (db?.getTime() ?? 0);
