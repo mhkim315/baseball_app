@@ -142,18 +142,21 @@ export default function StickerModal({
   const awayDisplay = TEAM_COLORS[awayTeam]?.shortName ?? awayTeam;
   const homeDisplay = TEAM_COLORS[homeTeam]?.shortName ?? homeTeam;
 
-  // Determine actual game result from scores (home team perspective)
-  const actualResult = useMemo((): "win" | "lose" | "draw" | null => {
-    if (isLive) return null;
-    if (homeScore === awayScore) return "draw";
-    return homeScore > awayScore ? "win" : "lose";
-  }, [homeScore, awayScore, isLive]);
-
   // Target team: myTeam if playing in this game, otherwise homeTeam
   const targetTeam = useMemo(() => {
     if (myTeam && (myTeam === homeTeam || myTeam === awayTeam)) return myTeam;
     return homeTeam;
   }, [myTeam, homeTeam, awayTeam]);
+
+  // Determine actual game result from target team's perspective
+  const isTargetHome = targetTeam === homeTeam;
+  const actualResult = useMemo((): "win" | "lose" | "draw" | null => {
+    if (isLive) return null;
+    if (homeScore === awayScore) return "draw";
+    const homeWon = homeScore > awayScore;
+    if (isTargetHome) return homeWon ? "win" : "lose";
+    return homeWon ? "lose" : "win";
+  }, [homeScore, awayScore, isLive, isTargetHome]);
 
   // ─── Effect 1: Load raw data ───
   useEffect(() => {
