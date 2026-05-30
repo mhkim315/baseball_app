@@ -27,7 +27,7 @@ interface Props {
   gameResult: "win" | "lose" | "draw" | null;
   liveInningLabel?: string;
   liveTimestamp?: string;
-  background: "transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon";
+  background: "transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon" | "stadium" | "ticket";
   stroke: boolean;
   showBadge: boolean;
   showScoreboard?: boolean;
@@ -202,6 +202,72 @@ function NeonOverlay() {
   );
 }
 
+function StadiumOverlay() {
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {/* Grass base */}
+      <View style={{ flex: 1, backgroundColor: "#1a3a1a" }} />
+      {/* Mowed grass stripes */}
+      {Array.from({ length: 10 }).map((_, i) => (
+        <View key={i} style={{
+          position: "absolute", top: i * 30, left: 0, right: 0,
+          height: 15, backgroundColor: i % 2 === 0 ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)",
+        }} />
+      ))}
+      {/* Dirt arc — infield edge suggestion */}
+      <View style={{
+        position: "absolute", bottom: -30, left: -10, right: -10,
+        height: 100, backgroundColor: "rgba(139,90,43,0.15)",
+        borderTopLeftRadius: 120, borderTopRightRadius: 120,
+      }} />
+      {/* Stadium lights */}
+      <View style={{ position: "absolute", top: -10, left: -10, width: 100, height: 100, borderRadius: 50, backgroundColor: "rgba(255,220,100,0.07)" }} />
+      <View style={{ position: "absolute", top: -10, right: -10, width: 100, height: 100, borderRadius: 50, backgroundColor: "rgba(255,220,100,0.07)" }} />
+      <View style={{ position: "absolute", top: 20, left: 40, width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,220,100,0.04)" }} />
+      <View style={{ position: "absolute", top: 20, right: 40, width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,220,100,0.04)" }} />
+    </View>
+  );
+}
+
+function TicketOverlay() {
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {/* Outer border — ticket frame */}
+      <View style={[StyleSheet.absoluteFill, {
+        borderWidth: 2, borderColor: "#d4a574", borderRadius: 10, margin: 4,
+      }]} />
+      {/* Inner border accent */}
+      <View style={[StyleSheet.absoluteFill, {
+        borderWidth: 1, borderColor: "#e8c9a0", borderRadius: 12, margin: 7,
+      }]} />
+      {/* Top decorative band */}
+      <View style={{
+        position: "absolute", top: 8, left: 16, right: 16, height: 3,
+        backgroundColor: "rgba(180,120,60,0.08)", borderRadius: 2,
+      }} />
+      {/* Perforation line */}
+      <View style={{
+        position: "absolute", left: 24, right: 24, bottom: 48,
+        borderTopWidth: 1.5, borderColor: "#d4a574",
+        borderStyle: "dashed",
+      }} />
+      {/* Ticket stub label area */}
+      <View style={{
+        position: "absolute", bottom: 16, left: 24, right: 24,
+        flexDirection: "row", justifyContent: "space-between",
+      }}>
+        <View style={{ width: 40, height: 2, backgroundColor: "rgba(180,120,60,0.1)", borderRadius: 1 }} />
+        <View style={{ width: 40, height: 2, backgroundColor: "rgba(180,120,60,0.1)", borderRadius: 1 }} />
+      </View>
+      {/* Corner accent circles */}
+      <View style={{ position: "absolute", top: 14, left: 14, width: 4, height: 4, borderRadius: 2, backgroundColor: "rgba(180,120,60,0.12)" }} />
+      <View style={{ position: "absolute", top: 14, right: 14, width: 4, height: 4, borderRadius: 2, backgroundColor: "rgba(180,120,60,0.12)" }} />
+      <View style={{ position: "absolute", bottom: 14, left: 14, width: 4, height: 4, borderRadius: 2, backgroundColor: "rgba(180,120,60,0.12)" }} />
+      <View style={{ position: "absolute", bottom: 14, right: 14, width: 4, height: 4, borderRadius: 2, backgroundColor: "rgba(180,120,60,0.12)" }} />
+    </View>
+  );
+}
+
 function GridOverlay() {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -279,6 +345,8 @@ export default function StickerContent(props: Props) {
           : background === "neon" ? "#1a1a1a"
           : background === "retro" ? "#faf3e8"
           : background === "postit" ? "#fff9c4"
+          : background === "stadium" ? "#1a3a1a"
+          : background === "ticket" ? "#faf0e4"
           : "#fff",
         borderRadius: 16,
         overflow: "hidden",
@@ -294,6 +362,8 @@ export default function StickerContent(props: Props) {
       {background === "postit" && <PostitOverlay />}
       {background === "grid" && <GridOverlay />}
       {background === "neon" && <NeonOverlay />}
+      {background === "stadium" && <StadiumOverlay />}
+      {background === "ticket" && <TicketOverlay />}
 
       <View style={{ padding: 24, paddingBottom: 20 }}>
         {/* ── Header: Date + Watermark ── */}
