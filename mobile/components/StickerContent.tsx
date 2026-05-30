@@ -27,7 +27,7 @@ interface Props {
   gameResult: "win" | "lose" | "draw" | null;
   liveInningLabel?: string;
   liveTimestamp?: string;
-  background: "transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon" | "stadium" | "ticket";
+  background: "transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon" | "grass" | "mound";
   stroke: boolean;
   showBadge: boolean;
   showScoreboard?: boolean;
@@ -202,7 +202,7 @@ function NeonOverlay() {
   );
 }
 
-function StadiumOverlay() {
+function GrassOverlay() {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       {/* Grass base — vivid green */}
@@ -247,41 +247,71 @@ function StadiumOverlay() {
   );
 }
 
-function TicketOverlay() {
+function MoundOverlay() {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {/* Outer border — ticket frame */}
-      <View style={[StyleSheet.absoluteFill, {
-        borderWidth: 2, borderColor: "#d4a574", borderRadius: 10, margin: 4,
-      }]} />
-      {/* Inner border accent */}
-      <View style={[StyleSheet.absoluteFill, {
-        borderWidth: 1, borderColor: "#e8c9a0", borderRadius: 12, margin: 7,
-      }]} />
-      {/* Top decorative band */}
+      {/* Brown dirt base */}
+      <View style={{ flex: 1, backgroundColor: "#8B6914" }} />
+      {/* Dirt texture — subtle grain */}
+      {Array.from({ length: 60 }).map((_, i) => (
+        <View key={i} style={{
+          position: "absolute",
+          left: (i * 37 + 13) % 280,
+          top: (i * 23 + 7) % 380,
+          width: 2, height: 2, borderRadius: 1,
+          backgroundColor: "rgba(60,40,10,0.08)",
+        }} />
+      ))}
+      {/* Pitcher's mound — raised circle */}
       <View style={{
-        position: "absolute", top: 8, left: 16, right: 16, height: 3,
-        backgroundColor: "rgba(180,120,60,0.08)", borderRadius: 2,
+        position: "absolute", top: 60, left: 90,
+        width: 120, height: 120, borderRadius: 60,
+        backgroundColor: "rgba(160,120,60,0.15)",
       }} />
-      {/* Perforation line */}
+      {/* Mound plateau — slightly lighter center */}
       <View style={{
-        position: "absolute", left: 24, right: 24, bottom: 48,
-        borderTopWidth: 1.5, borderColor: "#d4a574",
-        borderStyle: "dashed",
+        position: "absolute", top: 90, left: 115,
+        width: 70, height: 70, borderRadius: 35,
+        backgroundColor: "rgba(180,140,80,0.1)",
       }} />
-      {/* Ticket stub label area */}
+      {/* Home plate area — dark arc at bottom */}
       <View style={{
-        position: "absolute", bottom: 16, left: 24, right: 24,
-        flexDirection: "row", justifyContent: "space-between",
-      }}>
-        <View style={{ width: 40, height: 2, backgroundColor: "rgba(180,120,60,0.1)", borderRadius: 1 }} />
-        <View style={{ width: 40, height: 2, backgroundColor: "rgba(180,120,60,0.1)", borderRadius: 1 }} />
-      </View>
-      {/* Corner accent circles */}
-      <View style={{ position: "absolute", top: 14, left: 14, width: 4, height: 4, borderRadius: 2, backgroundColor: "rgba(180,120,60,0.12)" }} />
-      <View style={{ position: "absolute", top: 14, right: 14, width: 4, height: 4, borderRadius: 2, backgroundColor: "rgba(180,120,60,0.12)" }} />
-      <View style={{ position: "absolute", bottom: 14, left: 14, width: 4, height: 4, borderRadius: 2, backgroundColor: "rgba(180,120,60,0.12)" }} />
-      <View style={{ position: "absolute", bottom: 14, right: 14, width: 4, height: 4, borderRadius: 2, backgroundColor: "rgba(180,120,60,0.12)" }} />
+        position: "absolute", bottom: -10, left: 60, right: 60,
+        height: 80, backgroundColor: "rgba(100,70,30,0.2)",
+        borderTopLeftRadius: 80, borderTopRightRadius: 80,
+      }} />
+      {/* Home plate — pentagon shape (approximated) */}
+      <View style={{
+        position: "absolute", bottom: 12, left: 135,
+        width: 30, height: 24,
+        backgroundColor: "rgba(255,255,255,0.12)",
+        borderTopLeftRadius: 4, borderTopRightRadius: 4,
+      }} />
+      {/* Foul lines — left */}
+      <View style={{
+        position: "absolute", bottom: 30, left: 50,
+        width: 1.5, height: 240,
+        backgroundColor: "rgba(255,255,255,0.1)",
+        transform: [{ rotate: "-40deg" }],
+      }} />
+      {/* Foul lines — right */}
+      <View style={{
+        position: "absolute", bottom: 30, right: 50,
+        width: 1.5, height: 240,
+        backgroundColor: "rgba(255,255,255,0.1)",
+        transform: [{ rotate: "40deg" }],
+      }} />
+      {/* Base paths — subtle diamond lines */}
+      <View style={{
+        position: "absolute", bottom: 35, left: 140,
+        width: 1, height: 100, backgroundColor: "rgba(255,255,255,0.04)",
+        transform: [{ rotate: "45deg" }],
+      }} />
+      <View style={{
+        position: "absolute", bottom: 35, left: 140,
+        width: 1, height: 100, backgroundColor: "rgba(255,255,255,0.04)",
+        transform: [{ rotate: "-45deg" }],
+      }} />
     </View>
   );
 }
@@ -363,8 +393,8 @@ export default function StickerContent(props: Props) {
           : background === "neon" ? "#1a1a1a"
           : background === "retro" ? "#faf3e8"
           : background === "postit" ? "#fff9c4"
-          : background === "stadium" ? "#2d5a27"
-          : background === "ticket" ? "#faf0e4"
+          : background === "grass" ? "#2d5a27"
+          : background === "mound" ? "#8B6914"
           : "#fff",
         borderRadius: 16,
         overflow: "hidden",
@@ -380,8 +410,8 @@ export default function StickerContent(props: Props) {
       {background === "postit" && <PostitOverlay />}
       {background === "grid" && <GridOverlay />}
       {background === "neon" && <NeonOverlay />}
-      {background === "stadium" && <StadiumOverlay />}
-      {background === "ticket" && <TicketOverlay />}
+      {background === "grass" && <GrassOverlay />}
+      {background === "mound" && <MoundOverlay />}
 
       <View style={{ padding: 24, paddingBottom: 20 }}>
         {/* ── Header: Date + Watermark ── */}
