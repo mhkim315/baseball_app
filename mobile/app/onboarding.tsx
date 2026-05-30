@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { View, Text, Image, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { TEAM_LIST } from "@shared/teamColors";
@@ -6,12 +6,17 @@ import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
+import { prefetchInitialData } from "@/lib/prefetch";
 
 export default function OnboardingScreen() {
   const { theme, isDark } = useTheme();
   const { setMyTeam } = useTeam();
   const router = useRouter();
   const [selectedTeam, setSelectedTeam] = useState<string>("");
+
+  useEffect(() => {
+    prefetchInitialData();
+  }, []);
 
   const handleStart = async () => {
     if (!selectedTeam) return;

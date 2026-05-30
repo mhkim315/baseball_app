@@ -5,11 +5,11 @@ import { TEAM_COLORS } from "@shared/teamColors";
 import { parseGameTeamIds, formatDateForApi } from "@shared/constants";
 import { getInningInfo } from "@shared/gameStatus";
 import {
-  fetchGameDetail, fetchStandingsJson,
+  fetchStandingsJson,
   type GameDetail, type ScoreEntry, type LineupPlayer, type StandingRow,
 } from "@/lib/api";
 import { TeamBadge } from "@/components/TeamBadge";
-import { cachedDailyScores, cachedScheduleByMonth } from "@/lib/gameCache";
+import { cachedDailyScores, cachedScheduleByMonth, cachedGameDetail } from "@/lib/gameCache";
 import { resolveGames } from "@/lib/resolveGames";
 import DiaryEntryModal, { type GameOption } from "@/components/DiaryEntryModal";
 import StickerModal from "@/components/StickerModal";
@@ -162,7 +162,7 @@ export default function GameDetailScreen() {
       return () => { cancelled = true; };
     }
 
-    fetchGameDetail(gid).then(async (data) => {
+    cachedGameDetail(gid).then(async (data) => {
       if (cancelled) return;
       if (data) {
         setDetail(data);
