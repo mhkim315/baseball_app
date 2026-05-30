@@ -17,7 +17,7 @@ import AchievementModal from "@/components/AchievementModal";
 import ConfettiOverlay from "@/components/ConfettiOverlay";
 import ExpenseModal from "@/components/ExpenseModal";
 import { getJikgwanRecords, deleteJikgwanRecord, getAllExpenses, getExpensesByDate, type JikgwanRecord, type Expense, type Badge } from "@/lib/db";
-import { cachedDailyScores } from "@/lib/gameCache";
+import { cachedDailyScores, cachedAllDailyScores } from "@/lib/gameCache";
 
 import { parseGameTeamIds } from "@shared/constants";
 import { TEAM_COLORS } from "@shared/teamColors";
@@ -297,6 +297,8 @@ export default function DiaryScreen() {
         if (r.score_away != null && r.score_home != null && !(r.score_away === 0 && r.score_home === 0)) continue;
         dateSet.add(r.date.split(".").join("-"));
       }
+      // Bulk-fetch all daily scores first to warm the per-date cache (avoids 429 from N parallel requests)
+      await cachedAllDailyScores().catch(() => {});
       const scoresResults = await Promise.all(
         Array.from(dateSet).map((date) =>
           cachedDailyScores(date).catch(() => null)
