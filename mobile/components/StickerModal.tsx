@@ -45,7 +45,7 @@ interface StickerModalProps {
   gameId?: string;
 }
 
-type BgKey = "transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon" | "grass" | "homeplate";
+type BgKey = "transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon" | "grass" | "ground";
 const BG_OPTIONS: { key: BgKey; label: string }[] = [
   { key: "transparent", label: "투명" },
   { key: "sketchbook", label: "스케치북" },
@@ -54,7 +54,7 @@ const BG_OPTIONS: { key: BgKey; label: string }[] = [
   { key: "grid", label: "모눈노트" },
   { key: "neon", label: "네온" },
   { key: "grass", label: "잔디" },
-  { key: "homeplate", label: "홈플레이트" },
+  { key: "ground", label: "그라운드" },
 ];
 
 export default function StickerModal({
