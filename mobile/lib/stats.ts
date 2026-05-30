@@ -92,7 +92,8 @@ function opponentTeam(gameId: string, cheeredTeam: string): string {
 }
 
 function filterByYear(records: JikgwanRecord[], year?: number): JikgwanRecord[] {
-  return year ? records.filter((r) => r.date.startsWith(`${year}.`)) : records;
+  if (!year) return records;
+  return records.filter((r) => r.date.startsWith(`${year}.`) || r.date.startsWith(`${year}-`));
 }
 
 export function filterByGameType(records: JikgwanRecord[], gameType?: string | null): JikgwanRecord[] {
