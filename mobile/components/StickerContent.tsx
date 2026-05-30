@@ -36,6 +36,7 @@ interface Props {
   myTag: string;
   customTag: string;
   stats: Stats | null;
+  statsMode?: "live" | "broadcast";
 }
 
 const COLORS = {
@@ -233,7 +234,7 @@ export default function StickerContent(props: Props) {
     awayScore, homeScore, awayRank, homeRank,
     date, scoreBoard, rheb,
     gameResult, background, stroke, showBadge, showScoreboard, textColor, strokeColor,
-    teamTag, myTag, customTag, stats, badgeBackgroundColor,
+    teamTag, myTag, customTag, stats, badgeBackgroundColor, statsMode,
   } = props;
 
   const tc = textColor || "#333";
@@ -397,7 +398,7 @@ export default function StickerContent(props: Props) {
             <Text style={[{ fontSize: 16 }]}>🏆</Text>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "baseline", flexWrap: "wrap" }}>
-                <Text style={[{ fontSize: 11, color: badgeTextColor, fontWeight: "700" }]}>직관 승률 </Text>
+                <Text style={[{ fontSize: 11, color: badgeTextColor, fontWeight: "700" }]}>{statsMode === "broadcast" ? "집관 승률 " : "직관 승률 "}</Text>
                 <Text style={[{ fontSize: 14, fontWeight: "900", color: badgeValueColor }]}>
                   {Math.round(stats.winRate * 100)}%
                 </Text>

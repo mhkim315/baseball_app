@@ -5,9 +5,11 @@ import StickerContent from "@/components/StickerContent";
 import { captureRef } from "react-native-view-shot";
 import * as Clipboard from "expo-clipboard";
 import * as Sharing from "expo-sharing";
-import { computeTeamStreak, resolveHashtags } from "@/lib/sticker";
-import { getTeamDiaryStats, getJikgwanRecords } from "@/lib/db";
-import { computeStreakStats } from "@/lib/stats";
+import { computeTeamStreak, resolveHashtags, type TeamStreakInfo } from "@/lib/sticker";
+import { getJikgwanRecords } from "@/lib/db";
+import type { JikgwanRecord } from "@/lib/db";
+import { computeStreakStats, computeDiaryStats } from "@/lib/stats";
+import { resolveIsWin } from "@/lib/expenseStats";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { useTheme } from "@/lib/ThemeContext";
 import { useTeam } from "@/lib/TeamContext";
@@ -62,6 +64,7 @@ export default function StickerModal({
   const [strokeColor, setStrokeColor] = useState("#ffffff");
   const [showBadge, setShowBadge] = useState(true);
   const [showScoreboard, setShowScoreboard] = useState(true);
+  const [statsMode, setStatsMode] = useState<"live" | "broadcast">("live");
   const [capturing, setCapturing] = useState(false);
   const [textColor, setTextColor] = useState("");
   const [badgeColor, setBadgeColor] = useState<string | null>(null);
@@ -72,6 +75,8 @@ export default function StickerModal({
   const [teamTag, setTeamTag] = useState("");
   const [myTag, setMyTag] = useState("");
   const [customTag, setCustomTag] = useState("");
+  const [rawTeamStreak, setRawTeamStreak] = useState<TeamStreakInfo | null>(null);
+  const [allRecords, setAllRecords] = useState<JikgwanRecord[]>([]);
   const [alert, setAlert] = useState<{ visible: boolean; title: string; message: string }>({ visible: false, title: "", message: "" });
 
   // Colors & display names
@@ -86,7 +91,13 @@ export default function StickerModal({
     return homeScore > awayScore ? "win" : "lose";
   }, [homeScore, awayScore]);
 
-  // Load stats and compute hashtags on mount
+  // Target team: myTeam if playing in this game, otherwise homeTeam
+  const targetTeam = useMemo(() => {
+    if (myTeam && (myTeam === homeTeam || myTeam === awayTeam)) return myTeam;
+    return homeTeam;
+  }, [myTeam, homeTeam, awayTeam]);
+
+  // ─── Effect 1: Load raw data ───
   useEffect(() => {
     if (!visible) return;
     setLoading(true);
@@ -95,55 +106,13 @@ export default function StickerModal({
     (async () => {
       try {
         const year = parseInt(date.slice(0, 4), 10);
-        const [teamStats, teamStreak, allRecords] = await Promise.all([
-          getTeamDiaryStats(homeTeam),
-          computeTeamStreak(year, homeTeam),
+        const [teamStreakData, records] = await Promise.all([
+          computeTeamStreak(year, targetTeam),
           getJikgwanRecords(),
         ]);
-
-        const teamRecords = allRecords.filter((r) => r.cheered_team === homeTeam);
-        const myStreakResult = computeStreakStats(teamRecords, year);
-
-        // 1. 올해 기준 직관 기록 (isFirstWin, isFirstGame 용도)
-        const teamRecordsThisYear = teamRecords.filter(r => r.date.startsWith(String(year)));
-        const winsThisYear = teamRecordsThisYear.filter(r => r.is_win).length;
-        const isFirstGame = teamRecordsThisYear.length === 0;
-        const isFirstWin = winsThisYear === 0 && !isFirstGame;
-
-        // 2. 현재 경기 결과를 내 연승에 수동 반영 (DB 저장 전이므로)
-        let myCurrentType = myStreakResult.currentType;
-        let myCurrentCount = myStreakResult.currentCount;
-        if (actualResult === "win") {
-          if (myCurrentType === "W") myCurrentCount++;
-          else { myCurrentType = "W"; myCurrentCount = 1; }
-        } else if (actualResult === "lose") {
-          if (myCurrentType === "L") myCurrentCount++;
-          else { myCurrentType = "L"; myCurrentCount = 1; }
-        }
-
-        const hashtags = resolveHashtags(
-          teamStreak,
-          { type: myCurrentType as "W" | "L" | null, count: myCurrentCount },
-          actualResult,
-          { isHome: true, isFirstWin, isFirstGame },
-        );
-
         if (!cancelled) {
-          setStats({
-            winRate: teamStats.overall.winRate,
-            wins: teamStats.overall.wins,
-            draws: teamStats.overall.draws,
-            losses: teamStats.overall.losses,
-          });
-          const isOtherGame = myTeam && homeTeam !== myTeam && awayTeam !== myTeam;
-          if (isOtherGame) {
-            setTeamTag("책임없는쾌락");
-            setMyTag("아무나이겨라");
-          } else {
-            setTeamTag(hashtags.teamTag);
-            setMyTag(hashtags.myTag);
-          }
-          setCustomTag("");
+          setRawTeamStreak(teamStreakData);
+          setAllRecords(records);
           setLoading(false);
         }
       } catch (e) {
@@ -153,7 +122,82 @@ export default function StickerModal({
     })();
 
     return () => { cancelled = true; };
-  }, [visible, homeTeam, date, actualResult]);
+  }, [visible, targetTeam, date]);
+
+  // ─── Effect 2: Derive stats, streak & hashtags (runs on toggle too) ───
+  useEffect(() => {
+    if (loading || !rawTeamStreak) return;
+
+    const year = parseInt(date.slice(0, 4), 10);
+
+    // Filter by target team & viewing mode
+    const teamRecords = allRecords.filter((r) => r.cheered_team === targetTeam);
+    const modeRecords = statsMode === "live"
+      ? teamRecords.filter((r) => Number(r.is_live) === 1)
+      : teamRecords.filter((r) => Number(r.is_live) === 0);
+
+    // isFirstWin / isFirstGame: 가상 레코드 추가 전에 판단
+    const modeRecordsThisYear = modeRecords.filter((r) => r.date.startsWith(String(year)));
+    const winsThisYear = modeRecordsThisYear.filter((r) => resolveIsWin(r) === 1).length;
+    const isFirstGame = modeRecordsThisYear.length === 0;
+    const isFirstWin = winsThisYear === 0 && !isFirstGame;
+
+    // 현재 경기를 가상 레코드로 추가 → 기존 통계 함수에 그대로 전달
+    const virtualRecord: JikgwanRecord = {
+      id: 0,
+      game_id: "",
+      date,
+      photo_path: null,
+      photos: null,
+      memo: null,
+      score_away: null,
+      score_home: null,
+      created_at: "",
+      emotion: null,
+      three_line_1: null,
+      three_line_2: null,
+      three_line_3: null,
+      frame_style: "",
+      stadium: null,
+      is_win: actualResult === "win" ? 1 : actualResult === "draw" ? 0 : -1,
+      cheered_team: targetTeam,
+      is_live: statsMode === "live" ? 1 : 0,
+      seat: null,
+      game_type: null,
+      game_status: null,
+    };
+    const augmentedRecords = [...modeRecords, virtualRecord];
+
+    // 승률 = computeDiaryStats (가상 레코드 포함)
+    const diaryStats = computeDiaryStats(augmentedRecords, year);
+    setStats({
+      winRate: diaryStats.winRate,
+      wins: diaryStats.wins,
+      draws: diaryStats.draws,
+      losses: diaryStats.losses,
+    });
+
+    // 개인 연승 = computeStreakStats (가상 레코드 포함, 별도 보정 불필요)
+    const myStreakResult = computeStreakStats(augmentedRecords, year);
+
+    // 해시태그
+    const hashtags = resolveHashtags(
+      rawTeamStreak,
+      { type: myStreakResult.currentType as "W" | "L" | null, count: myStreakResult.currentCount },
+      actualResult,
+      { isHome: true, isFirstWin, isFirstGame },
+    );
+
+    const isOtherGame = myTeam && homeTeam !== myTeam && awayTeam !== myTeam;
+    if (isOtherGame) {
+      setTeamTag("책임없는쾌락");
+      setMyTag("아무나이겨라");
+    } else {
+      setTeamTag(hashtags.teamTag);
+      setMyTag(hashtags.myTag);
+    }
+    setCustomTag("");
+  }, [loading, allRecords, statsMode, actualResult, rawTeamStreak, targetTeam, homeTeam, myTeam, awayTeam, date]);
 
   // Handle copy to clipboard
   const handleCopyClipboard = useCallback(async () => {
@@ -189,6 +233,7 @@ export default function StickerModal({
     setStrokeColor("#ffffff");
     setShowBadge(true);
     setShowScoreboard(true);
+    setStatsMode("live");
     setTextColor("");
     setBadgeColor(null);
     setCapturing(false);
@@ -239,6 +284,7 @@ export default function StickerModal({
                   teamTag={teamTag}
                   myTag={myTag}
                   customTag={customTag}
+                  statsMode={statsMode}
                   stats={stats}
                 />
               </View>
@@ -258,6 +304,24 @@ export default function StickerModal({
                 >
                   <Text style={[s.chipText, background === opt.key && s.chipTextActive]}>
                     {opt.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          {/* Stats mode toggle */}
+          <View style={s.controlSection}>
+            <Text style={s.controlLabel}>응원 유형</Text>
+            <View style={s.chipRow}>
+              {(["live", "broadcast"] as const).map((mode) => (
+                <Pressable
+                  key={mode}
+                  style={[s.chip, statsMode === mode && s.chipActive]}
+                  onPress={() => setStatsMode(mode)}
+                >
+                  <Text style={[s.chipText, statsMode === mode && s.chipTextActive]}>
+                    {mode === "live" ? "직관" : "집관"}
                   </Text>
                 </Pressable>
               ))}

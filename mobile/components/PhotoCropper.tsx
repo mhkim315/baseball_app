@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, useCallback } from "react";
 import {
-  View, Text, Pressable, Image, StyleSheet,
+  Modal, View, Text, Pressable, Image, StyleSheet,
   Dimensions, GestureResponderEvent, NativeSyntheticEvent, ImageLoadEventData,
 } from "react-native";
 import { useTheme } from "@/lib/ThemeContext";
@@ -141,49 +141,51 @@ export default function PhotoCropper({ visible, imageUri, onCrop, onCancel }: Ph
   if (!visible) return null;
 
   return (
-    <View style={styles.overlay}>
-      <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700", marginBottom: 16 }}>
-        사진 영역 선택
-      </Text>
+    <Modal transparent visible={visible} onRequestClose={onCancel} statusBarTranslucent>
+      <View style={styles.overlay}>
+        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700", marginBottom: 16 }}>
+          사진 영역 선택
+        </Text>
 
-      <View
-        ref={guideRef}
-        style={styles.guide}
-        collapsable={false}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-      >
-        <Image
-          ref={imageRef}
-          source={{ uri: imageUri }}
-          style={[{
-            width: imageSize.width || CROP_SIZE,
-            height: imageSize.height || CROP_SIZE,
-            position: "absolute",
-            top: (CROP_SIZE - (imageSize.height || CROP_SIZE)) / 2,
-            left: (CROP_SIZE - (imageSize.width || CROP_SIZE)) / 2,
-            opacity: imageSize.width > 0 ? 1 : 0,
-          }]}
-          onLoad={handleImageLoad}
-        />
-      </View>
-
-      <Text style={styles.hint}>드래그하여 위치 조정</Text>
-
-      <View style={styles.bottomRow}>
-        <Pressable style={[styles.btn, styles.cancelBtn]} onPress={onCancel}>
-          <Text style={[styles.btnText, styles.cancelText]}>취소</Text>
-        </Pressable>
-        <Pressable
-          style={[styles.btn, styles.confirmBtn]}
-          onPress={handleConfirm}
-          disabled={loading}
+        <View
+          ref={guideRef}
+          style={styles.guide}
+          collapsable={false}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
         >
-          <Text style={[styles.btnText, styles.confirmText]}>
-            {loading ? "처리중..." : "확인"}
-          </Text>
-        </Pressable>
+          <Image
+            ref={imageRef}
+            source={{ uri: imageUri }}
+            style={[{
+              width: imageSize.width || CROP_SIZE,
+              height: imageSize.height || CROP_SIZE,
+              position: "absolute",
+              top: (CROP_SIZE - (imageSize.height || CROP_SIZE)) / 2,
+              left: (CROP_SIZE - (imageSize.width || CROP_SIZE)) / 2,
+              opacity: imageSize.width > 0 ? 1 : 0,
+            }]}
+            onLoad={handleImageLoad}
+          />
+        </View>
+
+        <Text style={styles.hint}>드래그하여 위치 조정</Text>
+
+        <View style={styles.bottomRow}>
+          <Pressable style={[styles.btn, styles.cancelBtn]} onPress={onCancel}>
+            <Text style={[styles.btnText, styles.cancelText]}>취소</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.btn, styles.confirmBtn]}
+            onPress={handleConfirm}
+            disabled={loading}
+          >
+            <Text style={[styles.btnText, styles.confirmText]}>
+              {loading ? "처리중..." : "확인"}
+            </Text>
+          </Pressable>
+        </View>
       </View>
-    </View>
+    </Modal>
   );
 }
