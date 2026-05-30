@@ -203,10 +203,11 @@ export default function StickerModal({
     const isFirstWin = winsThisYear === 0 && !isFirstGame;
 
     // 현재 경기를 가상 레코드로 추가 → 기존 통계 함수에 그대로 전달
+    // date는 DB 형식(YYYY.MM.DD)으로 통일 (filterByYear 등 호환)
     const virtualRecord: JikgwanRecord = {
       id: 0,
       game_id: gameId ?? "",
-      date,
+      date: date.replace(/-/g, "."),
       photo_path: null,
       photos: null,
       memo: null,
