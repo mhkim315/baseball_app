@@ -17,8 +17,9 @@ export default function IndexScreen() {
         router.replace("/onboarding");
       });
     } else {
-      prefetchOnAppInit();
-      router.replace("/(tabs)/home");
+      Promise.all([prefetchOnAppInit()]).then(() => {
+        router.replace("/(tabs)/home");
+      });
     }
   }, [myTeam, loading, router]);
 

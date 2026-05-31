@@ -116,5 +116,15 @@ export async function prefetchOnAppInit(): Promise<void> {
   if (cached && Date.now() - cached.updatedAt < 300_000) {
     return; // 캐시가 아직 유효함
   }
-  await fetchAndCacheOnboarding();
+  // Cache expired or missing — fetch, with in-flight dedup
+  if (consolidationPrefetchPromise) {
+    await consolidationPrefetchPromise;
+    return;
+  }
+  consolidationPrefetchPromise = fetchAndCacheOnboarding();
+  try {
+    await consolidationPrefetchPromise;
+  } finally {
+    consolidationPrefetchPromise = null;
+  }
 }
