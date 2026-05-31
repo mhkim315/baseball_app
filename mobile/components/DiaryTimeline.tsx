@@ -81,6 +81,8 @@ export default function DiaryTimeline({ records, teamId, onDelete, onEdit, onRef
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+        removeClippedSubviews
+        windowSize={7}
         onScrollToIndexFailed={(info) => {
           flatListRef.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: true });
         }}

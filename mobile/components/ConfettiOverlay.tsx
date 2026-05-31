@@ -93,6 +93,8 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 999,
+    elevation: 5,
+    shadowColor: "transparent",
   },
   piece: {
     position: "absolute",

@@ -748,7 +748,7 @@ export default function DiaryScreen() {
 
       {/* Diary coach mark */}
       {showDiaryCoach && (
-        <View style={{ position: "absolute", right: 20, bottom: 100, zIndex: 100, elevation: 7, width: Math.min(280, screenWidth - 40) }}>
+        <View style={{ position: "absolute", right: 20, bottom: 100, zIndex: 100, elevation: 10, shadowColor: "transparent", width: Math.min(280, screenWidth - 40) }}>
           <CoachMark
             visible
             showChevrons={false}

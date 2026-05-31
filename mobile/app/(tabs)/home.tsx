@@ -599,12 +599,12 @@ export default function HomeScreen() {
       {/* Game list — horizontal paging scroll */}
       <View style={{ flex: 1, position: "relative" }}>
         {showCoachMark && (
-          <View style={{ position: "absolute", top: 0, left: 16, right: 16, zIndex: 100 }}>
+          <View style={{ position: "absolute", top: 0, left: 16, right: 16, zIndex: 100, elevation: 5, shadowColor: "transparent" }}>
             <HomeCoachMark visible onDismiss={handleCoachDismiss} />
           </View>
         )}
         {showTodayBackCoach && (
-          <View style={{ position: "absolute", top: 0, left: 16, right: 16, zIndex: 100 }}>
+          <View style={{ position: "absolute", top: 0, left: 16, right: 16, zIndex: 100, elevation: 5, shadowColor: "transparent" }}>
             <CoachMark visible showChevrons={false} text="경기 카드를 눌러 오늘 경기의 스티커를 만들어보세요." onDismiss={() => setShowTodayBackCoach(false)} />
           </View>
         )}
@@ -641,6 +641,8 @@ export default function HomeScreen() {
                     contentContainerStyle={styles.listContent}
                     ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
                     nestedScrollEnabled
+                    removeClippedSubviews
+                    windowSize={7}
                   />
                 )}
               </View>

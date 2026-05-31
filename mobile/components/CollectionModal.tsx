@@ -401,7 +401,7 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
 
   return (
       <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "padding"}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
           <View style={styles.overlay}>
             <View style={[styles.content, { backgroundColor: theme.card, borderColor: theme.border }]}>
               {view === "list" && renderList()}

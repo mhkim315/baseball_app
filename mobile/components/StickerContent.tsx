@@ -399,7 +399,6 @@ export default function StickerContent(props: Props) {
           : background === "ground" ? "#8B6914"
           : "#fff",
         borderRadius: 16,
-        overflow: "hidden",
         elevation: background === "transparent" ? 0 : 8,
         shadowColor: background === "transparent" ? undefined : "#000",
         shadowOpacity: background === "transparent" ? 0 : 0.15,
@@ -407,6 +406,7 @@ export default function StickerContent(props: Props) {
         shadowRadius: background === "transparent" ? 0 : 20,
       }}
     >
+      <View style={{ borderRadius: 16, overflow: "hidden" }}>
       {background === "sketchbook" && <SketchbookOverlay />}
       {background === "retro" && <RetroOverlay />}
       {background === "postit" && <PostitOverlay />}
@@ -562,6 +562,7 @@ export default function StickerContent(props: Props) {
           </View>
         )}
       </View>
+    </View>
     </View>
   );
 }

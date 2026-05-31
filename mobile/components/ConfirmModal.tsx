@@ -36,6 +36,8 @@ export default function ConfirmModal({
       justifyContent: "center",
       alignItems: "center",
       zIndex: 999,
+      elevation: 5,
+      shadowColor: "transparent",
     },
     card: {
       backgroundColor: theme.card,
