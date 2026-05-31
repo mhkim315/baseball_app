@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, ScrollView, ActivityIndicator, Pressable, StyleSheet } from "react-native";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID } from "@shared/constants";
-import { fetchStandingsJson, type StandingRow } from "@/lib/api";
+import { type StandingRow } from "@/lib/api";
+import { cachedStandings } from "@/lib/gameCache";
 import { HISTORICAL_STANDINGS } from "@/lib/standingsData";
 import YearSelector from "@/components/YearSelector";
 import MyButton from "@/components/MyButton";
@@ -52,10 +53,10 @@ export default function RankScreen() {
       return;
     }
 
-    // Current season (2026+) — fetch from API
+    // Current season (2026+) — fetch from API (via cache layer)
     setLoading(true);
     setError(false);
-    fetchStandingsJson().then((data) => {
+    cachedStandings().then((data) => {
       if (data) {
         setStandings(data.rows);
         setFetchedAt(data.fetchedAt);

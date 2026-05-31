@@ -649,28 +649,64 @@ def get_onboarding_data():
     current_year = today_date.year
     schedule = _get_schedule_for_month(current_month, current_year)
 
-    # Game details for today's games (partial failure allowed)
+    # Game details for recent 4 days of games (partial failure allowed)
     game_details: dict[str, dict] = {}
-    for game in today.get("games", []):
-        game_id = game.get("id")
-        if game_id:
+    team_name_to_code: dict[str, str] = {}
+    for code, team_id in TEAM_CODE_MAP.items():
+        kr_name = TEAM_NAME_MAP.get(team_id)
+        if kr_name:
+            team_name_to_code[kr_name] = code
+
+    seen_game_ids: set[str] = set()
+    for i in range(4):
+        d = (today_date - timedelta(days=i)).isoformat()
+        if d not in recent_scores:
+            continue
+        for game in recent_scores[d]:
+            if game.get("cancelled"):
+                continue
+            kr_away = game.get("away", "")
+            kr_home = game.get("home", "")
+            away_code = team_name_to_code.get(kr_away)
+            home_code = team_name_to_code.get(kr_home)
+            if not away_code or not home_code:
+                continue
+            game_seq = game.get("gameIdx", 0)
+            date_compact = d.replace("-", "")
+            game_id = f"{date_compact}-{away_code}{home_code}-{game_seq}"
+            if game_id in seen_game_ids:
+                continue
+            seen_game_ids.add(game_id)
             detail = _build_game_detail(game_id)
             if detail:
                 game_details[game_id] = detail
+
+    # Standings
+    standings_data = load_json("kbo_standings.json")
+
+    # Score summary for current year
+    score_summary = _compute_score_summary(current_year, scores)
 
     return {
         "todayGames": today,
         "recentScores": recent_scores,
         "schedule": schedule,
         "todayGameDetails": game_details,
+        "standings": standings_data.get("rows") if standings_data else None,
+        "scoreSummary": score_summary,
     }
 
 
-# --- Score summary (cached) ---
+# --- Score summary ---
 
 
-@app.get("/api/score-summary/{year}")
-def get_score_summary(year: int):
+def _compute_score_summary(year: int, scores: dict | None) -> dict | None:
+    """Compute score summary for the given year from daily-scores data."""
+    if scores is None:
+        return None
+
+    from data_api.main import _HISTORICAL_SCORING
+
     if year in _HISTORICAL_SCORING:
         teams = []
         for team_name, info in sorted(_HISTORICAL_SCORING[year].items()):
@@ -682,11 +718,7 @@ def get_score_summary(year: int):
             })
         return {"year": year, "teams": teams}
 
-    data = load_json("daily-scores.json")
-    if data is None:
-        return JSONResponse({"error": "Data not found"}, status_code=404)
-
-    dates = data.get("dates", {})
+    dates = scores.get("dates", {})
     team_runs = {}
     team_games = {}
     for date_str, games in dates.items():
@@ -709,3 +741,14 @@ def get_score_summary(year: int):
             "totalGames": games,
         })
     return {"year": year, "teams": teams}
+
+
+@app.get("/api/score-summary/{year}")
+def get_score_summary(year: int):
+    data = load_json("daily-scores.json")
+    if data is None:
+        return JSONResponse({"error": "Data not found"}, status_code=404)
+    result = _compute_score_summary(year, data)
+    if result is None:
+        return JSONResponse({"error": "Data not found"}, status_code=404)
+    return result

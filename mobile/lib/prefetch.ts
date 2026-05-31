@@ -59,6 +59,16 @@ async function writeToCache(data: OnboardingData): Promise<void> {
   for (const [gameId, detail] of Object.entries(data.todayGameDetails)) {
     await db.setCache(`game:${gameId}`, JSON.stringify(detail));
   }
+
+  // standings → "standings:current"
+  if (data.standings) {
+    await db.setCache("standings:current", JSON.stringify({ rows: data.standings, fetchedAt: "" }));
+  }
+
+  // scoreSummary → "score-summary:{year}"
+  if (data.scoreSummary) {
+    await db.setCache(`score-summary:${data.scoreSummary.year}`, JSON.stringify(data.scoreSummary));
+  }
 }
 
 /**

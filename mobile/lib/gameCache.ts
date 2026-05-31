@@ -5,10 +5,14 @@ import {
   fetchScheduleByMonth as apiScheduleByMonth,
   fetchTodayGames as apiTodayGames,
   fetchGameDetail as apiGameDetail,
+  fetchStandingsJson as apiStandingsJson,
+  fetchScoreSummary as apiScoreSummary,
   type ScoreEntry,
   type ScheduleGame,
   type TodayGame,
   type GameDetail,
+  type StandingRow,
+  type ScoreSummaryRow,
 } from "./api";
 import { CHEER_SONGS, CHEER_PLAYERS } from "./cheerData";
 import { LOCAL_SCHEDULE, LOCAL_SCORES } from "./scheduleData";
@@ -296,5 +300,22 @@ export async function cachedTodayGames(): Promise<{ games: TodayGame[]; nextGame
 export async function cachedGameDetail(gameId: string): Promise<GameDetail | null> {
   return fetchWithCache(cacheKey("game", gameId), 300_000, () =>
     apiGameDetail(gameId)
+  );
+}
+
+export async function cachedStandings(): Promise<{
+  rows: StandingRow[];
+  fetchedAt: string;
+} | null> {
+  return fetchWithCache("standings:current", 300_000, () =>
+    apiStandingsJson()
+  );
+}
+
+export async function cachedScoreSummary(
+  year: number
+): Promise<{ year: number; teams: ScoreSummaryRow[] } | null> {
+  return fetchWithCache(`score-summary:${year}`, 300_000, () =>
+    apiScoreSummary(year)
   );
 }

@@ -185,6 +185,8 @@ export interface OnboardingData {
   recentScores: Record<string, ScoreEntry[]>;
   schedule: { year: number; month: number; games: ScheduleGame[] } | null;
   todayGameDetails: Record<string, GameDetail>;
+  standings: StandingRow[] | null;
+  scoreSummary: { year: number; teams: ScoreSummaryRow[] } | null;
 }
 
 export interface ScheduleGame {
