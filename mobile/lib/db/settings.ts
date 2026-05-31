@@ -139,3 +139,35 @@ export async function addUnlockedBackgrounds(bgKeys: string[]): Promise<void> {
     throw e;
   }
 }
+
+export async function getHomeCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_home_coach")) === "true";
+}
+
+export async function setHomeCoachSeen(): Promise<void> {
+  await setSetting("has_seen_home_coach", "true");
+}
+
+export async function getTodayBackCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_today_back_coach")) === "true";
+}
+
+export async function setTodayBackCoachSeen(): Promise<void> {
+  await setSetting("has_seen_today_back_coach", "true");
+}
+
+export async function getGameStickerCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_game_sticker_coach")) === "true";
+}
+
+export async function setGameStickerCoachSeen(): Promise<void> {
+  await setSetting("has_seen_game_sticker_coach", "true");
+}
+
+export async function getDiaryCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_diary_coach")) === "true";
+}
+
+export async function setDiaryCoachSeen(): Promise<void> {
+  await setSetting("has_seen_diary_coach", "true");
+}

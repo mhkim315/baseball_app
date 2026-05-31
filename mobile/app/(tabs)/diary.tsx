@@ -16,7 +16,8 @@ import AchievementToast from "@/components/AchievementToast";
 import AchievementModal from "@/components/AchievementModal";
 import ConfettiOverlay from "@/components/ConfettiOverlay";
 import ExpenseModal from "@/components/ExpenseModal";
-import { getJikgwanRecords, deleteJikgwanRecord, getAllExpenses, getExpensesByDate, type JikgwanRecord, type Expense, type Badge } from "@/lib/db";
+import CoachMark from "@/components/CoachMark";
+import { getJikgwanRecords, deleteJikgwanRecord, getAllExpenses, getExpensesByDate, type JikgwanRecord, type Expense, type Badge, getDiaryCoachSeen, setDiaryCoachSeen } from "@/lib/db";
 import { cachedDailyScores, cachedAllDailyScores } from "@/lib/gameCache";
 
 import { parseGameTeamIds } from "@shared/constants";
@@ -164,6 +165,8 @@ export default function DiaryScreen() {
   const [toastRewards, setToastRewards] = useState<{ type?: string; emotion?: string; label: string; key?: string }[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
+  const [showDiaryCoach, setShowDiaryCoach] = useState(false);
+  const diaryCoachChecked = useRef(false);
 
 
 
@@ -333,6 +336,19 @@ export default function DiaryScreen() {
     }, [loadData])
   );
 
+  // Diary coach mark: show once when no records exist
+  useEffect(() => {
+    if (loadState === "success" && records.length === 0 && !diaryCoachChecked.current) {
+      diaryCoachChecked.current = true;
+      getDiaryCoachSeen().then(async (seen) => {
+        if (!seen) {
+          await setDiaryCoachSeen();
+          setShowDiaryCoach(true);
+        }
+      }).catch(() => {});
+    }
+  }, [loadState, records]);
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await loadData();
@@ -441,6 +457,7 @@ export default function DiaryScreen() {
   const isExpenseFab = showSubTabs && subTab === "expense";
 
   const handleFabPress = () => {
+    setShowDiaryCoach(false);
     if (isExpenseFab) {
       setExpensePresetDate(null);
       setShowExpenseModal(true);
@@ -728,6 +745,20 @@ export default function DiaryScreen() {
           </ScrollView>
         </View>
       </Modal>
+
+      {/* Diary coach mark */}
+      {showDiaryCoach && (
+        <View style={{ position: "absolute", right: 20, bottom: 100, zIndex: 100, elevation: 7, width: Math.min(280, screenWidth - 40) }}>
+          <CoachMark
+            visible
+            showChevrons={false}
+            arrowDirection="down"
+            arrowAlign="right"
+            text="+ 버튼을 눌러 첫 직관 기록을 작성해보세요"
+            onDismiss={() => setShowDiaryCoach(false)}
+          />
+        </View>
+      )}
 
       {/* FAB */}
       <Pressable

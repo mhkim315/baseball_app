@@ -13,9 +13,11 @@ import { cachedDailyScores, cachedScheduleByMonth, cachedGameDetail } from "@/li
 import { resolveGames } from "@/lib/resolveGames";
 import DiaryEntryModal, { type GameOption } from "@/components/DiaryEntryModal";
 import StickerModal from "@/components/StickerModal";
+import CoachMark from "@/components/CoachMark";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { resolveVenue } from "@/lib/stadiumData";
+import { getGameStickerCoachSeen, setGameStickerCoachSeen } from "@/lib/db";
 
 
 const POSITION_LABELS: Record<string, string> = {
@@ -55,6 +57,8 @@ export default function GameDetailScreen() {
   const [diaryGamePreset, setDiaryGamePreset] = useState<GameOption | null>(null);
   const [diaryPresetDate, setDiaryPresetDate] = useState<Date | null>(null);
   const [showStickerModal, setShowStickerModal] = useState(false);
+  const [showStickerCoach, setShowStickerCoach] = useState(false);
+  const stickerCoachChecked = useRef(false);
   const scheduleTimeRef = useRef<string | null>(null);
 
   const load = useCallback(() => {
@@ -305,6 +309,19 @@ export default function GameDetailScreen() {
 
     return () => { cancelled = true; };
   }, [detail, isExhibition]);
+
+  // Sticker coach mark: show once when game detail loads (explains timing)
+  useEffect(() => {
+    if (!detail || stickerCoachChecked.current) return;
+    if (detail.gameInfo?.status === "cancelled") return;
+    stickerCoachChecked.current = true;
+    getGameStickerCoachSeen().then(async (seen) => {
+      if (!seen) {
+        await setGameStickerCoachSeen();
+        setShowStickerCoach(true);
+      }
+    }).catch(() => {});
+  }, [detail]);
 
   const handleOpenDiary = useCallback(() => {
     if (!detail) return;
@@ -868,6 +885,18 @@ export default function GameDetailScreen() {
         <Pressable style={styles.diaryRecordBtn} onPress={handleOpenDiary}>
           <Text style={styles.diaryRecordText}>직관 기록하기</Text>
         </Pressable>
+
+        {showStickerCoach && (
+          <View style={{ marginTop: 12, marginBottom: 8 }}>
+            <CoachMark
+              visible
+              showChevrons={false}
+              arrowDirection={canMakeSticker ? "down" : "up"}
+              text="경기가 시작되면 스티커 생성이 활성화되고, 다음날 14시까지 만들 수 있어요"
+              onDismiss={() => setShowStickerCoach(false)}
+            />
+          </View>
+        )}
 
         {canMakeSticker && (
           <Pressable style={styles.stickerBtn} onPress={handleOpenSticker}>

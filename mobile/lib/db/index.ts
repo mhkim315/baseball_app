@@ -33,4 +33,8 @@ export {
   getProfileImage, setProfileImage,
   getUnlockedEmotions, addUnlockedEmotion,
   getUnlockedBackgrounds, addUnlockedBackgrounds,
+  getHomeCoachSeen, setHomeCoachSeen,
+  getTodayBackCoachSeen, setTodayBackCoachSeen,
+  getGameStickerCoachSeen, setGameStickerCoachSeen,
+  getDiaryCoachSeen, setDiaryCoachSeen,
 } from "./settings";

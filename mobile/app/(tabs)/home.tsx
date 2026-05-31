@@ -23,9 +23,13 @@ import { formatDateForApi as formatDateStr } from "@shared/constants";
 import { getInningInfo } from "@shared/gameStatus";
 
 import MyButton from "@/components/MyButton";
+import AchievementToast from "@/components/AchievementToast";
+import HomeCoachMark from "@/components/HomeCoachMark";
+import CoachMark from "@/components/CoachMark";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
+import { type Badge, getTodayBackCoachSeen, setTodayBackCoachSeen } from "@/lib/db";
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -114,6 +118,12 @@ export default function HomeScreen() {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [achievementOpen, setAchievementOpen] = useState(false);
   const [calResolvedGames, setCalResolvedGames] = useState<ResolvedGame[]>([]);
+  const [toastBadges, setToastBadges] = useState<Badge[]>([]);
+  const [toastRewards, setToastRewards] = useState<{ type?: string; emotion?: string; label: string; key?: string }[]>([]);
+  const [showCoachMark, setShowCoachMark] = useState(false);
+  const [showTodayBackCoach, setShowTodayBackCoach] = useState(false);
+  const hasLeftTodayRef = useRef(false);
+  const todayBackChecked = useRef(false);
   const scheduleCache = useRef<{ month: number; year: number; games: ScheduleGame[] } | null>(null);
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
@@ -369,23 +379,80 @@ export default function HomeScreen() {
     return () => { cancelled = true; };
   }, [calendarOpen, calMonth, calYear]);
 
-  // Evaluate badges on mount + refresh when app returns to foreground
-  useEffect(() => {
-    import("@/lib/achievements").then(async ({ backfillLiveRecords, evaluateBadges }) => {
+  const runBadgeCheck = useCallback(async () => {
+    try {
+      const { backfillLiveRecords, evaluateBadges, grantRandomCharacter } = await import("@/lib/achievements");
       await backfillLiveRecords();
-      await evaluateBadges();
-    }).catch(() => {});
+      const { newlyUnlockedBadges, newlyUnlockedBackgrounds } = await evaluateBadges();
+
+      const rewards: { type: string; emotion?: string; label: string; key?: string }[] = [];
+      for (let i = 0; i < newlyUnlockedBadges.length; i++) {
+        const reward = await grantRandomCharacter(newlyUnlockedBadges[i].badge_key);
+        if (reward) rewards.push({ type: "character", ...reward });
+      }
+      for (const bg of newlyUnlockedBackgrounds) {
+        rewards.push({ type: "background", key: bg.key, label: bg.label });
+      }
+      if (newlyUnlockedBadges.length > 0 || newlyUnlockedBackgrounds.length > 0) {
+        setToastBadges(newlyUnlockedBadges);
+        setToastRewards(rewards);
+      }
+    } catch {}
+  }, []);
+
+  // On mount: show coach mark first (if not seen), then run badge check after dismiss
+  // On foreground: only run badge check (coach already handled on mount)
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const { getHomeCoachSeen, setHomeCoachSeen } = await import("@/lib/db");
+        if (!(await getHomeCoachSeen())) {
+          await setHomeCoachSeen();
+          setShowCoachMark(true);
+        } else {
+          runBadgeCheck();
+        }
+      } catch { runBadgeCheck(); }
+    };
+    init();
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
         load();
-        import("@/lib/achievements").then(async ({ backfillLiveRecords, evaluateBadges }) => {
-          await backfillLiveRecords();
-          await evaluateBadges();
-        }).catch(() => {});
+        runBadgeCheck();
       }
     });
     return () => sub.remove();
   }, [load]);
+
+  const handleCoachDismiss = useCallback(() => {
+    setShowCoachMark(false);
+    runBadgeCheck();
+  }, [runBadgeCheck]);
+
+  // Track: user left today → came back → show sticker coach mark (once, only if games exist today)
+  useEffect(() => {
+    if (isToday(selectedDate)) {
+      const todayStr = formatDateStr(new Date());
+      const todayGames = gamesByDate[todayStr];
+      if (!todayGames) return; // data not loaded yet
+      if (todayGames.length === 0) {
+        todayBackChecked.current = true; // no games today, skip permanently
+        return;
+      }
+      if (hasLeftTodayRef.current && !todayBackChecked.current) {
+        if (showCoachMark) return;
+        todayBackChecked.current = true;
+        getTodayBackCoachSeen().then(async (seen) => {
+          if (!seen) {
+            await setTodayBackCoachSeen();
+            setShowTodayBackCoach(true);
+          }
+        }).catch(() => {});
+      }
+    } else {
+      hasLeftTodayRef.current = true;
+    }
+  }, [selectedDate, showCoachMark, gamesByDate]);
 
   const handlePageSwipe = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -446,10 +513,10 @@ export default function HomeScreen() {
         isTop={item.isTop}
         highlighted={isMyTeamGame ? teamPrimaryColor(myTeam, isDark) : undefined}
         dense={!isMyTeamGame}
-        onClick={() => router.push(`/game/${item.gameId}?ap=${encodeURIComponent(item.awayPitcher || "")}&hp=${encodeURIComponent(item.homePitcher || "")}`)}
+        onClick={() => { setShowTodayBackCoach(false); router.push(`/game/${item.gameId}?ap=${encodeURIComponent(item.awayPitcher || "")}&hp=${encodeURIComponent(item.homePitcher || "")}`); }}
       />
     );
-  }, [myTeam, isDark, router]);
+  }, [myTeam, isDark, router, setShowTodayBackCoach]);
 
   const renderEmpty = (isMonday?: boolean) => (
     <View style={[styles.emptyContainer, isMonday && { paddingVertical: 20 }]}>
@@ -477,6 +544,13 @@ export default function HomeScreen() {
         <View style={{ flex: 1 }} />
         <MyButton color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
       </View>
+
+      <AchievementToast
+        badges={toastBadges}
+        rewards={toastRewards}
+        teamId={myTeam ?? undefined}
+        onDismiss={() => { setToastBadges([]); setToastRewards([]); }}
+      />
 
       {/* Date strip */}
       <DateStrip
@@ -529,14 +603,24 @@ export default function HomeScreen() {
       </View>
 
       {/* Game list — horizontal paging scroll */}
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, position: "relative" }}>
+        {showCoachMark && (
+          <View style={{ position: "absolute", top: 0, left: 16, right: 16, zIndex: 100 }}>
+            <HomeCoachMark visible onDismiss={handleCoachDismiss} />
+          </View>
+        )}
+        {showTodayBackCoach && (
+          <View style={{ position: "absolute", top: 0, left: 16, right: 16, zIndex: 100 }}>
+            <CoachMark visible showChevrons={false} text="경기 카드를 눌러 오늘 경기의 스티커를 만들어보세요." onDismiss={() => setShowTodayBackCoach(false)} />
+          </View>
+        )}
         <ScrollView
           ref={pageScrollRef}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           onMomentumScrollEnd={handlePageSwipe}
-          onScrollBeginDrag={() => { lastActedPageRef.current = 1; }}
+          onScrollBeginDrag={() => { lastActedPageRef.current = 1; if (showCoachMark) handleCoachDismiss(); setShowTodayBackCoach(false); }}
           style={{ flex: 1 }}
         >
           {(["prev", "current", "next"] as const).map((slot, idx) => {
