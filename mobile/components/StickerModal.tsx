@@ -336,7 +336,6 @@ export default function StickerModal({
   }, [onClose]);
 
   return (
-    <>
     <BottomSheet visible={visible} onClose={handleClose} maxHeight="88%">
       {/* Header */}
       <View style={s.header}>
@@ -628,15 +627,13 @@ export default function StickerModal({
 
           <Text style={s.hint}>스티커를 클립보드에 복사해서 인스타그램 스토리에 붙여넣기 하세요.</Text>
         </ScrollView>
-    </BottomSheet>
-
     <SimpleAlert
       visible={alert.visible}
       title={alert.title}
       message={alert.message}
       onClose={() => setAlert({ ...alert, visible: false })}
     />
-    </>
+    </BottomSheet>
   );
 }
 

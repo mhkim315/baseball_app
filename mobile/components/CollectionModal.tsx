@@ -400,7 +400,6 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
   );
 
   return (
-    <>
       <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "padding"}>
           <View style={styles.overlay}>
@@ -412,39 +411,38 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
             </View>
           </View>
         </KeyboardAvoidingView>
+
+        {/* Fullscreen photo viewer */}
+        <Modal visible={!!fullscreenUri} transparent animationType="fade" onRequestClose={() => setFullscreenUri(null)}>
+          <Pressable
+            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.95)", justifyContent: "center", alignItems: "center" }}
+            onPress={() => setFullscreenUri(null)}
+          >
+            {fullscreenUri && (
+              <Image source={{ uri: fullscreenUri }} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
+            )}
+          </Pressable>
+        </Modal>
+
+        {/* Simple alert */}
+        <SimpleAlert
+          visible={alert.visible}
+          title={alert.title}
+          message={alert.message}
+          onClose={() => setAlert({ ...alert, visible: false })}
+        />
+
+        {/* Confirm delete alert */}
+        <SimpleAlert
+          visible={confirmAlert.visible}
+          title={confirmAlert.title}
+          message={confirmAlert.message}
+          confirmText="삭제"
+          onConfirm={confirmAlert.onConfirm}
+          cancelText="취소"
+          onClose={() => setConfirmAlert({ ...confirmAlert, visible: false })}
+        />
       </Modal>
-
-      {/* Fullscreen photo viewer */}
-      <Modal visible={!!fullscreenUri} transparent animationType="fade" onRequestClose={() => setFullscreenUri(null)}>
-        <Pressable
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.95)", justifyContent: "center", alignItems: "center" }}
-          onPress={() => setFullscreenUri(null)}
-        >
-          {fullscreenUri && (
-            <Image source={{ uri: fullscreenUri }} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
-          )}
-        </Pressable>
-      </Modal>
-
-      {/* Simple alert */}
-      <SimpleAlert
-        visible={alert.visible}
-        title={alert.title}
-        message={alert.message}
-        onClose={() => setAlert({ ...alert, visible: false })}
-      />
-
-      {/* Confirm delete alert */}
-      <SimpleAlert
-        visible={confirmAlert.visible}
-        title={confirmAlert.title}
-        message={confirmAlert.message}
-        confirmText="삭제"
-        onConfirm={confirmAlert.onConfirm}
-        cancelText="취소"
-        onClose={() => setConfirmAlert({ ...confirmAlert, visible: false })}
-      />
-    </>
   );
 }
 

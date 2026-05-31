@@ -25,7 +25,6 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
   const closeAlert = () => form.setSimpleAlert({ visible: false, title: "", message: "" });
 
   return (
-    <>
       <BottomSheet visible={visible} onClose={onClose} swipeToClose hardwareBackPress>
         <View style={form.styles.stepHeader}>
           {form.step === "calendar" && <Text style={form.styles.stepTitle}>날짜 선택</Text>}
@@ -155,8 +154,6 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
             )}
           </View>
         )}
-      </BottomSheet>
-
       <Modal transparent visible={form.simpleAlert.visible} onRequestClose={closeAlert}>
         <View style={form.styles.alertOverlay}>
           <View style={form.styles.alertCard}>
@@ -194,6 +191,6 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
           form.croppedUrisRef.current = [];
         }}
       />
-    </>
+      </BottomSheet>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback, useMemo } from "react";
-import { View, Text, Image, ScrollView, FlatList, StyleSheet, ActivityIndicator, Pressable, PanResponder, LayoutAnimation, Platform, UIManager, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, AppState } from "react-native";
+import { View, Text, Image, ScrollView, FlatList, StyleSheet, ActivityIndicator, Pressable, PanResponder, LayoutAnimation, Platform, UIManager, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, AppState, InteractionManager } from "react-native";
 
 import { useRouter } from "expo-router";
 import DateStrip from "@/components/DateStrip";
@@ -29,7 +29,8 @@ import CoachMark from "@/components/CoachMark";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
-import { type Badge, getTodayBackCoachSeen, setTodayBackCoachSeen } from "@/lib/db";
+import { backfillLiveRecords, evaluateBadges, grantRandomCharacter } from "@/lib/achievements";
+import { type Badge, getTodayBackCoachSeen, setTodayBackCoachSeen, getHomeCoachSeen, setHomeCoachSeen } from "@/lib/db";
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -157,10 +158,8 @@ export default function HomeScreen() {
       onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dy) > 10,
       onPanResponderRelease: (_, gs) => {
         if (gs.dy < -80 && calendarOpenRef.current) {
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
           setCalendarOpen(false);
         } else if (gs.dy > 80 && !calendarOpenRef.current) {
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
           setAchievementOpen(false);
           setCalendarOpen(true);
         }
@@ -177,10 +176,8 @@ export default function HomeScreen() {
       onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dy) > 10,
       onPanResponderRelease: (_, gs) => {
         if (gs.dy < -80 && achievementOpenRef.current) {
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
           setAchievementOpen(false);
         } else if (gs.dy > 80 && !achievementOpenRef.current) {
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
           setCalendarOpen(false);
           setAchievementOpen(true);
         }
@@ -381,7 +378,6 @@ export default function HomeScreen() {
 
   const runBadgeCheck = useCallback(async () => {
     try {
-      const { backfillLiveRecords, evaluateBadges, grantRandomCharacter } = await import("@/lib/achievements");
       await backfillLiveRecords();
       const { newlyUnlockedBadges, newlyUnlockedBackgrounds } = await evaluateBadges();
 
@@ -403,9 +399,8 @@ export default function HomeScreen() {
   // On mount: show coach mark first (if not seen), then run badge check after dismiss
   // On foreground: only run badge check (coach already handled on mount)
   useEffect(() => {
-    const init = async () => {
+    InteractionManager.runAfterInteractions(async () => {
       try {
-        const { getHomeCoachSeen, setHomeCoachSeen } = await import("@/lib/db");
         if (!(await getHomeCoachSeen())) {
           await setHomeCoachSeen();
           setShowCoachMark(true);
@@ -413,12 +408,13 @@ export default function HomeScreen() {
           runBadgeCheck();
         }
       } catch { runBadgeCheck(); }
-    };
-    init();
+    });
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
-        load();
-        runBadgeCheck();
+        InteractionManager.runAfterInteractions(() => {
+          load();
+          runBadgeCheck();
+        });
       }
     });
     return () => sub.remove();
@@ -580,7 +576,6 @@ export default function HomeScreen() {
       {/* Toggle row */}
       <View style={{ flexDirection: "row", paddingHorizontal: 20 }}>
         <Pressable style={{ flex: 1, paddingVertical: 6 }} onPress={() => {
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
           setCalendarOpen(!calendarOpen);
         }}>
           <Text style={styles.calToggleText}>
@@ -589,7 +584,6 @@ export default function HomeScreen() {
         </Pressable>
         <Text style={[styles.calToggleText, { paddingVertical: 6 }]}>|</Text>
         <Pressable style={{ flex: 1, paddingVertical: 6 }} onPress={() => {
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
           setCalendarOpen(false);
           setAchievementOpen(!achievementOpen);
         }}>
@@ -646,6 +640,7 @@ export default function HomeScreen() {
                     keyExtractor={(item) => item.gameId}
                     contentContainerStyle={styles.listContent}
                     ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+                    nestedScrollEnabled
                   />
                 )}
               </View>
