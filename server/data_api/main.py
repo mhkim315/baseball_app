@@ -301,7 +301,7 @@ def get_schedule_by_month(month: int, year: int = None):
                 d = int(ds[6:8])
                 if m == month:
                     result.append({
-                        "date": ds,
+                        "date": f"{ds[:4]}-{ds[4:6]}-{ds[6:8]}",
                         "month": m,
                         "day": d,
                         "venue": g.get("venue", ""),
@@ -669,3 +669,127 @@ def get_score_summary(year: int):
             "totalGames": games,
         })
     return {"year": year, "teams": teams}
+
+@app.get("/onboarding-data")
+def get_onboarding_data():
+    from datetime import date as dt_date
+    today_obj = dt_date.today()
+    current_year = today_obj.year
+
+    today = load_json("today-games.json")
+    if today is None:
+        return JSONResponse({"error": "Data not found"}, status_code=404)
+
+    scores = load_json("daily-scores.json")
+    recent_scores = {}
+    if scores:
+        for d, games in scores.get("dates", {}).items():
+            if d.startswith(str(current_year)):
+                recent_scores[d] = games
+
+    current_month = today_obj.month
+    path = DATA_DIR / "seasons" / str(current_year) / "regular-season.json"
+    schedule = None
+    if path.exists():
+        with open(path, "r", encoding="utf-8") as f:
+            reg = json.load(f)
+        result = []
+        for g in reg.get("games", []):
+            ds = g.get("date", "")
+            if len(ds) == 8:
+                m = int(ds[4:6])
+                if m == current_month:
+                    d = int(ds[6:8])
+                    result.append({
+                        "date": f"{ds[:4]}-{ds[4:6]}-{ds[6:8]}",
+                        "month": m, "day": d,
+                        "venue": g.get("venue", ""),
+                        "away": g.get("away", ""),
+                        "home": g.get("home", ""),
+                        "time": g.get("time"),
+                    })
+        schedule = {"year": current_year, "month": current_month, "games": result}
+
+    game_details = {}
+    team_name_to_code = {}
+    for code, team_id in TEAM_CODE_MAP.items():
+        kr_name = TEAM_NAME_MAP.get(team_id)
+        if kr_name:
+            team_name_to_code[kr_name] = code
+    seen_game_ids = set()
+    for i in range(4):
+        d = (today_obj - timedelta(days=i)).isoformat()
+        if d not in recent_scores:
+            continue
+        for game in recent_scores[d]:
+            if game.get("cancelled"):
+                continue
+            kr_away = game.get("away", "")
+            kr_home = game.get("home", "")
+            away_code = team_name_to_code.get(kr_away)
+            home_code = team_name_to_code.get(kr_home)
+            if not away_code or not home_code:
+                continue
+            game_seq = game.get("gameIdx", 0)
+            date_compact = d.replace("-", "")
+            game_id = f"{date_compact}-{away_code}{home_code}-{game_seq}"
+            if game_id in seen_game_ids:
+                continue
+            seen_game_ids.add(game_id)
+            detail = None
+            try:
+                detail = get_game_detail(game_id)
+                if isinstance(detail, JSONResponse):
+                    detail = None
+            except Exception:
+                pass
+            if detail:
+                game_details[game_id] = detail
+
+    standings_data = load_json("kbo_standings.json")
+    standings = standings_data.get("rows") if standings_data else None
+
+    year = current_year
+    if year in _HISTORICAL_SCORING:
+        teams = []
+        for team_name, info in sorted(_HISTORICAL_SCORING[year].items()):
+            teams.append({
+                "teamName": team_name,
+                "avgRuns": info["avgRuns"],
+                "totalRuns": info["totalRuns"],
+                "totalGames": info["totalGames"],
+            })
+        score_summary = {"year": year, "teams": teams}
+    else:
+        dates = scores.get("dates", {}) if scores else {}
+        team_runs = {}
+        team_games = {}
+        for date_str, games in dates.items():
+            if not date_str.startswith(str(year)):
+                continue
+            for game in games:
+                if game.get("cancelled") or game.get("outcome") is None:
+                    continue
+                team_runs[game["away"]] = team_runs.get(game["away"], 0) + game["awayScore"]
+                team_games[game["away"]] = team_games.get(game["away"], 0) + 1
+                team_runs[game["home"]] = team_runs.get(game["home"], 0) + game["homeScore"]
+                team_games[game["home"]] = team_games.get(game["home"], 0) + 1
+        teams = []
+        for team in sorted(team_runs):
+            games = team_games.get(team, 0)
+            teams.append({
+                "teamName": team,
+                "avgRuns": round(team_runs[team] / games, 1) if games > 0 else 0,
+                "totalRuns": team_runs[team],
+                "totalGames": games,
+            })
+        score_summary = {"year": year, "teams": teams}
+
+    return {
+        "todayGames": today,
+        "recentScores": recent_scores,
+        "schedule": schedule,
+        "todayGameDetails": game_details,
+        "standings": standings,
+        "scoreSummary": score_summary,
+    }
