@@ -49,6 +49,9 @@ async function writeToCache(data: OnboardingData): Promise<void> {
     await db.setCache(`scores:${date}`, JSON.stringify({ games }));
   }
 
+  // Also write __all__ key so cachedAllDailyScores() hits cache in preloadAll()
+  await db.setCache("scores:__all__", JSON.stringify(data.recentScores));
+
   // schedule → "schedule:{year}:{month}"
   if (data.schedule) {
     const { year, month } = data.schedule;
@@ -80,6 +83,12 @@ async function fetchAndCacheOnboarding(): Promise<void> {
     const data = await fetchOnboardingData();
     if (data) {
       await writeToCache(data);
+      // Warm adjacent month schedules in background (don't block onboarding)
+      const now = new Date();
+      const m = now.getMonth() + 1;
+      const y = now.getFullYear();
+      cachedScheduleByMonth(m + 1, y).catch(() => {});
+      cachedScheduleByMonth(m - 1, y).catch(() => {});
       return;
     }
   } catch {
