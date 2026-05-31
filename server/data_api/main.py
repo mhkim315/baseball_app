@@ -638,14 +638,13 @@ def get_onboarding_data():
 
     today_date = date.today()
 
-    # All scores for current year only (daily-scores.json is already in _JSON_CACHE, so iteration is free)
+    # All scores (daily-scores.json is already in _JSON_CACHE, so iteration is free)
     scores = load_json("daily-scores.json")
     recent_scores: dict[str, list] = {}
     if scores:
         dates_dict = scores.get("dates", {})
         for d, games in dates_dict.items():
-            if d.startswith(str(current_year)):
-                recent_scores[d] = games
+            recent_scores[d] = games
 
     # Current month schedule
     current_month = today_date.month
