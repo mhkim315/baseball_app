@@ -55,36 +55,69 @@ export default function OnboardingScreen() {
     introContent: {
       alignItems: "center",
       maxWidth: 360,
+      width: "100%",
     },
     logo: {
-      width: 80,
-      height: 80,
-      marginBottom: 16,
-      borderRadius: 20,
+      width: 72,
+      height: 72,
+      marginBottom: 12,
+      borderRadius: 18,
     },
     introTitle: {
-      fontSize: 24,
+      fontSize: 22,
       fontWeight: "bold",
       color: theme.foreground,
       textAlign: "center",
-      marginBottom: 12,
-      lineHeight: 34,
+      marginBottom: 6,
+      lineHeight: 30,
     },
     introSub: {
-      fontSize: 14,
+      fontSize: 13,
       color: theme.mutedForeground,
       textAlign: "center",
-      lineHeight: 22,
-      marginBottom: 40,
+      lineHeight: 20,
+      marginBottom: 28,
+    },
+    featureCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.card,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: 14,
+      marginBottom: 10,
+      width: "100%",
+      gap: 12,
+    },
+    featureIcon: {
+      fontSize: 24,
+      width: 36,
+      textAlign: "center",
+    },
+    featureText: {
+      flex: 1,
+    },
+    featureTitle: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: theme.foreground,
+    },
+    featureDesc: {
+      fontSize: 12,
+      color: theme.mutedForeground,
+      marginTop: 2,
+      lineHeight: 17,
     },
     ctaBtn: {
       backgroundColor: theme.foreground,
-      paddingVertical: 16,
-      paddingHorizontal: 40,
-      borderRadius: 16,
+      paddingVertical: 14,
+      paddingHorizontal: 36,
+      borderRadius: 14,
+      marginTop: 8,
     },
     ctaBtnText: {
-      fontSize: 17,
+      fontSize: 16,
       fontWeight: "700",
       color: theme.background,
     },
@@ -208,13 +241,46 @@ export default function OnboardingScreen() {
           <View style={styles.introContent}>
             <Image source={require("../assets/icon.png")} style={styles.logo} />
             <Text style={styles.introTitle}>
-              내 직관 승률,{"\n"}궁금하지 않으세요?
+              야구의 모든 순간을 함께
             </Text>
             <Text style={styles.introSub}>
-              직관 경기 승률, 관람 패턴,{"\n"}나만의 기록을 한눈에 확인하세요
+              직관 경기 기록부터 승률 분석까지{'\n'}야구를 더 재미있게
             </Text>
+
+            <View style={styles.featureCard}>
+              <Text style={styles.featureIcon}>📝</Text>
+              <View style={styles.featureText}>
+                <Text style={styles.featureTitle}>직관 기록</Text>
+                <Text style={styles.featureDesc}>경기 결과, 사진, 감정을 저장하고 돌아보기</Text>
+              </View>
+            </View>
+
+            <View style={styles.featureCard}>
+              <Text style={styles.featureIcon}>📊</Text>
+              <View style={styles.featureText}>
+                <Text style={styles.featureTitle}>승률 & 통계</Text>
+                <Text style={styles.featureDesc}>팀별/연도별 승률, 패턴 분석</Text>
+              </View>
+            </View>
+
+            <View style={styles.featureCard}>
+              <Text style={styles.featureIcon}>🏆</Text>
+              <View style={styles.featureText}>
+                <Text style={styles.featureTitle}>도전과제 & 보상</Text>
+                <Text style={styles.featureDesc}>기록에 따라 배지와 스티커 배경 해금</Text>
+              </View>
+            </View>
+
+            <View style={styles.featureCard}>
+              <Text style={styles.featureIcon}>🏟️</Text>
+              <View style={styles.featureText}>
+                <Text style={styles.featureTitle}>구장 안내</Text>
+                <Text style={styles.featureDesc}>구단별 홈구장 정보와 좌석 안내</Text>
+              </View>
+            </View>
+
             <Pressable style={styles.ctaBtn} onPress={goToTeamSelect}>
-              <Text style={styles.ctaBtnText}>궁금해요!</Text>
+              <Text style={styles.ctaBtnText}>시작하기</Text>
             </Pressable>
           </View>
         </View>
