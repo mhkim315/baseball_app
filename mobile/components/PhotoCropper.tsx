@@ -174,7 +174,7 @@ export default function PhotoCropper({ visible, imageUri, onCrop, onCancel }: Ph
         <Text style={styles.hint}>드래그하여 위치 조정</Text>
 
         <View style={styles.bottomRow}>
-          <Pressable style={[styles.btn, styles.cancelBtn]} onPress={onCancel}>
+          <Pressable style={[styles.btn, styles.cancelBtn]} onPress={onCancel} hitSlop={8}>
             <Text style={[styles.btnText, styles.cancelText]}>취소</Text>
           </Pressable>
           <Pressable

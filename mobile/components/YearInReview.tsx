@@ -118,7 +118,7 @@ export default function YearInReview({ year, onClose }: YearInReviewProps) {
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{year} 시즌 리캡</Text>
-          <Pressable onPress={onClose}><Text style={styles.closeBtn}>닫기</Text></Pressable>
+          <Pressable onPress={onClose} hitSlop={8}><Text style={styles.closeBtn}>닫기</Text></Pressable>
         </View>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <Text style={{ color: theme.mutedForeground, fontSize: 16 }}>데이터를 불러오는 중...</Text>
@@ -132,7 +132,7 @@ export default function YearInReview({ year, onClose }: YearInReviewProps) {
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{year} 시즌 리캡</Text>
-          <Pressable onPress={onClose}><Text style={styles.closeBtn}>닫기</Text></Pressable>
+          <Pressable onPress={onClose} hitSlop={8}><Text style={styles.closeBtn}>닫기</Text></Pressable>
         </View>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40 }}>
           <Text style={{ fontSize: 40, marginBottom: 16 }}>⚾</Text>
@@ -157,7 +157,7 @@ export default function YearInReview({ year, onClose }: YearInReviewProps) {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{year} 시즌 리캡</Text>
-        <Pressable onPress={onClose}><Text style={styles.closeBtn}>닫기</Text></Pressable>
+        <Pressable onPress={onClose} hitSlop={8}><Text style={styles.closeBtn}>닫기</Text></Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -311,7 +311,7 @@ export default function YearInReview({ year, onClose }: YearInReviewProps) {
           <Text style={styles.closingSub}>
             내년에는 어떤 경기들이{'\n'}당신을 기다리고 있을까요?
           </Text>
-          <Pressable style={styles.shareBtn} onPress={onClose}>
+          <Pressable style={styles.shareBtn} onPress={onClose} hitSlop={8}>
             <Text style={styles.shareBtnText}>닫기</Text>
           </Pressable>
         </View>

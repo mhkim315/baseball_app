@@ -62,7 +62,7 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit, e
 
   // Parse teams from game_id
   const gt = parseGameTeamIds(record.game_id || "");
-  const profileTeamId = record.cheered_team || gt.awayId || gt.homeId || "";
+  const profileTeamId = record.cheered_team || teamId || gt.awayId || gt.homeId || "";
   const liveTeamColor = profileTeamId ? teamPrimaryColor(profileTeamId, isDark) : "#3b82f6";
   const charKey = record.emotion ? (EMOTION_CHARACTER[record.emotion] || "neutral") : "neutral";
   const emChar = charKey as CharacterEmotion;

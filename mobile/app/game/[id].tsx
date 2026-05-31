@@ -523,7 +523,7 @@ export default function GameDetailScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.headerBar}>
-          <Pressable onPress={() => router.back()} style={styles.headerBackBtn}>
+          <Pressable onPress={() => router.back()} style={styles.headerBackBtn} hitSlop={8}>
             <Text style={styles.headerBackText}>←</Text>
           </Pressable>
           <Text style={styles.headerBarTitle}>경기 상세</Text>
@@ -611,7 +611,7 @@ export default function GameDetailScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.headerBar}>
-        <Pressable onPress={() => router.back()} style={styles.headerBackBtn}>
+        <Pressable onPress={() => router.back()} style={styles.headerBackBtn} hitSlop={8}>
           <Text style={styles.headerBackText}>←</Text>
         </Pressable>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>

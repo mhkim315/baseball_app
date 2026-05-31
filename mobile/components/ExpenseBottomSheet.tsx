@@ -106,7 +106,7 @@ export default function ExpenseBottomSheet({ date, expenses, onClose, onRefresh,
               </Pressable>
             )}
             <Text style={styles.totalText}>{formatAmount(total)}</Text>
-            <Pressable style={styles.closeBtn} onPress={onClose}>
+            <Pressable style={styles.closeBtn} onPress={onClose} hitSlop={12}>
               <Text style={styles.closeText}>✕</Text>
             </Pressable>
           </View>

@@ -67,7 +67,7 @@ function BadgeDetailPopup({ badge, def, levelTitle, onClose }: {
         ) : (
           <Text style={[detailStyles.desc, { color: theme.mutedForeground, marginTop: 8 }]}>아직 발견되지 않음</Text>
         )}
-        <Pressable style={[detailStyles.closeBtn, { backgroundColor: theme.secondary }]} onPress={onClose}>
+        <Pressable style={[detailStyles.closeBtn, { backgroundColor: theme.secondary }]} onPress={onClose} hitSlop={8}>
           <Text style={[detailStyles.closeBtnText, { color: theme.foreground }]}>확인</Text>
         </Pressable>
       </View>
@@ -128,7 +128,7 @@ export default function BadgeCollectionModal({ visible, onClose, myTeam }: Badge
         {/* Header */}
         <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
           <Text style={[styles.headerTitle, { color: theme.foreground }]}>도전과제 컬렉션</Text>
-          <Pressable onPress={onClose}><Text style={[styles.closeBtn, { color: theme.mutedForeground }]}>닫기</Text></Pressable>
+          <Pressable onPress={onClose} hitSlop={8}><Text style={[styles.closeBtn, { color: theme.mutedForeground }]}>닫기</Text></Pressable>
         </View>
 
         <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>

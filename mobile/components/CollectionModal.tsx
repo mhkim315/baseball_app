@@ -196,7 +196,7 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
           <Pressable onPress={() => openForm()}>
             <Text style={{ fontSize: 22, color: theme.foreground }}>+</Text>
           </Pressable>
-          <Pressable onPress={onClose}>
+          <Pressable onPress={onClose} hitSlop={12}>
             <Text style={{ fontSize: 22, color: theme.mutedForeground }}>✕</Text>
           </Pressable>
         </View>
@@ -280,6 +280,7 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
               <Image source={{ uri }} style={{ width: 80, height: 80, borderRadius: 10, backgroundColor: theme.muted }} />
               <Pressable
                 onPress={() => setFormPhotos((prev) => prev.filter((_, idx) => idx !== i))}
+                hitSlop={12}
                 style={{ position: "absolute", top: -4, right: -4, width: 20, height: 20, borderRadius: 10, backgroundColor: "#e74c3c", alignItems: "center", justifyContent: "center" }}
               >
                 <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>✕</Text>
@@ -299,6 +300,7 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
         <Pressable
           style={{ flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.secondary }}
           onPress={() => { setView(isEdit && current ? "detail" : "list"); if (!isEdit) resetForm(); }}
+          hitSlop={8}
         >
           <Text style={{ fontSize: 14, color: theme.mutedForeground }}>취소</Text>
         </Pressable>
@@ -320,7 +322,7 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
     return (
       <View style={{ flex: 1 }}>
         <View style={{ flexDirection: "row", justifyContent: "flex-end", marginBottom: 12 }}>
-          <Pressable onPress={() => { setCurrent(null); setView("list"); }}>
+          <Pressable onPress={() => { setCurrent(null); setView("list"); }} hitSlop={12}>
             <Text style={{ fontSize: 22, color: theme.mutedForeground }}>✕</Text>
           </Pressable>
         </View>
@@ -385,7 +387,7 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
       <ColorPicker selected={totemColor} onSelect={setTotemColor} />
 
       <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
-        <Pressable style={{ flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.secondary }} onPress={() => setView("detail")}>
+        <Pressable style={{ flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.secondary }} onPress={() => setView("detail")} hitSlop={8}>
           <Text style={{ fontSize: 14, color: theme.mutedForeground }}>취소</Text>
         </Pressable>
         <Pressable

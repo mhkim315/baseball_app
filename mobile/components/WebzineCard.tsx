@@ -34,7 +34,7 @@ export default function WebzineCard({ record, teamId, expenses, onPress, onLongP
   const photoW = screenWidth / 3;
   const photos = useMemo(() => parsePhotos(record), [record.photos, record.photo_path]);
   const gt = parseGameTeamIds(record.game_id || "");
-  const profileTeamId = record.cheered_team || gt.awayId || gt.homeId || "";
+  const profileTeamId = record.cheered_team || teamId || gt.awayId || gt.homeId || "";
   const liveTeamColor = profileTeamId ? teamPrimaryColor(profileTeamId, isDark) : "#3b82f6";
   const charKey = record.emotion ? (EMOTION_CHARACTER[record.emotion] || "neutral") : "neutral";
   const emChar = charKey as CharacterEmotion;

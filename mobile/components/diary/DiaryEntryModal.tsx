@@ -44,7 +44,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
               </Pressable>
               <Text style={form.styles.stepTitle}>{form.editRecord ? "기록 수정" : "기록 작성"}</Text>
               <View style={{ flexDirection: "row", gap: 8 }}>
-                <Pressable style={form.styles.headerCancelBtn} onPress={onClose}>
+                <Pressable style={form.styles.headerCancelBtn} onPress={onClose} hitSlop={8}>
                   <Text style={form.styles.headerCancelText}>취소</Text>
                 </Pressable>
                 <Pressable style={form.styles.headerSaveBtn} onPress={form.handleSave} disabled={form.saving}>
@@ -138,7 +138,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
           <View style={form.styles.bottomRow}>
             {form.step === "games" ? (
               <>
-                <Pressable style={form.styles.cancelBtn} onPress={onClose}>
+                <Pressable style={form.styles.cancelBtn} onPress={onClose} hitSlop={8}>
                   <Text style={form.styles.cancelText}>취소</Text>
                 </Pressable>
                 <Pressable style={form.styles.cancelBtn} onPress={() => {
@@ -148,7 +148,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
                 </Pressable>
               </>
             ) : (
-              <Pressable style={form.styles.cancelBtnFull} onPress={onClose}>
+              <Pressable style={form.styles.cancelBtnFull} onPress={onClose} hitSlop={8}>
                 <Text style={form.styles.cancelText}>취소</Text>
               </Pressable>
             )}

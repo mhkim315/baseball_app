@@ -595,7 +595,7 @@ export default function MyScreen() {
                 maxLength={20}
               />
               <View style={styles.modalButtons}>
-                <Pressable style={styles.modalCancel} onPress={() => setShowNicknameModal(false)}>
+                <Pressable style={styles.modalCancel} onPress={() => setShowNicknameModal(false)} hitSlop={8}>
                   <Text style={styles.modalCancelText}>취소</Text>
                 </Pressable>
                 <Pressable style={styles.modalSave} onPress={handleSaveNickname}>
@@ -645,7 +645,7 @@ export default function MyScreen() {
               모든 직관기록, 사진, 지출내역, 설정이{'\n'}영구적으로 삭제됩니다.{'\n\n'}계속하시겠습니까?
             </Text>
             <View style={styles.modalButtons}>
-              <Pressable style={styles.modalCancel} onPress={() => setShowResetConfirm(false)}>
+              <Pressable style={styles.modalCancel} onPress={() => setShowResetConfirm(false)} hitSlop={8}>
                 <Text style={styles.modalCancelText}>취소</Text>
               </Pressable>
               <Pressable
@@ -690,7 +690,7 @@ export default function MyScreen() {
                   }}>
                     <Text style={{ fontSize: 22, color: theme.foreground }}>+</Text>
                   </Pressable>
-                  <Pressable onPress={() => setShowTotemList(false)}>
+                  <Pressable onPress={() => setShowTotemList(false)} hitSlop={12}>
                     <Text style={{ fontSize: 22, color: theme.mutedForeground }}>✕</Text>
                   </Pressable>
                 </View>
@@ -795,7 +795,7 @@ export default function MyScreen() {
               <ColorPicker selected={totemColor} onSelect={setTotemColor} />
 
               <View style={styles.modalButtons}>
-                <Pressable style={styles.modalCancel} onPress={() => setShowTotemModal(false)}>
+                <Pressable style={styles.modalCancel} onPress={() => setShowTotemModal(false)} hitSlop={8}>
                   <Text style={styles.modalCancelText}>취소</Text>
                 </Pressable>
                 <Pressable style={[styles.modalSave, !totemName.trim() && { opacity: 0.4 }]} disabled={!totemName.trim()} onPress={async () => {
@@ -858,7 +858,7 @@ export default function MyScreen() {
               }}>
                 <Text style={{ fontSize: 14, fontWeight: "600", color: "#ef4444" }}>기록에서도 제거</Text>
               </Pressable>
-              <Pressable style={{ alignItems: "center", paddingVertical: 10, borderRadius: 12, marginTop: 4 }} onPress={() => setShowTotemDeleteConfirm(null)}>
+              <Pressable style={{ alignItems: "center", paddingVertical: 10, borderRadius: 12, marginTop: 4 }} onPress={() => setShowTotemDeleteConfirm(null)} hitSlop={8}>
                 <Text style={{ fontSize: 14, color: theme.mutedForeground }}>취소</Text>
               </Pressable>
             </View>
@@ -905,7 +905,7 @@ export default function MyScreen() {
                 );
               })}
             </ScrollView>
-            <Pressable style={[styles.modalSave, { flex: 0, alignSelf: "center", paddingHorizontal: 40 }]} onPress={() => setShowProfilePicker(false)}>
+            <Pressable style={[styles.modalSave, { flex: 0, alignSelf: "center", paddingHorizontal: 40 }]} onPress={() => setShowProfilePicker(false)} hitSlop={8}>
               <Text style={styles.modalSaveText}>확인</Text>
             </Pressable>
           </View>

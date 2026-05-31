@@ -197,7 +197,7 @@ export default function ExpenseModal({ visible, onClose, onSaved, presetDate }: 
         {step === "calendar" ? (
           <>
             <View style={styles.header}>
-              <Pressable style={[styles.headerBtn, styles.headerCancelBtn]} onPress={onClose}>
+              <Pressable style={[styles.headerBtn, styles.headerCancelBtn]} onPress={onClose} hitSlop={8}>
                 <Text style={[styles.headerBtnText, styles.headerCancelText]}>취소</Text>
               </Pressable>
               <Text style={styles.title}>날짜 선택</Text>
@@ -242,7 +242,7 @@ export default function ExpenseModal({ visible, onClose, onSaved, presetDate }: 
               <Pressable style={styles.headerBackBtn} onPress={() => {
                 setStep("calendar");
                 setKeyboardHeight(0);
-              }}>
+              }} hitSlop={8}>
                 <Text style={styles.headerBackText}>← 뒤로</Text>
               </Pressable>
               <Text style={styles.title}>지출 기록</Text>
