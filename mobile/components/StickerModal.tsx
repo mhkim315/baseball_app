@@ -6,12 +6,14 @@ import { captureRef } from "react-native-view-shot";
 import * as Clipboard from "expo-clipboard";
 import * as Sharing from "expo-sharing";
 import { computeTeamStreak, resolveHashtags, type TeamStreakInfo } from "@/lib/sticker";
-import { getJikgwanRecords } from "@/lib/db";
+import { getJikgwanRecords, getUnlockedBackgrounds } from "@/lib/db";
 import { getInningInfo } from "@shared/gameStatus";
 import type { JikgwanRecord } from "@/lib/db";
 import { computeStreakStats, computeDiaryStats } from "@/lib/stats";
 import { resolveIsWin } from "@/lib/expenseStats";
 import { TEAM_COLORS } from "@shared/teamColors";
+import { STADIUM_BRIEFS, TEAM_STADIUM_MAP } from "@/lib/stadiumData";
+import { BgKey, BG_OPTIONS } from "@/lib/backgrounds";
 import { useTheme } from "@/lib/ThemeContext";
 import { useTeam } from "@/lib/TeamContext";
 import ColorPicker from "@/components/ColorPicker";
@@ -43,24 +45,15 @@ interface StickerModalProps {
   isFinished?: boolean;
   liveInning?: { inning: number; isTop: boolean } | null;
   gameId?: string;
+  venue?: string;
 }
 
-type BgKey = "transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon" | "grass" | "ground";
-const BG_OPTIONS: { key: BgKey; label: string }[] = [
-  { key: "transparent", label: "투명" },
-  { key: "sketchbook", label: "스케치북" },
-  { key: "retro", label: "레트로" },
-  { key: "postit", label: "포스트잇" },
-  { key: "grid", label: "모눈노트" },
-  { key: "neon", label: "네온" },
-  { key: "grass", label: "잔디" },
-  { key: "ground", label: "그라운드" },
-];
+
 
 export default function StickerModal({
   visible, onClose, awayTeam, homeTeam, awayScore, homeScore,
   awayRank, homeRank, date, scoreBoard, rheb,
-  isLive, isFinished, liveInning, gameId,
+  isLive, isFinished, liveInning, gameId, venue,
 }: StickerModalProps) {
   const { theme } = useTheme();
   const { myTeam } = useTeam();
@@ -127,6 +120,7 @@ export default function StickerModal({
   const [capturing, setCapturing] = useState(false);
   const [textColor, setTextColor] = useState("");
   const [badgeColor, setBadgeColor] = useState<string | null>(null);
+  const [unlockedBg, setUnlockedBg] = useState<Set<string> | null>(null);
 
   // Sticker data
   const [loading, setLoading] = useState(true);
@@ -138,11 +132,35 @@ export default function StickerModal({
   const [allRecords, setAllRecords] = useState<JikgwanRecord[]>([]);
   const [alert, setAlert] = useState<{ visible: boolean; title: string; message: string }>({ visible: false, title: "", message: "" });
 
+  // Sorted backgrounds: defaults → unlocked → locked
+  const sortedBgOptions = useMemo(() => {
+    if (!unlockedBg) return BG_OPTIONS;
+    return [...BG_OPTIONS].sort((a, b) => {
+      const aLocked = !unlockedBg.has(a.key);
+      const bLocked = !unlockedBg.has(b.key);
+      if (aLocked && !bLocked) return 1;
+      if (!aLocked && bLocked) return -1;
+      return 0;
+    });
+  }, [unlockedBg]);
+
   // Colors & display names
   const awayColor = TEAM_COLORS[awayTeam]?.primary ?? "#111";
   const homeColor = TEAM_COLORS[homeTeam]?.primary ?? "#111";
   const awayDisplay = TEAM_COLORS[awayTeam]?.shortName ?? awayTeam;
   const homeDisplay = TEAM_COLORS[homeTeam]?.shortName ?? homeTeam;
+  const STADIUM_DISPLAY: Record<string, string> = {
+    doosan: "서울 잠실야구장", lg: "서울 잠실야구장",
+    kiwoom: "서울 고척스카이돔",
+    ssg: "인천 SSG랜더스필드",
+    kt: "수원 KT위즈파크",
+    hanwha: "대전 한화생명볼파크",
+    samsung: "대구 삼성라이온즈파크",
+    kia: "광주 기아챔피언스필드",
+    lotte: "부산 사직야구장",
+    nc: "창원 NC파크",
+  };
+  const stadiumName = STADIUM_DISPLAY[homeTeam] || venue || "";
 
   // Target team: myTeam if playing in this game, otherwise homeTeam
   const targetTeam = useMemo(() => {
@@ -159,6 +177,12 @@ export default function StickerModal({
     if (isTargetHome) return homeWon ? "win" : "lose";
     return homeWon ? "lose" : "win";
   }, [homeScore, awayScore, isLive, isTargetHome]);
+
+  // ─── Load unlocked backgrounds ───
+  useEffect(() => {
+    if (!visible) return;
+    getUnlockedBackgrounds().then((list) => setUnlockedBg(new Set(list)));
+  }, [visible]);
 
   // ─── Effect 1: Load raw data ───
   useEffect(() => {
@@ -261,8 +285,10 @@ export default function StickerModal({
       setTeamTag("책임없는쾌락");
       setMyTag("아무나이겨라");
     } else {
-      setTeamTag(hashtags.teamTag || (isLive ? "직관중" : ""));
-      setMyTag(hashtags.myTag || (isLive ? "야구장" : ""));
+      const modeLiveLabel = statsMode === "broadcast" ? "집관중" : "직관중";
+      const modeFallback = statsMode === "broadcast" ? "집관" : "야구장";
+      setTeamTag(hashtags.teamTag || (isLive ? modeLiveLabel : ""));
+      setMyTag(hashtags.myTag || (isLive ? modeFallback : ""));
     }
     setCustomTag("");
   }, [loading, allRecords, statsMode, actualResult, rawTeamStreak, targetTeam, homeTeam, myTeam, awayTeam, date]);
@@ -359,6 +385,7 @@ export default function StickerModal({
                   customTag={customTag}
                   statsMode={statsMode}
                   stats={stats}
+                  venue={stadiumName}
                 />
               </View>
             )}
@@ -368,24 +395,23 @@ export default function StickerModal({
           {isLive && localScoreBoard && (
             <View style={{ marginBottom: 24, padding: 16, backgroundColor: theme.muted, borderRadius: 12 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground }}>라이브 스코어 조정</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground }}>라이브 스코어 조정</Text>
+                  {(() => {
+                    const info = getInningInfo(localScoreBoard);
+                    if (!info) return null;
+                    const label = `${info.inning}회${info.isTop ? "초" : "말"}`;
+                    return (
+                      <View style={{ backgroundColor: "#e53935", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 12, fontWeight: "800", color: "#fff" }}>{label}</Text>
+                      </View>
+                    );
+                  })()}
+                </View>
                 <Pressable onPress={handleResetScore} hitSlop={12}>
                   <Text style={{ fontSize: 12, color: theme.mutedForeground, fontWeight: "600" }}>↺ 리셋</Text>
                 </Pressable>
               </View>
-
-              {localScoreBoard && (() => {
-                const info = getInningInfo(localScoreBoard);
-                if (!info) return null;
-                const label = `${info.inning}회${info.isTop ? "초" : "말"}`;
-                return (
-                  <View style={{ alignItems: "center", marginBottom: 12 }}>
-                    <View style={{ backgroundColor: "#e53935", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 4 }}>
-                      <Text style={{ fontSize: 13, fontWeight: "800", color: "#fff" }}>{label}</Text>
-                    </View>
-                  </View>
-                );
-              })()}
 
               <View style={{ flexDirection: "row", gap: 16 }}>
                 {/* Away Control */}
@@ -418,22 +444,33 @@ export default function StickerModal({
           )}
 
           {/* ── Controls ── */}
-          {/* Background selector */}
           <View style={s.controlSection}>
             <Text style={s.controlLabel}>배경</Text>
-            <View style={s.chipRow}>
-              {BG_OPTIONS.map((opt) => (
-                <Pressable
-                  key={opt.key}
-                  style={[s.chip, background === opt.key && s.chipActive]}
-                  onPress={() => setBackground(opt.key)}
-                >
-                  <Text style={[s.chipText, background === opt.key && s.chipTextActive]}>
-                    {opt.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+              {sortedBgOptions.map((opt) => {
+                const locked = unlockedBg !== null && !unlockedBg.has(opt.key);
+                return (
+                  <Pressable
+                    key={opt.key}
+                    style={[s.bgChip, background === opt.key && s.chipActive]}
+                    onPress={() => {
+                      if (locked) {
+                        setAlert({ visible: true, title: "잠금 해제 필요", message: "도전과제 레벨업 시 랜덤으로 해금됩니다.\n도전과제를 달성해서 배경을 모아보세요!" });
+                      } else {
+                        setBackground(opt.key);
+                      }
+                    }}
+                  >
+                    <Text style={[s.bgChipText, background === opt.key && s.chipTextActive, locked && { opacity: 0.4 }]}>
+                      {opt.label}
+                    </Text>
+                    {locked && <Text style={s.bgLockIcon}>🔒</Text>}
+                  </Pressable>
+                );
+              })}
+              </View>
+            </ScrollView>
           </View>
 
           {/* Stats mode toggle */}
@@ -453,6 +490,39 @@ export default function StickerModal({
               ))}
             </View>
           </View>
+
+          {/* Scoreboard toggle */}
+          <View style={[s.toggleRow]}>
+            <Text style={s.controlLabel}>스코어보드</Text>
+            <Pressable style={[s.toggle, showScoreboard && s.toggleActive]} onPress={() => setShowScoreboard(!showScoreboard)}>
+              <Text style={[s.toggleText, showScoreboard && s.toggleTextActive]}>
+                {showScoreboard ? "ON" : "OFF"}
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Text color */}
+          <View style={s.controlSection}>
+            <Text style={s.controlLabel}>글자 색상</Text>
+            <ColorPicker selected={textColor} onSelect={setTextColor} showDefault />
+          </View>
+
+          {/* Badge toggle */}
+          <View style={[s.toggleRow, { marginBottom: 16 }]}>
+            <Text style={s.controlLabel}>승률 · 해시태그</Text>
+            <Pressable style={[s.toggle, showBadge && s.toggleActive]} onPress={() => setShowBadge(!showBadge)}>
+              <Text style={[s.toggleText, showBadge && s.toggleTextActive]}>
+                {showBadge ? "ON" : "OFF"}
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Badge background color */}
+          {showBadge && (
+            <View style={{ marginBottom: 16 }}>
+              <ColorPicker selected={badgeColor ?? ""} onSelect={setBadgeColor} showDefault defaultLabel="없음" defaultActive={badgeColor === ""} />
+            </View>
+          )}
 
           {/* Stroke toggle */}
           <View style={s.toggleRow}>
@@ -489,39 +559,6 @@ export default function StickerModal({
               >
                 <Text style={{ fontSize: 11, fontWeight: "700", color: theme.mutedForeground }}>X</Text>
               </Pressable>
-            </View>
-          )}
-
-          {/* Scoreboard toggle */}
-          <View style={[s.toggleRow]}>
-            <Text style={s.controlLabel}>스코어보드</Text>
-            <Pressable style={[s.toggle, showScoreboard && s.toggleActive]} onPress={() => setShowScoreboard(!showScoreboard)}>
-              <Text style={[s.toggleText, showScoreboard && s.toggleTextActive]}>
-                {showScoreboard ? "ON" : "OFF"}
-              </Text>
-            </Pressable>
-          </View>
-
-          {/* Text color */}
-          <View style={s.controlSection}>
-            <Text style={s.controlLabel}>글자 색상</Text>
-            <ColorPicker selected={textColor} onSelect={setTextColor} showDefault />
-          </View>
-
-          {/* Badge toggle */}
-          <View style={[s.toggleRow, { marginBottom: 16 }]}>
-            <Text style={s.controlLabel}>승률 · 해시태그</Text>
-            <Pressable style={[s.toggle, showBadge && s.toggleActive]} onPress={() => setShowBadge(!showBadge)}>
-              <Text style={[s.toggleText, showBadge && s.toggleTextActive]}>
-                {showBadge ? "ON" : "OFF"}
-              </Text>
-            </Pressable>
-          </View>
-
-          {/* Badge background color */}
-          {showBadge && (
-            <View style={{ marginBottom: 16 }}>
-              <ColorPicker selected={badgeColor ?? ""} onSelect={setBadgeColor} showDefault defaultLabel="없음" defaultActive={badgeColor === ""} />
             </View>
           )}
 
@@ -705,4 +742,15 @@ const s = StyleSheet.create({
   },
   actionBtnText: { fontSize: 14, fontWeight: "700", color: "#fff" },
   hint: { fontSize: 11, color: "#bbb", textAlign: "center" },
+  bgChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: "#f0f0f0",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  bgChipText: { fontSize: 13, fontWeight: "600", color: "#555" },
+  bgLockIcon: { fontSize: 11 },
 });

@@ -32,4 +32,5 @@ export {
   getNickname, setNickname, getInstallDate,
   getProfileImage, setProfileImage,
   getUnlockedEmotions, addUnlockedEmotion,
+  getUnlockedBackgrounds, addUnlockedBackgrounds,
 } from "./settings";

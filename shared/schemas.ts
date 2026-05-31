@@ -155,11 +155,12 @@ export const GameDetailSchema = z.object({
   }).passthrough(),
   lineupConfirmed: z.boolean().nullish(),
   gameInfo: z.object({
-    time: z.string(),
-    venue: z.string(),
-    status: z.string(),
+    time: z.string().nullable().nullish(),
+    venue: z.string().nullable().nullish(),
+    status: z.string().nullable().nullish(),
   }).passthrough().nullish(),
-  score: z.object({ away: z.number(), home: z.number() }).passthrough().nullish(),
+  // game-detail response — nullable fields for live/in-progress games
+  score: z.object({ away: z.number(), home: z.number() }).passthrough().nullable().nullish(),
   scoreBoard: z.object({
     rheb: z.object({
       away: z.object({ r: z.number(), h: z.number(), e: z.number() }).passthrough(),

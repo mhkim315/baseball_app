@@ -1,4 +1,5 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
+
 import { useTheme } from "@/lib/ThemeContext";
 
 interface Props {
@@ -19,32 +20,34 @@ export default function ColorPicker({ selected, onSelect, showDefault, defaultLa
   const isDefaultActive = defaultActive !== undefined ? defaultActive : !selected;
 
   return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
-      {COLORS.map((c) => (
-        <Pressable
-          key={c}
-          onPress={() => onSelect(selected === c ? "" : c)}
-          style={{
-            width: 32, height: 32, borderRadius: 16,
-            backgroundColor: c,
-            borderWidth: 2.5,
-            borderColor: selected === c ? theme.foreground : (c === "#000000" || c === "#ffffff" ? theme.border : "transparent"),
-          }}
-        />
-      ))}
-      {showDefault && (
-        <Pressable
-          onPress={() => onSelect("")}
-          style={{
-            height: 32, paddingHorizontal: 12, borderRadius: 16,
-            borderWidth: 2, borderColor: isDefaultActive ? theme.foreground : theme.border,
-            alignItems: "center", justifyContent: "center",
-            backgroundColor: isDefaultActive ? theme.muted : "transparent",
-          }}
-        >
-          <Text style={{ fontSize: 12, fontWeight: isDefaultActive ? "700" : "400", color: isDefaultActive ? theme.foreground : theme.mutedForeground }}>{defaultLabel || "기본"}</Text>
-        </Pressable>
-      )}
-    </View>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        {showDefault && (
+          <Pressable
+            onPress={() => onSelect("")}
+            style={{
+              height: 32, paddingHorizontal: 12, borderRadius: 16,
+              borderWidth: 2, borderColor: isDefaultActive ? theme.foreground : theme.border,
+              alignItems: "center", justifyContent: "center",
+              backgroundColor: isDefaultActive ? theme.muted : "transparent",
+            }}
+          >
+            <Text style={{ fontSize: 12, fontWeight: isDefaultActive ? "700" : "400", color: isDefaultActive ? theme.foreground : theme.mutedForeground }}>{defaultLabel || "기본"}</Text>
+          </Pressable>
+        )}
+        {COLORS.map((c) => (
+          <Pressable
+            key={c}
+            onPress={() => onSelect(selected === c ? "" : c)}
+            style={{
+              width: 32, height: 32, borderRadius: 16,
+              backgroundColor: c,
+              borderWidth: 2.5,
+              borderColor: selected === c ? theme.foreground : (c === "#000000" || c === "#ffffff" ? theme.border : "transparent"),
+            }}
+          />
+        ))}
+      </View>
+    </ScrollView>
   );
 }

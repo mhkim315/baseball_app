@@ -7,15 +7,24 @@ import {
   getInstallDate,
   getUnlockedEmotions,
   addUnlockedEmotion,
+  addUnlockedBackgrounds,
+  getUnlockedBackgrounds,
   setBadgeRewardEmotion,
   getDb,
   type Badge,
 } from "@/lib/db";
 import { computeBadgeResults } from "./pureEvaluator";
 import { CHARACTER_LOCKABLE_SET, ALL_CHARACTERS } from "@/lib/emotions";
+import { computeLevel } from "./level";
+import { LOCKABLE_BACKGROUNDS, BG_LABEL_MAP } from "@/lib/backgrounds";
 
 export interface CharacterReward {
   emotion: string;
+  label: string;
+}
+
+export interface BackgroundReward {
+  key: string;
   label: string;
 }
 
@@ -47,9 +56,9 @@ export async function persistBadgeResults(results: { newlyUnlocked: Badge[]; pro
 }
 
 /**
- * Evaluate all badges and return the list of newly unlocked badges.
+ * Evaluate all badges and return newly unlocked badges + background rewards.
  */
-export async function evaluateBadges(): Promise<Badge[]> {
+export async function evaluateBadges(): Promise<{ newlyUnlockedBadges: Badge[]; newlyUnlockedBackgrounds: BackgroundReward[] }> {
   const [
     records,
     existingBadges,
@@ -68,6 +77,8 @@ export async function evaluateBadges(): Promise<Badge[]> {
     getUnlockedEmotions(),
   ]);
 
+  const oldLevel = computeLevel(existingBadges).level;
+
   const results = computeBadgeResults({
     records,
     existingBadges,
@@ -80,7 +91,29 @@ export async function evaluateBadges(): Promise<Badge[]> {
 
   await persistBadgeResults(results);
 
-  return results.newlyUnlocked;
+  // Level-up background unlock
+  const allUnlocked = [...existingBadges, ...results.newlyUnlocked];
+  const newLevel = computeLevel(allUnlocked).level;
+  const newlyUnlockedBackgrounds: BackgroundReward[] = [];
+
+  if (newLevel > oldLevel) {
+    const levelsGained = newLevel - oldLevel;
+    const currentUnlocked = await getUnlockedBackgrounds();
+    const stillLocked = LOCKABLE_BACKGROUNDS.filter((bg) => !currentUnlocked.includes(bg));
+    const picks: string[] = [];
+    const shuffled = stillLocked.sort(() => Math.random() - 0.5);
+    for (let i = 0; i < Math.min(levelsGained, shuffled.length); i++) {
+      picks.push(shuffled[i]);
+    }
+    if (picks.length > 0) {
+      await addUnlockedBackgrounds(picks);
+      for (const key of picks) {
+        newlyUnlockedBackgrounds.push({ key, label: BG_LABEL_MAP[key as keyof typeof BG_LABEL_MAP] || key });
+      }
+    }
+  }
+
+  return { newlyUnlockedBadges: results.newlyUnlocked, newlyUnlockedBackgrounds };
 }
 
 /**

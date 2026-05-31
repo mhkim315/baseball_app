@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
+import type { BgKey } from "@/lib/backgrounds";
 
 interface ScoreBoardInn {
   away: (number | null)[];
@@ -27,7 +28,7 @@ interface Props {
   gameResult: "win" | "lose" | "draw" | null;
   liveInningLabel?: string;
   liveTimestamp?: string;
-  background: "transparent" | "sketchbook" | "retro" | "postit" | "grid" | "neon" | "grass" | "ground";
+  background: BgKey;
   stroke: boolean;
   showBadge: boolean;
   showScoreboard?: boolean;
@@ -39,6 +40,7 @@ interface Props {
   customTag: string;
   stats: Stats | null;
   statsMode?: "live" | "broadcast";
+  venue?: string;
 }
 
 const COLORS = {
@@ -350,7 +352,7 @@ export default function StickerContent(props: Props) {
     awayScore, homeScore, awayRank, homeRank,
     date, scoreBoard, rheb,
     gameResult, background, stroke, showBadge, showScoreboard, textColor, strokeColor,
-    teamTag, myTag, customTag, stats, badgeBackgroundColor, statsMode,
+    teamTag, myTag, customTag, stats, badgeBackgroundColor, statsMode, venue,
   } = props;
 
   const tc = textColor || "#333";
@@ -525,11 +527,13 @@ export default function StickerContent(props: Props) {
             borderColor: badgeBackgroundColor ? "transparent" : "#e2e8f0",
             flexDirection: "row", alignItems: "flex-start", gap: 6,
           }}>
-            {gameResult !== null && stats && (
+            {gameResult !== null ? (
               <Text style={[{ fontSize: 16, marginTop: 2 }]}>🏆</Text>
-            )}
+            ) : venue ? (
+              <Text style={[{ fontSize: 16, marginTop: 1, color: badgeTextColor }]}>📍</Text>
+            ) : null}
             <View style={{ flex: 1 }}>
-              {gameResult !== null && (
+              {gameResult !== null ? (
                 <View style={{ flexDirection: "row", alignItems: "baseline", flexWrap: "wrap" }}>
                   <Text style={[{ fontSize: 11, color: badgeTextColor, fontWeight: "700" }]}>{statsMode === "broadcast" ? "집관 승률 " : "직관 승률 "}</Text>
                   <Text style={[{ fontSize: 14, fontWeight: "900", color: badgeValueColor }]}>
@@ -539,7 +543,9 @@ export default function StickerContent(props: Props) {
                     ({stats.wins}승 {stats.losses}패{stats.draws > 0 ? ` ${stats.draws}무` : ""})
                   </Text>
                 </View>
-              )}
+              ) : venue ? (
+                <Text style={[{ fontSize: 12, color: badgeTextColor, fontWeight: "700" }]}>{venue}</Text>
+              ) : null}
               {/* Hashtags */}
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: gameResult !== null ? 2 : 0 }}>
                 {teamTag ? (

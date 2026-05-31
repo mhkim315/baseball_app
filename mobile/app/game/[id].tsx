@@ -55,6 +55,7 @@ export default function GameDetailScreen() {
   const [diaryGamePreset, setDiaryGamePreset] = useState<GameOption | null>(null);
   const [diaryPresetDate, setDiaryPresetDate] = useState<Date | null>(null);
   const [showStickerModal, setShowStickerModal] = useState(false);
+  const scheduleTimeRef = useRef<string | null>(null);
 
   const load = useCallback(() => {
     if (!gid) return;
@@ -180,6 +181,7 @@ export default function GameDetailScreen() {
         const gameSeq = parseInt(suffix, 10);
         const myGame = !isNaN(gameSeq) ? resolved[gameSeq] : undefined;
         if (myGame?.isExhibition) setIsExhibition(true);
+        if (myGame?.time) scheduleTimeRef.current = myGame.time;
 
         if (scores?.games) {
           if (myGame?._raw.score) {
@@ -515,7 +517,8 @@ export default function GameDetailScreen() {
   const away = TEAM_COLORS[detail.awayTeam];
   const homeLineup = detail.lineup?.home || [];
   const awayLineup = detail.lineup?.away || [];
-  const gameScore = detail.score ?? (scoreFallback ? { away: scoreFallback.awayScore, home: scoreFallback.homeScore } : null);
+  const gameScore = detail.score ?? (scoreFallback ? { away: scoreFallback.awayScore, home: scoreFallback.homeScore } : null)
+    ?? (detail.scoreBoard?.rheb ? { away: detail.scoreBoard.rheb.away.r, home: detail.scoreBoard.rheb.home.r } : null);
 
   // Only show expected pitchers/lineup for tomorrow (today+1); beyond that is undecided
   const gameDateStr = `${gid.slice(0, 4)}-${gid.slice(4, 6)}-${gid.slice(6, 8)}`;
@@ -537,10 +540,11 @@ export default function GameDetailScreen() {
   const isGameActive = hasScoreData || hasFinishedSignals;
   const hasDefinitiveFinish = (detail.pitchingResult && detail.pitchingResult.length > 0);
 
-  const [gh, gm] = (detail.gameInfo?.time || "18:30").split(":").map(Number);
+  const [gh, gm] = (detail.gameInfo?.time || scheduleTimeRef.current || "18:30").split(":").map(Number);
   const [y, m, d] = detail.date.split("-").map(Number);
   const startTime = new Date(y, m - 1, d, gh, gm, 0, 0);
   const gameHasStarted = new Date() >= startTime;
+  const hasInningData = !!detail.scoreBoard?.inn;
 
   const isFinished = !isCancelled && !isFuture && (
     detail.gameInfo?.status === "finished" && (!isToday || hasDefinitiveFinish) ||
@@ -548,7 +552,8 @@ export default function GameDetailScreen() {
   );
   const isLive = !isCancelled && !isFinished && (
     detail.gameInfo?.status === "live" && !isFuture ||
-    (isToday && gameHasStarted)
+    (isToday && gameHasStarted) ||
+    (isToday && hasInningData)
   );
   const isBeforeGame = !isFinished && !isLive && !isCancelled;
   const hasLineup = !isBeyondTomorrow && homeLineup.length > 0 && awayLineup.length > 0;
@@ -564,7 +569,7 @@ export default function GameDetailScreen() {
   const gameDateOnly = new Date(y, m - 1, d);
   const daysSinceGame = Math.floor((Date.now() - gameDateOnly.getTime()) / (1000 * 60 * 60 * 24));
   const canMakeSticker = (isFinished || isLive) && !!gs && (
-    isToday || (daysSinceGame === 1 && new Date().getHours() < 14)
+    isToday || (daysSinceGame === 1 && new Date().getHours() < 24)
   );
   const awayEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : awayWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";
   const homeEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : homeWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";
@@ -906,6 +911,7 @@ export default function GameDetailScreen() {
         isFinished={isFinished}
         liveInning={inningInfo ?? null}
         gameId={gid}
+        venue={detail?.gameInfo?.venue}
       />
     </View>
   );

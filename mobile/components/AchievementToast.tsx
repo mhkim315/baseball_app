@@ -7,7 +7,7 @@ import type { Badge } from "@/lib/db";
 
 interface AchievementToastProps {
   badges: Badge[];
-  rewards?: { emotion: string; label: string }[];
+  rewards?: ({ type?: string; emotion?: string; label: string; key?: string })[];
   teamId?: string;
   onDismiss: () => void;
   onPress?: () => void;
@@ -15,7 +15,7 @@ interface AchievementToastProps {
 
 interface ToastItemData {
   id: string;
-  type: "badge" | "character";
+  type: "badge" | "character" | "background";
   badgeKey?: string;
   emotion?: string;
   label?: string;
@@ -92,7 +92,12 @@ export default function AchievementToast({ badges, rewards, teamId, onDismiss, o
 
     const newItems: ToastItemData[] = [
       ...badges.map((b) => ({ id: `b-${b.badge_key}`, type: "badge" as const, badgeKey: b.badge_key })),
-      ...(rewards ?? []).map((r) => ({ id: `c-${r.emotion}`, type: "character" as const, emotion: r.emotion, label: r.label })),
+      ...(rewards ?? []).map((r) => {
+        if (r.type === "background") {
+          return { id: `bg-${r.key}`, type: "background" as const, label: r.label };
+        }
+        return { id: `c-${r.emotion}`, type: "character" as const, emotion: r.emotion, label: r.label };
+      }),
     ];
 
     for (const item of newItems) {
@@ -174,6 +179,14 @@ export default function AchievementToast({ badges, rewards, teamId, onDismiss, o
                       {def?.title ?? item.badgeKey} 달성!
                     </Text>
                     {def?.xp ? <Text style={[styles.xp, dynamicStyles.muted]}>+{def.xp} XP</Text> : null}
+                  </View>
+                </>
+              ) : item.type === "background" ? (
+                <>
+                  <Text style={styles.emoji}>🎨</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.title, dynamicStyles.title]}>새 배경 잠금 해제!</Text>
+                    <Text style={[styles.charLabel, dynamicStyles.muted]}>{item.label}</Text>
                   </View>
                 </>
               ) : (

@@ -161,7 +161,7 @@ export default function DiaryScreen() {
   const [sheetExpenses, setSheetExpenses] = useState<Expense[]>([]);
 
   const [toastBadges, setToastBadges] = useState<Badge[]>([]);
-  const [toastRewards, setToastRewards] = useState<{ emotion: string; label: string }[]>([]);
+  const [toastRewards, setToastRewards] = useState<{ type?: string; emotion?: string; label: string; key?: string }[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
 
@@ -175,19 +175,21 @@ export default function DiaryScreen() {
     try {
       const { backfillLiveRecords, evaluateBadges, grantRandomCharacter } = await import("@/lib/achievements");
       await backfillLiveRecords();
-      const newBadges = await evaluateBadges();
+      const { newlyUnlockedBadges, newlyUnlockedBackgrounds } = await evaluateBadges();
 
       // Grant random character reward for each new badge
-      const rewards: { emotion: string; label: string }[] = [];
-      for (let i = 0; i < newBadges.length; i++) {
-        const reward = await grantRandomCharacter(newBadges[i].badge_key);
-        if (reward) rewards.push(reward);
+      const rewards: { type: string; emotion?: string; label: string; key?: string }[] = [];
+      for (let i = 0; i < newlyUnlockedBadges.length; i++) {
+        const reward = await grantRandomCharacter(newlyUnlockedBadges[i].badge_key);
+        if (reward) rewards.push({ type: "character", ...reward });
       }
-      if (newBadges.length > 0) {
-        // Show confetti + toasts simultaneously
-        setToastBadges(newBadges);
+      for (const bg of newlyUnlockedBackgrounds) {
+        rewards.push({ type: "background", key: bg.key, label: bg.label });
+      }
+      if (newlyUnlockedBadges.length > 0 || newlyUnlockedBackgrounds.length > 0) {
+        setToastBadges(newlyUnlockedBadges);
         setToastRewards(rewards);
-        setShowConfetti(true);
+        if (newlyUnlockedBadges.length > 0) setShowConfetti(true);
       }
     } catch {}
   };

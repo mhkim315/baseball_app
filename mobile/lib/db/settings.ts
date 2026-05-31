@@ -1,3 +1,4 @@
+import { DEFAULT_BACKGROUNDS } from "@/lib/backgrounds";
 import { getDb } from "./connection";
 
 export async function getSetting(key: string): Promise<string | null> {
@@ -85,6 +86,50 @@ export async function addUnlockedEmotion(emotion: string): Promise<void> {
       current.push(emotion);
       await database.runAsync(
         "INSERT OR REPLACE INTO user_settings (key, value) VALUES ('unlocked_emotions', ?)",
+        JSON.stringify(current)
+      );
+    }
+    await database.runAsync("COMMIT");
+  } catch (e) {
+    await database.runAsync("ROLLBACK");
+    throw e;
+  }
+}
+
+export async function getUnlockedBackgrounds(): Promise<string[]> {
+  const raw = await getSetting("unlocked_backgrounds");
+  if (raw) {
+    try { return JSON.parse(raw); } catch {}
+  }
+  const basic = [...DEFAULT_BACKGROUNDS];
+  await setSetting("unlocked_backgrounds", JSON.stringify(basic));
+  return basic;
+}
+
+export async function addUnlockedBackgrounds(bgKeys: string[]): Promise<void> {
+  if (bgKeys.length === 0) return;
+  const database = await getDb();
+  await database.runAsync("BEGIN IMMEDIATE");
+  try {
+    const row = await database.getFirstAsync<{ value: string }>(
+      "SELECT value FROM user_settings WHERE key = 'unlocked_backgrounds'"
+    );
+    let current: string[];
+    if (row?.value) {
+      try { current = JSON.parse(row.value); } catch { current = []; }
+    } else {
+      current = [...DEFAULT_BACKGROUNDS];
+    }
+    let changed = false;
+    for (const key of bgKeys) {
+      if (!current.includes(key)) {
+        current.push(key);
+        changed = true;
+      }
+    }
+    if (changed) {
+      await database.runAsync(
+        "INSERT OR REPLACE INTO user_settings (key, value) VALUES ('unlocked_backgrounds', ?)",
         JSON.stringify(current)
       );
     }
