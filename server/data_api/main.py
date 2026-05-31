@@ -88,7 +88,7 @@ def serialize_row(row):
 
 
 _JSON_CACHE = {}
-_JSON_CACHE_TTL = 60  # seconds
+_JSON_CACHE_TTL = 300  # seconds (matches collector cycle)
 
 def load_json(filename):
     now = time.time()
@@ -135,6 +135,10 @@ def scheduled_collect():
         collect()
     except Exception as e:
         print(f"Collection error: {e}")
+    _JSON_CACHE.clear()
+    # Pre-warm cache with fresh data written by collector
+    load_json("today-games.json")
+    load_json("daily-scores.json")
     next_interval = random.randint(180, 300)
     next_run_time = datetime.now() + timedelta(seconds=next_interval)
     scheduler.add_job(scheduled_collect, "date", run_date=next_run_time)
