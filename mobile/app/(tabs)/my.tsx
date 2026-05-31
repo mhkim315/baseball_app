@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   Platform,
   Dimensions,
 } from "react-native";
-import { useRouter, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useRouter, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import { Linking } from "react-native";
 import Constants from "expo-constants";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
@@ -49,6 +49,8 @@ import CollectionModal from "@/components/CollectionModal";
 import TotemSection from "@/components/TotemSection";
 import EmojiPicker from "@/components/EmojiPicker";
 import ColorPicker from "@/components/ColorPicker";
+import CoachMark from "@/components/CoachMark";
+import { getMyCoachSeen, setMyCoachSeen } from "@/lib/db";
 
 export default function MyScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -374,6 +376,31 @@ export default function MyScreen() {
     }, [loadData])
   );
 
+  // My tab coach mark: show once when first loaded with no totems
+  const [showMyCoach, setShowMyCoach] = useState(false);
+  const myCoachChecked = useRef(false);
+
+  useEffect(() => {
+    if (myCoachChecked.current) return;
+    if (totems.length !== 0) return;
+    myCoachChecked.current = true;
+    getMyCoachSeen().then(async (seen) => {
+      if (!seen) {
+        await setMyCoachSeen();
+        setShowMyCoach(true);
+      }
+    }).catch(() => {});
+  }, [totems]);
+
+  // Dismiss on navigation away
+  const navigationMy = useNavigation();
+  useEffect(() => {
+    const unsubscribe = navigationMy.addListener("blur", () => {
+      setShowMyCoach(false);
+    });
+    return unsubscribe;
+  }, [navigationMy]);
+
   const handleTeamSelect = async (teamId: string) => {
     try {
       setMyTeam(teamId);
@@ -513,7 +540,16 @@ export default function MyScreen() {
 
         <CollectionSection onPress={() => setShowCollectionModal(true)} />
 
-        <TotemSection onPress={() => setShowTotemList(true)} totems={totems} />
+        <TotemSection onPress={() => { setShowMyCoach(false); setShowTotemList(true); }} totems={totems} />
+        {showMyCoach && (
+          <View style={{ marginTop: 8 }}>
+            <CoachMark
+              visible showChevrons={false} arrowDirection="up"
+              text="나만의 승리 토템을 만들어보세요"
+              onDismiss={() => setShowMyCoach(false)}
+            />
+          </View>
+        )}
       </View>
 
       {/* App Info */}

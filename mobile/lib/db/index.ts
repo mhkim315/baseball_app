@@ -37,4 +37,6 @@ export {
   getTodayBackCoachSeen, setTodayBackCoachSeen,
   getGameStickerCoachSeen, setGameStickerCoachSeen,
   getDiaryCoachSeen, setDiaryCoachSeen,
+  getStadiumCoachSeen, setStadiumCoachSeen,
+  getMyCoachSeen, setMyCoachSeen,
 } from "./settings";

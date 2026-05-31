@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { parseGameTeamIds, formatDateForApi } from "@shared/constants";
 import { getInningInfo } from "@shared/gameStatus";
@@ -323,8 +323,18 @@ export default function GameDetailScreen() {
     }).catch(() => {});
   }, [detail]);
 
+  // Dismiss sticker coach mark on navigation away
+  const navigation = useNavigation();
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("blur", () => {
+      setShowStickerCoach(false);
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   const handleOpenDiary = useCallback(() => {
     if (!detail) return;
+    setShowStickerCoach(false);
     const cancelled = detail.gameInfo?.status === "cancelled" ||
       detail.etcRecords?.some(r => r.how?.includes("취소") || r.result?.includes("취소")) === true;
     const gidParts = gid.split("-");
@@ -354,6 +364,7 @@ export default function GameDetailScreen() {
 
   const handleOpenSticker = useCallback(() => {
     if (!detail) return;
+    setShowStickerCoach(false);
     setShowStickerModal(true);
   }, [detail]);
 

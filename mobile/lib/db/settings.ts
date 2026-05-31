@@ -171,3 +171,19 @@ export async function getDiaryCoachSeen(): Promise<boolean> {
 export async function setDiaryCoachSeen(): Promise<void> {
   await setSetting("has_seen_diary_coach", "true");
 }
+
+export async function getStadiumCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_stadium_coach")) === "true";
+}
+
+export async function setStadiumCoachSeen(): Promise<void> {
+  await setSetting("has_seen_stadium_coach", "true");
+}
+
+export async function getMyCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_my_coach")) === "true";
+}
+
+export async function setMyCoachSeen(): Promise<void> {
+  await setSetting("has_seen_my_coach", "true");
+}

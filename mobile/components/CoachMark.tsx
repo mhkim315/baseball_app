@@ -50,7 +50,7 @@ export default function CoachMark({ visible, text, onDismiss, arrowDirection = "
       <View style={[
         styles.arrow,
         isUp ? { top: -10, bottom: undefined, borderBottomWidth: 12, borderBottomColor: theme.card, borderTopWidth: 0 } : { bottom: -10, top: undefined, borderTopWidth: 12, borderTopColor: theme.card, borderBottomWidth: 0 },
-        arrowAlign === "right" && { alignSelf: "flex-end", marginRight: 16 },
+        arrowAlign === "right" && { alignSelf: "flex-end", marginRight: 34 },
       ]} />
     </Pressable>
   );

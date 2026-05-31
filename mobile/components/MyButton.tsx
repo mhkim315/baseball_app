@@ -8,13 +8,14 @@ const PERSON_PATH = "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z
 interface Props {
   color?: string;
   style?: ViewStyle;
+  onPress?: () => void;
 }
 
-export default function MyButton({ color, style }: Props) {
+export default function MyButton({ color, style, onPress }: Props) {
   const { theme } = useTheme();
   const router = useRouter();
   return (
-    <Pressable onPress={() => router.push("/my")} hitSlop={8} style={style}>
+    <Pressable onPress={() => { if (onPress) onPress(); router.push("/my"); }} hitSlop={8} style={style}>
       <Svg width="22" height="22" viewBox="0 0 24 24" fill={color || theme.mutedForeground}>
         <Path d={PERSON_PATH} />
       </Svg>

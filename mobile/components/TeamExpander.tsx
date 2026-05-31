@@ -9,9 +9,10 @@ interface TeamExpanderProps {
   currentTeamId: string;
   myTeam: string | null;
   onSelectTeam: (teamId: string) => void;
+  onPress?: () => void;
 }
 
-export default function TeamExpander({ currentTeamId, myTeam, onSelectTeam }: TeamExpanderProps) {
+export default function TeamExpander({ currentTeamId, myTeam, onSelectTeam, onPress }: TeamExpanderProps) {
   const { theme, isDark } = useTheme();
   const [open, setOpen] = useState(false);
   const currentTeam = TEAM_COLORS[currentTeamId];
@@ -100,7 +101,7 @@ export default function TeamExpander({ currentTeamId, myTeam, onSelectTeam }: Te
 
   return (
     <View>
-      <Pressable style={styles.trigger} onPress={() => setOpen(true)}>
+      <Pressable style={styles.trigger} onPress={() => { if (onPress) onPress(); setOpen(true); }}>
         <Text style={[styles.teamName, { color: teamPrimaryColor(currentTeam?.id, isDark) }]}>
           {currentTeam?.shortName || ""}
         </Text>

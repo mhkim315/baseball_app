@@ -1,12 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import TeamExpander from "@/components/TeamExpander";
+import CoachMark from "@/components/CoachMark";
 import StadiumPage from "@/components/StadiumPage";
 import MyButton from "@/components/MyButton";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
+import { getStadiumCoachSeen, setStadiumCoachSeen } from "@/lib/db";
+import { useNavigation } from "expo-router";
 
 export default function StadiumTab() {
   const { theme, isDark } = useTheme();
@@ -55,6 +58,29 @@ export default function StadiumTab() {
 
   const myTeamColor = myTeam ? teamPrimaryColor(myTeam, isDark) : undefined;
 
+  const [showStadiumCoach, setShowStadiumCoach] = useState(false);
+  const stadiumCoachChecked = useRef(false);
+
+  useEffect(() => {
+    if (!myTeam || loading || stadiumCoachChecked.current) return;
+    stadiumCoachChecked.current = true;
+    getStadiumCoachSeen().then(async (seen) => {
+      if (!seen) {
+        await setStadiumCoachSeen();
+        setShowStadiumCoach(true);
+      }
+    }).catch(() => {});
+  }, [myTeam, loading]);
+
+  // Dismiss stadium coach mark on navigation away
+  const navigation = useNavigation();
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("blur", () => {
+      setShowStadiumCoach(false);
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   if (loading) {
     return (
       <ScrollView style={styles.container}>
@@ -99,10 +125,20 @@ export default function StadiumTab() {
           currentTeamId={activeTeam}
           myTeam={myTeam}
           onSelectTeam={setDisplayTeam}
+          onPress={() => setShowStadiumCoach(false)}
         />
         <View style={{ width: 4 }} />
-        <MyButton color={myTeamColor} />
+        <MyButton color={myTeamColor} onPress={() => setShowStadiumCoach(false)} />
       </View>
+      {showStadiumCoach && (
+        <View style={{ paddingHorizontal: 20, marginTop: 4 }}>
+          <CoachMark
+            visible showChevrons={false} arrowDirection="up" arrowAlign="right"
+            text="다른팀 정보를 보려면 여기를 눌러주세요"
+            onDismiss={() => setShowStadiumCoach(false)}
+          />
+        </View>
+      )}
       <StadiumPage teamId={activeTeam} accentColor={myTeamColor} />
     </View>
   );
