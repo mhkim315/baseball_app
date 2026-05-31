@@ -411,9 +411,9 @@ export default function HomeScreen() {
     });
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
+        runBadgeCheck();
         InteractionManager.runAfterInteractions(() => {
           load();
-          runBadgeCheck();
         });
       }
     });

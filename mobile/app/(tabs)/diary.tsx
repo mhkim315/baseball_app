@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet, RefreshControl, ScrollView, Alert, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, Modal } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, RefreshControl, ScrollView, Alert, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, Modal, ActivityIndicator } from "react-native";
 import { useFocusEffect } from "expo-router";
 import DiaryTimeline from "@/components/DiaryTimeline";
 import WebzineTimeline from "@/components/WebzineTimeline";
@@ -609,6 +609,10 @@ export default function DiaryScreen() {
                   >
                     <Text style={{ fontSize: 14, fontWeight: "600", color: theme.foreground }}>다시 시도</Text>
                   </Pressable>
+                </View>
+              ) : loadState === "loading" || loadState === "idle" ? (
+                <View style={{ paddingVertical: 80, alignItems: "center" }}>
+                  <ActivityIndicator size="large" color={theme.mutedForeground} />
                 </View>
               ) : (
               <View style={{ paddingVertical: 60, alignItems: "center", paddingHorizontal: 32 }}>
