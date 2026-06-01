@@ -1564,6 +1564,29 @@ Opus 코드리뷰에서 발견된 버그 2건 수정:
 | 5 | `server/data_api/main.py` | `lineup.json` fallback에서 `??`/`미정` placeholder 필터 |
 | 6 | `server/data_api/main.py` | `/onboarding-data` 연도 필터 로컬 동기화 |
 | 7 | 서버 명령 | `build_game_records.py --recent 60 --skip-existing` (4/3~5/12 전구간) |
+| 8 | 서버 명령 | `build_game_records.py --recent 95 --skip-existing` (3/12~3/31 시범경기+개막전 포함) |
+
+### game-records 보유 현황 (2026 시즌)
+
+| 구간 | 내용 | 상태 |
+|------|------|:----:|
+| 3/12~3/24 | 시범경기 | ✅ |
+| 3/28~3/29 | 개막 2연전 | ✅ |
+| 3/31 | 정규시즌 | ✅ |
+| 4/3~5/12 | 재수집 구간 (파이프라인 도입 전) | ✅ |
+| 5/13~현재 | 파이프라인 자동 수집 | ✅ |
+
+※ `build_game_records.py --recent 10` 파이프라인이 5월에 추가되어 그 이전 경기는 수동 재수집 필요.
+
+### 영향도
+
+서버 데이터만으로 해결 (빌드 불필요):
+- `??` 선발투수 → lineup.json placeholder 필터
+- 경기상세 점수만 뜸 → game-records 전 구간 보유
+- 온보딩 응답 크기 → 연도 필터로 1MB→200KB
+
+앱 변경사항 (EAS 빌드 필요, 이중 안전장치):
+- AppState 프리페치, dedup 누수 수정, 3초 자동 재시도, 백그라운드 재시도
 
 ### 커밋
 
@@ -1571,4 +1594,4 @@ Opus 코드리뷰에서 발견된 버그 2건 수정:
 |------|------|
 | `94d6ea7` | `fix: 경기상세 점수만 뜨는 현상 — API 실패 시 백그라운드 재시도 + 3초 자동 복구` |
 | `f17123a` | `fix: AppState 포그라운드 복귀 시 prefetch 자동 실행 + dedup promise 리셋 누락 수정` |
-| `(current)` | `fix: 서버 선발투수 ?? 버그 + 온보딩 연도 필터 로컬 동기화 + April game-records 재수집` |
+| `81a1500` | `fix: 서버 선발투수 ?? 버그 + 온보딩 연도 필터 로컬 동기화 + April game-records 재수집` |
