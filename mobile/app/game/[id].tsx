@@ -925,7 +925,7 @@ export default function GameDetailScreen() {
               visible
               showChevrons={false}
               arrowDirection={canMakeSticker ? "down" : "up"}
-              text="경기가 시작되면 스티커 생성이 활성화되고, 다음날 14시까지 만들 수 있어요"
+              text="경기가 시작되면 스티커 생성이 활성화되고,\n다음날 14시까지 만들 수 있어요"
               onDismiss={() => setShowStickerCoach(false)}
             />
           </View>
