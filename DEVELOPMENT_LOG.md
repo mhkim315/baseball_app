@@ -1455,3 +1455,120 @@ Opus 코드리뷰에서 발견된 버그 2건 수정:
 |------|------|
 | `4a8fc6f` | `@refactor: resolveGames() 통합 — 데이터 흐름 아키텍처 개선` (6개 파일) |
 | `(current)` | `@fix: resolveGames "전체" 팀 필터링 버그 수정` (CalendarGrid + DiaryCalendar) |
+
+---
+
+## Phase 17-5: 온보딩 프리페치 확장 — 모든 점수 + 인접 월 schedule (2026-06-01)
+
+### 문제
+온보딩 완료 후 홈화면 진입 시 경기 상세/일정이 바로 표시되지 않고 로딩 필요.
+
+### 근본 원인
+- 서버 `/onboarding-data`가 14일치 점수만 반환 (`range(14)`)
+- `writeToCache()`가 `scores:__all__` 키를 쓰지 않아 `preloadAll()`의 `cachedAllDailyScores()`가 항상 API 호출
+- 인접 월 schedule preload 없음
+
+### 수정 내역
+
+| 파일 | 변경 |
+|------|------|
+| `server/data_api/main.py` | `range(14)` 일부 순회 → `dates_dict.items()` 전체 순회 (모든 daily-scores 반환) |
+| `mobile/lib/prefetch.ts` | `writeToCache()`에 `scores:__all__` 키 기록 추가 |
+| `mobile/lib/prefetch.ts` | `fetchAndCacheOnboarding()`에 인접 월 schedule fire-and-forget preload 추가 |
+
+### 커밋
+
+| 해시 | 설명 |
+|------|------|
+| `c86c03f` | `fix: 온보딩 프리페치에 모든 점수 데이터 + 인접 월 schedule 포함` |
+
+---
+
+## Phase 17-6: 온보딩 응답 연도 필터 + 서버 동기화 및 전면 백업 (2026-06-01)
+
+### 문제
+`/onboarding-data`가 daily-scores.json의 729일치(2024-2026, ~1MB)를 통째로 반환. 앱에서 과거 연도(≤2025)는 LOCAL_SCORES로 로컬 처리하므로 서버에서 보낼 필요 없음.
+
+### 수정 내역
+
+| 파일 | 변경 |
+|------|------|
+| `server/data_api/main.py` (로컬) | `dates_dict.items()` → `if d.startswith(str(current_year))` 필터 추가 (후에 revert) |
+| 서버 `main.py` (bak 기반) | `/onboarding-data` 엔드포인트 append, `current_year` 필터로 2026년만 반환 |
+
+### 서버 배포 중 발견된 Python 3.9 호환 이슈
+
+서버 Python 3.9에서 발생한 오류와 수정:
+
+| 문제 | 원인 | 수정 |
+|------|------|------|
+| `TypeError: unsupported operand type(s) for \|` | `dict \| None` 타입 구문 (Python 3.10+) | `Optional[dict]`로 변경 |
+| `ModuleNotFoundError: No module named 'data_api'` | `from data_api.main import _HISTORICAL_SCORING` — 서버는 flat `main.py`, 패키지 구조 아님 | inline `_HISTORICAL_SCORING` 사용 (서버 bak에 이미 정의됨) |
+| `UnboundLocalError: local variable 'current_year' referenced before assignment` | `current_year` 할당이 scores 루프보다 뒤에 위치 | 루프 전으로 이동 |
+
+**원인:** 로컬 `server/data_api/main.py`(Python 3.10+, `data_api` 패키지)와 서버 `main.py`(Python 3.9, flat)가 분기되어 있었음. 서버 backup(bak)에 `onboarding-data` 엔드포인트를 append하는 방식으로 해결.
+
+### 서버 동기화
+
+`server-scripts` 로컬 전용 브랜치에 서버 Python 파일 전체 동기화:
+
+| 파일 | 커밋 |
+|------|------|
+| `server/data_api/main.py` | `e4d34fc` |
+| `server/collector.py` | `9a4fae5` |
+| `server/init_db.py` | `9a4fae5` |
+| `server/migrate_data.py` | `9a4fae5` |
+| `server/scripts/` (24개 파이프라인) | `b74e843` |
+
+### 서버 전면 백업
+
+`server_backup/` 갱신 (서버 완전 상실 시 복구 가능):
+
+| 항목 | 파일 | 비고 |
+|------|------|------|
+| Python 코드 | `main.py`, `collector.py`, `init_db.py`, `migrate_data.py` | 서버 최신 버전 |
+| nginx 설정 | `nginx/api.conf` | |
+| nginx SSL | `nginx/api.fullcount.kr.cer` + `.key` | |
+| systemd 서비스 | `systemd/fullcount-api.service` | DB 비밀번호 포함 |
+| DB 덤프 | `full_db.sql` (7KB) | git-ignore |
+| JSON 데이터 | `data.tar.gz` (12MB, 압축) | git-ignore |
+| pip 패키지 | `requirements.txt` | |
+
+### 메모리 갱신
+- `oracle-server-access.md` — 동기화 루틴, 백업 항목, 복구 절차 업데이트
+
+### Verification
+- `/onboarding-data` 응답: **1MB(729일) → 253KB(135일, 2026년만)** ✅
+- 모든 필드 정상: todayGames, standings, schedule, scoreSummary, gameDetails(20) ✅
+- HTTP 200 ✅
+
+---
+
+## Phase 17-7: 경기상세 fallback 개선 + 서버 버그 수정 + April game-records 재수집 (2026-06-01)
+
+### 문제
+1. **경기상세 점수만 뜸**: `fetchWithCache`가 stale cache도 API 실패 시 `scheduleRetry` 없이 `null` 반환 → `tryExhibitionFallback()` → 점수만 표시
+2. **dedup promise 누수**: `prefetchOnboardingData()`가 reject된 promise를 cleanup하지 않음 → `prefetchOnAppInit()`이 영원히 실패
+3. **AppState 미처리**: 앱 백그라운드 복귀 시 `prefetchOnAppInit()` 호출되지 않아 캐시 장기간 stale
+4. **선발투수 `??`**: `lineup.json`의 `startingPitcher: {"name": "??"}`가 game_data의 실제 선발을 덮어씀
+5. **4월 game-records 없음**: 서버 pipeline이 5월에 추가되어 4월 경기 game-records 미존재
+
+### 수정 내역
+
+| # | 파일 | 변경 |
+|---|------|------|
+| 1 | `mobile/lib/gameCache.ts` | `fetchWithCache` — API 실패 시에도 `scheduleRetry` 호출 |
+| 2 | `mobile/lib/prefetch.ts` | `prefetchOnboardingData()` — `try/finally`로 dedup promise cleanup |
+| 3 | `mobile/app/(tabs)/home.tsx` | AppState 리스너에 `prefetchOnAppInit()` 추가 |
+| 4 | `mobile/app/game/[id].tsx` | 3초 background 재시도로 점수 fallback→full detail 전환 |
+| 5 | `server/data_api/main.py` | `lineup.json` fallback에서 `??`/`미정` placeholder 필터 |
+| 6 | `server/data_api/main.py` | `/onboarding-data` 연도 필터 로컬 동기화 |
+| 7 | 서버 명령 | `build_game_records.py --recent 60 --skip-existing` (4/3~5/12 전구간) |
+
+### 커밋
+
+| 해시 | 설명 |
+|------|------|
+| `94d6ea7` | `fix: 경기상세 점수만 뜨는 현상 — API 실패 시 백그라운드 재시도 + 3초 자동 복구` |
+| `f17123a` | `fix: AppState 포그라운드 복귀 시 prefetch 자동 실행 + dedup promise 리셋 누락 수정` |
+| `(current)` | `fix: 서버 선발투수 ?? 버그 + 온보딩 연도 필터 로컬 동기화 + April game-records 재수집` |
