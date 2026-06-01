@@ -61,9 +61,10 @@
 ### 2.1 설계 목표
 
 - **하나의 엔드포인트**로 5분 주기 갱신이 필요한 모든 데이터를 전달
-- 응답 크기를 **최소화** (5KB 이하 목표)
+- 응답 크기를 **최소화** (~20KB, 경기 5개 기준)
 - **서버 부하 최소화** (daily-scores.json 전체 로드 방지)
 - 기존 엔드포인트는 **fallback으로 유지**
+- 경기상세 진입 시 추가 API 요청 없이 SQLite hit
 
 ### 2.2 응답 구조
 
@@ -111,20 +112,41 @@ Response 200 OK
       ...
     },
     ...
-  ]
+  ],
+
+  "todayGameDetails": {           // game-detail (5분 주기 백그라운드 갱신)
+    "20260601-OBLG-0": {
+      "gameId": "20260601-OBLG-0",
+      "starters": { "home": { "name": "곽빈" }, "away": { "name": "엔스" } },
+      "lineup": { "home": [...], "away": [...] },
+      "scoreBoard": { "rheb": {...}, "inn": {...} },
+      "pitchingResult": [...],
+      "etcRecords": [...]
+    },
+    ...
+  }
 }
 ```
 
-예상 크기: **~5 KB** (todayGames 2KB + standings 1KB + scoreSummary 0.5KB + todayScores 1.5KB)
+예상 크기: **~20 KB** (todayGames 2KB + standings 1KB + scoreSummary 0.5KB + todayScores 1.5KB + game-detail×5 15KB)
 
 ### 2.3 제외하는 데이터와 이유
 
 | 데이터 | 제외 이유 |
 |--------|----------|
 | schedule | 24시간 TTL, 하루 1-2회 갱신으로 충분. refresh 주기 아님 |
-| game-detail | 경기상세 진입 시 개별 호출. 미리 받을 필요 없음 |
 | 과거 날짜 scores | SQLite에 Infinity TTL로 이미 캐싱됨 (한 번 받으면 영구) |
 | 인접 날짜 scores | 홈화면 load()에서 `cachedDailyScores(어제/내일)`로 개별 호출. 각각 1.5KB |
+
+### 2.4 포함하는 데이터
+
+| 데이터 | 포함 이유 | 크기 |
+|--------|----------|:----:|
+| todayGames | 라이브 스코어, 이닝, 상태 | 2KB |
+| standings | 순위표 | 1KB |
+| scoreSummary | 팀별 득실 | 0.5KB |
+| todayScores | 오늘 경기 최종 결과 | 1.5KB |
+| game-detail | 경기상세 진입 시 SQLite hit (추가 요청 없음) | 3KB × 5 = 15KB |
 
 ---
 
@@ -135,24 +157,87 @@ Response 200 OK
 ```python
 @app.get("/refresh-data")
 def get_refresh_data():
+    today_str = date.today().isoformat()
+    year = date.today().year
     today_games = load_json("today-games.json")
 
     standings_data = load_json("kbo_standings.json")
     standings = standings_data.get("rows") if standings_data else None
 
-    # score-summary는 scheduled_collect()에서 pre-compute한 파일 사용
-    score_summary = load_json("score-summary.json")
-
     # 오늘 날짜 scores만 daily-scores.json에서 추출
-    today_str = date.today().isoformat()
     daily = load_json("daily-scores.json")
     today_scores = daily.get("dates", {}).get(today_str, []) if daily else []
+
+    # score-summary는 inline 계산 (score-summary.json 파일 없어도 동작)
+    team_runs = {}; team_games = {}
+    if daily:
+        for date_str, games in daily.get("dates", {}).items():
+            if not date_str.startswith(str(year)):
+                continue
+            for game in games:
+                if game.get("cancelled") or game.get("outcome") is None:
+                    continue
+                team_runs[game["away"]] = team_runs.get(game["away"], 0) + game["awayScore"]
+                team_games[game["away"]] = team_games.get(game["away"], 0) + 1
+                team_runs[game["home"]] = team_runs.get(game["home"], 0) + game["homeScore"]
+                team_games[game["home"]] = team_games.get(game["home"], 0) + 1
+    teams = [{"teamName": t, "avgRuns": round(team_runs[t] / team_games.get(t, 0), 1)
+              if team_games.get(t, 0) > 0 else 0, "totalRuns": team_runs[t], "totalGames": team_games.get(t, 0)}
+             for t in sorted(team_runs)]
+    score_summary = {"year": year, "teams": teams}
+
+    # 오늘 경기의 game-detail 빌드 (lineup/scoreBoard/pitchingResult)
+    today_game_details = {}
+    for g in (today_games or {}).get("games", []):
+        gid = g.get("id")
+        if not gid:
+            continue
+        m = GAME_ID_REGEX.match(gid)
+        if not m:
+            continue
+        date_str = f"{m.group(1)[:4]}-{m.group(1)[4:6]}-{m.group(1)[6:8]}"
+        away_team = TEAM_CODE_MAP.get(m.group(2))
+        home_team = TEAM_CODE_MAP.get(m.group(3))
+        if not away_team or not home_team:
+            continue
+
+        lineup = {"home": [], "away": []}
+        starters = {"home": None, "away": None}
+        score_board = None
+        pitching_result = []
+        etc_records = []
+
+        for team_id, side in [(away_team, "away"), (home_team, "home")]:
+            record_path = DATA_DIR / "teams" / team_id / "game-records" / f"{date_str}.json"
+            if record_path.exists():
+                with open(record_path, "r", encoding="utf-8") as f:
+                    record = json.load(f)
+                lineup[side] = record.get("homeLineup" if side == "home" else "awayLineup", [])
+                if not starters[side]:
+                    starter = record.get("homeStarter" if side == "home" else "awayStarter")
+                    if starter:
+                        starters[side] = starter
+                if record.get("scoreBoard"):
+                    score_board = record["scoreBoard"]
+                if record.get("pitchingResult"):
+                    pitching_result = record["pitchingResult"]
+                if record.get("etcRecords"):
+                    etc_records = record["etcRecords"]
+
+        today_game_details[gid] = {
+            "gameId": gid, "date": date_str,
+            "homeTeam": home_team, "awayTeam": away_team,
+            "starters": starters, "lineup": lineup,
+            "scoreBoard": score_board, "pitchingResult": pitching_result,
+            "etcRecords": etc_records,
+        }
 
     return {
         "todayGames": today_games,
         "standings": standings,
-        "scoreSummary": score_summary,
         "todayScores": today_scores,
+        "scoreSummary": score_summary,
+        "todayGameDetails": today_game_details,
     }
 ```
 
@@ -219,6 +304,11 @@ async function fetchRefreshData(): Promise<boolean> {
       await db.setCache(`score-summary:${data.scoreSummary.year}`, JSON.stringify(data.scoreSummary));
     }
 
+    // todayGameDetails → "game:{gameId}" (5분마다 백그라운드 갱신)
+    for (const [gameId, detail] of Object.entries(data.todayGameDetails)) {
+      await db.setCache(`game:${gameId}`, JSON.stringify(detail));
+    }
+
     return true;
   } catch {
     return false;
@@ -244,11 +334,11 @@ export async function prefetchOnAppInit(): Promise<void> {
     return;
   }
 
-  // 1순위: /refresh-data (경량, ~5KB)
+  // 1순위: /refresh-data (~20KB)
   consolidationPrefetchPromise = (async () => {
     const ok = await fetchRefreshData();
     if (!ok) {
-      // 2순위: /onboarding-data fallback (198KB, 기존 로직)
+      // 2순위: /onboarding-data fallback (~200KB)
       await fetchAndCacheOnboarding();
     }
   })();
@@ -261,7 +351,7 @@ export async function prefetchOnAppInit(): Promise<void> {
 }
 ```
 
-**Fallback 체인**: `/refresh-data` 실패 → `/onboarding-data` 실패 → `prefetchInitialData()` (※ 개별 API 호출)
+**Fallback 체인**: `/refresh-data` → `/onboarding-data` → 개별 API
 
 ### 4.3 home.tsx — load() 영향도
 
@@ -270,7 +360,8 @@ export async function prefetchOnAppInit(): Promise<void> {
 | 함수 | 대체 가능? | 방식 |
 |------|:---------:|------|
 | `cachedTodayGames()` | ✅ | `/refresh-data`가 `today:{date}` 캐시 갱신 → SQLite hit |
-| `cachedAllDailyScores()` | ⚠️ 부분적 | 오늘 날짜 scores는 fresh, 과거는 기존 캐시 유지. `scores:__all__` 미갱신 시 `cachedAllDailyScores()`는 개별 API 호출 → **별도 조치 없어도 동작 이상 무** (5분 TTL, 이전 캐시 hit or 개별 API 1회) |
+| `cachedGameDetail()` | ✅ | `/refresh-data`가 `game:{gameId}` 캐시 갱신 → 경기상세 진입 시 SQLite hit, 추가 요청 없음 |
+| `cachedAllDailyScores()` | ⚠️ 부분적 | 오늘 날짜 scores는 fresh, 과거는 기존 캐시 유지. `scores:__all__` 미갱신 시 `cachedAllDailyScores()`는 개별 API 호출 → **앱 최초 마운트 시 1회**만 발생 |
 | `cachedScheduleByMonth()` | ❌ | 24시간 TTL, 별도 유지 |
 
 ### 4.4 cachedAllDailyScores() 유지 (lazy)
@@ -308,15 +399,15 @@ cachedScoreSummary() → TTL 체크 → GET /score-summary (0.5KB)
   ↓
 prefetchOnAppInit()
   → TTL 체크 (today:{date} < 5분?)
-  → GET /refresh-data (~5KB)  ← 단 1개 요청
-    ├── today:{date} 갱신
-    ├── scores:{today} 갱신
+  → GET /refresh-data (~20KB)  ← 단 1개 요청
+    ├── today:{date} 갱신 (todayGames)
+    ├── scores:{today} 갱신 (todayScores)
     ├── standings:current 갱신
-    └── score-summary:{year} 갱신
+    ├── score-summary:{year} 갱신
+    └── game:{gameId}×N 갱신 (todayGameDetails)
   ↓
-[순위 탭 진입]
-cachedStandings() → SQLite hit (바로 반환)
-cachedScoreSummary() → SQLite hit (바로 반환)
+[순위 탭 진입]        → cachedStandings() → SQLite hit
+[경기상세 진입]       → cachedGameDetail() → SQLite hit
 ```
 
 ---
@@ -326,8 +417,9 @@ cachedScoreSummary() → SQLite hit (바로 반환)
 | 항목 | Before | After | 개선 |
 |------|-------|-------|:----:|
 | 홈화면 mount 시 요청 수 | 5개 | 1개 (+ fallback 시 1개) | **80% 감소** |
-| 홈화면 mount 시 다운로드 크기 | 1,064 KB | 5 KB (refresh-data) | **99.5% 감소** |
+| 홈화면 mount 시 다운로드 크기 | 1,064 KB | 20 KB (refresh-data) | **98% 감소** |
 | 순위 탭 진입 시 요청 수 | 2개 | 0개 (SQLite hit) | **100% 감소** |
+| 경기상세 진입 시 요청 수 | 1개 (API 호출) | 0개 (SQLite hit) | **100% 감소** |
 | 데이터 신선도 | 5분 | 5분 | 동일 |
 
 ---
@@ -348,11 +440,11 @@ cachedScoreSummary() → SQLite hit (바로 반환)
 
 | 파일 | 변경 내용 | EAS 빌드 필요? |
 |------|----------|:-------------:|
-| `server/data_api/main.py` | `/refresh-data` 엔드포인트 추가 | ❌ (서버만 재시작) |
-| `server/data_api/main.py` | `scheduled_collect()`에 score-summary pre-compute 추가 | ❌ |
-| `shared/api.ts` | `fetchRefreshData()` 타입/스키마/함수 추가 | ✅ |
-| `shared/schemas.ts` | RefreshDataResponseSchema 추가 | ✅ |
-| `mobile/lib/prefetch.ts` | `fetchRefreshData()`, `prefetchOnAppInit()` 변경 | ✅ |
+| `server/main.py` (flat) | `/refresh-data` 엔드포인트 추가 + game-detail 빌드 | ❌ (서버만 재시작) |
+| `shared/types.ts` | `RefreshData` 인터페이스 추가 (+ `todayGameDetails`) | ✅ |
+| `shared/api.ts` | `fetchRefreshData()` 메서드 추가 | ✅ |
+| `mobile/lib/api.ts` | `fetchRefreshData` re-export | ✅ |
+| `mobile/lib/prefetch.ts` | `fetchRefreshDataAndCache()` + `prefetchOnAppInit()` fallback | ✅ |
 
 ---
 
