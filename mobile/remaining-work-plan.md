@@ -14,7 +14,7 @@
 ## 5. 경량 갱신 엔드포인트 `/refresh-data`
 
 ### 문제
-홈화면 mount 1번에 **1MB+ 7개 요청** 발생. `cachedAllDailyScores()`가 729일치(1MB) daily-scores 전체를 5분마다 재검증.
+홈화면 mount + 탭 전환 시 **1MB+ 다수 요청** 발생. `cachedAllDailyScores()`가 729일치(1MB) daily-scores 전체를 5분마다 재검증.
 
 ### 해결
 `/refresh-data` 엔드포인트 (~5KB)로 5분 주기 갱신 통합. score-summary pre-compute로 서버 부하 최소화.
