@@ -65,6 +65,11 @@ async function fetchRefreshDataAndCache(): Promise<boolean> {
       await db.setCache(`score-summary:${data.scoreSummary.year}`, JSON.stringify(data.scoreSummary));
     }
 
+    // todayGameDetails → "game:{gameId}" (5분마다 백그라운드 갱신)
+    for (const [gameId, detail] of Object.entries(data.todayGameDetails)) {
+      await db.setCache(`game:${gameId}`, JSON.stringify(detail));
+    }
+
     return true;
   } catch {
     return false;

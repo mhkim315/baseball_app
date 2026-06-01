@@ -185,6 +185,7 @@ export interface RefreshData {
   standings: StandingRow[] | null;
   todayScores: ScoreEntry[];
   scoreSummary: { year: number; teams: ScoreSummaryRow[] } | null;
+  todayGameDetails: Record<string, GameDetail>;
 }
 
 export interface OnboardingData {
