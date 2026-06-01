@@ -219,6 +219,28 @@ export default function GameDetailScreen() {
         setLoading(false);
       } else {
         tryExhibitionFallback();
+        // Background retry: full detail API가 3초 후 자동 재시도 → 성공 시 UI 업데이트
+        const retryTimer = setTimeout(async () => {
+          if (cancelled) return;
+          const retry = await cachedGameDetail(gid).catch(() => null);
+          if (cancelled || !retry) return;
+          setDetail(retry);
+          const dateStr = `${gid.slice(0, 4)}-${gid.slice(4, 6)}-${gid.slice(6, 8)}`;
+          const [schedule, scores] = await Promise.all([
+            cachedScheduleByMonth(parseInt(gid.slice(4, 6), 10), parseInt(gid.slice(0, 4), 10)).catch(() => null),
+            cachedDailyScores(dateStr).catch(() => null),
+          ]);
+          if (cancelled) return;
+          const resolved = resolveGames(schedule?.games || [], scores?.games || [], dateStr);
+          const gameSeq = parseInt(gid.split("-").pop() ?? "0", 10);
+          const myGame = !isNaN(gameSeq) ? resolved[gameSeq] : undefined;
+          if (myGame?.isExhibition) setIsExhibition(true);
+          if (myGame?.time) scheduleTimeRef.current = myGame.time;
+          if (scores?.games && myGame?._raw.score) {
+            setScoreFallback(myGame._raw.score);
+          }
+          setLoading(false);
+        }, 3000);
       }
     }).catch(() => {
       if (!cancelled) {

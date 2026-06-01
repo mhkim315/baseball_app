@@ -112,6 +112,8 @@ async function fetchWithCache<T>(
         return parsed as T;
       }
     }
+    // No stale cache — still retry in background so next attempt may succeed
+    scheduleRetry(cacheKeyStr, fetcher);
     return null;
   })();
 
