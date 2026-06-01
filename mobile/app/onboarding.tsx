@@ -250,32 +250,32 @@ export default function OnboardingScreen() {
             <View style={styles.featureCard}>
               <Text style={styles.featureIcon}>📝</Text>
               <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>직관 기록</Text>
-                <Text style={styles.featureDesc}>경기 결과, 사진, 감정을 저장하고 돌아보기</Text>
+                <Text style={styles.featureTitle}>야구 일기</Text>
+                <Text style={styles.featureDesc}>사진과 감정을 담은 나만의 기록</Text>
               </View>
             </View>
 
             <View style={styles.featureCard}>
               <Text style={styles.featureIcon}>📊</Text>
               <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>승률 & 통계</Text>
-                <Text style={styles.featureDesc}>팀별/연도별 승률, 패턴 분석</Text>
+                <Text style={styles.featureTitle}>MY 통계</Text>
+                <Text style={styles.featureDesc}>직관 승률·지출·토템까지 한눈에</Text>
               </View>
             </View>
 
             <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>🏆</Text>
+              <Text style={styles.featureIcon}>🎬</Text>
               <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>도전과제 & 보상</Text>
-                <Text style={styles.featureDesc}>기록에 따라 배지와 스티커 배경 해금</Text>
+                <Text style={styles.featureTitle}>라이브 스티커</Text>
+                <Text style={styles.featureDesc}>경기 상황을 실시간 스티커로 공유</Text>
               </View>
             </View>
 
             <View style={styles.featureCard}>
               <Text style={styles.featureIcon}>🏟️</Text>
               <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>구장 안내</Text>
-                <Text style={styles.featureDesc}>구단별 홈구장 정보와 좌석 안내</Text>
+                <Text style={styles.featureTitle}>구장 정보</Text>
+                <Text style={styles.featureDesc}>맛집부터 교통·주차까지 완벽 준비</Text>
               </View>
             </View>
 
