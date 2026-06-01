@@ -20,6 +20,7 @@ export const {
   fetchTodayGames,
   fetchGameDetail,
   fetchOnboardingData,
+  fetchRefreshData,
   fetchSeasons,
   fetchScoreSummary,
 } = createApi({

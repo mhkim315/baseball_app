@@ -547,7 +547,7 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
                         lineup_confirmed = True
                     if not starters[side]:
                         sp = lu.get("startingPitcher")
-                        if sp and sp.get("name"):
+                        if sp and sp.get("name") and sp["name"] not in ("??", "미정", ""):
                             starters[side] = sp
                 except (json.JSONDecodeError, KeyError):
                     pass
@@ -644,7 +644,8 @@ def get_onboarding_data():
     if scores:
         dates_dict = scores.get("dates", {})
         for d, games in dates_dict.items():
-            recent_scores[d] = games
+            if d.startswith(str(current_year)):
+                recent_scores[d] = games
 
     # Current month schedule
     current_month = today_date.month

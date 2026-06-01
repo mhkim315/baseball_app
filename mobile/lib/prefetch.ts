@@ -5,7 +5,7 @@ import {
   cachedGameDetail,
 } from "@/lib/gameCache";
 import * as db from "@/lib/db";
-import { fetchOnboardingData } from "@/lib/api";
+import { fetchOnboardingData, fetchRefreshData } from "@/lib/api";
 import type { OnboardingData } from "@shared/types";
 
 function getYear(): number {
@@ -36,6 +36,40 @@ export async function prefetchInitialData(): Promise<void> {
 // ─── Consolidated Prefetch (단일 API 호출) ──────────────────
 
 let consolidationPrefetchPromise: Promise<void> | null = null;
+
+// ─── /refresh-data 경량 갱신 ────────────────────────────────
+
+/** /refresh-data 응답을 SQLite 캐시에 기록한다. 실패 시 false 반환. */
+async function fetchRefreshDataAndCache(): Promise<boolean> {
+  try {
+    const data = await fetchRefreshData();
+    if (!data) return false;
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    // todayGames → cache key "today:{YYYY-MM-DD}"
+    await db.setCache(`today:${today}`, JSON.stringify(data.todayGames));
+
+    // todayScores → cache key "scores:{YYYY-MM-DD}"
+    if (data.todayScores) {
+      await db.setCache(`scores:${today}`, JSON.stringify({ games: data.todayScores }));
+    }
+
+    // standings → cache key "standings:current"
+    if (data.standings) {
+      await db.setCache("standings:current", JSON.stringify({ rows: data.standings, fetchedAt: "" }));
+    }
+
+    // scoreSummary → cache key "score-summary:{year}"
+    if (data.scoreSummary) {
+      await db.setCache(`score-summary:${data.scoreSummary.year}`, JSON.stringify(data.scoreSummary));
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /** Write onboarding response into SQLite cache so cachedXxx() functions hit instantly. */
 async function writeToCache(data: OnboardingData): Promise<void> {
@@ -125,7 +159,13 @@ export async function prefetchOnAppInit(): Promise<void> {
     await consolidationPrefetchPromise;
     return;
   }
-  consolidationPrefetchPromise = fetchAndCacheOnboarding();
+  consolidationPrefetchPromise = (async () => {
+    const ok = await fetchRefreshDataAndCache();
+    if (!ok) {
+      // Fallback to /onboarding-data
+      await fetchAndCacheOnboarding();
+    }
+  })();
   try {
     await consolidationPrefetchPromise;
   } finally {
