@@ -26,6 +26,7 @@ import MyButton from "@/components/MyButton";
 import AchievementToast from "@/components/AchievementToast";
 import HomeCoachMark from "@/components/HomeCoachMark";
 import CoachMark from "@/components/CoachMark";
+import { prefetchOnAppInit } from "@/lib/prefetch";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
@@ -411,6 +412,7 @@ export default function HomeScreen() {
     });
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
+        prefetchOnAppInit();
         runBadgeCheck();
         InteractionManager.runAfterInteractions(() => {
           load();

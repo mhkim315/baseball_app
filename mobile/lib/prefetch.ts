@@ -103,7 +103,11 @@ async function fetchAndCacheOnboarding(): Promise<void> {
 export async function prefetchOnboardingData(): Promise<void> {
   if (consolidationPrefetchPromise) return consolidationPrefetchPromise;
   consolidationPrefetchPromise = fetchAndCacheOnboarding();
-  return consolidationPrefetchPromise;
+  try {
+    return await consolidationPrefetchPromise;
+  } finally {
+    consolidationPrefetchPromise = null;
+  }
 }
 
 /**
