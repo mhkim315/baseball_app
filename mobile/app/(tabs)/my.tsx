@@ -330,6 +330,7 @@ export default function MyScreen() {
   const [showProfilePicker, setShowProfilePicker] = useState(false);
   const [showTeamPicker, setShowTeamPicker] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showResetComplete, setShowResetComplete] = useState(false);
   const [showYearInReview, setShowYearInReview] = useState(false);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [showCollectionModal, setShowCollectionModal] = useState(false);
@@ -657,9 +658,7 @@ export default function MyScreen() {
                     const { deleteAllPhotos } = await import("@/lib/camera");
                     await deleteAllPhotos();
                     setMyTeam(null);
-                    Alert.alert("완료", "모든 데이터가 초기화되었습니다.", [
-                      { text: "확인", onPress: () => router.replace("/onboarding") },
-                    ]);
+                    setShowResetComplete(true);
                   } catch (e) {
                     console.warn("resetAllData failed", e);
                     Alert.alert("오류", "데이터 초기화에 실패했습니다. 다시 시도해주세요.");
@@ -667,6 +666,30 @@ export default function MyScreen() {
                 }}
               >
                 <Text style={styles.modalSaveText}>초기화</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Reset complete modal */}
+      <Modal visible={showResetComplete} transparent animationType="fade" onRequestClose={() => setShowResetComplete(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>완료</Text>
+            <Text style={{ fontSize: 14, color: theme.mutedForeground, marginBottom: 16, lineHeight: 20, textAlign: "center" }}>
+              모든 데이터가 초기화되었습니다.
+            </Text>
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={[styles.modalSave, { backgroundColor: theme.primary }]}
+                onPress={() => {
+                  setShowResetComplete(false);
+                  router.replace("/onboarding");
+                }}
+                hitSlop={8}
+              >
+                <Text style={styles.modalSaveText}>확인</Text>
               </Pressable>
             </View>
           </View>
