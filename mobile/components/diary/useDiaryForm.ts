@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { StyleSheet, Animated, Keyboard, Platform } from "react-native";
+import { StyleSheet, Animated, Keyboard, Platform, AppState } from "react-native";
 import { Gesture } from "react-native-gesture-handler";
 import * as ImagePicker from "expo-image-picker";
 import { TEAM_LIST } from "@shared/teamColors";
@@ -133,6 +133,21 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
       () => setKeyboardHeight(0)
     );
     return () => { show.remove(); hide.remove(); };
+  }, []);
+
+  // Recover pending picker results when app returns to foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        ImagePicker.getPendingResultAsync().then((pending) => {
+          if (pending && "assets" in pending && pending.assets && (pending.assets as any[]).length > 0) {
+            console.log("Recovered pending picker result on foreground");
+            handlePhotoSelect((pending.assets as any[]).map((a: any) => a.uri));
+          }
+        }).catch(() => {});
+      }
+    });
+    return () => sub.remove();
   }, []);
 
   useEffect(() => {
@@ -317,32 +332,45 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
   };
 
   const handleFullGalleryPick = async () => {
+    const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!granted) {
+      setSimpleAlert({ visible: true, title: "권한 필요", message: "앨범 접근 권한이 필요합니다" });
+      return;
+    }
+
+    const launchPicker = () => ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.8,
+      allowsMultipleSelection: true,
+      selectionLimit: 10,
+    });
+
+    let result: ImagePicker.ImagePickerResult;
     try {
-      const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!granted) {
-        setSimpleAlert({ visible: true, title: "권한 필요", message: "앨범 접근 권한이 필요합니다" });
+      result = await launchPicker();
+    } catch (e: any) {
+      console.error("handleFullGalleryPick attempt 1 failed", e?.message ?? e);
+      // Stale Activity reference: wait 300ms for Android to settle new Activity
+      await new Promise(r => setTimeout(r, 300));
+      try {
+        result = await launchPicker();
+      } catch (e2: any) {
+        console.error("handleFullGalleryPick attempt 2 failed", e2?.message ?? e2);
+        try {
+          const pending = await ImagePicker.getPendingResultAsync();
+          if (pending && "assets" in pending && pending.assets && pending.assets.length > 0) {
+            console.log("Recovered from Activity destruction via getPendingResultAsync");
+            handlePhotoSelect(pending.assets.map((a) => a.uri));
+            return;
+          }
+        } catch {}
+        setSimpleAlert({ visible: true, title: "오류", message: "사진을 불러오지 못했습니다\n앱을 재시작해 주세요" });
         return;
       }
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        quality: 0.8,
-        allowsMultipleSelection: true,
-        selectionLimit: 10,
-      });
-      if (!result.canceled && result.assets.length > 0) {
-        handlePhotoSelect(result.assets.map((a) => a.uri));
-      }
-    } catch (e: any) {
-      console.error("handleFullGalleryPick failed", e?.message ?? e);
-      try {
-        const pending = await ImagePicker.getPendingResultAsync();
-        if (pending && "assets" in pending && pending.assets && pending.assets.length > 0) {
-          console.log("Recovered from Activity destruction via getPendingResultAsync");
-          handlePhotoSelect(pending.assets.map((a) => a.uri));
-          return;
-        }
-      } catch {}
-      setSimpleAlert({ visible: true, title: "오류", message: "사진을 불러오지 못했습니다\n앱을 재시작해 주세요" });
+    }
+
+    if (!result.canceled && result.assets.length > 0) {
+      handlePhotoSelect(result.assets.map((a) => a.uri));
     }
   };
 

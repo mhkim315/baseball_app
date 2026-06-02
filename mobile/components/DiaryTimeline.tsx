@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
-import { View, Text, FlatList, StyleSheet, RefreshControl } from "react-native";
+import { View, Text, FlatList, StyleSheet, RefreshControl, Alert } from "react-native";
 import * as Sharing from "expo-sharing";
 import DiaryCard from "@/components/DiaryCard";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -32,8 +32,13 @@ export default function DiaryTimeline({ records, teamId, onDelete, onEdit, onRef
   }, [scrollTargetDate]);
 
   const handleShare = useCallback(async (uri: string) => {
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(uri);
+    try {
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri);
+      }
+    } catch (e) {
+      console.warn("Share failed", e);
+      Alert.alert("공유 실패", "공유를 실행하지 못했습니다\n잠시 후 다시 시도해 주세요");
     }
   }, []);
 

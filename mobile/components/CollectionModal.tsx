@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   View, Text, Pressable, Modal, TextInput, ScrollView,
-  Image, StyleSheet, KeyboardAvoidingView, Platform, Dimensions,
+  Image, StyleSheet, KeyboardAvoidingView, Platform, Dimensions, AppState,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useTheme } from "@/lib/ThemeContext";
@@ -61,6 +61,19 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
     }
   }, [visible, load]);
 
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        ImagePicker.getPendingResultAsync().then((pending) => {
+          if (pending && "assets" in pending && pending.assets && (pending.assets as any[]).length > 0) {
+            handleAddPhotoResult((pending.assets as any[]).map((a: any) => a.uri));
+          }
+        }).catch(() => {});
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
   const resetForm = () => {
     setFormName("");
     setFormDescription("");
@@ -68,26 +81,51 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
     setIsEdit(false);
   };
 
+  const handleAddPhotoResult = useCallback(async (uris: string[]) => {
+    for (const uri of uris) {
+      const resized = await resizePhoto(uri);
+      const saved = await savePhoto(resized, generatePhotoName());
+      setFormPhotos((prev) => [...prev, saved]);
+    }
+  }, []);
+
   const handleAddPhoto = async () => {
+    const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!granted) {
+      setAlert({ visible: true, title: "권한 필요", message: "사진 라이브러리 접근 권한이 필요합니다." });
+      return;
+    }
+
+    const launchPicker = () => ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.85,
+      allowsMultipleSelection: true,
+    });
+
+    let result: ImagePicker.ImagePickerResult;
     try {
-      const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!granted) {
-        setAlert({ visible: true, title: "권한 필요", message: "사진 라이브러리 접근 권한이 필요합니다." });
+      result = await launchPicker();
+    } catch (e) {
+      console.warn("handleAddPhoto attempt 1 failed", e);
+      await new Promise(r => setTimeout(r, 300));
+      try {
+        result = await launchPicker();
+      } catch (e2) {
+        console.warn("handleAddPhoto attempt 2 failed", e2);
+        try {
+          const pending = await ImagePicker.getPendingResultAsync();
+          if (pending && "assets" in pending && pending.assets && pending.assets.length > 0) {
+            await handleAddPhotoResult(pending.assets.map((a) => a.uri));
+            return;
+          }
+        } catch {}
+        setAlert({ visible: true, title: "오류", message: "사진을 불러오지 못했습니다\n앱을 재시작해 주세요" });
         return;
       }
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        quality: 0.85,
-        allowsMultipleSelection: true,
-      });
-      if (result.canceled) return;
-      for (const asset of result.assets) {
-        const resized = await resizePhoto(asset.uri);
-        const saved = await savePhoto(resized, generatePhotoName());
-        setFormPhotos((prev) => [...prev, saved]);
-      }
-    } catch (e) {
-      console.warn("handleAddPhoto failed", e);
+    }
+
+    if (!result.canceled && result.assets.length > 0) {
+      await handleAddPhotoResult(result.assets.map((a) => a.uri));
     }
   };
 
