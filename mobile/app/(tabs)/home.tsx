@@ -31,7 +31,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 import { backfillLiveRecords, evaluateBadges, grantRandomCharacter } from "@/lib/achievements";
-import { type Badge, getTodayBackCoachSeen, setTodayBackCoachSeen, getHomeCoachSeen, setHomeCoachSeen } from "@/lib/db";
+import { type Badge, getTodayBackCoachSeen, setTodayBackCoachSeen, getHomeCoachSeen, setHomeCoachSeen, getHomeStickerCoachSeen, setHomeStickerCoachSeen } from "@/lib/db";
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -126,6 +126,10 @@ export default function HomeScreen() {
   const [showTodayBackCoach, setShowTodayBackCoach] = useState(false);
   const hasLeftTodayRef = useRef(false);
   const todayBackChecked = useRef(false);
+  const [showHomeStickerCoach, setShowHomeStickerCoach] = useState(false);
+  const homeStickerCoachCheckedRef = useRef(false);
+  const homeStickerCoachPendingRef = useRef(false);
+  const homeSCRef = useRef(false);
   const scheduleCache = useRef<{ month: number; year: number; games: ScheduleGame[] } | null>(null);
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
@@ -453,6 +457,51 @@ export default function HomeScreen() {
     }
   }, [selectedDate, showCoachMark, gamesByDate]);
 
+  // Home sticker coach: 1-time, after today-back coach was seen,
+  // when viewing a day that has sticker-eligible games (finished/live today or yesterday before 14:00)
+  useEffect(() => {
+    if (showCoachMark || showTodayBackCoach || showHomeStickerCoach) return;
+    if (todayBackChecked.current && !showTodayBackCoach) return; // today-back in-flight
+    if (homeStickerCoachCheckedRef.current) return;
+    if (homeStickerCoachPendingRef.current) return;
+
+    const viewedDateStr = formatDateStr(selectedDate);
+    const games = gamesByDate[viewedDateStr];
+    if (!games || games.length === 0) return;
+
+    // sticker eligibility: finished/live today, or yesterday before 14:00
+    const todayStr = formatDateStr(new Date());
+    const currentHour = new Date().getHours();
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const gameDate = new Date(selectedDate); gameDate.setHours(0, 0, 0, 0);
+    const daysSinceGame = Math.floor((todayStart.getTime() - gameDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    const hasStickerEligible = games.some((g) => {
+      if (g.status !== "finished" && g.status !== "live") return false;
+      if (viewedDateStr === todayStr) return true;
+      if (daysSinceGame === 1 && currentHour < 14) return true;
+      return false;
+    });
+    if (!hasStickerEligible) return;
+
+    homeStickerCoachPendingRef.current = true;
+    Promise.all([getTodayBackCoachSeen(), getHomeStickerCoachSeen()])
+      .then(async ([todayBackSeen, homeStickerSeen]) => {
+        homeStickerCoachPendingRef.current = false;
+        if (homeStickerSeen) {
+          homeStickerCoachCheckedRef.current = true;
+          return;
+        }
+        if (todayBackSeen && !homeStickerCoachCheckedRef.current) {
+          homeStickerCoachCheckedRef.current = true;
+          homeSCRef.current = true;
+          await setHomeStickerCoachSeen();
+          setShowHomeStickerCoach(true);
+        }
+      })
+      .catch(() => { homeStickerCoachPendingRef.current = false; });
+  }, [selectedDate, gamesByDate, showCoachMark, showTodayBackCoach, showHomeStickerCoach]);
+
   const handlePageSwipe = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const page = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
@@ -512,10 +561,18 @@ export default function HomeScreen() {
         isTop={item.isTop}
         highlighted={isMyTeamGame ? teamPrimaryColor(myTeam, isDark) : undefined}
         dense={!isMyTeamGame}
-        onClick={() => { setShowTodayBackCoach(false); router.push(`/game/${item.gameId}?ap=${encodeURIComponent(item.awayPitcher || "")}&hp=${encodeURIComponent(item.homePitcher || "")}`); }}
+        onClick={() => {
+          setShowTodayBackCoach(false);
+          const addSC = homeSCRef.current;
+          if (homeSCRef.current) {
+            homeSCRef.current = false;
+            setShowHomeStickerCoach(false);
+          }
+          router.push(`/game/${item.gameId}?ap=${encodeURIComponent(item.awayPitcher || "")}&hp=${encodeURIComponent(item.homePitcher || "")}${addSC ? "&sc=1" : ""}`);
+        }}
       />
     );
-  }, [myTeam, isDark, router, setShowTodayBackCoach]);
+  }, [myTeam, isDark, router, setShowTodayBackCoach, setShowHomeStickerCoach]);
 
   const renderEmpty = (isMonday?: boolean) => (
     <View style={[styles.emptyContainer, isMonday && { paddingVertical: 20 }]}>
@@ -615,13 +672,19 @@ export default function HomeScreen() {
             })()} onDismiss={() => setShowTodayBackCoach(false)} />
           </View>
         )}
+        {showHomeStickerCoach && (
+          <View style={{ position: "absolute", top: 0, left: 16, right: 16, zIndex: 100, elevation: 5, shadowColor: "transparent" }}>
+            <CoachMark visible showChevrons={false} text="카드를 눌러 경기 스티커를 생성해보세요"
+              onDismiss={() => { homeSCRef.current = false; setShowHomeStickerCoach(false); }} />
+          </View>
+        )}
         <ScrollView
           ref={pageScrollRef}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           onMomentumScrollEnd={handlePageSwipe}
-          onScrollBeginDrag={() => { lastActedPageRef.current = 1; if (showCoachMark) handleCoachDismiss(); setShowTodayBackCoach(false); }}
+          onScrollBeginDrag={() => { lastActedPageRef.current = 1; if (showCoachMark) handleCoachDismiss(); setShowTodayBackCoach(false); if (homeSCRef.current) { homeSCRef.current = false; setShowHomeStickerCoach(false); } }}
           style={{ flex: 1 }}
         >
           {(["prev", "current", "next"] as const).map((slot, idx) => {

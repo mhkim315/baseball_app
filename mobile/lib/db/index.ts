@@ -36,6 +36,8 @@ export {
   getHomeCoachSeen, setHomeCoachSeen,
   getTodayBackCoachSeen, setTodayBackCoachSeen,
   getGameStickerCoachSeen, setGameStickerCoachSeen,
+  getHomeStickerCoachSeen, setHomeStickerCoachSeen,
+  getDetailStickerCoachSeen, setDetailStickerCoachSeen,
   getDiaryCoachSeen, setDiaryCoachSeen,
   getStadiumCoachSeen, setStadiumCoachSeen,
   getMyCoachSeen, setMyCoachSeen,

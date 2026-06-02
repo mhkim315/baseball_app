@@ -16,7 +16,7 @@ import CoachMark from "@/components/CoachMark";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { resolveVenue } from "@/lib/stadiumData";
-import { getGameStickerCoachSeen, setGameStickerCoachSeen } from "@/lib/db";
+import { getGameStickerCoachSeen, setGameStickerCoachSeen, getDetailStickerCoachSeen, setDetailStickerCoachSeen } from "@/lib/db";
 
 
 const POSITION_LABELS: Record<string, string> = {
@@ -39,7 +39,7 @@ const WLS_COLORS: Record<string, { text: string; bg: string }> = {
 export default function GameDetailScreen() {
   const { theme, isDark } = useTheme();
   const router = useRouter();
-  const { id: gameId, ap, hp } = useLocalSearchParams<{ id: string; ap?: string; hp?: string }>();
+  const { id: gameId, ap, hp, sc } = useLocalSearchParams<{ id: string; ap?: string; hp?: string; sc?: string }>();
   const gid = gameId || "";
 
   const [detail, setDetail] = useState<GameDetail | null>(null);
@@ -57,6 +57,7 @@ export default function GameDetailScreen() {
   const [diaryPresetDate, setDiaryPresetDate] = useState<Date | null>(null);
   const [showStickerModal, setShowStickerModal] = useState(false);
   const [showStickerCoach, setShowStickerCoach] = useState(false);
+  const [showDetailStickerCoach, setShowDetailStickerCoach] = useState(false);
   const stickerCoachChecked = useRef(false);
   const scheduleTimeRef = useRef<string | null>(null);
 
@@ -333,6 +334,7 @@ export default function GameDetailScreen() {
   useEffect(() => {
     if (!detail || stickerCoachChecked.current) return;
     if (detail.gameInfo?.status === "cancelled") return;
+    if (sc === "1") return; // home sticker coach handles this flow
     stickerCoachChecked.current = true;
     getGameStickerCoachSeen().then(async (seen) => {
       if (!seen) {
@@ -340,13 +342,27 @@ export default function GameDetailScreen() {
         setShowStickerCoach(true);
       }
     }).catch(() => {});
-  }, [detail]);
+  }, [detail, sc]);
 
-  // Dismiss sticker coach mark on navigation away
+  // Detail sticker coach: 1-time, triggered when entering from home sticker coach flow (sc=1)
+  useEffect(() => {
+    if (sc !== "1") return;
+    if (!detail || detail.gameInfo?.status === "cancelled") return;
+    setShowStickerCoach(false); // prevent overlap
+    getDetailStickerCoachSeen().then(async (seen) => {
+      if (!seen) {
+        await setDetailStickerCoachSeen();
+        setShowDetailStickerCoach(true);
+      }
+    }).catch(() => {});
+  }, [detail, sc]);
+
+  // Dismiss sticker coach marks on navigation away
   const navigation = useNavigation();
   useEffect(() => {
     const unsubscribe = navigation.addListener("blur", () => {
       setShowStickerCoach(false);
+      setShowDetailStickerCoach(false);
     });
     return unsubscribe;
   }, [navigation]);
@@ -354,6 +370,7 @@ export default function GameDetailScreen() {
   const handleOpenDiary = useCallback(() => {
     if (!detail) return;
     setShowStickerCoach(false);
+    setShowDetailStickerCoach(false);
     const cancelled = detail.gameInfo?.status === "cancelled" ||
       detail.etcRecords?.some(r => r.how?.includes("취소") || r.result?.includes("취소")) === true;
     const gidParts = gid.split("-");
@@ -384,6 +401,7 @@ export default function GameDetailScreen() {
   const handleOpenSticker = useCallback(() => {
     if (!detail) return;
     setShowStickerCoach(false);
+    setShowDetailStickerCoach(false);
     setShowStickerModal(true);
   }, [detail]);
 
@@ -925,6 +943,14 @@ export default function GameDetailScreen() {
               text={canMakeSticker ? "경기가 시작되면 스티커 생성이 활성화되고,\n다음날 14시까지 만들 수 있어요" : "직관 기록하기 버튼을 눌러\n경기 기록을 남겨보세요"}
               onDismiss={() => setShowStickerCoach(false)}
             />
+          </View>
+        )}
+
+        {showDetailStickerCoach && (
+          <View style={{ marginTop: 12, marginBottom: 8 }}>
+            <CoachMark visible showChevrons={false} arrowDirection="down"
+              text="스티커는 경기시작부터 다음날 14시까지 만들 수 있어요"
+              onDismiss={() => setShowDetailStickerCoach(false)} />
           </View>
         )}
 

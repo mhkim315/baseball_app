@@ -164,6 +164,22 @@ export async function setGameStickerCoachSeen(): Promise<void> {
   await setSetting("has_seen_game_sticker_coach", "true");
 }
 
+export async function getHomeStickerCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_home_sticker_coach")) === "true";
+}
+
+export async function setHomeStickerCoachSeen(): Promise<void> {
+  await setSetting("has_seen_home_sticker_coach", "true");
+}
+
+export async function getDetailStickerCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_detail_sticker_coach")) === "true";
+}
+
+export async function setDetailStickerCoachSeen(): Promise<void> {
+  await setSetting("has_seen_detail_sticker_coach", "true");
+}
+
 export async function getDiaryCoachSeen(): Promise<boolean> {
   return (await getSetting("has_seen_diary_coach")) === "true";
 }
