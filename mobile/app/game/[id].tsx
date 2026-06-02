@@ -5,11 +5,10 @@ import { TEAM_COLORS } from "@shared/teamColors";
 import { parseGameTeamIds, formatDateForApi } from "@shared/constants";
 import { getInningInfo } from "@shared/gameStatus";
 import {
-  fetchStandingsJson,
   type GameDetail, type ScoreEntry, type LineupPlayer, type StandingRow,
 } from "@/lib/api";
 import { TeamBadge } from "@/components/TeamBadge";
-import { cachedDailyScores, cachedScheduleByMonth, cachedGameDetail } from "@/lib/gameCache";
+import { cachedDailyScores, cachedAllDailyScores, cachedScheduleByMonth, cachedGameDetail, cachedStandings } from "@/lib/gameCache";
 import { resolveGames } from "@/lib/resolveGames";
 import DiaryEntryModal, { type GameOption } from "@/components/DiaryEntryModal";
 import StickerModal from "@/components/StickerModal";
@@ -264,7 +263,7 @@ export default function GameDetailScreen() {
     if (!homeName || !awayName) return;
     let cancelled = false;
 
-    Promise.all([fetchStandingsJson()]).then(async ([standings]) => {
+    Promise.all([cachedStandings()]).then(async ([standings]) => {
       if (cancelled || !standings?.rows) return;
       const homeStanding = standings.rows.find((r: StandingRow) => r.teamName === homeName);
       const awayStanding = standings.rows.find((r: StandingRow) => r.teamName === awayName);
@@ -291,10 +290,8 @@ export default function GameDetailScreen() {
       }
       const dates = [...dateSet].sort().reverse();
 
-      // Fetch per-date scores
-      const scoreResults = await Promise.all(
-        dates.map((d) => cachedDailyScores(d).catch(() => null))
-      );
+      // Bulk fetch all scores for the year (avoids N concurrent per-date calls)
+      const allYearScores = await cachedAllDailyScores(gameYear).catch(() => null);
       if (cancelled) return;
 
       const homeRecent: ("승"|"패"|"무")[] = [];
@@ -302,7 +299,7 @@ export default function GameDetailScreen() {
 
       for (let i = 0; i < dates.length; i++) {
         if (homeRecent.length >= 5 && awayRecent.length >= 5) break;
-        const dayScores = scoreResults[i]?.games;
+        const dayScores = allYearScores?.[dates[i]];
         if (!dayScores) continue;
         for (const g of dayScores) {
           if (g.cancelled || g.outcome == null) continue;
@@ -619,7 +616,7 @@ export default function GameDetailScreen() {
   const gameDateOnly = new Date(y, m - 1, d);
   const daysSinceGame = Math.floor((Date.now() - gameDateOnly.getTime()) / (1000 * 60 * 60 * 24));
   const canMakeSticker = (isFinished || isLive) && !!gs && (
-    isToday || (daysSinceGame === 1 && new Date().getHours() < 24)
+    isToday || (daysSinceGame === 1 && new Date().getHours() < 14)
   );
   const awayEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : awayWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";
   const homeEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : homeWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";

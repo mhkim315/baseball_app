@@ -60,11 +60,6 @@ async function fetchRefreshDataAndCache(): Promise<boolean> {
       await db.setCache("standings:current", JSON.stringify({ rows: data.standings, fetchedAt: "" }));
     }
 
-    // scoreSummary → cache key "score-summary:{year}"
-    if (data.scoreSummary) {
-      await db.setCache(`score-summary:${data.scoreSummary.year}`, JSON.stringify(data.scoreSummary));
-    }
-
     // todayGameDetails → "game:{gameId}" (5분마다 백그라운드 갱신)
     for (const [gameId, detail] of Object.entries(data.todayGameDetails)) {
       await db.setCache(`game:${gameId}`, JSON.stringify(detail));
@@ -105,11 +100,6 @@ async function writeToCache(data: OnboardingData): Promise<void> {
   // standings → "standings:current"
   if (data.standings) {
     await db.setCache("standings:current", JSON.stringify({ rows: data.standings, fetchedAt: "" }));
-  }
-
-  // scoreSummary → "score-summary:{year}"
-  if (data.scoreSummary) {
-    await db.setCache(`score-summary:${data.scoreSummary.year}`, JSON.stringify(data.scoreSummary));
   }
 }
 

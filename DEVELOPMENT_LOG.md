@@ -1595,3 +1595,215 @@ Opus 코드리뷰에서 발견된 버그 2건 수정:
 | `94d6ea7` | `fix: 경기상세 점수만 뜨는 현상 — API 실패 시 백그라운드 재시도 + 3초 자동 복구` |
 | `f17123a` | `fix: AppState 포그라운드 복귀 시 prefetch 자동 실행 + dedup promise 리셋 누락 수정` |
 | `81a1500` | `fix: 서버 선발투수 ?? 버그 + 온보딩 연도 필터 로컬 동기화 + April game-records 재수집` |
+
+---
+
+## Phase 17-8: /refresh-data 엔드포인트 + 서버 상태 점검 (2026-06-01)
+
+### 목적
+
+기존 개별 API 요청을 대체하는 경량 갱신 엔드포인트 `/refresh-data` 구현. 5분 주기 백그라운드 갱신에 최적화된 단일 API로 부하와 데이터 사용량을 줄임.
+
+### 변경 내역
+
+**서버 (`server/data_api/main.py`)**
+- `/refresh-data` GET 엔드포인트 신규 추가
+- 응답: `todayGames`, `todayScores`, `standings`, `scoreSummary`, `todayGameDetails`
+- `todayGameDetails`: 오늘의 각 경기에 대해 `game-records/{date}.json`에서 lineup/scoreBoard/pitchingResult 추출
+- 서버 JSON 캐시 TTL 60초→300초로 증가
+- collector 실행 직후 JSON 캐시 clear + pre-warm 로직 추가
+
+**공유 타입 (`shared/types.ts`)**
+- `RefreshData` 인터페이스 정의
+
+**공유 API (`shared/api.ts`)**
+- `fetchRefreshData()` 추가
+
+**앱 (`mobile/lib/api.ts`)**
+- `fetchRefreshData` re-export
+
+**앱 (`mobile/lib/prefetch.ts`)**
+- `fetchRefreshDataAndCache()`: `/refresh-data` 응답을 5개 SQLite 캐시 키(today, scores, standings, score-summary, game)에 쓰기
+- `prefetchOnAppInit()`: fallback 체인 구성 — `/refresh-data` → `/onboarding-data` → 개별 API
+
+### 데이터 흐름
+
+```
+prefetchOnAppInit()
+  → fetchRefreshDataAndCache()          (1 API call, ~20KB)
+    → 실패 시 fetchOnboardingWithCache() (1 API call, ~200KB)
+      → 실패 시 개별 API 호출           (5+ API calls)
+```
+
+### 응답 크기
+
+- game-detail 미포함: ~5KB
+- game-detail 포함 (5경기 기준): ~20KB
+- game-detail 내 lineup/scoreBoard/pitchingResult만 포함 (전체 game-detail 응답보다 70% 경량)
+
+### 서버 상태
+
+| 항목 | 값 |
+|------|:----:|
+| OCPU | 2 (원래 1 → OCI 무료 업그레이드로 2OCPU/12GB) |
+| RAM | 12 GB |
+| 평균 CPU | 0.3~0.5% (near-idle) |
+| 평균 메모리 | ~13% |
+| 디스크 | 47.6G / 200G 사용 |
+| 동시접속 추정 | active ~1,000 / background refresh ~10,000 |
+| Workers | uvicorn single worker (추가 시 collector 분리 필요) |
+
+### 예상 부하
+
+- 5분 주기 = 12회/시간 × 사용자 수
+- 1,000 DAU 기준: 12,000 req/h = 3.3 req/s
+- `/refresh-data` 단일 엔드포인트가 개별 API 5~6회 대체
+- 서버 JSON 캐시(300s TTL)로 동시 요청 중복 방지
+
+### OCI 업그레이드 히스토리
+
+| 단계 | 상태 | 비고 |
+|------|:----:|------|
+| 1→2 OCPU (A1.Flex) | ✅ 완료 | OCI 항상 무료 범위 내 |
+| 2→4 OCPU | ⛔ 대기 중 | Chuncheon region Out of capacity, 50분 간격 자동 재시도 |
+| 스크립트 위치 | `server/upgrade_oci.sh` | @reboot cron + PATH fix 완료 (`oci: command not found` → `export PATH`) |
+
+### 커밋
+
+| 해시 | 설명 |
+|------|------|
+| `4ef8419` | `feat: /refresh-data 경량 갱신 엔드포인트 — 앱 fallback 체인 + SQLite cache 갱신` |
+| `d97af79` | `feat: /refresh-data에 game-detail(lineup/scoreBoard/pitchingResult) 포함` |
+| `cd62eb8` | `docs: /refresh-data 작업 문서 업데이트` |
+| `a2a8e17` | `chore: server-scripts — OCI upgrade 스크립트 PATH fix` |
+
+---
+
+## Phase 17-9: 서버 복구 플랜 수립 + 백업 체계 (2026-06-01)
+
+### 작업 내역
+
+**4 OCPU 업그레이드 중단**
+- `@reboot cron` 제거, 실행 중이던 `upgrade_oci.sh` 종료
+- 이유: 4 OCPU 회수 위험 증가 (24시간 평균 0.3~0.5% 사용량)
+
+**서버 설정 문서화** (`mobile/server-setup.md`)
+- systemd 서비스, nginx, 디렉토리 구조, 배포 방식 정리
+- Python 패키지 목록 (fastapi 0.128.8, uvicorn 0.39.0 등 25개)
+- SSL 인증서 (api.fullcount.kr, 만료 2026-08-10, acme.sh 자동 갱신)
+
+**복구 플랜 수립** (`mobile/disaster-recovery-plan.md`)
+- 단계별 복구 절차 (OCI 재생성 → 유료 클라우드 이전 → 최악의 시나리오)
+- 사전 준비 체크리스트 (데이터, nginx설정, SSL, main.py, collector.py)
+
+**로컬 백업 체계**
+- 백업 경로: `server-backup/YYYY-MM-DD/data/` (JSON 196MB)
+- nginx 설정 + SSL 인증서/개인키 별도 백업
+- CLAUDE.md 규칙에 추가 (대화 시작 시 사용자 확인 후 실행)
+- 하루 1회 중복 방지
+
+**백업 파일**
+```
+server-backup/2026-06-01/
+├── data/              # JSON 데이터 전체
+├── main.py            # 서빙 중인 API 코드
+├── collector.py       # 데이터 수집기
+└── nginx-config/
+    ├── api.conf       # nginx reverse proxy
+    ├── api.fullcount.kr.cer
+    └── api.fullcount.kr.key
+```
+
+### 새 문서 목록
+
+| 문서 | 설명 |
+|:-----|:-----|
+| `mobile/server-setup.md` | 서버 설정 문서 |
+| `mobile/disaster-recovery-plan.md` | 장애 복구 플랜 |
+
+### CLAUDE.md 변경
+- Server: `mobile/server-setup.md` 참고 규칙 추가
+- Daily backup: 대화 시작 시 사용자 확인 후 실행 (하루 1회)
+
+---
+
+## Phase 18: iOS App Store 최초 배포 + 버그픽스 (2026-06-01~02)
+
+> **버전**: iOS 1.0.0 (별도 트랙), Android 1.0.11 (versionCode 13)
+> **iOS 상태**: 심사 제출 완료 ("심사 대기 중"), 수동 출시 설정
+> **Android 상태**: AAB 빌드 큐 대기 중
+
+### iOS App Store 배포 (최초)
+
+**Apple Developer 설정:**
+- App ID: `kr.fullcount.app` — Identifiers에 등록 (user가 직접)
+- EAS Build가 Distribution Certificate + Provisioning Profile 자동 생성
+- App Store Connect 앱 생성: "Fullcount" (이름 충돌로 "Fullcount" 사용 가능)
+
+**App Store Connect 메타데이터 설정:**
+| 항목 | 값 |
+|------|-----|
+| 설명 | "풀카운트와 함께하는 KBO 야구 직관 · 집관 기록 앱" |
+| 키워드 | KBO, 야구, 직관, 풀카운트, 한국프로야구 |
+| 개인정보 보호정책 URL | `https://api.fullcount.kr/privacy` |
+| 연령 등급 | 4+ |
+| 가격 | 무료 |
+| 수집 데이터 | 연락처 정보/식별자/사용자 콘텐츠/구매 내역/검색 기록/진단 (총 6종) |
+| 저작권 | "(c) 2026 fullcount.kr" |
+| iPad 스크린샷 | 2048×2732 (1/4 상단, 3/4 하단 크롭) |
+
+**앱 설정:**
+- `ITSAppUsesNonExemptEncryption`: `false` (암호화 없음, 앱스토어 심사 필수)
+- `app.json` version: iOS 1.0.0 / Android 1.0.11
+
+**iOS 빌드 및 제출:**
+- `npx eas build --platform ios --profile production --non-interactive` → Distribution Certificate 검증 실패
+- 사용자가 직접 `npx eas build --platform ios --profile production` 실행 (interactive) → 성공
+- `npx eas submit --platform ios --profile production` → App Store Connect 업로드 완료
+- `PowerShell ExecutionPolicy` 이슈: `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser` 필요
+
+**iPad 스크린샷 리사이즈 파이썬 스크립트:**
+- `resize_ipad.py` — iPad 실기기 캡쳐(1488×2266) → 2048×2732 스케일 후 크롭
+  - 크롭 비율: 상단 1/4, 하단 3/4 제거 (사용자 피드백 반영)
+  - `scale = max(TARGET_W/w, TARGET_H/h)` → center crop with offset
+
+| 파일 | 설명 |
+|------|------|
+| `C:\Users\user\Pictures\appstore\resize_ipad.py` | iPad 스크린샷 2048×2732 크롭 |
+| `C:\Users\user\Pictures\appstore\make_ipad.py` | (시도) 흰색 캔버스 중앙 배치 → 실기기 사진으로 대체 |
+
+**버전 분리 결정:**
+- iOS: 1.0.0부터 별도 트랙 (앱스토어 첫 출시)
+- Android: 기존 1.0.11 유지 (Play Store 이미 출시)
+- `app.json`에서 빌드 시에만 각 플랫폼 버전 수동 변경
+- memory: `ios-android-version-separate.md`, `ios-deploy-process.md` 문서화
+
+### 버그 수정: 스티커 만료 시간
+
+**파일:** `mobile/app/game/[id].tsx:618-620`
+**변경:** `new Date().getHours() < 24` → `< 14`
+**설명:** 스티커 생성 다음날 14시(오후 2시)까지 생성 가능, 14시 이후 만료
+
+### 리팩터링: filterByGameType 순환 의존성 해결
+
+**문제:** `lib/stats.ts` ↔ `lib/expenseStats.ts` 간 `filterByGameType`/`resolveIsWin` 순환 import
+
+**해결:** `lib/gameTypeFilter.ts` 신규 생성 (공유 함수 추출)
+
+| 파일 | 변경 |
+|------|------|
+| `lib/gameTypeFilter.ts` | 신규: `filterByGameType()` 추출 |
+| `lib/stats.ts` | `filterByGameType` 제거, `@/lib/gameTypeFilter` import |
+| `lib/expenseStats.ts` | `@/lib/stats` → `@/lib/gameTypeFilter` import 변경 |
+| `lib/__tests__/stats.test.ts` | import 분리 (`@/lib/stats` + `@/lib/gameTypeFilter`) |
+
+- 검증: `npx jest` → 46개 테스트 전부 통과 ✅
+- `npx expo start --clear`로 Metro 캐시 초기화 필요 (중복 선언 에러 방지)
+
+### Android 빌드
+- `app.json` 변경: `version: "1.0.11"`, `versionCode: 13`
+- `npx eas build --platform android --profile production` 실행 (큐 대기 중)
+
+### iOS 배포 프로세스 문서화
+- `memory/ios-deploy-process.md` — 전체 단계별 가이드 (Apple ID, 버전 관리, 명령어)
+- `memory/ios-android-version-separate.md` — iOS/Android 버전 분리 결정 및 이유

@@ -4,19 +4,19 @@ import { View, Text, Image, ScrollView, FlatList, StyleSheet, ActivityIndicator,
 import { useRouter } from "expo-router";
 import DateStrip from "@/components/DateStrip";
 import GameCard from "@/components/GameCard";
-import CalendarGrid from "@/components/CalendarGrid";
+import CalendarContainer from "@/components/CalendarContainer";
 import AchievementWidget from "@/components/AchievementWidget";
 import {
   type TodayGame,
   type ScoreEntry,
   type ScheduleGame,
-  fetchGameDetail,
 } from "@/lib/api";
 import {
   cachedScheduleByMonth,
   cachedDailyScores,
   cachedAllDailyScores,
   cachedTodayGames,
+  cachedGameDetail,
 } from "@/lib/gameCache";
 import { resolveGames, resolveGamesForSchedule, type ResolvedGame } from "@/lib/resolveGames";
 import { formatDateForApi as formatDateStr } from "@shared/constants";
@@ -115,7 +115,7 @@ export default function HomeScreen() {
   const [gamesByDate, setGamesByDate] = useState<Record<string, ResolvedGame[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [displayTeam, setDisplayTeam] = useState<string | null>(null);
+
   const { myTeam } = useTeam();
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [achievementOpen, setAchievementOpen] = useState(false);
@@ -270,13 +270,14 @@ export default function HomeScreen() {
             nextGames: nextGamesForDate,
           });
 
-          // Fallback: fetch game-detail for live games and missing pitchers
+          // Fallback: fetch game-detail for live games only
+          // Past games don't need pitcher info — GameCard renders without it
           const gamesNeedingDetail = resolved.filter(
-            (g) => !isFuture && !g.isExhibition && (g.status === "live" || !g.homePitcher || !g.awayPitcher)
+            (g) => !isFuture && !g.isExhibition && g.status === "live"
           );
           if (gamesNeedingDetail.length > 0) {
             Promise.all(
-              gamesNeedingDetail.map((g) => fetchGameDetail(g.gameId).catch(() => null))
+              gamesNeedingDetail.map((g) => cachedGameDetail(g.gameId))
             ).then((results) => {
               if (cancelled) return;
               setGamesByDate((prev) => ({
@@ -341,14 +342,13 @@ export default function HomeScreen() {
     cachedScheduleByMonth(month, calYear).then(async (schedule) => {
       if (cancelled) return;
       const gamesList = schedule?.games || [];
-      const myDates = [...new Set(gamesList.map((g) => g.date))];
-      const scoreResults = await Promise.all(
-        myDates.map((d) => cachedDailyScores(d).catch((e) => { console.warn('cachedDailyScores failed for', d, e); return null; }))
-      );
+      const allScoresData = await cachedAllDailyScores(calYear).catch(() => null);
       if (cancelled) return;
       const scoresRecord: Record<string, any[]> = {};
-      for (let i = 0; i < myDates.length; i++) {
-        if (scoreResults[i]?.games) scoresRecord[myDates[i]] = scoreResults[i]!.games;
+      if (allScoresData) {
+        for (const game of gamesList) {
+          if (allScoresData[game.date] && !scoresRecord[game.date]) scoresRecord[game.date] = allScoresData[game.date];
+        }
       }
       const resolved = resolveGamesForSchedule(gamesList, scoresRecord);
       calCache.current[cacheKey] = resolved;
@@ -362,11 +362,12 @@ export default function HomeScreen() {
         if (adj >= 1 && adj <= 12 && !calCache.current[adjKey]) {
           cachedScheduleByMonth(adj, calYear).then(async (s) => {
             const gl = s?.games || [];
-            const dts = [...new Set(gl.map((g) => g.date))];
-            const srs = await Promise.all(dts.map((d) => cachedDailyScores(d).catch((e) => { console.warn('cachedDailyScores preload failed for', d, e); return null; })));
+            const adjScores = await cachedAllDailyScores(calYear).catch(() => null);
             const src: Record<string, any[]> = {};
-            for (let i = 0; i < dts.length; i++) {
-              if (srs[i]?.games) src[dts[i]] = srs[i]!.games;
+            if (adjScores) {
+              for (const game of gl) {
+                if (adjScores[game.date] && !src[game.date]) src[game.date] = adjScores[game.date];
+              }
             }
             calCache.current[adjKey] = resolveGamesForSchedule(gl, src);
             pruneCalCache(calCache.current);
@@ -560,16 +561,14 @@ export default function HomeScreen() {
       {/* Calendar toggle + content — pan wraps both for open/close swipe */}
       <View {...calendarPan.panHandlers}>
       <View style={[styles.toggleWrapper, calendarOpen ? styles.toggleOpen : styles.toggleHidden]}>
-        <CalendarGrid
+        <CalendarContainer
           year={calYear}
           month={calMonth}
           resolvedGames={calResolvedGames}
           loading={loading}
-          selectedTeam={displayTeam || myTeam}
           myTeam={myTeam}
           onSelectDate={(d) => { setSelectedDate(d); setCalendarOpen(false); }}
           onMonthChange={(y, m) => { setCalYear(y); setCalMonth(m); }}
-          onTeamChange={setDisplayTeam}
           onYearChange={(y) => setCalYear(y)}
         />
       </View>

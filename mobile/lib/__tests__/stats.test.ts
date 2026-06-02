@@ -1,8 +1,8 @@
 import type { JikgwanRecord } from "@/lib/db";
+import { filterByGameType } from "@/lib/gameTypeFilter";
 import {
   parseDateStr,
   filterByYear,
-  filterByGameType,
   computeDiaryStats,
   computeStreakStats,
   computeOpponentStats,

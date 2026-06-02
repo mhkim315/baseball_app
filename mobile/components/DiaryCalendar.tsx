@@ -6,7 +6,7 @@ import { parseGameTeamIds, getWinBadge, getDaysInMonth, getFirstDayOfMonth } fro
 import { EMOTION_CHARACTER, type CharacterEmotion } from "@/lib/emotions";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme } from "@/lib/ThemeContext";
-import { cachedScheduleByMonth, cachedDailyScores } from "@/lib/gameCache";
+import { cachedScheduleByMonth, cachedAllDailyScores } from "@/lib/gameCache";
 import { resolveGamesForSchedule, type ResolvedGame } from "@/lib/resolveGames";
 import type { JikgwanRecord, Expense } from "@/lib/db";
 import { getBadges } from "@/lib/db";
@@ -71,15 +71,12 @@ export default function DiaryCalendar({
     cachedScheduleByMonth(month + 1, year).then(async (schedule) => {
       if (cancelled) return;
       const gamesList = schedule?.games || [];
-      const allDates = [...new Set(gamesList.map((g) => g.date))];
-      const scoreResults = await Promise.all(
-        allDates.map((d) => cachedDailyScores(d).catch(() => null))
-      );
+      const allScores = await cachedAllDailyScores(year).catch(() => null);
       if (cancelled) return;
       const scoresByDate: Record<string, any[]> = {};
-      for (let i = 0; i < allDates.length; i++) {
-        if (scoreResults[i]?.games) {
-          scoresByDate[allDates[i]] = scoreResults[i]!.games;
+      if (allScores) {
+        for (const game of gamesList) {
+          if (allScores[game.date] && !scoresByDate[game.date]) scoresByDate[game.date] = allScores[game.date];
         }
       }
       const resolved = resolveGamesForSchedule(gamesList, scoresByDate);

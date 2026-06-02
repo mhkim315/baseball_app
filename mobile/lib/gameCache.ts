@@ -7,6 +7,7 @@ import {
   fetchGameDetail as apiGameDetail,
   fetchStandingsJson as apiStandingsJson,
   fetchScoreSummary as apiScoreSummary,
+  getWithStatus,
   type ScoreEntry,
   type ScheduleGame,
   type TodayGame,
@@ -30,6 +31,36 @@ const thisYear = () => now().getFullYear();
 
 const pendingFetches = new Map<string, Promise<unknown | null>>();
 
+// Global concurrency limiter — max 3 concurrent API calls
+const MAX_CONCURRENT = 3;
+let inFlight = 0;
+const requestQueue: (() => void)[] = [];
+
+function acquireSlot(): Promise<void> {
+  if (inFlight < MAX_CONCURRENT) {
+    inFlight++;
+    return Promise.resolve();
+  }
+  return new Promise<void>((resolve) => {
+    requestQueue.push(() => { inFlight++; resolve(); });
+  });
+}
+
+function releaseSlot() {
+  inFlight--;
+  const next = requestQueue.shift();
+  if (next) next();
+}
+
+async function withConcurrencyLimit<T>(fn: () => Promise<T>): Promise<T> {
+  await acquireSlot();
+  try {
+    return await fn();
+  } finally {
+    releaseSlot();
+  }
+}
+
 // Background retry after API failure — exponential backoff: 5s, 15s, 45s
 const RETRY_DELAYS = [5_000, 15_000, 45_000];
 const retryCounts = new Map<string, number>();
@@ -41,6 +72,8 @@ function scheduleRetry<T>(key: string, fetcher: () => Promise<T | null>, cachedA
     return;
   }
   retryCounts.set(key, done + 1);
+  const baseDelay = RETRY_DELAYS[done];
+  const jitter = baseDelay * (0.7 + Math.random() * 0.6); // ±30%
   setTimeout(async () => {
     try {
       // Don't write if cache was refreshed since this retry started
@@ -51,15 +84,18 @@ function scheduleRetry<T>(key: string, fetcher: () => Promise<T | null>, cachedA
           return;
         }
       }
-      const fresh = await fetcher();
+      const fresh = await withConcurrencyLimit(() => fetcher());
       if (fresh) {
         await db.setCache(key, JSON.stringify(fresh));
         retryCounts.delete(key);
+      } else {
+        // null response (including 429/5xx) — continue backoff chain
+        scheduleRetry(key, fetcher, cachedAt);
       }
     } catch {
       scheduleRetry(key, fetcher, cachedAt);
     }
-  }, RETRY_DELAYS[done]);
+  }, Math.round(jitter));
 }
 
 function safeParse(json: string): unknown | null {
@@ -99,7 +135,7 @@ async function fetchWithCache<T>(
   if (pending) return pending.then((r) => r as T | null);
 
   const promise = (async (): Promise<T | null> => {
-    const fresh = await fetcher();
+    const fresh = await withConcurrencyLimit(() => fetcher());
     if (fresh) {
       await db.setCache(cacheKeyStr, JSON.stringify(fresh));
       return fresh;
@@ -121,7 +157,10 @@ async function fetchWithCache<T>(
   try {
     return await promise;
   } finally {
-    pendingFetches.delete(cacheKeyStr);
+    // 2s cooldown before clearing dedup key, so concurrent callers
+    // during a failure burst share the same null result instead of
+    // each creating a new API request that also hits the rate limit.
+    setTimeout(() => pendingFetches.delete(cacheKeyStr), 2000);
   }
 }
 
@@ -206,13 +245,57 @@ export async function cachedDailyScores(date: string): Promise<{ games: ScoreEnt
   if (!isNaN(year) && year <= 2025) {
     return { games: [] };
   }
-  return fetchWithCache(cacheKey("scores", date), ttlForDate(date), () =>
-    apiDailyScores(date)
-  );
+
+  // Before making an individual API call, check if the bulk aggregate is cached.
+  // This prevents 100+ individual requests when cache is cold (e.g. calendar preload).
+  const bulkCached = await db.getCache(cacheKey("scores", "__all__"));
+  if (bulkCached) {
+    const bulkData = safeParse(bulkCached.data) as Record<string, ScoreEntry[]> | null;
+    if (bulkData?.[date]) {
+      // Write to per-date cache for future fast lookups
+      await db.setCache(cacheKey("scores", date), JSON.stringify({ games: bulkData[date] }));
+      return { games: bulkData[date] };
+    }
+  }
+
+  return fetchWithCache(cacheKey("scores", date), ttlForDate(date), async () => {
+    const { data, status } = await getWithStatus<{ date: string; games: ScoreEntry[] }>(`/daily-scores/${date}`);
+    if (status === 404) {
+      // Server confirmed no games on this date — cache empty permanently
+      return { games: [] };
+    }
+    // Return data (null on 5xx/network error → fetchWithCache will skip cache & retry)
+    return data ?? null;
+  });
+}
+
+// Read cached all-scores without triggering any API call (cache hit only)
+export async function readCachedAllScores(): Promise<Record<string, ScoreEntry[]> | null> {
+  const cached = await db.getCache(cacheKey("scores", "__all__"));
+  if (!cached) return null;
+  const parsed = safeParse(cached.data) as Record<string, ScoreEntry[]> | null;
+  return parsed ?? null;
+}
+
+// Build a date range string[] for a given season/year (March ~ today)
+function dateRangeForSeason(year: number): string[] {
+  const today = todayStr();
+  const dates: string[] = [];
+  const start = `${year}-03-01`;
+  const end = year < thisYear() ? `${year}-12-31` : today;
+  if (end < start) return [];
+  const d = new Date(start);
+  while (d.toISOString().slice(0, 10) <= end) {
+    dates.push(d.toISOString().slice(0, 10));
+    d.setDate(d.getDate() + 1);
+  }
+  return dates;
 }
 
 // Bulk fetch all daily scores → populate per-date cache for instant individual lookups
-const ALL_SCORES_TTL = 300_000; // 5 min
+const ALL_SCORES_TTL = 300_000; // 5 min (used only for the aggregate cache key)
+
+// Module-level dedup for cachedAllDailyScores concurrent calls
 let allScoresPromise: Promise<Record<string, ScoreEntry[]> | null> | null = null;
 
 export async function cachedAllDailyScores(year?: number): Promise<Record<string, ScoreEntry[]> | null> {
@@ -240,46 +323,78 @@ export async function cachedAllDailyScores(year?: number): Promise<Record<string
     return filtered;
   }
 
+  const targetYear = year ?? thisYear();
   const allScoresCacheKey = cacheKey("scores", "__all__");
 
-  // Check cache first (with TTL)
+  // ─── Step 1: Try aggregate cache ───
   const cached = await db.getCache(allScoresCacheKey);
-  let staleParsed: Record<string, ScoreEntry[]> | null = null;
   if (cached) {
-    staleParsed = safeParse(cached.data) as Record<string, ScoreEntry[]> | null;
-    if (staleParsed && Date.now() - cached.updatedAt < ALL_SCORES_TTL) return staleParsed;
-    // TTL expired — keep staleParsed for fallback if API fails, don't delete cache
+    const parsed = safeParse(cached.data) as Record<string, ScoreEntry[]> | null;
+    if (parsed && Date.now() - cached.updatedAt < ALL_SCORES_TTL) return parsed;
   }
 
-  // Dedup concurrent calls
+  // ─── Step 2: Reconstruct from per-date caches ───
+  // Per-date caches have correct TTLs (past = ∞, today = 5min, future = 1hr).
+  // Use Promise.all for parallel SQLite reads to minimize latency.
+  const seasonDates = dateRangeForSeason(targetYear);
+  const result: Record<string, ScoreEntry[]> = {};
+  const coldDates: string[] = [];
+
+  const perDateEntries = await Promise.all(
+    seasonDates.map((date) =>
+      db.getCache(cacheKey("scores", date)).then((entry) => ({ date, entry }))
+    )
+  );
+  for (const { date, entry } of perDateEntries) {
+    if (!entry) {
+      coldDates.push(date);
+      continue;
+    }
+    const parsed = safeParse(entry.data) as { games: ScoreEntry[] } | null;
+    if (parsed?.games) result[date] = parsed.games;
+  }
+
+  // Merge LOCAL_SCORES (exhibition games not covered by API)
+  for (const [date, entries] of Object.entries(LOCAL_SCORES)) {
+    if (date.startsWith(String(targetYear)) && !result[date]) {
+      result[date] = entries;
+    }
+  }
+
+  // If all dates are warm, no API call needed
+  if (coldDates.length === 0) {
+    // Still write the aggregate key for next time
+    await db.setCache(allScoresCacheKey, JSON.stringify(result));
+    return result;
+  }
+
+  // ─── Step 3: Only fetch cold dates from API ───
+  // Dedup concurrent calls via module-level allScoresPromise
   if (allScoresPromise) return allScoresPromise;
 
   allScoresPromise = (async () => {
     const data = await apiAllDailyScores();
     if (!data) {
-      // API failed — return stale cache if available
-      if (staleParsed) return staleParsed;
+      // API failed — return whatever we reconstructed (even if partial)
+      if (Object.keys(result).length > 0) return result;
       return null;
     }
 
-    // data.dates is the raw dates map: { "2026-05-21": [...], ... }
-    const dates = { ...data.dates };
+    const dates = { ...result, ...data.dates };
 
-    // Merge LOCAL_SCORES (March exhibition games, etc.) not covered by API
-    const targetYear = year ?? thisYear();
+    // Merge LOCAL_SCORES exhibition games not covered by API
     for (const [date, entries] of Object.entries(LOCAL_SCORES)) {
       if (date.startsWith(String(targetYear)) && !dates[date]) {
         dates[date] = entries;
       }
     }
 
-    // Populate per-date cache so individual cachedDailyScores calls hit instantly
-    for (const [date, games] of Object.entries(dates)) {
+    // Populate per-date cache for newly fetched dates
+    for (const [date, games] of Object.entries(data.dates)) {
       const key = cacheKey("scores", date);
       await db.setCache(key, JSON.stringify({ games }));
     }
 
-    // Also cache the full result briefly so rapid remounts skip the loop
     await db.setCache(allScoresCacheKey, JSON.stringify(dates));
     return dates;
   })();
@@ -298,9 +413,11 @@ export async function cachedTodayGames(): Promise<{ games: TodayGame[]; nextGame
   );
 }
 
-// Game detail — moderate TTL
+// Game detail — TTL based on game date
 export async function cachedGameDetail(gameId: string): Promise<GameDetail | null> {
-  return fetchWithCache(cacheKey("game", gameId), 300_000, () =>
+  const gameDate = gameId.length >= 8 ? normalizeDate(gameId.slice(0, 8)) : "";
+  const ttl = gameDate && gameDate < todayStr() ? Infinity : 300_000;
+  return fetchWithCache(cacheKey("game", gameId), ttl, () =>
     apiGameDetail(gameId)
   );
 }
@@ -317,7 +434,9 @@ export async function cachedStandings(): Promise<{
 export async function cachedScoreSummary(
   year: number
 ): Promise<{ year: number; teams: ScoreSummaryRow[] } | null> {
-  return fetchWithCache(`score-summary:${year}`, 300_000, () =>
-    apiScoreSummary(year)
-  );
+  return fetchWithCache(`score-summary:${year}`, 300_000, async () => {
+    const { data, status } = await getWithStatus<{ year: number; teams: ScoreSummaryRow[] }>(`/score-summary/${year}`);
+    if (status === 404) return { year, teams: [] };
+    return data ?? null;
+  });
 }

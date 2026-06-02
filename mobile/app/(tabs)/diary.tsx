@@ -18,7 +18,7 @@ import ConfettiOverlay from "@/components/ConfettiOverlay";
 import ExpenseModal from "@/components/ExpenseModal";
 import CoachMark from "@/components/CoachMark";
 import { getJikgwanRecords, deleteJikgwanRecord, getAllExpenses, getExpensesByDate, type JikgwanRecord, type Expense, type Badge, getDiaryCoachSeen, setDiaryCoachSeen } from "@/lib/db";
-import { cachedDailyScores, cachedAllDailyScores } from "@/lib/gameCache";
+import { readCachedAllScores } from "@/lib/gameCache";
 
 import { parseGameTeamIds } from "@shared/constants";
 import { TEAM_COLORS } from "@shared/teamColors";
@@ -274,47 +274,36 @@ export default function DiaryScreen() {
         getJikgwanRecords(),
         getAllExpenses(),
       ]);
-      // Merge scores into records in-memory (no DB write needed)
-      const merge = (records: JikgwanRecord[], scoresList: { away: string; home: string; awayScore: number; homeScore: number; cancelled: boolean }[]) => {
-        for (const r of records) {
-          if (r.score_away != null && r.score_home != null && !(r.score_away === 0 && r.score_home === 0)) continue;
-          const { awayId, homeId } = parseGameTeamIds(r.game_id);
-          if (!awayId || !homeId) continue;
-          const awayShort = TEAM_COLORS[awayId]?.shortName;
-          const homeShort = TEAM_COLORS[homeId]?.shortName;
-          if (!awayShort || !homeShort) continue;
-          const match = scoresList.find((s) => s.away === awayShort && s.home === homeShort);
-          if (!match) continue;
-          if (match.cancelled) { r.is_cancelled = 1; continue; }
-          if (match.awayScore == null || match.homeScore == null) continue;
-          if (match.awayScore === 0 && match.homeScore === 0) continue;
-          r.score_away = match.awayScore;
-          r.score_home = match.homeScore;
-          if (r.cheered_team) {
-            if (r.cheered_team === homeId) r.is_win = match.homeScore > match.awayScore ? 1 : match.homeScore < match.awayScore ? -1 : 0;
-            else if (r.cheered_team === awayId) r.is_win = match.awayScore > match.homeScore ? 1 : match.awayScore < match.homeScore ? -1 : 0;
-          }
-        }
-      };
-      // Per-date score lookup: only fetch dates for records without scores
-      const dateSet = new Set<string>();
+      // Enrich records missing scores from local cache only (no API call)
+      const missingDateSet = new Set<string>();
       for (const r of data) {
         if (r.score_away != null && r.score_home != null && !(r.score_away === 0 && r.score_home === 0)) continue;
-        dateSet.add(r.date.split(".").join("-"));
+        missingDateSet.add(r.date.split(".").join("-"));
       }
-      // Bulk-fetch all daily scores first to warm the per-date cache (avoids 429 from N parallel requests)
-      await cachedAllDailyScores().catch(() => {});
-      const scoresResults = await Promise.all(
-        Array.from(dateSet).map((date) =>
-          cachedDailyScores(date).catch(() => null)
-        )
-      );
-      let i = 0;
-      for (const apiDate of dateSet) {
-        const dayScores = scoresResults[i++];
-        if (!dayScores?.games) continue;
-        const dayRecords = data.filter((r) => r.date.split(".").join("-") === apiDate);
-        if (dayRecords.length > 0) merge(dayRecords, dayScores.games);
+      if (missingDateSet.size > 0) {
+        const cachedScores = await readCachedAllScores();
+        if (cachedScores) {
+          for (const r of data) {
+            if (r.score_away != null && r.score_home != null && !(r.score_away === 0 && r.score_home === 0)) continue;
+            const dayEntries = cachedScores[r.date.split(".").join("-")];
+            if (!dayEntries) continue;
+            const { awayId, homeId } = parseGameTeamIds(r.game_id);
+            if (!awayId || !homeId) continue;
+            const awayShort = TEAM_COLORS[awayId]?.shortName;
+            const homeShort = TEAM_COLORS[homeId]?.shortName;
+            if (!awayShort || !homeShort) continue;
+            const match = dayEntries.find((s) => s.away === awayShort && s.home === homeShort);
+            if (!match || match.cancelled) continue;
+            if (match.awayScore == null || match.homeScore == null) continue;
+            if (match.awayScore === 0 && match.homeScore === 0) continue;
+            r.score_away = match.awayScore;
+            r.score_home = match.homeScore;
+            if (r.cheered_team) {
+              if (r.cheered_team === homeId) r.is_win = match.homeScore > match.awayScore ? 1 : match.homeScore < match.awayScore ? -1 : 0;
+              else if (r.cheered_team === awayId) r.is_win = match.awayScore > match.homeScore ? 1 : match.awayScore < match.homeScore ? -1 : 0;
+            }
+          }
+        }
       }
       if (gen !== generationRef.current) return; // discard stale
 

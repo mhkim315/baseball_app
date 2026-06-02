@@ -1,5 +1,6 @@
 import { parseGameTeamIds } from "@shared/constants";
 import type { JikgwanRecord } from "@/lib/db";
+import { filterByGameType } from "@/lib/gameTypeFilter";
 import { resolveIsWin } from "@/lib/expenseStats";
 
 export interface DiaryStats {
@@ -97,12 +98,6 @@ function opponentTeam(gameId: string, cheeredTeam: string): string {
 
 export function filterByYear(records: JikgwanRecord[], year?: number): JikgwanRecord[] {
   return year ? records.filter((r) => r.date.startsWith(`${year}.`)) : records;
-}
-
-export function filterByGameType(records: JikgwanRecord[], gameType?: string | null): JikgwanRecord[] {
-  if (gameType === undefined) return records;
-  if (gameType === "regular") return records.filter((r) => (r.game_type ?? null) === null);
-  return records.filter((r) => r.game_type === gameType);
 }
 
 export function computeDiaryStats(records: JikgwanRecord[], year?: number, gameType?: string | null): DiaryStats {

@@ -6,11 +6,10 @@ import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { computeDiaryStats, computeOpponentStats, computeHomeAwayStats, computeDayOfWeekStats, computeStreakStats, computeAttendanceScoring, type DiaryStats as Stats } from "@/lib/stats";
-import { fetchScoreSummary } from "@/lib/api";
 import { HISTORICAL_SCORING, scoringTeamName } from "@/lib/scoringData";
 import { resolveIsWin } from "@/lib/expenseStats";
-import { fetchStandingsJson } from "@/lib/api";
 import { HISTORICAL_STANDINGS } from "@/lib/standingsData";
+import { cachedStandings, cachedScoreSummary } from "@/lib/gameCache";
 import type { JikgwanRecord } from "@/lib/db";
 import { getAllTotemStats, type TotemWithStats } from "@/lib/db";
 
@@ -62,7 +61,7 @@ export default function DiaryStats({ records, teamId, year }: DiaryStatsProps) {
         if (team) setTeamWinRate(team.winRate);
       }
     } else {
-      fetchStandingsJson()
+      cachedStandings()
         .then((data) => {
           if (!data?.rows) return;
           const team = data.rows.find((r) => r.teamName === teamName);
@@ -87,7 +86,7 @@ export default function DiaryStats({ records, teamId, year }: DiaryStatsProps) {
         if (entry) setTeamAvgRuns(entry.avgRuns);
       }
     } else {
-      fetchScoreSummary(year).then((data) => {
+      cachedScoreSummary(year).then((data) => {
         if (!data?.teams) return;
         const team = data.teams.find((t) => t.teamName === teamName);
         if (team) setTeamAvgRuns(team.avgRuns);

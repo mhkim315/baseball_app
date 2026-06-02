@@ -1,6 +1,6 @@
 import { type Expense, type ExpenseCategory, EXPENSE_CATEGORIES, type JikgwanRecord } from "@/lib/db";
 import { parseGameTeamIds } from "@shared/constants";
-import { filterByGameType } from "@/lib/stats";
+import { filterByGameType } from "@/lib/gameTypeFilter";
 
 export interface CategoryTotal {
   category: ExpenseCategory;

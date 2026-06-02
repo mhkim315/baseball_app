@@ -139,5 +139,8 @@ export function createApi(options: ApiClientOptions) {
 
     fetchRefreshData: (): Promise<RefreshData | null> =>
       client.get<RefreshData>("/refresh-data"),
+
+    getWithStatus: <T>(path: string) =>
+      client.getWithStatus<T>(path),
   };
 }

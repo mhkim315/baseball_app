@@ -17,7 +17,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "kr.fullcount.app",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "직관일기 작성 시 사진을 첨부하기 위해 앨범 접근 권한이 필요합니다."
+        "NSPhotoLibraryUsageDescription": "직관일기 작성 시 사진을 첨부하기 위해 앨범 접근 권한이 필요합니다.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -27,7 +28,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "kr.fullcount.app",
-      "versionCode": 12
+      "versionCode": 13
     },
     "web": {
       "favicon": "./assets/favicon.png"
