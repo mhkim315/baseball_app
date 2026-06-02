@@ -360,6 +360,9 @@ export default function StickerContent(props: Props) {
 
   const isHomeWin = homeScore > awayScore;
   const isAwayWin = awayScore > homeScore;
+  const showCrown = gameResult !== null && gameResult !== "draw" && homeScore !== awayScore;
+  const isWinnerAway = showCrown && isAwayWin;
+  const isWinnerHome = showCrown && isHomeWin;
   // When textColor is set, ALL text uses that color (no team-specific colors)
   const winColor = isCustomColor ? textColor : COLORS.win;
   const loseColor = isCustomColor ? textColor : COLORS.lose;
@@ -444,13 +447,19 @@ export default function StickerContent(props: Props) {
 
           {/* Score */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <Text style={[{ fontSize: 36, fontWeight: "900", lineHeight: 40, color: awayScoreColor }, thickStroke]}>
-              {awayScore}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+              <Text style={[{ fontSize: 36, fontWeight: "900", lineHeight: 40, color: awayScoreColor }, thickStroke]}>
+                {awayScore}
+              </Text>
+              {isWinnerAway && <Text style={{ fontSize: 14, marginTop: -8, marginLeft: -4 }}>🏆</Text>}
+            </View>
             <Text style={{ fontSize: 24, fontWeight: "700", color: toRgba(tc, 0.3) }}>:</Text>
-            <Text style={[{ fontSize: 36, fontWeight: "900", lineHeight: 40, color: homeScoreColor }, thickStroke]}>
-              {homeScore}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+              {isWinnerHome && <Text style={{ fontSize: 14, marginTop: -8, marginRight: -4 }}>🏆</Text>}
+              <Text style={[{ fontSize: 36, fontWeight: "900", lineHeight: 40, color: homeScoreColor }, thickStroke]}>
+                {homeScore}
+              </Text>
+            </View>
           </View>
 
           {/* Home team */}
@@ -528,8 +537,8 @@ export default function StickerContent(props: Props) {
             flexDirection: "row", alignItems: "flex-start", gap: 6,
           }}>
             {gameResult !== null ? (
-              <Text style={[{ fontSize: 16, marginTop: 2 }]}>🏆</Text>
-            ) : venue ? (
+              <Text style={[{ fontSize: 16, marginTop: 2 }]}>🔥</Text>
+            ) : venue && statsMode !== "broadcast" ? (
               <Text style={[{ fontSize: 16, marginTop: 1, color: badgeTextColor }]}>📍</Text>
             ) : null}
             <View style={{ flex: 1 }}>
@@ -543,7 +552,7 @@ export default function StickerContent(props: Props) {
                     ({stats.wins}승 {stats.losses}패{stats.draws > 0 ? ` ${stats.draws}무` : ""})
                   </Text>
                 </View>
-              ) : venue ? (
+              ) : venue && statsMode !== "broadcast" ? (
                 <Text style={[{ fontSize: 12, color: badgeTextColor, fontWeight: "700" }]}>{venue}</Text>
               ) : null}
               {/* Hashtags */}

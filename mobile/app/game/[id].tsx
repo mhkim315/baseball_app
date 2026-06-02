@@ -625,7 +625,7 @@ export default function GameDetailScreen() {
   const showLineupStatus = isBeforeGame;
   const lineupConfirmed = isFuture ? false : (detail.lineupConfirmed ?? false);
   const statusLabel = isCancelled ? "취소" : isFinished ? "경기 종료" : isLive ? "경기 중" : "경기 전";
-  const inningInfo = getInningInfo(detail.scoreBoard?.inn);
+  const inningInfo = getInningInfo(detail.scoreBoard?.inn) || (isLive ? { inning: 1, isTop: true as const } : null);
   const liveLabel = inningInfo ? `${inningInfo.inning}회${inningInfo.isTop ? "초" : "말"}` : "경기 중";
   const gs = gameScore;
   const awayWin = isFinished && gs ? gs.away > gs.home : null;
@@ -640,8 +640,8 @@ export default function GameDetailScreen() {
   const homeEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : homeWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";
 
   const scoreBoard = detail.scoreBoard;
-  const rheb = scoreBoard?.rheb;
-  const innData = scoreBoard?.inn;
+  const innData = scoreBoard?.inn || (isLive ? { away: [0], home: [] } : null);
+  const rheb = scoreBoard?.rheb || (isLive ? { away: { r: 0, h: 0, e: 0 }, home: { r: 0, h: 0, e: 0 } } : null);
   const maxInn = innData ? Math.max(innData.away.length, innData.home.length) : 0;
 
   return (
@@ -990,7 +990,7 @@ export default function GameDetailScreen() {
         awayRank={previewData ? String(previewData.awayRank) : undefined}
         homeRank={previewData ? String(previewData.homeRank) : undefined}
         date={detail?.date ?? ""}
-        scoreBoard={detail?.scoreBoard?.inn ? { away: detail.scoreBoard.inn.away, home: detail.scoreBoard.inn.home } : null}
+        scoreBoard={detail?.scoreBoard?.inn ? { away: detail.scoreBoard.inn.away, home: detail.scoreBoard.inn.home } : (isLive ? { away: [0], home: [] } : null)}
         rheb={detail?.scoreBoard?.rheb ?? null}
         isLive={isLive}
         isFinished={isFinished}

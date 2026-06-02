@@ -294,7 +294,13 @@ export default function HomeScreen() {
                   let isTop = g.isTop;
                   if (g.status === "live" && liveInning == null) {
                     const info = getInningInfo(detail.scoreBoard?.inn);
-                    if (info) { liveInning = info.inning; isTop = info.isTop; }
+                    if (info) {
+                      liveInning = info.inning;
+                      isTop = info.isTop;
+                    } else {
+                      liveInning = 1;
+                      isTop = true;
+                    }
                   }
 
                   return {

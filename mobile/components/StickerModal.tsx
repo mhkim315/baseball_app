@@ -196,7 +196,7 @@ export default function StickerModal({
       try {
         const year = parseInt(date.slice(0, 4), 10);
         const [teamStreakData, records] = await Promise.all([
-          computeTeamStreak(year, targetTeam),
+          computeTeamStreak(year, targetTeam, isLive ? date : undefined),
           getJikgwanRecords(),
         ]);
         if (!cancelled) {
@@ -277,7 +277,7 @@ export default function StickerModal({
       rawTeamStreak,
       { type: myStreakResult.currentType as "W" | "L" | null, count: myStreakResult.currentCount },
       actualResult,
-      { isHome: true, isFirstWin, isFirstGame, statsMode },
+      { isHome: isTargetHome, isFirstWin, isFirstGame, statsMode },
     );
 
     const isOtherGame = myTeam && homeTeam !== myTeam && awayTeam !== myTeam;
@@ -286,7 +286,7 @@ export default function StickerModal({
       setMyTag("아무나이겨라");
     } else {
       const modeLiveLabel = statsMode === "broadcast" ? "집관중" : "직관중";
-      const modeFallback = statsMode === "broadcast" ? "집관" : "야구장";
+      const modeFallback = "승요기원";
       setTeamTag(hashtags.teamTag || (isLive ? modeLiveLabel : ""));
       setMyTag(hashtags.myTag || (isLive ? modeFallback : ""));
     }

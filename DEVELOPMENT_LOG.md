@@ -1807,3 +1807,99 @@ server-backup/2026-06-01/
 ### iOS 배포 프로세스 문서화
 - `memory/ios-deploy-process.md` — 전체 단계별 가이드 (Apple ID, 버전 관리, 명령어)
 - `memory/ios-android-version-separate.md` — iOS/Android 버전 분리 결정 및 이유
+
+### 스티커 코치멘트 2종 추가 (홈 → 경기상세 연결)
+
+**날짜:** 2026-06-02
+
+**문제:**
+- today-back 코치(1회성)를 이미 본 사용자에게 스티커 활성화 시점에 다시 알릴 방법이 없음
+- 경기 시작 전(14시~경기시작), 취소, 월요일 등 스티커 불가 구간에서 "일기를 적어보세요"로 대체했지만, 스티커 가능해졌을 때 안내 부재
+- 24시 이후 어제 경기(다음날 14시 전까지 스티커 유효)에서도 코치 필요
+
+**해결:**
+1. **홈 스티커 코치** (`showHomeStickerCoach`): today-back 코치를 이미 본 상태에서, 현재 보고 있는 날짜(`selectedDate`)의 게임 중 `finished`/`live`가 있으면 발동
+   - `selectedDate` 기준이므로 오늘뿐 아니라 어제(14시 전) 페이지에서도 정상 작동
+   - 메시지: "카드를 눌러 경기 스티커를 생성해보세요"
+   - 저장소 키: `has_seen_home_sticker_coach`
+2. **경기상세 스티커 코치** (`showDetailStickerCoach`): 홈 코치에서 카드 탭 시 `&sc=1` 파라미터로 전달받아 발동
+   - 메시지: "스티커는 경기시작부터 다음날 14시까지 만들 수 있어요"
+   - 저장소 키: `has_seen_detail_sticker_coach`
+3. **레이스 컨디션 방어:** `todayBackChecked.current && !showTodayBackCoach` 가드로 today-back 코치 인플라이트 감지
+
+**변경 파일:**
+| 파일 | 변경 |
+|------|------|
+| `mobile/lib/db/settings.ts` | get/setHomeStickerCoachSeen, get/setDetailStickerCoachSeen 추가 (4함수) |
+| `mobile/lib/db/index.ts` | 4개 함수 barrel export 추가 |
+| `mobile/app/(tabs)/home.tsx` | state/refs/effect/render + onClick `sc=1` 파라미터 + scroll dismiss |
+| `mobile/app/game/[id].tsx` | `sc` 파라미터, state, effect 2개, dismiss, render 추가 |
+
+**커밋:** `00c55c1`
+
+### 장시간 사용 후 ImagePicker/Sharing 실패 복구
+
+**날짜:** 2026-06-02
+
+**문제:**
+- 장시간 앱을 백그라운드에 두면 Android가 Activity를 파괴함
+- Expo 네이티브 모듈(expo-image-picker, expo-sharing)이 stale Activity 참조를 들고 있어 `launchImageLibraryAsync` / `shareAsync` 자체가 실패
+- `getPendingResultAsync`는 picker가 실제 실행된 적 있어야만 복구 가능 → 이 케이스에서는 무용지물
+- (DEVELOPMENT_LOG.md:1390에 이미 문서화된 미해결 이슈)
+
+**해결: 3중 방어 패턴**
+1. **AppState foreground 복구:** `AppState.addEventListener("change")`로 포그라운드 복귀 시 `getPendingResultAsync()` 선제 호출
+2. **300ms retry:** 1차 실패 시 300ms 지연 후 2차 시도 (Android가 새 Activity 참조를 정리할 시간)
+3. **fallback:** 2차도 실패 시 `getPendingResultAsync()` 최종 확인 → 그래도 없으면 오류 Alert
+
+**변경 파일:**
+| 파일 | 변경 |
+|------|------|
+| `mobile/components/diary/useDiaryForm.ts` | AppState 리스너 + 300ms retry + getPendingResultAsync 3중 방어 |
+| `mobile/components/CollectionModal.tsx` | 동일 패턴 적용, handleAddPhotoResult 분리, 오류 Alert 추가 |
+| `mobile/components/DiaryTimeline.tsx` | Sharing.shareAsync try/catch + Alert 추가 |
+
+**전체 감사 결과:**
+- ImagePicker 2곳 → 둘 다 복구 완료
+- Sharing 2곳 → 둘 다 try/catch 완료
+- ImageManipulator, WebView, Linking → Activity 사용 안 함 (안전)
+
+**커밋:** `eb78fa3`
+
+### 스티커 해시태그 알고리즘 수정 + 1회초 초기 스코어보드 + UI 개선
+
+**날짜:** 2026-06-02
+
+#### 1. 스티커 해시태그 알고리즘 수정
+
+**문제:**
+- 연패 중인 팀의 라이브 경기에서 "2연승가자!"가 출력됨
+- *원인:* `computeTeamStreak`가 `allScores` 전체를 순회하며 오늘 라이브 경기의 임시 스코어(앞서고 있는 상태)까지 과거 전적에 포함 → streak type이 L→W로 뒤바뀜
+- `isHome: true` 하드코딩으로 원정팀 직관 시 `홈승리`로 잘못 표시
+
+**해결:**
+- `computeTeamStreak`에 `beforeDate` 파라미터 추가 → 라이브 경기 시 오늘 날짜 이후 스코어 제외
+- `isHome: true` → `isTargetHome`
+- fallback myTag: `야구장`/`집관` → `승요기원`
+- 집관 모드에서 지도핀/venue 숨김 처리
+
+**변경 파일:**
+| 파일 | 변경 |
+|------|------|
+| `mobile/lib/sticker.ts` | computeTeamStreak `beforeDate` 파라미터 + 루프 필터 |
+| `mobile/components/StickerModal.tsx` | isHome 수정, isLive?date 전달, fallback myTag 변경 |
+| `mobile/components/StickerContent.tsx` | 집관 모드 지도핀/venue 숨김, 승리팀 🏆 표시, 배지 🔥 |
+
+#### 2. 1회초 초기 스코어보드 표시
+
+**문제:** 경기 시작 후 1회초에 득점이 없으면 `getInningInfo`가 `null` 반환 → `liveLabel`이 "경기 중", 스코어보드 미표시, 스티커 라이브 스코어 조정 UI 비활성화
+
+**해결:** 경기 시작 후(isLive) 득점 전에도 합성 초기값 `{ away: [0], home: [] }`을 주입하여 모든 스코어보드 UI 활성화
+
+**변경 파일:**
+| 파일 | 변경 |
+|------|------|
+| `mobile/app/game/[id].tsx` | inningInfo/innData/rheb/StickerModal prop — isLive 시 합성 fallback |
+| `mobile/app/(tabs)/home.tsx` | getInningInfo null 시 `{ inning: 1, isTop: true }` fallback |
+
+**커밋:** `{{PENDING}}`

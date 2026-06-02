@@ -30,7 +30,7 @@ function isExhibitionDate(date: string): boolean {
  *
  * 최적화: 최신 경기부터 역순 탐색, streak이 끊기는 즉시 break.
  */
-export async function computeTeamStreak(year: number, teamId: string): Promise<TeamStreakInfo> {
+export async function computeTeamStreak(year: number, teamId: string, beforeDate?: string): Promise<TeamStreakInfo> {
   const teamName = Object.entries(TEAM_NAME_TO_ID).find(([, id]) => id === teamId)?.[0];
   if (!teamName) return { type: null, count: 0, prevType: null, prevCount: 0 };
 
@@ -41,6 +41,7 @@ export async function computeTeamStreak(year: number, teamId: string): Promise<T
   const results: { date: string; gameIdx: number; isWin: boolean }[] = [];
 
   for (const [date, entries] of Object.entries(allScores)) {
+    if (beforeDate && date >= beforeDate) continue;
     if (isExhibitionDate(date)) continue;
     for (const entry of entries) {
       if (entry.cancelled) continue;
