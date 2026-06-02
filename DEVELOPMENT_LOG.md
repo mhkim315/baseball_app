@@ -1902,4 +1902,4 @@ server-backup/2026-06-01/
 | `mobile/app/game/[id].tsx` | inningInfo/innData/rheb/StickerModal prop — isLive 시 합성 fallback |
 | `mobile/app/(tabs)/home.tsx` | getInningInfo null 시 `{ inning: 1, isTop: true }` fallback |
 
-**커밋:** `{{PENDING}}`
+**커밋:** `92b5fc6`
