@@ -606,7 +606,13 @@ export default function HomeScreen() {
         )}
         {showTodayBackCoach && (
           <View style={{ position: "absolute", top: 0, left: 16, right: 16, zIndex: 100, elevation: 5, shadowColor: "transparent" }}>
-            <CoachMark visible showChevrons={false} text="경기 카드를 눌러 오늘 경기의 스티커를 만들어보세요." onDismiss={() => setShowTodayBackCoach(false)} />
+            <CoachMark visible showChevrons={false} text={(() => {
+              const td = gamesByDate[formatDateStr(new Date())];
+              const hasSticker = td?.some((g) => g.status === "finished" || g.status === "live");
+              return hasSticker
+                ? "경기 카드를 눌러 오늘 경기의 스티커를 만들어보세요."
+                : "경기 카드를 눌러 경기 상세를 확인하고 일기를 적어보세요";
+            })()} onDismiss={() => setShowTodayBackCoach(false)} />
           </View>
         )}
         <ScrollView
