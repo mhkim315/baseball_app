@@ -60,6 +60,7 @@ export default function GameDetailScreen() {
   const [showDetailStickerCoach, setShowDetailStickerCoach] = useState(false);
   const stickerCoachChecked = useRef(false);
   const scheduleTimeRef = useRef<string | null>(null);
+  const resolvedStatusRef = useRef<string | undefined>(undefined);
 
   const load = useCallback(() => {
     if (!gid) return;
@@ -186,6 +187,7 @@ export default function GameDetailScreen() {
         const myGame = !isNaN(gameSeq) ? resolved[gameSeq] : undefined;
         if (myGame?.isExhibition) setIsExhibition(true);
         if (myGame?.time) scheduleTimeRef.current = myGame.time;
+        resolvedStatusRef.current = myGame?.status;
 
         if (scores?.games) {
           if (myGame?._raw.score) {
@@ -209,7 +211,7 @@ export default function GameDetailScreen() {
               home: myGame.homeTeam,
               awayScore: myGame.awayScore,
               homeScore: myGame.homeScore,
-              outcome: null,
+              outcome: myGame.outcome ?? null,
               cancelled: myGame.status === "cancelled",
               winPitcher: myGame.winPitcher ?? null,
               losePitcher: myGame.losePitcher ?? null,
@@ -236,6 +238,7 @@ export default function GameDetailScreen() {
           const myGame = !isNaN(gameSeq) ? resolved[gameSeq] : undefined;
           if (myGame?.isExhibition) setIsExhibition(true);
           if (myGame?.time) scheduleTimeRef.current = myGame.time;
+          resolvedStatusRef.current = myGame?.status;
           if (scores?.games && myGame?._raw.score) {
             setScoreFallback(myGame._raw.score);
           }
@@ -603,7 +606,6 @@ export default function GameDetailScreen() {
   const hasScoreData = gameScore !== null;
   const hasFinishedSignals = !!detail.scoreBoard || (detail.pitchingResult && detail.pitchingResult.length > 0) || (detail.etcRecords && detail.etcRecords.length > 0);
   const isGameActive = hasScoreData || hasFinishedSignals;
-  const hasDefinitiveFinish = (detail.pitchingResult && detail.pitchingResult.length > 0);
 
   const [gh, gm] = (detail.gameInfo?.time || scheduleTimeRef.current || "18:30").split(":").map(Number);
   const [y, m, d] = detail.date.split("-").map(Number);
@@ -611,8 +613,13 @@ export default function GameDetailScreen() {
   const gameHasStarted = new Date() >= startTime;
   const hasInningData = !!detail.scoreBoard?.inn;
 
+  // ── 이중 방어: resolveGames(daily-scores.json) + 서버(gameInfo) 상태를 모두 고려 ──
+  const hasOutcome = scoreFallback && scoreFallback.outcome !== null && !scoreFallback.cancelled;
+  const currentStatus = resolvedStatusRef.current || detail.gameInfo?.status;
+
   const isFinished = !isCancelled && !isFuture && (
-    detail.gameInfo?.status === "finished" && (!isToday || hasDefinitiveFinish) ||
+    hasOutcome ||
+    currentStatus === "finished" ||
     (isGameActive && !isToday && gameHasStarted)
   );
   const isLive = !isCancelled && !isFinished && (
@@ -675,7 +682,7 @@ export default function GameDetailScreen() {
 
             {/* Score / VS */}
             <View style={styles.scoreColumn}>
-              <Text style={styles.gameTime}>{detail.gameInfo?.time || "18:30"}</Text>
+              <Text style={styles.gameTime}>{detail.gameInfo?.time || scheduleTimeRef.current || "18:30"}</Text>
               {isCancelled ? (
                 <Text style={styles.cancelledText}>취소</Text>
               ) : gameScore ? (

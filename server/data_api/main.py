@@ -408,6 +408,104 @@ def get_today_games():
     return data
 
 
+@app.get("/refresh-data")
+def get_refresh_data():
+    today_str = date.today().isoformat()
+    year = date.today().year
+    today_games = load_json("today-games.json")
+    standings_data = load_json("kbo_standings.json")
+    standings = standings_data.get("rows") if standings_data else None
+    daily = load_json("daily-scores.json")
+    today_scores = daily.get("dates", {}).get(today_str, []) if daily else []
+    team_runs = {}
+    team_games = {}
+    if daily:
+        for date_str, games in daily.get("dates", {}).items():
+            if not date_str.startswith(str(year)):
+                continue
+            for game in games:
+                if game.get("cancelled") or game.get("outcome") is None:
+                    continue
+                team_runs[game["away"]] = team_runs.get(game["away"], 0) + game["awayScore"]
+                team_games[game["away"]] = team_games.get(game["away"], 0) + 1
+                team_runs[game["home"]] = team_runs.get(game["home"], 0) + game["homeScore"]
+                team_games[game["home"]] = team_games.get(game["home"], 0) + 1
+    teams = []
+    for team in sorted(team_runs):
+        g = team_games.get(team, 0)
+        teams.append({
+            "teamName": team,
+            "avgRuns": round(team_runs[team] / g, 1) if g > 0 else 0,
+            "totalRuns": team_runs[team],
+            "totalGames": g,
+        })
+    score_summary = {"year": year, "teams": teams}
+
+    # Build game-detail for today's games (5분 주기 캐시 갱신)
+    today_game_details = {}
+    for g in (today_games or {}).get("games", []):
+        gid = g.get("id")
+        if not gid:
+            continue
+        m = GAME_ID_REGEX.match(gid)
+        if not m:
+            continue
+        date_str_raw = m.group(1)
+        date_str = f"{date_str_raw[:4]}-{date_str_raw[4:6]}-{date_str_raw[6:8]}"
+        away_code = m.group(2)
+        home_code = m.group(3)
+        away_team = TEAM_CODE_MAP.get(away_code)
+        home_team = TEAM_CODE_MAP.get(home_code)
+        if not away_team or not home_team:
+            continue
+
+        lineup = {"home": [], "away": []}
+        starters = {"home": None, "away": None}
+        score_board = None
+        pitching_result = []
+        etc_records = []
+
+        for team_id, side in [(away_team, "away"), (home_team, "home")]:
+            record_path = DATA_DIR / "teams" / team_id / "game-records" / f"{date_str}.json"
+            if record_path.exists():
+                try:
+                    with open(record_path, "r", encoding="utf-8") as f:
+                        record = json.load(f)
+                    lineup[side] = record.get("homeLineup" if side == "home" else "awayLineup", [])
+                    if not starters[side]:
+                        starter = record.get("homeStarter" if side == "home" else "awayStarter")
+                        if starter:
+                            starters[side] = starter
+                    if record.get("scoreBoard"):
+                        score_board = record["scoreBoard"]
+                    if record.get("pitchingResult"):
+                        pitching_result = record["pitchingResult"]
+                    if record.get("etcRecords"):
+                        etc_records = record["etcRecords"]
+                except json.JSONDecodeError:
+                    pass
+
+        today_game_details[gid] = {
+            "gameId": gid,
+            "date": date_str,
+            "homeTeam": home_team,
+            "awayTeam": away_team,
+            "starters": starters,
+            "lineup": lineup,
+            "scoreBoard": score_board,
+            "pitchingResult": pitching_result,
+            "etcRecords": etc_records,
+        }
+
+    return {
+        "todayGames": today_games,
+        "standings": standings,
+        "todayScores": today_scores,
+        "scoreSummary": score_summary,
+        "todayGameDetails": today_game_details,
+    }
+
+
 @app.get("/postseason-odds")
 def get_postseason_odds():
     data = load_json("kbo_postseason_odds.json")
@@ -585,13 +683,24 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
             pr.append({"name": game_data["winPitcher"], "wls": "W"})
         if game_data.get("losePitcher"):
             pr.append({"name": game_data["losePitcher"], "wls": "L"})
+        if not pr and scores and date_str in scores.get("dates", {}):
+            home_kr = TEAM_NAME_MAP.get(home_team)
+            away_kr = TEAM_NAME_MAP.get(away_team)
+            for s in scores["dates"][date_str]:
+                if s.get("home") == home_kr and s.get("away") == away_kr \
+                        and s.get("gameIdx", 0) == game_seq:
+                    if s.get("winPitcher"):
+                        pr.append({"name": s["winPitcher"], "wls": "W"})
+                    if s.get("losePitcher"):
+                        pr.append({"name": s["losePitcher"], "wls": "L"})
+                    break
         if pr:
             result["pitchingResult"] = pr
 
     if game_data:
         if isinstance(game_data.get("away"), dict):
             result["gameInfo"] = {
-                "time": game_data.get("time"),
+                "time": game_data.get("time") or "18:30",
                 "venue": game_data.get("venue"),
                 "status": game_data.get("status"),
             }
@@ -608,6 +717,22 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
                     "away": game_data["awayScore"],
                     "home": game_data["homeScore"],
                 }
+
+    # ── daily-scores.json outcome → finished override ──
+    # today-games.json may still say "live" even though daily-scores.json has outcome.
+    if scores and date_str in scores.get("dates", {}):
+        home_kr = TEAM_NAME_MAP.get(home_team)
+        away_kr = TEAM_NAME_MAP.get(away_team)
+        for s in scores["dates"][date_str]:
+            if s.get("home") == home_kr and s.get("away") == away_kr \
+                    and s.get("gameIdx", 0) == game_seq:
+                if s.get("outcome") is not None:
+                    if "gameInfo" not in result:
+                        result["gameInfo"] = {}
+                    result["gameInfo"]["status"] = "finished"
+                    if "score" not in result and s.get("awayScore") is not None:
+                        result["score"] = {"away": s["awayScore"], "home": s["homeScore"]}
+                break
 
     return result
 
