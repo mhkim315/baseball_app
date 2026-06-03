@@ -334,7 +334,7 @@ def _enrich_schedule_times(games_list: list) -> list:
         away = tg.get("away", {})
         home = tg.get("home", {})
         if tg_date and tg_time and isinstance(away, dict) and isinstance(home, dict):
-            key = (tg_date, away.get("name", ""), home.get("name", ""))
+            key = (tg_date.replace("-", ""), away.get("name", ""), home.get("name", ""))
             time_lookup[key] = tg_time
     if not time_lookup:
         return games_list
@@ -601,7 +601,7 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
     scores = load_json("daily-scores.json")
     game_data = None
     if today:
-        for g in today.get("games", []):
+        for g in today.get("games", []) + today.get("nextGames", []):
             if g.get("id") == game_id:
                 game_data = g
                 break
