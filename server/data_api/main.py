@@ -321,6 +321,33 @@ def get_schedule(year: int = None):
     return data
 
 
+def _enrich_schedule_times(games_list: list) -> list:
+    """Override schedule times with actual values from today-games.json (today/tomorrow only)."""
+    today_data = load_json("today-games.json")
+    if not today_data:
+        return games_list
+    # Build lookup: (date, away_team, home_team) -> time
+    time_lookup = {}
+    for tg in today_data.get("games", []) + today_data.get("nextGames", []):
+        tg_date = tg.get("date", "")
+        tg_time = tg.get("time")
+        away = tg.get("away", {})
+        home = tg.get("home", {})
+        if tg_date and tg_time and isinstance(away, dict) and isinstance(home, dict):
+            key = (tg_date, away.get("name", ""), home.get("name", ""))
+            time_lookup[key] = tg_time
+    if not time_lookup:
+        return games_list
+    enriched = []
+    for g in games_list:
+        g = dict(g)  # shallow copy to avoid mutating cached data
+        key = (g.get("date", ""), g.get("away", ""), g.get("home", ""))
+        if key in time_lookup:
+            g["time"] = time_lookup[key]
+        enriched.append(g)
+    return enriched
+
+
 def _get_schedule_for_month(month: int, year: Optional[int] = None) -> Optional[dict]:
     """Return schedule dict for month/year, or None if data unavailable."""
     if month < 1 or month > 12:
@@ -345,14 +372,14 @@ def _get_schedule_for_month(month: int, year: Optional[int] = None) -> Optional[
                         "home": g.get("home", ""),
                         "time": g.get("time"),
                     })
-        return {"year": year, "month": month, "games": result}
+        return {"year": year, "month": month, "games": _enrich_schedule_times(result)}
     # No year provided — use current year's schedule JSON
     year_default = date.today().year
     data = load_json(f"kbo_schedule_{year_default}.json")
     if data is None:
         return None
     games = [g for g in data.get("games", []) if g.get("month") == month]
-    return {"year": data.get("year"), "month": month, "games": games}
+    return {"year": data.get("year"), "month": month, "games": _enrich_schedule_times(games)}
 
 
 @app.get("/schedule/{month}")
@@ -539,6 +566,21 @@ TEAM_NAME_MAP = {
 GAME_ID_REGEX = re.compile(r"(\d{8})-([A-Z]{2})([A-Z]{2})-(\d)")
 
 
+def _get_db_game_time(game_id: str) -> Optional[str]:
+    """Query games.time from PostgreSQL for a given game_id."""
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(
+                text("SELECT time::text FROM games WHERE id = :gid"),
+                {"gid": game_id}
+            ).fetchone()
+            if row and row[0]:
+                return row[0].strip()
+    except Exception:
+        pass
+    return None
+
+
 def _build_game_detail(game_id: str) -> Optional[dict]:
     """Build game detail dict from game ID. Returns None if data unavailable."""
     m = GAME_ID_REGEX.match(game_id)
@@ -699,8 +741,14 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
 
     if game_data:
         if isinstance(game_data.get("away"), dict):
+            time_val = game_data.get("time")
+            # Fallback: query DB directly for correct time
+            if not time_val or time_val == "18:30":
+                db_time = _get_db_game_time(game_id)
+                if db_time:
+                    time_val = db_time
             result["gameInfo"] = {
-                "time": game_data.get("time") or "18:30",
+                "time": time_val or "18:30",
                 "venue": game_data.get("venue"),
                 "status": game_data.get("status"),
             }
@@ -828,12 +876,12 @@ def get_onboarding_data():
 # --- Score summary ---
 
 
-def _compute_score_summary(year: int, scores: dict | None) -> dict | None:
+def _compute_score_summary(year: int, scores: Optional[dict]) -> Optional[dict]:
     """Compute score summary for the given year from daily-scores data."""
     if scores is None:
         return None
 
-    from data_api.main import _HISTORICAL_SCORING
+    # _HISTORICAL_SCORING is imported at module level from shared.scoring_data
 
     if year in _HISTORICAL_SCORING:
         teams = []
