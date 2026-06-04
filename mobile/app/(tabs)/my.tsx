@@ -397,18 +397,17 @@ export default function MyScreen() {
   const [showProfileCoach, setShowProfileCoach] = useState(false);
   const profileCoachChecked = useRef(false);
 
-  useEffect(() => {
-    if (!myTeam || profileCoachChecked.current) return;
-    if (showMyCoach) return;
-    profileCoachChecked.current = true;
-    Promise.all([getVisitCount(), getMyProfileCoachSeen()])
-      .then(async ([visitCount, seen]) => {
-        if (visitCount >= 2 && !seen) {
-          await setMyProfileCoachSeen();
-          setShowProfileCoach(true);
-        }
-      }).catch(() => {});
-  }, [myTeam, showMyCoach]);
+	  useEffect(() => {
+	    if (!myTeam || profileCoachChecked.current) return;
+	    if (showMyCoach) return;
+	    profileCoachChecked.current = true;
+	    getMyProfileCoachSeen().then(async (seen) => {
+	      if (!seen) {
+	        await setMyProfileCoachSeen();
+	        setShowProfileCoach(true);
+	      }
+	    }).catch(() => {});
+	  }, [myTeam, showMyCoach]);
 
   // Dismiss on navigation away
   const navigationMy = useNavigation();

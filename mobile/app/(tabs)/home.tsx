@@ -513,24 +513,23 @@ export default function HomeScreen() {
       .catch(() => { homeStickerCoachPendingRef.current = false; });
   }, [selectedDate, gamesByDate, showCoachMark, showTodayBackCoach, showHomeStickerCoach]);
 
-  // Home deep discovery: Calendar (visit 2) → Achievement (visit 3), sequential, no overlap
-  useEffect(() => {
-    if (showCoachMark || showTodayBackCoach || showHomeStickerCoach) return;
-    if (showHomeCalendarCoach || showHomeAchievementCoach) return;
-    if (homeDeepCoachChecked.current) return;
-    homeDeepCoachChecked.current = true;
-    Promise.all([getVisitCount(), getHomeCalendarCoachSeen(), getHomeAchievementCoachSeen()])
-      .then(async ([visitCount, calSeen, achSeen]) => {
-        if (visitCount < 2) return;
-        if (!calSeen) {
-          await setHomeCalendarCoachSeen();
-          setShowHomeCalendarCoach(true);
-        } else if (!achSeen) {
-          await setHomeAchievementCoachSeen();
-          setShowHomeAchievementCoach(true);
-        }
-      }).catch(() => {});
-  }, [showCoachMark, showTodayBackCoach, showHomeStickerCoach, showHomeCalendarCoach, showHomeAchievementCoach]);
+	  // Home deep discovery: Calendar (visit 2) → Achievement (visit 3), sequential, no overlap
+	  useEffect(() => {
+	    if (showCoachMark || showTodayBackCoach || showHomeStickerCoach) return;
+	    if (showHomeCalendarCoach || showHomeAchievementCoach) return;
+	    if (homeDeepCoachChecked.current) return;
+	    homeDeepCoachChecked.current = true;
+	    Promise.all([getHomeCalendarCoachSeen(), getHomeAchievementCoachSeen()])
+	      .then(async ([calSeen, achSeen]) => {
+	        if (!calSeen) {
+	          await setHomeCalendarCoachSeen();
+	          setShowHomeCalendarCoach(true);
+	        } else if (!achSeen) {
+	          await setHomeAchievementCoachSeen();
+	          setShowHomeAchievementCoach(true);
+	        }
+	      }).catch(() => {});
+	  }, [showCoachMark, showTodayBackCoach, showHomeStickerCoach, showHomeCalendarCoach, showHomeAchievementCoach]);
 
   const handlePageSwipe = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {

@@ -59,17 +59,16 @@ export default function CheerScreen() {
   const [showCheerTeamCoach, setShowCheerTeamCoach] = useState(false);
   const cheerTeamCoachChecked = useRef(false);
 
-  useEffect(() => {
-    if (!myTeam || loading || cheerTeamCoachChecked.current) return;
-    cheerTeamCoachChecked.current = true;
-    Promise.all([getVisitCount(), getCheerTeamCoachSeen()])
-      .then(async ([visitCount, seen]) => {
-        if (visitCount === 1 && !seen) {
-          await setCheerTeamCoachSeen();
-          setShowCheerTeamCoach(true);
-        }
-      }).catch(() => {});
-  }, [myTeam, loading]);
+	  useEffect(() => {
+	    if (!myTeam || loading || cheerTeamCoachChecked.current) return;
+	    cheerTeamCoachChecked.current = true;
+	    getCheerTeamCoachSeen().then(async (seen) => {
+	      if (!seen) {
+	        await setCheerTeamCoachSeen();
+	        setShowCheerTeamCoach(true);
+	      }
+	    }).catch(() => {});
+	  }, [myTeam, loading]);
 
   // Dismiss on navigation away
   const navigation = useNavigation();

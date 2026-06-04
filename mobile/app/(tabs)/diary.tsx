@@ -347,7 +347,7 @@ export default function DiaryScreen() {
     }
   }, [loadState, records]);
 
-  // Diary deep discovery: Expense (visit 2) → ViewMode (visit 3) → Search (visit 4), sequential
+  // Diary deep discovery: Expense → ViewMode → Search, sequential, one at a time
   useEffect(() => {
     if (loadState !== "success") return;
     if (records.length === 0) return;
@@ -356,12 +356,10 @@ export default function DiaryScreen() {
     diaryDeepCoachChecked.current = true;
     const showSubTabs = activeTab === "calendar" || activeTab === "stats";
     Promise.all([
-      getVisitCount(),
       getDiaryExpenseCoachSeen(),
       getDiaryViewModeCoachSeen(),
       getDiarySearchCoachSeen(),
-    ]).then(async ([visitCount, expenseSeen, viewModeSeen, searchSeen]) => {
-      if (visitCount < 2) return;
+    ]).then(async ([expenseSeen, viewModeSeen, searchSeen]) => {
       if (!expenseSeen && showSubTabs) {
         await setDiaryExpenseCoachSeen();
         setShowDiaryExpenseCoach(true);

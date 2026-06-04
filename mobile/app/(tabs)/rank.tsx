@@ -79,17 +79,16 @@ export default function RankScreen() {
   const [showRankYearCoach, setShowRankYearCoach] = useState(false);
   const rankYearCoachChecked = useRef(false);
 
-  useEffect(() => {
-    if (loading || error || rankYearCoachChecked.current) return;
-    rankYearCoachChecked.current = true;
-    Promise.all([getVisitCount(), getRankYearCoachSeen()])
-      .then(async ([visitCount, seen]) => {
-        if (visitCount >= 2 && !seen) {
-          await setRankYearCoachSeen();
-          setShowRankYearCoach(true);
-        }
-      }).catch(() => {});
-  }, [loading, error]);
+	  useEffect(() => {
+	    if (loading || error || rankYearCoachChecked.current) return;
+	    rankYearCoachChecked.current = true;
+	    getRankYearCoachSeen().then(async (seen) => {
+	      if (!seen) {
+	        await setRankYearCoachSeen();
+	        setShowRankYearCoach(true);
+	      }
+	    }).catch(() => {});
+	  }, [loading, error]);
 
   const navigationRank = useNavigation();
   useEffect(() => {
