@@ -1,8 +1,9 @@
-import { useMemo } from "react";
-import { View, Text, Pressable, ScrollView, StyleSheet, Alert } from "react-native";
+import { useMemo, useState } from "react";
+import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme } from "@/lib/ThemeContext";
 import { ALL_CHARACTERS, EMOTION_CHARACTER } from "@/lib/emotions";
+import SimpleAlert from "@/components/SimpleAlert";
 
 interface EmotionPickerProps {
   value: string | null;
@@ -13,6 +14,7 @@ interface EmotionPickerProps {
 
 export default function EmotionPicker({ value, onChange, teamId, unlockedEmotions }: EmotionPickerProps) {
   const { theme } = useTheme();
+  const [lockedAlert, setLockedAlert] = useState(false);
   const unlockedSet = useMemo(() => new Set(unlockedEmotions), [unlockedEmotions]);
 
   // Sort: basic (always unlocked) → unlocked non-basic → locked
@@ -87,7 +89,7 @@ export default function EmotionPicker({ value, onChange, teamId, unlockedEmotion
               ]}
               onPress={() => {
                 if (isUnlocked) onChange(c.id);
-                else Alert.alert("잠금 해제 필요", "도전과제 달성 시 랜덤으로 해금됩니다.\n도전과제를 달성해서 감정표현을 모아보세요!");
+                else setLockedAlert(true);
               }}
             >
               <View style={styles.badgeWrap}>
@@ -115,6 +117,12 @@ export default function EmotionPicker({ value, onChange, teamId, unlockedEmotion
         })}
       </View>
       </ScrollView>
+      <SimpleAlert
+        visible={lockedAlert}
+        title="잠금 해제 필요"
+        message="도전과제 달성 시 랜덤으로 해금됩니다.\n도전과제를 달성해서 감정표현을 모아보세요!"
+        onClose={() => setLockedAlert(false)}
+      />
     </View>
   );
 }
