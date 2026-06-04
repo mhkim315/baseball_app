@@ -717,8 +717,6 @@ export default function HomeScreen() {
                     contentContainerStyle={styles.listContent}
                     ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
                     nestedScrollEnabled
-                    removeClippedSubviews
-                    windowSize={7}
                   />
                 )}
               </View>
