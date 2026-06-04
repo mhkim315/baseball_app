@@ -143,6 +143,16 @@ export default function CheerScreen() {
         <MyButton color={teamPrimaryColor(activeTeam, isDark)} />
       </View>
 
+      {showCheerTeamCoach && (
+        <View style={{ paddingHorizontal: 20, marginTop: 4 }}>
+          <CoachMark
+            visible showChevrons={false} arrowDirection="up" arrowAlign="right"
+            text="다른팀 응원가 정보를 보려면 여기를 눌러주세요"
+            onDismiss={() => setShowCheerTeamCoach(false)}
+          />
+        </View>
+      )}
+
       {/* Tab switcher */}
       <View style={styles.tabRow}>
         {(["songs", "players", "rules"] as const).map((tab) => (
@@ -157,16 +167,6 @@ export default function CheerScreen() {
           </Pressable>
         ))}
       </View>
-
-      {showCheerTeamCoach && (
-        <View style={{ paddingHorizontal: 20, marginTop: 4 }}>
-          <CoachMark
-            visible showChevrons={false} arrowDirection="up" arrowAlign="right"
-            text="다른팀 응원가 정보를 보려면 여기를 눌러주세요"
-            onDismiss={() => setShowCheerTeamCoach(false)}
-          />
-        </View>
-      )}
 
       <ScrollView
         ref={tabScrollRef}

@@ -174,7 +174,7 @@ export default function RankScreen() {
 
     // Cells
     cell: {
-      fontSize: 13,
+      fontSize: 13.5,
       color: theme.foreground,
     },
     colRank: {
@@ -197,9 +197,9 @@ export default function RankScreen() {
       textAlign: "center",
     },
     colStreak: {
-      width: 48,
+      width: 50,
       textAlign: "center",
-      fontSize: 12,
+      fontSize: 12.5,
       fontWeight: "600",
     },
 
@@ -219,7 +219,7 @@ export default function RankScreen() {
       gap: 6,
     },
     teamName: {
-      fontSize: 13,
+      fontSize: 13.5,
       fontWeight: "500",
       color: theme.foreground,
     },
@@ -231,14 +231,14 @@ export default function RankScreen() {
 
     // GB
     gbText: {
-      fontSize: 12,
+      fontSize: 12.5,
       color: theme.mutedForeground,
     },
 
     // Footer
     footer: {
       textAlign: "center",
-      fontSize: 12,
+      fontSize: 12.5,
       color: theme.mutedForeground,
       marginTop: 16,
     },
@@ -255,17 +255,16 @@ export default function RankScreen() {
           <MyButton color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
         </View>
         <Text style={styles.headerSub}>{year} KBO 리그</Text>
+        {showRankYearCoach && (
+          <View style={{ marginTop: 8 }}>
+            <CoachMark
+              visible showChevrons={false} arrowDirection="up" arrowAlign="right"
+              text="연도를 변경하여 지난 시즌 순위를 확인해보세요"
+              onDismiss={() => setShowRankYearCoach(false)}
+            />
+          </View>
+        )}
       </View>
-
-      {showRankYearCoach && (
-        <View style={{ paddingHorizontal: 20, marginTop: 4 }}>
-          <CoachMark
-            visible showChevrons={false} arrowDirection="up" arrowAlign="right"
-            text="연도를 변경하여 지난 시즌 순위를 확인해보세요"
-            onDismiss={() => setShowRankYearCoach(false)}
-          />
-        </View>
-      )}
 
       {loading ? (
         <View style={styles.center}>
@@ -303,7 +302,7 @@ export default function RankScreen() {
 
               return (
                 <View key={`${row.teamName}-${idx}`} style={[styles.tableRow, isMyTeam && teamId && { backgroundColor: teamPrimaryColor(teamId, isDark) + "20" }]}>
-                  <Text style={[styles.cell, styles.colRank, top5 ? styles.rankBold : styles.rankMuted]}>
+                  <Text style={[styles.cell, styles.colRank, idx === 0 ? { color: "#FFD700", fontWeight: "800" } : idx === 1 ? { color: "#C0C0C0", fontWeight: "800" } : idx === 2 ? { color: "#CD7F32", fontWeight: "800" } : top5 ? styles.rankBold : styles.rankMuted]}>
                     {row.rank}
                   </Text>
                   <View style={[styles.colTeam, styles.teamCell]}>

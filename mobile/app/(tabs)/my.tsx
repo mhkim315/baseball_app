@@ -50,7 +50,7 @@ import TotemSection from "@/components/TotemSection";
 import EmojiPicker from "@/components/EmojiPicker";
 import ColorPicker from "@/components/ColorPicker";
 import CoachMark from "@/components/CoachMark";
-import { getMyCoachSeen, setMyCoachSeen, getVisitCount, getMyProfileCoachSeen, setMyProfileCoachSeen } from "@/lib/db";
+import { getMyCoachSeen, setMyCoachSeen, getVisitCount } from "@/lib/db";
 
 export default function MyScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -393,28 +393,11 @@ export default function MyScreen() {
     }).catch(() => {});
   }, [totems]);
 
-  // My profile coach mark (visit 2+): show when myTeam is set, no overlap with totem coach
-  const [showProfileCoach, setShowProfileCoach] = useState(false);
-  const profileCoachChecked = useRef(false);
-
-	  useEffect(() => {
-	    if (!myTeam || profileCoachChecked.current) return;
-	    if (showMyCoach) return;
-	    profileCoachChecked.current = true;
-	    getMyProfileCoachSeen().then(async (seen) => {
-	      if (!seen) {
-	        await setMyProfileCoachSeen();
-	        setShowProfileCoach(true);
-	      }
-	    }).catch(() => {});
-	  }, [myTeam, showMyCoach]);
-
   // Dismiss on navigation away
   const navigationMy = useNavigation();
   useEffect(() => {
     const unsubscribe = navigationMy.addListener("blur", () => {
       setShowMyCoach(false);
-      setShowProfileCoach(false);
     });
     return unsubscribe;
   }, [navigationMy]);
@@ -495,7 +478,7 @@ export default function MyScreen() {
         {myTeam ? (
           <>
           <View style={styles.profileRow}>
-            <Pressable onPress={() => { setShowProfileCoach(false); setShowProfilePicker(true); }} style={styles.profileImage}>
+            <Pressable onPress={() => { setShowProfilePicker(true); }} style={styles.profileImage}>
               <TeamBadge
                 teamId={myTeam}
                 size="lg"
@@ -504,21 +487,12 @@ export default function MyScreen() {
               <Text style={styles.changeText}>변경</Text>
             </Pressable>
             <View style={styles.profileInfo}>
-              <Pressable onPress={() => { setShowProfileCoach(false); setNicknameInput(nickname); setShowNicknameModal(true); }}>
+              <Pressable onPress={() => { setNicknameInput(nickname); setShowNicknameModal(true); }}>
                 <Text style={styles.nickname}>{nickname || "닉네임 설정"}</Text>
                 <Text style={styles.changeHint}>탭하여 변경</Text>
               </Pressable>
             </View>
           </View>
-          {showProfileCoach && (
-            <View style={{ marginTop: 8 }}>
-              <CoachMark
-                visible showChevrons={false} arrowDirection="up"
-                text="탭하여 나만의 닉네임과 프로필 캐릭터를 변경해보세요"
-                onDismiss={() => setShowProfileCoach(false)}
-              />
-            </View>
-          )}
           </>
         ) : (
           <View style={styles.noTeamProfile}>

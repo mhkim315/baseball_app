@@ -239,20 +239,6 @@ export async function setHomeCalendarCoachSeen(): Promise<void> {
   await setSetting("has_seen_home_calendar_coach", "true");
 }
 
-export async function getHomeAchievementCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_home_achievement_coach")) === "true";
-}
-export async function setHomeAchievementCoachSeen(): Promise<void> {
-  await setSetting("has_seen_home_achievement_coach", "true");
-}
-
-export async function getMyProfileCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_my_profile_coach")) === "true";
-}
-export async function setMyProfileCoachSeen(): Promise<void> {
-  await setSetting("has_seen_my_profile_coach", "true");
-}
-
 export async function getDiaryExpenseCoachSeen(): Promise<boolean> {
   return (await getSetting("has_seen_diary_expense_coach")) === "true";
 }

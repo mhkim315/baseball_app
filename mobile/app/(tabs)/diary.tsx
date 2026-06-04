@@ -173,6 +173,7 @@ export default function DiaryScreen() {
   const [showDiaryViewModeCoach, setShowDiaryViewModeCoach] = useState(false);
   const [showDiarySearchCoach, setShowDiarySearchCoach] = useState(false);
   const diaryDeepCoachChecked = useRef(false);
+  const diaryTimelineDeepChecked = useRef(false);
 
 
 
@@ -347,31 +348,44 @@ export default function DiaryScreen() {
     }
   }, [loadState, records]);
 
-  // Diary deep discovery: Expense → ViewMode → Search, sequential, one at a time
+  // Diary deep discovery: Expense coach (calendar/stats tab — visit 2)
   useEffect(() => {
     if (loadState !== "success") return;
     if (records.length === 0) return;
     if (showDiaryCoach) return;
     if (diaryDeepCoachChecked.current) return;
-    diaryDeepCoachChecked.current = true;
     const showSubTabs = activeTab === "calendar" || activeTab === "stats";
-    Promise.all([
-      getDiaryExpenseCoachSeen(),
-      getDiaryViewModeCoachSeen(),
-      getDiarySearchCoachSeen(),
-    ]).then(async ([expenseSeen, viewModeSeen, searchSeen]) => {
-      if (!expenseSeen && showSubTabs) {
+    if (!showSubTabs) return;
+    diaryDeepCoachChecked.current = true;
+    getDiaryExpenseCoachSeen().then(async (seen) => {
+      if (!seen) {
         await setDiaryExpenseCoachSeen();
         setShowDiaryExpenseCoach(true);
-      } else if (!viewModeSeen && activeTab === "timeline") {
+      }
+    }).catch(() => {});
+  }, [loadState, records.length, activeTab, showDiaryCoach]);
+
+  // Diary deep discovery: ViewMode → Search, sequential (timeline tab — visits 3-4)
+  useEffect(() => {
+    if (loadState !== "success") return;
+    if (records.length === 0) return;
+    if (showDiaryCoach || showDiaryExpenseCoach) return;
+    if (diaryTimelineDeepChecked.current) return;
+    if (activeTab !== "timeline") return;
+    diaryTimelineDeepChecked.current = true;
+    Promise.all([
+      getDiaryViewModeCoachSeen(),
+      getDiarySearchCoachSeen(),
+    ]).then(async ([viewModeSeen, searchSeen]) => {
+      if (!viewModeSeen) {
         await setDiaryViewModeCoachSeen();
         setShowDiaryViewModeCoach(true);
-      } else if (!searchSeen && activeTab === "timeline") {
+      } else if (!searchSeen) {
         await setDiarySearchCoachSeen();
         setShowDiarySearchCoach(true);
       }
     }).catch(() => {});
-  }, [loadState, records.length, activeTab, showDiaryCoach]);
+  }, [loadState, records.length, activeTab, showDiaryCoach, showDiaryExpenseCoach]);
 
   // Dismiss deep discovery coach marks on navigation away
   const diaryNav = useNavigation();
