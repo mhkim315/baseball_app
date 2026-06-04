@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
+import { View, Text, Pressable, ScrollView, StyleSheet, Alert } from "react-native";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme } from "@/lib/ThemeContext";
 import { ALL_CHARACTERS, EMOTION_CHARACTER } from "@/lib/emotions";
@@ -85,7 +85,10 @@ export default function EmotionPicker({ value, onChange, teamId, unlockedEmotion
                 styles.item,
                 isSelected && isUnlocked && { backgroundColor: theme.foreground },
               ]}
-              onPress={isUnlocked ? () => onChange(c.id) : undefined}
+              onPress={() => {
+                if (isUnlocked) onChange(c.id);
+                else Alert.alert("잠금 해제 필요", "도전과제 달성 시 랜덤으로 해금됩니다.\n도전과제를 달성해서 감정표현을 모아보세요!");
+              }}
             >
               <View style={styles.badgeWrap}>
                 <View style={!isUnlocked && { opacity: 0.35 }}>
