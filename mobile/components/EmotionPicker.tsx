@@ -120,7 +120,7 @@ export default function EmotionPicker({ value, onChange, teamId, unlockedEmotion
       <SimpleAlert
         visible={lockedAlert}
         title="잠금 해제 필요"
-        message="도전과제 달성 시 랜덤으로 해금됩니다.\n도전과제를 달성해서 감정표현을 모아보세요!"
+        message={"도전과제 달성 시 랜덤으로 해금됩니다.\n도전과제를 달성해서 감정표현을 모아보세요!"}
         onClose={() => setLockedAlert(false)}
       />
     </View>
