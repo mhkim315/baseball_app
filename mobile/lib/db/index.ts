@@ -41,4 +41,13 @@ export {
   getDiaryCoachSeen, setDiaryCoachSeen,
   getStadiumCoachSeen, setStadiumCoachSeen,
   getMyCoachSeen, setMyCoachSeen,
+  getVisitCount, incrementVisitCount,
+  getCheerTeamCoachSeen, setCheerTeamCoachSeen,
+  getRankYearCoachSeen, setRankYearCoachSeen,
+  getHomeCalendarCoachSeen, setHomeCalendarCoachSeen,
+  getHomeAchievementCoachSeen, setHomeAchievementCoachSeen,
+  getMyProfileCoachSeen, setMyProfileCoachSeen,
+  getDiaryExpenseCoachSeen, setDiaryExpenseCoachSeen,
+  getDiaryViewModeCoachSeen, setDiaryViewModeCoachSeen,
+  getDiarySearchCoachSeen, setDiarySearchCoachSeen,
 } from "./settings";

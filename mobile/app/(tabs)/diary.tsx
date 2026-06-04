@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, RefreshControl, ScrollView, Alert, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, Modal, ActivityIndicator } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useNavigation } from "expo-router";
 import DiaryTimeline from "@/components/DiaryTimeline";
 import WebzineTimeline from "@/components/WebzineTimeline";
 import GridTimeline from "@/components/GridTimeline";
@@ -17,7 +17,7 @@ import AchievementModal from "@/components/AchievementModal";
 import ConfettiOverlay from "@/components/ConfettiOverlay";
 import ExpenseModal from "@/components/ExpenseModal";
 import CoachMark from "@/components/CoachMark";
-import { getJikgwanRecords, deleteJikgwanRecord, getAllExpenses, getExpensesByDate, type JikgwanRecord, type Expense, type Badge, getDiaryCoachSeen, setDiaryCoachSeen } from "@/lib/db";
+import { getJikgwanRecords, deleteJikgwanRecord, getAllExpenses, getExpensesByDate, type JikgwanRecord, type Expense, type Badge, getDiaryCoachSeen, setDiaryCoachSeen, getVisitCount, getDiaryExpenseCoachSeen, setDiaryExpenseCoachSeen, getDiaryViewModeCoachSeen, setDiaryViewModeCoachSeen, getDiarySearchCoachSeen, setDiarySearchCoachSeen } from "@/lib/db";
 import { readCachedAllScores } from "@/lib/gameCache";
 
 import { parseGameTeamIds } from "@shared/constants";
@@ -168,6 +168,12 @@ export default function DiaryScreen() {
   const [showDiaryCoach, setShowDiaryCoach] = useState(false);
   const diaryCoachChecked = useRef(false);
 
+  // Diary deep discovery: Expense (visit 2) → ViewMode (visit 3) → Search (visit 4)
+  const [showDiaryExpenseCoach, setShowDiaryExpenseCoach] = useState(false);
+  const [showDiaryViewModeCoach, setShowDiaryViewModeCoach] = useState(false);
+  const [showDiarySearchCoach, setShowDiarySearchCoach] = useState(false);
+  const diaryDeepCoachChecked = useRef(false);
+
 
 
   // Horizontal tab scroll
@@ -238,6 +244,9 @@ export default function DiaryScreen() {
     setActiveTab(tab);
     setShowSearch(false);
     setSearchQuery("");
+    setShowDiaryExpenseCoach(false);
+    setShowDiaryViewModeCoach(false);
+    setShowDiarySearchCoach(false);
   }, []);
 
   const handleMomentumScrollEnd = useCallback(
@@ -337,6 +346,45 @@ export default function DiaryScreen() {
       }).catch(() => {});
     }
   }, [loadState, records]);
+
+  // Diary deep discovery: Expense (visit 2) → ViewMode (visit 3) → Search (visit 4), sequential
+  useEffect(() => {
+    if (loadState !== "success") return;
+    if (records.length === 0) return;
+    if (showDiaryCoach) return;
+    if (diaryDeepCoachChecked.current) return;
+    diaryDeepCoachChecked.current = true;
+    const showSubTabs = activeTab === "calendar" || activeTab === "stats";
+    Promise.all([
+      getVisitCount(),
+      getDiaryExpenseCoachSeen(),
+      getDiaryViewModeCoachSeen(),
+      getDiarySearchCoachSeen(),
+    ]).then(async ([visitCount, expenseSeen, viewModeSeen, searchSeen]) => {
+      if (visitCount < 2) return;
+      if (!expenseSeen && showSubTabs) {
+        await setDiaryExpenseCoachSeen();
+        setShowDiaryExpenseCoach(true);
+      } else if (!viewModeSeen && activeTab === "timeline") {
+        await setDiaryViewModeCoachSeen();
+        setShowDiaryViewModeCoach(true);
+      } else if (!searchSeen && activeTab === "timeline") {
+        await setDiarySearchCoachSeen();
+        setShowDiarySearchCoach(true);
+      }
+    }).catch(() => {});
+  }, [loadState, records.length, activeTab, showDiaryCoach]);
+
+  // Dismiss deep discovery coach marks on navigation away
+  const diaryNav = useNavigation();
+  useEffect(() => {
+    const unsubscribe = diaryNav.addListener("blur", () => {
+      setShowDiaryExpenseCoach(false);
+      setShowDiaryViewModeCoach(false);
+      setShowDiarySearchCoach(false);
+    });
+    return unsubscribe;
+  }, [diaryNav]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -476,19 +524,19 @@ export default function DiaryScreen() {
             <View style={{ flexDirection: "row", gap: 3, marginRight: 8 }}>
               <Pressable
                 style={[styles.viewModeBtn, timelineViewMode === "list" && { backgroundColor: myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground }]}
-                onPress={() => setTimelineViewMode("list")}
+                onPress={() => { setTimelineViewMode("list"); setShowDiaryViewModeCoach(false); }}
               >
                 <Text style={[styles.viewModeBtnText, timelineViewMode === "list" && styles.viewModeBtnTextActive]}>▣ 카드</Text>
               </Pressable>
               <Pressable
                 style={[styles.viewModeBtn, timelineViewMode === "webzine" && { backgroundColor: myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground }]}
-                onPress={() => setTimelineViewMode("webzine")}
+                onPress={() => { setTimelineViewMode("webzine"); setShowDiaryViewModeCoach(false); }}
               >
                 <Text style={[styles.viewModeBtnText, timelineViewMode === "webzine" && styles.viewModeBtnTextActive]}>☰ 리스트</Text>
               </Pressable>
               <Pressable
                 style={[styles.viewModeBtn, timelineViewMode === "grid" && { backgroundColor: myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground }]}
-                onPress={() => setTimelineViewMode("grid")}
+                onPress={() => { setTimelineViewMode("grid"); setShowDiaryViewModeCoach(false); }}
               >
                 <Text style={[styles.viewModeBtnText, timelineViewMode === "grid" && styles.viewModeBtnTextActive]}>⊞ 그리드</Text>
               </Pressable>
@@ -502,6 +550,7 @@ export default function DiaryScreen() {
                   style={[styles.viewModeBtn, subTab === st.key && { backgroundColor: myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground }]}
                   onPress={() => {
                     setSubTab(st.key);
+                    setShowDiaryExpenseCoach(false);
                     if (st.key === "jikgwan") { setCalYear(expCalYear); setCalMonth(expCalMonth); }
                     else if (st.key === "expense") { setExpCalYear(calYear); setExpCalMonth(calMonth); }
                   }}
@@ -519,7 +568,7 @@ export default function DiaryScreen() {
           {activeTab === "timeline" && (
           <Pressable
             style={[styles.viewModeBtn, { marginRight: 6 }, showSearch && { backgroundColor: myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground }]}
-            onPress={() => { setShowSearch(!showSearch); if (showSearch) setSearchQuery(""); }}
+            onPress={() => { setShowSearch(!showSearch); setShowDiarySearchCoach(false); if (showSearch) setSearchQuery(""); }}
           >
             <Text style={[styles.viewModeBtnText, showSearch && styles.viewModeBtnTextActive, { fontSize: 15 }]}>⌕</Text>
           </Pressable>
@@ -738,6 +787,29 @@ export default function DiaryScreen() {
           </ScrollView>
         </View>
       </Modal>
+
+      {/* Diary deep discovery coach marks */}
+      {showDiaryExpenseCoach && (
+        <View style={{ position: "absolute", top: 110, right: 20, zIndex: 100, elevation: 10, shadowColor: "transparent", width: Math.min(260, screenWidth - 40) }}>
+          <CoachMark visible showChevrons={false} arrowDirection="up" arrowAlign="right"
+            text="지출 탭에서 직관 경비를 확인하고 기록해보세요"
+            onDismiss={() => setShowDiaryExpenseCoach(false)} />
+        </View>
+      )}
+      {showDiaryViewModeCoach && (
+        <View style={{ position: "absolute", top: 80, left: 20, right: 20, zIndex: 100, elevation: 10, shadowColor: "transparent", alignItems: "center" }}>
+          <CoachMark visible showChevrons={false} arrowDirection="down"
+            text="카드, 리스트, 그리드 중 원하는 타임라인 보기를 선택해보세요"
+            onDismiss={() => setShowDiaryViewModeCoach(false)} />
+        </View>
+      )}
+      {showDiarySearchCoach && (
+        <View style={{ position: "absolute", top: 105, right: 20, zIndex: 100, elevation: 10, shadowColor: "transparent", width: Math.min(260, screenWidth - 40) }}>
+          <CoachMark visible showChevrons={false} arrowDirection="down" arrowAlign="right"
+            text="검색 아이콘을 눌러 메모, 구장, 상대팀으로 기록을 찾아보세요"
+            onDismiss={() => setShowDiarySearchCoach(false)} />
+        </View>
+      )}
 
       {/* Diary coach mark */}
       {showDiaryCoach && (

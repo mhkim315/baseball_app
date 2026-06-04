@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useTeam } from "@/lib/TeamContext";
 import { useTheme } from "@/lib/ThemeContext";
 import { prefetchOnboardingData, prefetchOnAppInit } from "@/lib/prefetch";
+import { incrementVisitCount } from "@/lib/db";
 
 export default function IndexScreen() {
   const { theme } = useTheme();
@@ -17,7 +18,7 @@ export default function IndexScreen() {
         router.replace("/onboarding");
       });
     } else {
-      Promise.all([prefetchOnAppInit()]).then(() => {
+      Promise.all([prefetchOnAppInit(), incrementVisitCount()]).then(() => {
         router.replace("/(tabs)/home");
       });
     }

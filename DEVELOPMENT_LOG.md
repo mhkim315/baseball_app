@@ -1903,3 +1903,87 @@ server-backup/2026-06-01/
 | `mobile/app/(tabs)/home.tsx` | getInningInfo null 시 `{ inning: 1, isTop: true }` fallback |
 
 **커밋:** `92b5fc6`
+
+---
+
+## Phase 19: v1.0.13 — 경기 시간 표기 알고리즘 전면 개선 (2026-06-03~04)
+
+> **버전**: 1.0.13 (iOS / Android 통합)
+> **iOS 상태**: 1.0.12 심사 제출 완료 ("심사 대기 중")
+> **Android 상태**: 1.0.13 Play Store 출시 노트 — "경기 시간 정확도 개선, 데이터 불일치 수정"
+
+### 홈탭-경기상세 데이터 불일치 — 클라이언트 이중 방어
+
+**날짜:** 2026-06-03
+
+**문제:** 홈탭과 경기상세 화면의 게임 데이터가 불일치 (서로 다른 fetch 결과 사용)
+
+**해결: 클라이언트 이중 방어**
+1. **경기상세에서 홈탭 데이터 우선:** `[id].tsx:168-175` — game detail API 호출 전 홈탭의 `todayGames` 데이터를 `scheduleTimeRef`에 저장
+2. **상태 동기화:** 홈탭에서 받은 `status`/`outcome`/`score`를 경기상세에 전달하여 갱신 전에도 일관된 상태 표시
+3. **fallback 체인:** `detail.gameInfo?.time || scheduleTimeRef.current || "18:30"`
+
+**커밋:** `9949cb6`
+
+### 경기 시간 표기 오류 전면 수정
+
+**날짜:** 2026-06-03~04
+
+**버그 현상:**
+- 내일(6/5) 경기: 17:00으로 표시 (실제 18:30)
+- 토요일(6/6) KT-SSG: 18:30으로 표시 (실제 14:00)
+- 어제(6/3) 경기: 18:30으로 표시 (실제 경기 시간 무시)
+- 캐시 삭제 후 모든 카드 18:30
+
+**근본 원인 분석 (데이터 흐름 4단계):**
+```
+KBO API → collector.py (DB) → build_today_games.py (today-games.json) 
+  → main.py API → 앱 resolveGames.ts
+```
+1. **collector.py `patch_today_games_times()`가 `nextGames` 시간 오염:** DB games.time은 활성 시간대(경기시간-2h~+4h)에만 갱신되어 내일 경기는 stale 값. 그런데 `patch_today_games_times()`가 `nextGames`까지 DB 값으로 덮어써서 Naver의 정확한 시간을 파괴
+2. **`build_today_games.py` 1일치 only:** `nextGames`를 1일만 생성 → 모레 이후 날짜는 schedule JSON의 "18:30"(placeholder) 폴백
+3. **`_build_game_detail()` `nextGames` 미검색:** today-games.json의 `games[]`만 검색하고 `nextGames[]`는 검색 안 함 → 내일 이후 경기는 항상 daily-scores.json(시간 필드 없음) 폴백 → 18:30
+
+**수정 내역 (전량 서버 측):**
+
+| 파일 | 수정 | 위치 |
+|------|------|------|
+| `build_today_games.py` (서버, repo 외) | nextGames 1일 → **7일** 확장 + Naver `schedule_games().gameDateTime` 7일치 오버레이 | `build_games()` |
+| `collector.py` (서버, repo 외) | `patch_today_games_times()` nextGames 패치 제거, `update_game_time()` 항상 호출 | Fix 8, 9 |
+| `server/data_api/main.py` | `_build_game_detail()` nextGames 검색 추가 (line 604), `_get_db_game_time()` DB fallback, `_enrich_schedule_times()` schedule 보강 + 날짜포맷 보정 | Fix 10, 11 |
+
+**변경 (repo 내 `main.py`):**
+```python
+# Fix 10: _build_game_detail() — nextGames 검색
+for g in today.get("games", []) + today.get("nextGames", []):  # + nextGames 추가
+
+# Fix 10: _get_db_game_time() — DB 시간 fallback 헬퍼
+def _get_db_game_time(game_id: str) -> Optional[str]:
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(
+                text("SELECT time::text FROM games WHERE id = :gid"),
+                {"gid": game_id}
+            ).fetchone()
+            if row and row[0]:
+                return row[0].strip()
+    except Exception:
+        pass
+    return None
+
+# Fix 11: _enrich_schedule_times() — schedule 보강
+# today-games.json의 시간으로 schedule JSON 덮어쓰기
+key = (tg_date.replace("-", ""), away.get("name", ""), home.get("name", ""))  # 날짜포맷 보정
+```
+
+**검증 결과:**
+- 토요일 6/6: KT-SSG **14:00** ✅, 나머지 **17:00** ✅
+- 일요일 6/7: 전경기 **17:00** ✅
+- 평일: 전경기 **18:30** ✅
+- game-detail 엔드포인트: `20260606-KTSK-0` → `"14:00"` ✅
+
+**앱 빌드 불필요:** 전량 서버 변경. 캐시 새로고침으로 적용.
+
+**한계:** 7일 이후 경기는 schedule JSON의 "18:30" (placeholder) 그대로 사용. 완전 해결은 서버 `build_today_games.py`를 7일 이상으로 확장하거나 KBO 스케줄 크롤링 필요.
+
+**커밋:** `5eeae24`, `d781a75`

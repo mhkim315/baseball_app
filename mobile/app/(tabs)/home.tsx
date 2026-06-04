@@ -31,7 +31,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 import { backfillLiveRecords, evaluateBadges, grantRandomCharacter } from "@/lib/achievements";
-import { type Badge, getTodayBackCoachSeen, setTodayBackCoachSeen, getHomeCoachSeen, setHomeCoachSeen, getHomeStickerCoachSeen, setHomeStickerCoachSeen } from "@/lib/db";
+import { type Badge, getTodayBackCoachSeen, setTodayBackCoachSeen, getHomeCoachSeen, setHomeCoachSeen, getHomeStickerCoachSeen, setHomeStickerCoachSeen, getVisitCount, getHomeCalendarCoachSeen, setHomeCalendarCoachSeen, getHomeAchievementCoachSeen, setHomeAchievementCoachSeen } from "@/lib/db";
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -130,6 +130,11 @@ export default function HomeScreen() {
   const homeStickerCoachCheckedRef = useRef(false);
   const homeStickerCoachPendingRef = useRef(false);
   const homeSCRef = useRef(false);
+
+  // Home deep discovery coach marks: Calendar (visit 2) → Achievement (visit 3)
+  const [showHomeCalendarCoach, setShowHomeCalendarCoach] = useState(false);
+  const [showHomeAchievementCoach, setShowHomeAchievementCoach] = useState(false);
+  const homeDeepCoachChecked = useRef(false);
   const scheduleCache = useRef<{ month: number; year: number; games: ScheduleGame[] } | null>(null);
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
@@ -508,6 +513,25 @@ export default function HomeScreen() {
       .catch(() => { homeStickerCoachPendingRef.current = false; });
   }, [selectedDate, gamesByDate, showCoachMark, showTodayBackCoach, showHomeStickerCoach]);
 
+  // Home deep discovery: Calendar (visit 2) → Achievement (visit 3), sequential, no overlap
+  useEffect(() => {
+    if (showCoachMark || showTodayBackCoach || showHomeStickerCoach) return;
+    if (showHomeCalendarCoach || showHomeAchievementCoach) return;
+    if (homeDeepCoachChecked.current) return;
+    homeDeepCoachChecked.current = true;
+    Promise.all([getVisitCount(), getHomeCalendarCoachSeen(), getHomeAchievementCoachSeen()])
+      .then(async ([visitCount, calSeen, achSeen]) => {
+        if (visitCount < 2) return;
+        if (!calSeen) {
+          await setHomeCalendarCoachSeen();
+          setShowHomeCalendarCoach(true);
+        } else if (!achSeen) {
+          await setHomeAchievementCoachSeen();
+          setShowHomeAchievementCoach(true);
+        }
+      }).catch(() => {});
+  }, [showCoachMark, showTodayBackCoach, showHomeStickerCoach, showHomeCalendarCoach, showHomeAchievementCoach]);
+
   const handlePageSwipe = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const page = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
@@ -684,13 +708,27 @@ export default function HomeScreen() {
               onDismiss={() => { homeSCRef.current = false; setShowHomeStickerCoach(false); }} />
           </View>
         )}
+        {showHomeCalendarCoach && (
+          <View style={{ position: "absolute", top: 0, left: 16, zIndex: 100, elevation: 5, shadowColor: "transparent" }}>
+            <CoachMark visible showChevrons={false} arrowDirection="up" arrowAlign="center"
+              text="캘린더를 열어 다른 날짜의 경기를 한눈에 확인하세요"
+              onDismiss={() => setShowHomeCalendarCoach(false)} />
+          </View>
+        )}
+        {showHomeAchievementCoach && (
+          <View style={{ position: "absolute", top: 0, right: 16, zIndex: 100, elevation: 5, shadowColor: "transparent", maxWidth: 260 }}>
+            <CoachMark visible showChevrons={false} arrowDirection="up" arrowAlign="right"
+              text="도전과제를 확인하고 캐릭터와 배경을 모아보세요"
+              onDismiss={() => setShowHomeAchievementCoach(false)} />
+          </View>
+        )}
         <ScrollView
           ref={pageScrollRef}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           onMomentumScrollEnd={handlePageSwipe}
-          onScrollBeginDrag={() => { lastActedPageRef.current = 1; if (showCoachMark) handleCoachDismiss(); setShowTodayBackCoach(false); if (homeSCRef.current) { homeSCRef.current = false; setShowHomeStickerCoach(false); } }}
+          onScrollBeginDrag={() => { lastActedPageRef.current = 1; if (showCoachMark) handleCoachDismiss(); setShowTodayBackCoach(false); if (homeSCRef.current) { homeSCRef.current = false; setShowHomeStickerCoach(false); } setShowHomeCalendarCoach(false); setShowHomeAchievementCoach(false); }}
           style={{ flex: 1 }}
         >
           {(["prev", "current", "next"] as const).map((slot, idx) => {

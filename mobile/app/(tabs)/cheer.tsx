@@ -1,12 +1,15 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, ActivityIndicator } from "react-native";
 import TeamExpander from "@/components/TeamExpander";
 import MyButton from "@/components/MyButton";
 import CheerContent from "@/components/CheerContent";
+import CoachMark from "@/components/CoachMark";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 import { TEAM_COLORS } from "@shared/teamColors";
+import { useNavigation } from "expo-router";
+import { getVisitCount, getCheerTeamCoachSeen, setCheerTeamCoachSeen } from "@/lib/db";
 
 type TabId = "songs" | "players" | "rules";
 
@@ -51,6 +54,31 @@ export default function CheerScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const tabScrollRef = useRef<ScrollView>(null);
   const TABS_ORDER = useMemo(() => ["songs", "players", "rules"] as const, []);
+
+  // Cheer team expander coach mark (visit 1)
+  const [showCheerTeamCoach, setShowCheerTeamCoach] = useState(false);
+  const cheerTeamCoachChecked = useRef(false);
+
+  useEffect(() => {
+    if (!myTeam || loading || cheerTeamCoachChecked.current) return;
+    cheerTeamCoachChecked.current = true;
+    Promise.all([getVisitCount(), getCheerTeamCoachSeen()])
+      .then(async ([visitCount, seen]) => {
+        if (visitCount === 1 && !seen) {
+          await setCheerTeamCoachSeen();
+          setShowCheerTeamCoach(true);
+        }
+      }).catch(() => {});
+  }, [myTeam, loading]);
+
+  // Dismiss on navigation away
+  const navigation = useNavigation();
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("blur", () => {
+      setShowCheerTeamCoach(false);
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const handleTabPress = useCallback((tab: TabId) => {
     setActiveTab(tab);
@@ -109,6 +137,7 @@ export default function CheerScreen() {
             currentTeamId={activeTeam}
             myTeam={myTeam}
             onSelectTeam={setDisplayTeam}
+            onPress={() => setShowCheerTeamCoach(false)}
           />
         )}
         {myTeam && <View style={{ width: 4 }} />}
@@ -129,6 +158,16 @@ export default function CheerScreen() {
           </Pressable>
         ))}
       </View>
+
+      {showCheerTeamCoach && (
+        <View style={{ paddingHorizontal: 20, marginTop: 4 }}>
+          <CoachMark
+            visible showChevrons={false} arrowDirection="up" arrowAlign="right"
+            text="다른팀 응원가 정보를 보려면 여기를 눌러주세요"
+            onDismiss={() => setShowCheerTeamCoach(false)}
+          />
+        </View>
+      )}
 
       <ScrollView
         ref={tabScrollRef}

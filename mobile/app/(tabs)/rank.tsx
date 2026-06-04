@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { View, Text, ScrollView, ActivityIndicator, Pressable, StyleSheet } from "react-native";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { TEAM_NAME_TO_ID } from "@shared/constants";
@@ -7,9 +7,12 @@ import { cachedStandings } from "@/lib/gameCache";
 import { HISTORICAL_STANDINGS } from "@/lib/standingsData";
 import YearSelector from "@/components/YearSelector";
 import MyButton from "@/components/MyButton";
+import CoachMark from "@/components/CoachMark";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
+import { useNavigation } from "expo-router";
+import { getVisitCount, getRankYearCoachSeen, setRankYearCoachSeen } from "@/lib/db";
 
 function parseWLT(wlt: string | undefined | null): { wins: number; draws: number; losses: number } {
   const m = wlt?.match(/(\d+)승(\d+)무(\d+)패/);
@@ -71,6 +74,28 @@ export default function RankScreen() {
   }, [year]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Rank YearSelector coach mark (visit 2+)
+  const [showRankYearCoach, setShowRankYearCoach] = useState(false);
+  const rankYearCoachChecked = useRef(false);
+
+  useEffect(() => {
+    if (loading || error || rankYearCoachChecked.current) return;
+    rankYearCoachChecked.current = true;
+    Promise.all([getVisitCount(), getRankYearCoachSeen()])
+      .then(async ([visitCount, seen]) => {
+        if (visitCount >= 2 && !seen) {
+          await setRankYearCoachSeen();
+          setShowRankYearCoach(true);
+        }
+      }).catch(() => {});
+  }, [loading, error]);
+
+  const navigationRank = useNavigation();
+  useEffect(() => {
+    const unsubscribe = navigationRank.addListener("blur", () => setShowRankYearCoach(false));
+    return unsubscribe;
+  }, [navigationRank]);
 
   const styles = useMemo(() => StyleSheet.create({
     container: {
@@ -232,6 +257,16 @@ export default function RankScreen() {
         </View>
         <Text style={styles.headerSub}>{year} KBO 리그</Text>
       </View>
+
+      {showRankYearCoach && (
+        <View style={{ paddingHorizontal: 20, marginTop: 4 }}>
+          <CoachMark
+            visible showChevrons={false} arrowDirection="up" arrowAlign="right"
+            text="연도를 변경하여 지난 시즌 순위를 확인해보세요"
+            onDismiss={() => setShowRankYearCoach(false)}
+          />
+        </View>
+      )}
 
       {loading ? (
         <View style={styles.center}>

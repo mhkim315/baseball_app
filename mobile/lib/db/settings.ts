@@ -203,3 +203,73 @@ export async function getMyCoachSeen(): Promise<boolean> {
 export async function setMyCoachSeen(): Promise<void> {
   await setSetting("has_seen_my_coach", "true");
 }
+
+// === Visit Count ===
+export async function getVisitCount(): Promise<number> {
+  const val = await getSetting("visit_count");
+  return val ? parseInt(val, 10) : 0;
+}
+
+export async function incrementVisitCount(): Promise<number> {
+  const current = await getVisitCount();
+  const next = current + 1;
+  await setSetting("visit_count", String(next));
+  return next;
+}
+
+// === Additional Coach Marks ===
+export async function getCheerTeamCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_cheer_team_coach")) === "true";
+}
+export async function setCheerTeamCoachSeen(): Promise<void> {
+  await setSetting("has_seen_cheer_team_coach", "true");
+}
+
+export async function getRankYearCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_rank_year_coach")) === "true";
+}
+export async function setRankYearCoachSeen(): Promise<void> {
+  await setSetting("has_seen_rank_year_coach", "true");
+}
+
+export async function getHomeCalendarCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_home_calendar_coach")) === "true";
+}
+export async function setHomeCalendarCoachSeen(): Promise<void> {
+  await setSetting("has_seen_home_calendar_coach", "true");
+}
+
+export async function getHomeAchievementCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_home_achievement_coach")) === "true";
+}
+export async function setHomeAchievementCoachSeen(): Promise<void> {
+  await setSetting("has_seen_home_achievement_coach", "true");
+}
+
+export async function getMyProfileCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_my_profile_coach")) === "true";
+}
+export async function setMyProfileCoachSeen(): Promise<void> {
+  await setSetting("has_seen_my_profile_coach", "true");
+}
+
+export async function getDiaryExpenseCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_diary_expense_coach")) === "true";
+}
+export async function setDiaryExpenseCoachSeen(): Promise<void> {
+  await setSetting("has_seen_diary_expense_coach", "true");
+}
+
+export async function getDiaryViewModeCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_diary_viewmode_coach")) === "true";
+}
+export async function setDiaryViewModeCoachSeen(): Promise<void> {
+  await setSetting("has_seen_diary_viewmode_coach", "true");
+}
+
+export async function getDiarySearchCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_diary_search_coach")) === "true";
+}
+export async function setDiarySearchCoachSeen(): Promise<void> {
+  await setSetting("has_seen_diary_search_coach", "true");
+}
