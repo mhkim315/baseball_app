@@ -168,15 +168,17 @@ export default function StickerModal({
     return homeTeam;
   }, [myTeam, homeTeam, awayTeam]);
 
+  const isOtherGame = myTeam != null && homeTeam !== myTeam && awayTeam !== myTeam;
+
   // Determine actual game result from target team's perspective
   const isTargetHome = targetTeam === homeTeam;
   const actualResult = useMemo((): "win" | "lose" | "draw" | null => {
-    if (isLive) return null;
+    if (isLive || isOtherGame) return null;
     if (homeScore === awayScore) return "draw";
     const homeWon = homeScore > awayScore;
     if (isTargetHome) return homeWon ? "win" : "lose";
     return homeWon ? "lose" : "win";
-  }, [homeScore, awayScore, isLive, isTargetHome]);
+  }, [homeScore, awayScore, isLive, isTargetHome, isOtherGame]);
 
   // ─── Load unlocked backgrounds ───
   useEffect(() => {
@@ -260,31 +262,32 @@ export default function StickerModal({
     const filteredRecords = gameId ? modeRecords.filter((r) => r.game_id !== gameId) : modeRecords;
     const augmentedRecords = [...filteredRecords, virtualRecord];
 
-    // 승률 = computeDiaryStats (가상 레코드 포함)
-    const diaryStats = computeDiaryStats(augmentedRecords, year);
-    setStats({
-      winRate: diaryStats.winRate,
-      wins: diaryStats.wins,
-      draws: diaryStats.draws,
-      losses: diaryStats.losses,
-    });
-
-    // 개인 연승 = computeStreakStats (가상 레코드 포함, 별도 보정 불필요)
-    const myStreakResult = computeStreakStats(augmentedRecords, year);
-
-    // 해시태그
-    const hashtags = resolveHashtags(
-      rawTeamStreak,
-      { type: myStreakResult.currentType as "W" | "L" | null, count: myStreakResult.currentCount },
-      actualResult,
-      { isHome: isTargetHome, isFirstWin, isFirstGame, statsMode },
-    );
-
-    const isOtherGame = myTeam && homeTeam !== myTeam && awayTeam !== myTeam;
     if (isOtherGame) {
+      // 타팀타팀 경기: 승률 불필요, 구장명만 표시
+      setStats(null);
       setTeamTag("책임없는쾌락");
       setMyTag("아무나이겨라");
     } else {
+      // 승률 = computeDiaryStats (가상 레코드 포함)
+      const diaryStats = computeDiaryStats(augmentedRecords, year);
+      setStats({
+        winRate: diaryStats.winRate,
+        wins: diaryStats.wins,
+        draws: diaryStats.draws,
+        losses: diaryStats.losses,
+      });
+
+      // 개인 연승 = computeStreakStats (가상 레코드 포함, 별도 보정 불필요)
+      const myStreakResult = computeStreakStats(augmentedRecords, year);
+
+      // 해시태그
+      const hashtags = resolveHashtags(
+        rawTeamStreak,
+        { type: myStreakResult.currentType as "W" | "L" | null, count: myStreakResult.currentCount },
+        actualResult,
+        { isHome: isTargetHome, isFirstWin, isFirstGame, statsMode },
+      );
+
       const modeLiveLabel = statsMode === "broadcast" ? "집관중" : "직관중";
       const modeFallback = "승요기원";
       setTeamTag(hashtags.teamTag || (isLive ? modeLiveLabel : ""));

@@ -528,7 +528,7 @@ export default function StickerContent(props: Props) {
         )}
 
         {/* ── User Stats Badge ── */}
-        {showBadge && stats && (
+        {showBadge && (stats || venue) && (
           <View style={{
             marginTop: 12, padding: 10, borderRadius: 10,
             backgroundColor: badgeBackgroundColor === "" ? "transparent" : (badgeBackgroundColor || "#f8fafc"),
@@ -536,13 +536,13 @@ export default function StickerContent(props: Props) {
             borderColor: badgeBackgroundColor ? "transparent" : "#e2e8f0",
             flexDirection: "row", alignItems: "flex-start", gap: 6,
           }}>
-            {gameResult !== null ? (
+            {gameResult !== null && stats ? (
               <Text style={[{ fontSize: 16, marginTop: 2 }]}>🔥</Text>
             ) : venue && statsMode !== "broadcast" ? (
               <Text style={[{ fontSize: 16, marginTop: 1, color: badgeTextColor }]}>📍</Text>
             ) : null}
             <View style={{ flex: 1 }}>
-              {gameResult !== null ? (
+              {gameResult !== null && stats ? (
                 <View style={{ flexDirection: "row", alignItems: "baseline", flexWrap: "wrap" }}>
                   <Text style={[{ fontSize: 11, color: badgeTextColor, fontWeight: "700" }]}>{statsMode === "broadcast" ? "집관 승률 " : "직관 승률 "}</Text>
                   <Text style={[{ fontSize: 14, fontWeight: "900", color: badgeValueColor }]}>
