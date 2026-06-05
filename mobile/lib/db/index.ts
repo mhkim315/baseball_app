@@ -45,7 +45,5 @@ export {
   getCheerTeamCoachSeen, setCheerTeamCoachSeen,
   getRankYearCoachSeen, setRankYearCoachSeen,
   getHomeCalendarCoachSeen, setHomeCalendarCoachSeen,
-  getDiaryExpenseCoachSeen, setDiaryExpenseCoachSeen,
-  getDiaryViewModeCoachSeen, setDiaryViewModeCoachSeen,
   getDiarySearchCoachSeen, setDiarySearchCoachSeen,
 } from "./settings";

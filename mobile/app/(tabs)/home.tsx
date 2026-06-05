@@ -458,13 +458,15 @@ export default function HomeScreen() {
       }
       if (hasLeftTodayRef.current && !todayBackChecked.current) {
         if (showCoachMark) return;
-        todayBackChecked.current = true;
         getTodayBackCoachSeen().then(async (seen) => {
           if (!seen) {
             await setTodayBackCoachSeen();
+            todayBackChecked.current = true;
             setShowTodayBackCoach(true);
+          } else {
+            todayBackChecked.current = true;
           }
-        }).catch(() => {});
+        }).catch((e) => { console.warn("coach: todayBack", e); });
       }
     } else {
       hasLeftTodayRef.current = true;
@@ -513,7 +515,7 @@ export default function HomeScreen() {
           setShowHomeStickerCoach(true);
         }
       })
-      .catch(() => { homeStickerCoachPendingRef.current = false; });
+      .catch((e) => { console.warn("coach: homeSticker", e); homeStickerCoachPendingRef.current = false; });
   }, [selectedDate, gamesByDate, showCoachMark, showTodayBackCoach, showHomeStickerCoach]);
 
 	  // Home deep discovery: Calendar coach mark
@@ -529,11 +531,14 @@ export default function HomeScreen() {
 	          return;
 	        }
 	        if (!seen) {
-	          homeDeepCoachChecked.current = true;
 	          await setHomeCalendarCoachSeen();
+	          homeDeepCoachChecked.current = true;
 	          setShowHomeCalendarCoach(true);
+	        } else {
+	          homeDeepCoachChecked.current = true;
 	        }
-	      }).catch(() => { homeDeepCoachPending.current = false; });
+	        homeDeepCoachPending.current = false;
+	      }).catch((e) => { console.warn("coach: homeCalendar", e); homeDeepCoachPending.current = false; });
 	  }, [showCoachMark, showTodayBackCoach, showHomeStickerCoach, showHomeCalendarCoach]);
 
   const handlePageSwipe = useCallback(
@@ -713,8 +718,8 @@ export default function HomeScreen() {
           </View>
         )}
         {showHomeCalendarCoach && !showCoachMark && !showTodayBackCoach && !showHomeStickerCoach && (
-          <View style={{ position: "absolute", top: 0, left: 16, right: 16, zIndex: 100, elevation: 5, shadowColor: "transparent" }}>
-            <CoachMark visible showChevrons={false} arrowDirection="up" arrowAlign="center"
+          <View style={{ position: "absolute", top: 0, left: 16, zIndex: 100, elevation: 5, shadowColor: "transparent", maxWidth: 280 }}>
+            <CoachMark visible showChevrons={false} arrowDirection="up" arrowAlign="left"
               text="캘린더를 열어 다른 날짜의 경기를 한눈에 확인하세요"
               onDismiss={() => setShowHomeCalendarCoach(false)} />
           </View>

@@ -61,13 +61,15 @@ export default function CheerScreen() {
 
 	  useEffect(() => {
 	    if (!myTeam || loading || cheerTeamCoachChecked.current) return;
-	    cheerTeamCoachChecked.current = true;
 	    getCheerTeamCoachSeen().then(async (seen) => {
 	      if (!seen) {
 	        await setCheerTeamCoachSeen();
+	        cheerTeamCoachChecked.current = true;
 	        setShowCheerTeamCoach(true);
+	      } else {
+	        cheerTeamCoachChecked.current = true;
 	      }
-	    }).catch(() => {});
+	    }).catch((e) => { console.warn("coach: cheerTeam", e); });
 	  }, [myTeam, loading]);
 
   // Dismiss on navigation away

@@ -338,13 +338,15 @@ export default function GameDetailScreen() {
     if (!detail || stickerCoachChecked.current) return;
     if (detail.gameInfo?.status === "cancelled") return;
     if (sc === "1") return; // home sticker coach handles this flow
-    stickerCoachChecked.current = true;
     getGameStickerCoachSeen().then(async (seen) => {
       if (!seen) {
         await setGameStickerCoachSeen();
+        stickerCoachChecked.current = true;
         setShowStickerCoach(true);
+      } else {
+        stickerCoachChecked.current = true;
       }
-    }).catch(() => {});
+    }).catch((e) => { console.warn("coach: gameSticker", e); });
   }, [detail, sc]);
 
   // Detail sticker coach: 1-time, triggered when entering from home sticker coach flow (sc=1)
@@ -357,7 +359,7 @@ export default function GameDetailScreen() {
         await setDetailStickerCoachSeen();
         setShowDetailStickerCoach(true);
       }
-    }).catch(() => {});
+    }).catch((e) => { console.warn("coach: detailSticker", e); });
   }, [detail, sc]);
 
   // Dismiss sticker coach marks on navigation away

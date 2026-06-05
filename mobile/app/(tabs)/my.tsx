@@ -384,13 +384,15 @@ export default function MyScreen() {
   useEffect(() => {
     if (myCoachChecked.current) return;
     if (totems.length !== 0) return;
-    myCoachChecked.current = true;
     getMyCoachSeen().then(async (seen) => {
       if (!seen) {
         await setMyCoachSeen();
+        myCoachChecked.current = true;
         setShowMyCoach(true);
+      } else {
+        myCoachChecked.current = true;
       }
-    }).catch(() => {});
+    }).catch((e) => { console.warn("coach: my", e); });
   }, [totems]);
 
   // Dismiss on navigation away

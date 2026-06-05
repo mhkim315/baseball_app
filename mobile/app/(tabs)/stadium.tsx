@@ -63,13 +63,15 @@ export default function StadiumTab() {
 
   useEffect(() => {
     if (!myTeam || loading || stadiumCoachChecked.current) return;
-    stadiumCoachChecked.current = true;
     getStadiumCoachSeen().then(async (seen) => {
       if (!seen) {
         await setStadiumCoachSeen();
+        stadiumCoachChecked.current = true;
         setShowStadiumCoach(true);
+      } else {
+        stadiumCoachChecked.current = true;
       }
-    }).catch(() => {});
+    }).catch((e) => { console.warn("coach: stadium", e); });
   }, [myTeam, loading]);
 
   // Dismiss stadium coach mark on navigation away

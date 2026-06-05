@@ -1987,3 +1987,55 @@ key = (tg_date.replace("-", ""), away.get("name", ""), home.get("name", ""))  # 
 **한계:** 7일 이후 경기는 schedule JSON의 "18:30" (placeholder) 그대로 사용. 완전 해결은 서버 `build_today_games.py`를 7일 이상으로 확장하거나 KBO 스케줄 크롤링 필요.
 
 **커밋:** `5eeae24`, `d781a75`
+
+## Phase 19.5: CoachMark 확장 및 버그픽스 (2026-06-04~05)
+
+> **관련 커밋:** `120e6a6`, `5ce3cfe`, `965de7f`
+
+### 신규 코치멘트 8종 추가
+
+**날짜:** 2026-06-04
+
+**추가된 코치멘트:**
+
+| 화면 | 방문 | 대상 | 상태 |
+|------|------|------|------|
+| Cheer | visit 1 | TeamExpander (헤더 우측) | ✅ 유지 |
+| Rank | visit 2+ | YearSelector (연도 변경) | ✅ 유지 |
+| Home | visit 2 | Calendar 토글 | ✅ 유지 |
+| Home | visit 3 | Achievement 토글 | ❌ 제거 (사용자 요청) |
+| My | visit 2+ | 프로필 설정 | ❌ 제거 (사용자 요청) |
+| Diary | visit 2 | 지출 탭 (캘린더/통계) | ✅ 유지 |
+| Diary | visit 3 | ViewMode 토글 (타임라인) | ✅ 유지 |
+| Diary | visit 4 | 검색 (타임라인) | ✅ 유지 |
+
+**인프라:** SQLite `user_settings`에 `visit_count` 추적, `has_seen_*` 16개 함수 추가.
+
+### 발견된 버그 4종 및 수정
+
+**날짜:** 2026-06-04~05
+
+1. **Home — 스와이프 + 캘린더 코치멘트 중복 표시**
+   - 원인: `InteractionManager.runAfterInteractions`와 동기 useEffect 가드 간 race condition. async `.then()` 콜백에서 `showCoachMark` 재확인 누락.
+   - 수정: `showCoachMarkRef` 미러링 ref + `.then()` 내 재확인 + `homeDeepCoachPending` pending ref + JSX 우선순위 게이트
+
+2. **Cheer — TeamExpander 코치멘트가 "야구 규칙" 탭 아래 표시**
+   - 원인: CoachMark JSX가 tabRow 뒤에 위치
+   - 수정: CoachMark 블록을 header와 tabRow 사이로 이동
+
+3. **Rank — YearSelector 코치멘트 위치 오류**
+   - 원인: CoachMark가 header View 바깥에 배치, subtitle과의 간격 과다
+   - 수정: header View 내부 subtitle 아래로 이동
+
+4. **Diary — 지출 코치멘트 미표시**
+   - 원인: 하나의 one-shot ref가 3개 코치멘트를 모두 게이트. 기본 탭 "timeline"에서 ref 소진 후 calendar/stats 전환해도 재진입 불가
+   - 수정: Expense용 ref + timeline용 ref 분리, 효과 1→2개로 분할
+
+### Rank 탭 UI 개선
+- 테이블 폰트 0.5step 업 (13→13.5, 12→12.5)
+- 1/2/3등 rank 숫자 금은동 색상 적용 (Gold/Silver/Bronze)
+
+### 제거된 코치멘트 (사용자 요청)
+- Home 도전과제 코치멘트
+- My 프로필 설정 코치멘트
+- 관련 DB 함수 4개 및 import 정리

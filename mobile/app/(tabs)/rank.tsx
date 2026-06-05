@@ -81,13 +81,15 @@ export default function RankScreen() {
 
 	  useEffect(() => {
 	    if (loading || error || rankYearCoachChecked.current) return;
-	    rankYearCoachChecked.current = true;
 	    getRankYearCoachSeen().then(async (seen) => {
 	      if (!seen) {
 	        await setRankYearCoachSeen();
+	        rankYearCoachChecked.current = true;
 	        setShowRankYearCoach(true);
+	      } else {
+	        rankYearCoachChecked.current = true;
 	      }
-	    }).catch(() => {});
+	    }).catch((e) => { console.warn("coach: rankYear", e); });
 	  }, [loading, error]);
 
   const navigationRank = useNavigation();

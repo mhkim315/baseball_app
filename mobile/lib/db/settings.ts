@@ -140,10 +140,11 @@ export async function addUnlockedBackgrounds(bgKeys: string[]): Promise<void> {
   }
 }
 
+// === Coach Marks ===
+
 export async function getHomeCoachSeen(): Promise<boolean> {
   return (await getSetting("has_seen_home_coach")) === "true";
 }
-
 export async function setHomeCoachSeen(): Promise<void> {
   await setSetting("has_seen_home_coach", "true");
 }
@@ -151,47 +152,69 @@ export async function setHomeCoachSeen(): Promise<void> {
 export async function getTodayBackCoachSeen(): Promise<boolean> {
   return (await getSetting("has_seen_today_back_coach")) === "true";
 }
-
 export async function setTodayBackCoachSeen(): Promise<void> {
   await setSetting("has_seen_today_back_coach", "true");
-}
-
-export async function getGameStickerCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_game_sticker_coach")) === "true";
-}
-
-export async function setGameStickerCoachSeen(): Promise<void> {
-  await setSetting("has_seen_game_sticker_coach", "true");
 }
 
 export async function getHomeStickerCoachSeen(): Promise<boolean> {
   return (await getSetting("has_seen_home_sticker_coach")) === "true";
 }
-
 export async function setHomeStickerCoachSeen(): Promise<void> {
   await setSetting("has_seen_home_sticker_coach", "true");
+}
+
+export async function getHomeCalendarCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_home_calendar_coach")) === "true";
+}
+export async function setHomeCalendarCoachSeen(): Promise<void> {
+  await setSetting("has_seen_home_calendar_coach", "true");
+}
+
+export async function getGameStickerCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_game_sticker_coach")) === "true";
+}
+export async function setGameStickerCoachSeen(): Promise<void> {
+  await setSetting("has_seen_game_sticker_coach", "true");
 }
 
 export async function getDetailStickerCoachSeen(): Promise<boolean> {
   return (await getSetting("has_seen_detail_sticker_coach")) === "true";
 }
-
 export async function setDetailStickerCoachSeen(): Promise<void> {
   await setSetting("has_seen_detail_sticker_coach", "true");
+}
+
+export async function getCheerTeamCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_cheer_team_coach")) === "true";
+}
+export async function setCheerTeamCoachSeen(): Promise<void> {
+  await setSetting("has_seen_cheer_team_coach", "true");
+}
+
+export async function getRankYearCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_rank_year_coach")) === "true";
+}
+export async function setRankYearCoachSeen(): Promise<void> {
+  await setSetting("has_seen_rank_year_coach", "true");
 }
 
 export async function getDiaryCoachSeen(): Promise<boolean> {
   return (await getSetting("has_seen_diary_coach")) === "true";
 }
-
 export async function setDiaryCoachSeen(): Promise<void> {
   await setSetting("has_seen_diary_coach", "true");
+}
+
+export async function getDiarySearchCoachSeen(): Promise<boolean> {
+  return (await getSetting("has_seen_diary_search_coach")) === "true";
+}
+export async function setDiarySearchCoachSeen(): Promise<void> {
+  await setSetting("has_seen_diary_search_coach", "true");
 }
 
 export async function getStadiumCoachSeen(): Promise<boolean> {
   return (await getSetting("has_seen_stadium_coach")) === "true";
 }
-
 export async function setStadiumCoachSeen(): Promise<void> {
   await setSetting("has_seen_stadium_coach", "true");
 }
@@ -199,7 +222,6 @@ export async function setStadiumCoachSeen(): Promise<void> {
 export async function getMyCoachSeen(): Promise<boolean> {
   return (await getSetting("has_seen_my_coach")) === "true";
 }
-
 export async function setMyCoachSeen(): Promise<void> {
   await setSetting("has_seen_my_coach", "true");
 }
@@ -215,47 +237,4 @@ export async function incrementVisitCount(): Promise<number> {
   const next = current + 1;
   await setSetting("visit_count", String(next));
   return next;
-}
-
-// === Additional Coach Marks ===
-export async function getCheerTeamCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_cheer_team_coach")) === "true";
-}
-export async function setCheerTeamCoachSeen(): Promise<void> {
-  await setSetting("has_seen_cheer_team_coach", "true");
-}
-
-export async function getRankYearCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_rank_year_coach")) === "true";
-}
-export async function setRankYearCoachSeen(): Promise<void> {
-  await setSetting("has_seen_rank_year_coach", "true");
-}
-
-export async function getHomeCalendarCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_home_calendar_coach")) === "true";
-}
-export async function setHomeCalendarCoachSeen(): Promise<void> {
-  await setSetting("has_seen_home_calendar_coach", "true");
-}
-
-export async function getDiaryExpenseCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_diary_expense_coach")) === "true";
-}
-export async function setDiaryExpenseCoachSeen(): Promise<void> {
-  await setSetting("has_seen_diary_expense_coach", "true");
-}
-
-export async function getDiaryViewModeCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_diary_viewmode_coach")) === "true";
-}
-export async function setDiaryViewModeCoachSeen(): Promise<void> {
-  await setSetting("has_seen_diary_viewmode_coach", "true");
-}
-
-export async function getDiarySearchCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_diary_search_coach")) === "true";
-}
-export async function setDiarySearchCoachSeen(): Promise<void> {
-  await setSetting("has_seen_diary_search_coach", "true");
 }
