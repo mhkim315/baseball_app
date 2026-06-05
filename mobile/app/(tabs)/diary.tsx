@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, RefreshControl, ScrollView, Alert, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, Modal, ActivityIndicator } from "react-native";
-import { useFocusEffect, useNavigation } from "expo-router";
+import { useFocusEffect, useNavigation, useLocalSearchParams, useRouter } from "expo-router";
 import DiaryTimeline from "@/components/DiaryTimeline";
 import WebzineTimeline from "@/components/WebzineTimeline";
 import GridTimeline from "@/components/GridTimeline";
@@ -172,7 +172,10 @@ export default function DiaryScreen() {
   const [showDiarySearchCoach, setShowDiarySearchCoach] = useState(false);
   const diarySearchCoachChecked = useRef(false);
 
-
+  // Route params for tab/sub navigation (used by shortcut)
+  const { tab, sub } = useLocalSearchParams<{ tab?: string; sub?: string }>();
+  const router = useRouter();
+  const paramsConsumed = useRef(false);
 
   // Horizontal tab scroll
   const tabScrollRef = useRef<ScrollView>(null);
@@ -327,7 +330,20 @@ export default function DiaryScreen() {
     useCallback(() => {
       loadData();
       checkBadges();
-    }, [loadData])
+      // Handle route params for shortcut navigation (tab/sub)
+      // Reset consumed flag so second shortcut use also works
+      if (tab) paramsConsumed.current = false;
+      if (!paramsConsumed.current && tab) {
+        if (tab === "stats" || tab === "calendar" || tab === "timeline") {
+          setActiveTab(tab);
+        }
+        if (sub === "jikgwan" || sub === "expense") {
+          setSubTab(sub);
+        }
+        paramsConsumed.current = true;
+        router.setParams({ tab: undefined, sub: undefined } as any);
+      }
+    }, [loadData, tab, sub])
   );
 
   // Diary coach mark: show once when no records exist

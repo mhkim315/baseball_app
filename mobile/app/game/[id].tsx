@@ -349,17 +349,12 @@ export default function GameDetailScreen() {
     }).catch((e) => { console.warn("coach: gameSticker", e); });
   }, [detail, sc]);
 
-  // Detail sticker coach: 1-time, triggered when entering from home sticker coach flow (sc=1)
+  // Detail sticker coach & auto-open modal for sc=1
   useEffect(() => {
     if (sc !== "1") return;
     if (!detail || detail.gameInfo?.status === "cancelled") return;
-    setShowStickerCoach(false); // prevent overlap
-    getDetailStickerCoachSeen().then(async (seen) => {
-      if (!seen) {
-        await setDetailStickerCoachSeen();
-        setShowDetailStickerCoach(true);
-      }
-    }).catch((e) => { console.warn("coach: detailSticker", e); });
+    setShowStickerCoach(false);
+    setShowStickerModal(true);
   }, [detail, sc]);
 
   // Dismiss sticker coach marks on navigation away

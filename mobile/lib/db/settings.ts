@@ -238,3 +238,11 @@ export async function incrementVisitCount(): Promise<number> {
   await setSetting("visit_count", String(next));
   return next;
 }
+
+// === Shortcut ===
+export async function getShortcut(): Promise<string | null> {
+  return getSetting("shortcut");
+}
+export async function setShortcut(type: string): Promise<void> {
+  await setSetting("shortcut", type);
+}

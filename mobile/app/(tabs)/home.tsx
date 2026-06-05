@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback, useMemo } from "react";
-import { View, Text, Image, ScrollView, FlatList, StyleSheet, ActivityIndicator, Pressable, PanResponder, LayoutAnimation, Platform, UIManager, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, AppState, InteractionManager } from "react-native";
+import { View, Text, Image, ScrollView, FlatList, StyleSheet, ActivityIndicator, Pressable, PanResponder, LayoutAnimation, Platform, UIManager, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, AppState, InteractionManager, Alert } from "react-native";
 
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import DateStrip from "@/components/DateStrip";
 import GameCard from "@/components/GameCard";
 import CalendarContainer from "@/components/CalendarContainer";
@@ -23,6 +23,10 @@ import { formatDateForApi as formatDateStr } from "@shared/constants";
 import { getInningInfo } from "@shared/gameStatus";
 
 import MyButton from "@/components/MyButton";
+import ShortcutButton from "@/components/ShortcutButton";
+import ShortcutPickerModal from "@/components/ShortcutPickerModal";
+import DiaryEntryModal from "@/components/DiaryEntryModal";
+import ExpenseModal from "@/components/ExpenseModal";
 import AchievementToast from "@/components/AchievementToast";
 import HomeCoachMark from "@/components/HomeCoachMark";
 import CoachMark from "@/components/CoachMark";
@@ -31,7 +35,9 @@ import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 import { backfillLiveRecords, evaluateBadges, grantRandomCharacter } from "@/lib/achievements";
-import { type Badge, getTodayBackCoachSeen, setTodayBackCoachSeen, getHomeCoachSeen, setHomeCoachSeen, getHomeStickerCoachSeen, setHomeStickerCoachSeen, getVisitCount, getHomeCalendarCoachSeen, setHomeCalendarCoachSeen } from "@/lib/db";
+import { type Badge, getTodayBackCoachSeen, setTodayBackCoachSeen, getHomeCoachSeen, setHomeCoachSeen, getHomeStickerCoachSeen, setHomeStickerCoachSeen, getVisitCount, getHomeCalendarCoachSeen, setHomeCalendarCoachSeen, getShortcut, setShortcut as saveShortcut } from "@/lib/db";
+import { findTargetDate, getGameOptionForDate, findRecentMyTeamGame, type ShortcutType } from "@/lib/shortcutHelper";
+import type { GameOption } from "@/components/diary/useDiaryForm";
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -137,6 +143,13 @@ export default function HomeScreen() {
   const homeDeepCoachPending = useRef(false);
   const showCoachMarkRef = useRef(false);
   const scheduleCache = useRef<{ month: number; year: number; games: ScheduleGame[] } | null>(null);
+
+  // Shortcut state
+  const [shortcut, setShortcut] = useState<ShortcutType | null>(null);
+  const [showShortcutPicker, setShowShortcutPicker] = useState(false);
+  const [showDiaryEntryModal, setShowDiaryEntryModal] = useState(false);
+  const [shortcutGameOption, setShortcutGameOption] = useState<GameOption | null>(null);
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
   const calCache = useRef<Record<string, ResolvedGame[]>>({});
@@ -541,6 +554,69 @@ export default function HomeScreen() {
 	      }).catch((e) => { console.warn("coach: homeCalendar", e); homeDeepCoachPending.current = false; });
 	  }, [showCoachMark, showTodayBackCoach, showHomeStickerCoach, showHomeCalendarCoach]);
 
+  // Shortcut: load setting on focus, auto-set diary_write for returning users
+  useFocusEffect(useCallback(() => {
+    getShortcut().then(async (s) => {
+      if (s === null) {
+        const vc = await getVisitCount();
+        if (vc >= 2) {
+          await saveShortcut("diary_write");
+          setShortcut("diary_write");
+          return;
+        }
+      }
+      setShortcut(s as ShortcutType | null);
+    }).catch(() => {});
+  }, []));
+
+  const handleShortcutSelect = async (type: ShortcutType) => {
+    await saveShortcut(type);
+    setShortcut(type);
+    setShowShortcutPicker(false);
+  };
+
+  const executeShortcut = async (type: ShortcutType) => {
+    if (!myTeam) return;
+    switch (type) {
+      case "diary_write": {
+        const targetDate = findTargetDate();
+        const gameOpt = await getGameOptionForDate(targetDate, myTeam);
+        if (gameOpt) {
+          setShortcutGameOption(gameOpt);
+          setShowDiaryEntryModal(true);
+        } else {
+          Alert.alert("알림", "해당 날짜에 응원팀 경기가 없습니다");
+        }
+        break;
+      }
+      case "sticker": {
+        const result = await findRecentMyTeamGame(myTeam);
+        if (result) {
+          router.push(`/game/${result.gameId}?sc=1`);
+        } else {
+          Alert.alert("알림", "표시할 경기가 없습니다");
+        }
+        break;
+      }
+      case "diary_stats": {
+        router.push("/(tabs)/diary?tab=stats&sub=jikgwan");
+        break;
+      }
+      case "expense": {
+        setShowExpenseModal(true);
+        break;
+      }
+    }
+  };
+
+  const handleShortcutPress = () => {
+    if (shortcut) {
+      executeShortcut(shortcut);
+    } else {
+      setShowShortcutPicker(true);
+    }
+  };
+
   const handlePageSwipe = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const page = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
@@ -637,6 +713,8 @@ export default function HomeScreen() {
           <Text style={styles.title}>풀카운트</Text>
         </View>
         <View style={{ flex: 1 }} />
+        <ShortcutButton shortcut={shortcut} onPress={handleShortcutPress} color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
+        <View style={{ width: 8 }} />
         <MyButton color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
       </View>
 
@@ -730,7 +808,7 @@ export default function HomeScreen() {
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           onMomentumScrollEnd={handlePageSwipe}
-          onScrollBeginDrag={() => { lastActedPageRef.current = 1; if (showCoachMark) handleCoachDismiss(); setShowTodayBackCoach(false); if (homeSCRef.current) { homeSCRef.current = false; setShowHomeStickerCoach(false); } setShowHomeCalendarCoach(false); }}
+          onScrollBeginDrag={() => { lastActedPageRef.current = 1; if (showCoachMark) handleCoachDismiss(); setShowTodayBackCoach(false); if (homeSCRef.current) { homeSCRef.current = false; setShowHomeStickerCoach(false); } setShowHomeCalendarCoach(false); setShowShortcutPicker(false); }}
           style={{ flex: 1 }}
         >
           {(["prev", "current", "next"] as const).map((slot, idx) => {
@@ -764,6 +842,26 @@ export default function HomeScreen() {
           })}
         </ScrollView>
       </View>
+
+      {/* Shortcut modals */}
+      <ShortcutPickerModal
+        visible={showShortcutPicker}
+        onClose={() => setShowShortcutPicker(false)}
+        currentShortcut={shortcut}
+        onSelect={handleShortcutSelect}
+      />
+      <DiaryEntryModal
+        visible={showDiaryEntryModal}
+        onClose={() => { setShowDiaryEntryModal(false); setShortcutGameOption(null); }}
+        onSaved={() => { setShowDiaryEntryModal(false); setShortcutGameOption(null); }}
+        presetGame={shortcutGameOption}
+      />
+      <ExpenseModal
+        visible={showExpenseModal}
+        onClose={() => setShowExpenseModal(false)}
+        onSaved={() => setShowExpenseModal(false)}
+        presetDate={new Date()}
+      />
     </View>
   );
 }

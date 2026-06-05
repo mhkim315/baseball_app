@@ -46,4 +46,5 @@ export {
   getRankYearCoachSeen, setRankYearCoachSeen,
   getHomeCalendarCoachSeen, setHomeCalendarCoachSeen,
   getDiarySearchCoachSeen, setDiarySearchCoachSeen,
+  getShortcut, setShortcut,
 } from "./settings";

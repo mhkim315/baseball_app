@@ -50,7 +50,9 @@ import TotemSection from "@/components/TotemSection";
 import EmojiPicker from "@/components/EmojiPicker";
 import ColorPicker from "@/components/ColorPicker";
 import CoachMark from "@/components/CoachMark";
-import { getMyCoachSeen, setMyCoachSeen, getVisitCount } from "@/lib/db";
+import ShortcutPickerModal from "@/components/ShortcutPickerModal";
+import { getMyCoachSeen, setMyCoachSeen, getVisitCount, getShortcut, setShortcut as saveShortcut } from "@/lib/db";
+import { SHORTCUT_LABELS, type ShortcutType } from "@/lib/shortcutHelper";
 
 export default function MyScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -371,9 +373,13 @@ export default function MyScreen() {
     }
   }, []);
 
+  const [shortcut, setShortcut] = useState<ShortcutType | null>(null);
+  const [showShortcutPicker, setShowShortcutPicker] = useState(false);
+
   useFocusEffect(
     useCallback(() => {
       loadData();
+      getShortcut().then((s) => setShortcut(s as ShortcutType | null));
     }, [loadData])
   );
 
@@ -394,6 +400,12 @@ export default function MyScreen() {
       }
     }).catch((e) => { console.warn("coach: my", e); });
   }, [totems]);
+
+  const handleShortcutSelect = async (type: ShortcutType) => {
+    await saveShortcut(type);
+    setShortcut(type);
+    setShowShortcutPicker(false);
+  };
 
   // Dismiss on navigation away
   const navigationMy = useNavigation();
@@ -555,6 +567,21 @@ export default function MyScreen() {
             />
           </View>
         )}
+
+        {/* Shortcut section */}
+        <Pressable
+          style={[styles.myTeamRow, { gap: 12, marginTop: 12 }]}
+          onPress={() => setShowShortcutPicker(true)}
+        >
+          <Text style={{ fontSize: 28 }}>⚡</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground }}>나의 바로가기</Text>
+            <Text style={{ fontSize: 12, color: theme.mutedForeground, marginTop: 2 }}>
+              {shortcut !== null ? SHORTCUT_LABELS[shortcut] : "설정 안 함"}
+            </Text>
+          </View>
+          <Text style={styles.myTeamArrow}>›</Text>
+        </Pressable>
       </View>
 
       {/* App Info */}
@@ -949,6 +976,14 @@ export default function MyScreen() {
 
       {/* Collection Modal */}
       <CollectionModal visible={showCollectionModal} onClose={() => setShowCollectionModal(false)} onSave={loadData} />
+
+      {/* Shortcut picker modal */}
+      <ShortcutPickerModal
+        visible={showShortcutPicker}
+        onClose={() => setShowShortcutPicker(false)}
+        currentShortcut={shortcut}
+        onSelect={handleShortcutSelect}
+      />
     </ScrollView>
   );
 }
