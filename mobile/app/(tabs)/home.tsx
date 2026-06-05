@@ -577,35 +577,39 @@ export default function HomeScreen() {
 
   const executeShortcut = async (type: ShortcutType) => {
     if (!myTeam) return;
-    switch (type) {
-      case "diary_write": {
-        const targetDate = findTargetDate();
-        const gameOpt = await getGameOptionForDate(targetDate, myTeam);
-        if (gameOpt) {
-          setShortcutGameOption(gameOpt);
-          setShowDiaryEntryModal(true);
-        } else {
-          Alert.alert("알림", "해당 날짜에 응원팀 경기가 없습니다");
+    try {
+      switch (type) {
+        case "diary_write": {
+          const targetDate = findTargetDate();
+          const gameOpt = await getGameOptionForDate(targetDate, myTeam);
+          if (gameOpt) {
+            setShortcutGameOption(gameOpt);
+            setShowDiaryEntryModal(true);
+          } else {
+            Alert.alert("알림", "해당 날짜에 응원팀 경기가 없습니다");
+          }
+          break;
         }
-        break;
-      }
-      case "sticker": {
-        const result = await findRecentMyTeamGame(myTeam);
-        if (result) {
-          router.push(`/game/${result.gameId}?sc=1`);
-        } else {
-          Alert.alert("알림", "표시할 경기가 없습니다");
+        case "sticker": {
+          const result = await findRecentMyTeamGame(myTeam);
+          if (result) {
+            router.push(`/game/${result.gameId}?sc=1`);
+          } else {
+            Alert.alert("알림", "표시할 경기가 없습니다");
+          }
+          break;
         }
-        break;
+        case "diary_stats": {
+          router.push("/(tabs)/diary?tab=stats&sub=jikgwan");
+          break;
+        }
+        case "expense": {
+          setShowExpenseModal(true);
+          break;
+        }
       }
-      case "diary_stats": {
-        router.push("/(tabs)/diary?tab=stats&sub=jikgwan");
-        break;
-      }
-      case "expense": {
-        setShowExpenseModal(true);
-        break;
-      }
+    } catch (e) {
+      Alert.alert("오류", "바로가기 실행 중 문제가 발생했습니다");
     }
   };
 

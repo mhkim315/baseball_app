@@ -16,6 +16,7 @@ export const SHORTCUT_LABELS: Record<ShortcutType, string> = {
 /** 주어진 myTeam을 ScoreEntry의 한글 팀명과 매칭해 해당되는 경기를 반환 */
 function findMyTeamGame(games: { away: string; home: string; awayScore?: number; homeScore?: number; cancelled?: boolean }[], myTeam: string, gameId?: string): { found: boolean; game?: any } {
   for (const g of games) {
+    if (g.cancelled) continue;
     const homeId = TEAM_NAME_TO_ID[g.home];
     const awayId = TEAM_NAME_TO_ID[g.away];
     if (homeId === myTeam || awayId === myTeam) {

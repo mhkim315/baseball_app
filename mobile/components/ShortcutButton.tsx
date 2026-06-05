@@ -45,8 +45,8 @@ export default function ShortcutButton({ shortcut, onPress, color }: Props) {
       hitSlop={8}
       style={[styles.activeBtn, { backgroundColor: color || theme.mutedForeground }]}
     >
-      <Text style={styles.activeIcon}>{SHORTCUT_ICONS[shortcut]}</Text>
-      <Text style={styles.activeLabel}>{SHORTCUT_LABELS[shortcut]}</Text>
+      <Text style={styles.activeIcon}>{SHORTCUT_ICONS[shortcut] ?? "⚡"}</Text>
+      <Text style={styles.activeLabel}>{SHORTCUT_LABELS[shortcut] ?? ""}</Text>
     </Pressable>
   );
 }

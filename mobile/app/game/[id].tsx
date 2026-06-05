@@ -10,6 +10,7 @@ import {
 import { TeamBadge } from "@/components/TeamBadge";
 import { cachedDailyScores, cachedAllDailyScores, cachedScheduleByMonth, cachedGameDetail, cachedStandings } from "@/lib/gameCache";
 import { resolveGames } from "@/lib/resolveGames";
+import SimpleAlert from "@/components/SimpleAlert";
 import DiaryEntryModal, { type GameOption } from "@/components/DiaryEntryModal";
 import StickerModal from "@/components/StickerModal";
 import CoachMark from "@/components/CoachMark";
@@ -58,6 +59,7 @@ export default function GameDetailScreen() {
   const [showStickerModal, setShowStickerModal] = useState(false);
   const [showStickerCoach, setShowStickerCoach] = useState(false);
   const [showDetailStickerCoach, setShowDetailStickerCoach] = useState(false);
+  const [showStickerTimeAlert, setShowStickerTimeAlert] = useState(false);
   const stickerCoachChecked = useRef(false);
   const scheduleTimeRef = useRef<string | null>(null);
   const resolvedStatusRef = useRef<string | undefined>(undefined);
@@ -354,7 +356,25 @@ export default function GameDetailScreen() {
     if (sc !== "1") return;
     if (!detail || detail.gameInfo?.status === "cancelled") return;
     setShowStickerCoach(false);
-    setShowStickerModal(true);
+
+    const isFinishedOrLive = detail.gameInfo?.status === "finished" || detail.gameInfo?.status === "live";
+    const hasScore = !!detail.score;
+    const gameDateStr = detail.date;
+    const now = new Date();
+    const todayStr = formatDateForApi(now);
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = formatDateForApi(yesterday);
+    const isToday = gameDateStr === todayStr;
+    const isYesterday = gameDateStr === yesterdayStr;
+    const isBefore1400 = now.getHours() < 14;
+    const canMake = isFinishedOrLive && hasScore && (isToday || (isYesterday && isBefore1400));
+
+    if (canMake) {
+      setShowStickerModal(true);
+    } else {
+      setShowStickerTimeAlert(true);
+    }
   }, [detail, sc]);
 
   // Dismiss sticker coach marks on navigation away
@@ -1001,6 +1021,14 @@ export default function GameDetailScreen() {
         liveInning={inningInfo ?? null}
         gameId={gid}
         venue={detail?.gameInfo?.venue}
+      />
+
+      <SimpleAlert
+        visible={showStickerTimeAlert}
+        title="알림"
+        message="스티커는 경기 시작부터 다음날 14시까지 만들 수 있어요"
+        onConfirm={() => setShowStickerTimeAlert(false)}
+        onClose={() => setShowStickerTimeAlert(false)}
       />
     </View>
   );

@@ -2039,3 +2039,37 @@ key = (tg_date.replace("-", ""), away.get("name", ""), home.get("name", ""))  # 
 - Home 도전과제 코치멘트
 - My 프로필 설정 코치멘트
 - 관련 DB 함수 4개 및 import 정리
+
+---
+
+## Phase 17-7: 바로가기 시스템 개선 및 스티커 시간 제한 알림 (2026-06-05)
+
+### ShortcutButton UI 개선
+- idle 상태 ⚡ 원형 아이콘 → ⚡ + "바로가기 만들기" 텍스트 버튼으로 변경
+- "사용 안 함" 선택 시 버튼 완전히 숨김 (`return null`)
+- `getShortcut()`이 `null` 반환하여 "미설정"과 "사용 안 함" 구분
+  - `null` = 미설정 → 설정 유도 버튼 표시
+  - `""` = 사용 안 함 → 버튼 숨김
+  - 그 외 = 활성화 → 아이콘 + 라벨 표시
+
+### 스티커 시간 제한 알림 (sc=1)
+- `sc=1` 진입 시 스티커 생성 가능 시간 체크
+- 가능 → StickerModal 자동 오픈 (기존 유지)
+- 불가 → SimpleAlert: "스티커는 경기 시작부터 다음날 14시까지 만들 수 있어요"
+
+### 버그 수정
+- `findMyTeamGame`에서 취소 경기(`cancelled`) 건너뛰도록 수정
+- `executeShortcut`에 `try/catch` 추가 (unhandled rejection 방지)
+- `ShortcutButton` SHORTCUT_ICONS/LABELS에 `??` fallback 추가
+
+### 변경 파일
+| 파일 | 변경 |
+|---|---|
+| `mobile/lib/db/settings.ts` | `getShortcut()` null 반환 |
+| `mobile/components/ShortcutButton.tsx` | 3-way 렌더링 + fallback |
+| `mobile/components/ShortcutPickerModal.tsx` | ShortcutType \| null 타입 |
+| `mobile/app/(tabs)/home.tsx` | 상태 타입, auto-set 조건, try/catch |
+| `mobile/app/(tabs)/my.tsx` | 상태 타입, 표시 로직 |
+| `mobile/app/(tabs)/diary.tsx` | Route params 탭 이동 |
+| `mobile/app/game/[id].tsx` | sc=1 스티커 시간 체크 + SimpleAlert |
+| `mobile/lib/shortcutHelper.ts` | cancelled 경기 필터링 |
