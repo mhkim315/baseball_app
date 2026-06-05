@@ -35,13 +35,21 @@ function getWeekOfMonth(date: Date): number {
   return Math.floor((monday.getDate() - 1) / 7) + 1;
 }
 
+function resultColor(isWin: number): string {
+  if (isWin === 1) return "rgba(59, 130, 246, 0.35)";
+  if (isWin === -1) return "rgba(239, 68, 68, 0.35)";
+  return "rgba(234, 179, 8, 0.35)";
+}
+
 interface DateStripProps {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
   teamColor?: string;
+  /** Date string (YYYY-MM-DD) → is_win (1=win, -1=loss, 0=draw) */
+  resultByDate?: Record<string, number>;
 }
 
-export default function DateStrip({ selectedDate, onDateChange, teamColor }: DateStripProps) {
+export default function DateStrip({ selectedDate, onDateChange, teamColor, resultByDate }: DateStripProps) {
   const { theme } = useTheme();
   const weekDates = useMemo(() => getWeekDates(selectedDate), [selectedDate]);
 
@@ -172,9 +180,20 @@ export default function DateStrip({ selectedDate, onDateChange, teamColor }: Dat
                 <Text style={[styles.dayText, sel && styles.dayTextSelected, dayIndex === 0 && !sel && styles.sunday, dayIndex === 6 && !sel && styles.saturday]}>
                   {DAYS[dayIndex]}
                 </Text>
-                <Text style={[styles.dateNum, sel && styles.dateNumSelected]}>
-                  {date.getDate()}
-                </Text>
+                <View style={{ position: "relative", alignItems: "center", justifyContent: "center" }}>
+                  {!sel && resultByDate?.[formatDateStr(date)] !== undefined && (
+                    <View style={{
+                      position: "absolute",
+                      width: 30,
+                      height: 30,
+                      borderRadius: 15,
+                      backgroundColor: resultColor(resultByDate[formatDateStr(date)]),
+                    }} />
+                  )}
+                  <Text style={[styles.dateNum, sel && styles.dateNumSelected]}>
+                    {date.getDate()}
+                  </Text>
+                </View>
                 <View style={styles.dotRow}>
                   {today && !sel && <View style={styles.todayDot} />}
                 </View>

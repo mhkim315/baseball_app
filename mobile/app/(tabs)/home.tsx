@@ -35,7 +35,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 import { backfillLiveRecords, evaluateBadges, grantRandomCharacter } from "@/lib/achievements";
-import { type Badge, getTodayBackCoachSeen, setTodayBackCoachSeen, getHomeCoachSeen, setHomeCoachSeen, getHomeStickerCoachSeen, setHomeStickerCoachSeen, getVisitCount, getShortcut, setShortcut as saveShortcut } from "@/lib/db";
+import { type Badge, getTodayBackCoachSeen, setTodayBackCoachSeen, getHomeCoachSeen, setHomeCoachSeen, getHomeStickerCoachSeen, setHomeStickerCoachSeen, getVisitCount, getShortcut, setShortcut as saveShortcut, getJikgwanRecords } from "@/lib/db";
 import { findTargetDate, getGameOptionForDate, findRecentMyTeamGame, type ShortcutType } from "@/lib/shortcutHelper";
 import type { GameOption } from "@/components/diary/useDiaryForm";
 
@@ -137,6 +137,7 @@ export default function HomeScreen() {
   const homeStickerCoachPendingRef = useRef(false);
   const showCoachMarkRef = useRef(false);
   const scheduleCache = useRef<{ month: number; year: number; games: ScheduleGame[] } | null>(null);
+  const [resultByDate, setResultByDate] = useState<Record<string, number>>({});
 
   // Shortcut state
   const [shortcut, setShortcut] = useState<ShortcutType | null>(null);
@@ -348,6 +349,21 @@ export default function HomeScreen() {
     return cleanup;
   }, [load]);
 
+  // Load jikgwan records for DateStrip result indicators
+  useEffect(() => {
+    try {
+      const records = getJikgwanRecords();
+      const map: Record<string, number> = {};
+      for (const r of records) {
+        if (r.is_win == null) continue;
+        const key = r.date.replace(/\./g, "-"); // YYYY.MM.DD → YYYY-MM-DD
+        // Multiple records can exist for same date; keep the last one's result
+        map[key] = r.is_win;
+      }
+      setResultByDate(map);
+    } catch (e) { console.warn("home: load jikgwan records", e); }
+  }, []);
+
   // Fetch calendar data when opened or month/year changes (cache + preload adjacent)
   useEffect(() => {
     if (!calendarOpen) return;
@@ -404,11 +420,11 @@ export default function HomeScreen() {
   const runBadgeCheck = useCallback(async () => {
     try {
       await backfillLiveRecords();
-      const { newlyUnlockedBadges, newlyUnlockedBackgrounds } = await evaluateBadges();
+      const { newlyUnlockedBadges, newlyUnlockedBackgrounds } = evaluateBadges();
 
       const rewards: { type: string; emotion?: string; label: string; key?: string }[] = [];
       for (let i = 0; i < newlyUnlockedBadges.length; i++) {
-        const reward = await grantRandomCharacter(newlyUnlockedBadges[i].badge_key);
+        const reward = grantRandomCharacter(newlyUnlockedBadges[i].badge_key);
         if (reward) rewards.push({ type: "character", ...reward });
       }
       for (const bg of newlyUnlockedBackgrounds) {
@@ -441,6 +457,15 @@ export default function HomeScreen() {
       if (state === 'active') {
         prefetchOnAppInit();
         runBadgeCheck();
+        try {
+          const records = getJikgwanRecords();
+          const map: Record<string, number> = {};
+          for (const r of records) {
+            if (r.is_win == null) continue;
+            map[r.date.replace(/\./g, "-")] = r.is_win;
+          }
+          setResultByDate(map);
+        } catch {}
         InteractionManager.runAfterInteractions(() => {
           load();
         });
@@ -702,6 +727,7 @@ export default function HomeScreen() {
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}
         teamColor={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined}
+        resultByDate={resultByDate}
       />
 
       {/* Calendar toggle + content — pan wraps both for open/close swipe */}

@@ -181,12 +181,12 @@ export default function DiaryScreen() {
     try {
       const { backfillLiveRecords, evaluateBadges, grantRandomCharacter } = await import("@/lib/achievements");
       await backfillLiveRecords();
-      const { newlyUnlockedBadges, newlyUnlockedBackgrounds } = await evaluateBadges();
+      const { newlyUnlockedBadges, newlyUnlockedBackgrounds } = evaluateBadges();
 
       // Grant random character reward for each new badge
       const rewards: { type: string; emotion?: string; label: string; key?: string }[] = [];
       for (let i = 0; i < newlyUnlockedBadges.length; i++) {
-        const reward = await grantRandomCharacter(newlyUnlockedBadges[i].badge_key);
+        const reward = grantRandomCharacter(newlyUnlockedBadges[i].badge_key);
         if (reward) rewards.push({ type: "character", ...reward });
       }
       for (const bg of newlyUnlockedBackgrounds) {
@@ -329,6 +329,10 @@ export default function DiaryScreen() {
       if (!paramsConsumed.current && tab) {
         if (tab === "stats" || tab === "calendar" || tab === "timeline") {
           setActiveTab(tab);
+          const idx = TABS.findIndex((t) => t.key === tab);
+          if (idx >= 0) {
+            tabScrollRef.current?.scrollTo({ x: screenWidth * idx, animated: false });
+          }
         }
         if (sub === "jikgwan" || sub === "expense") {
           setSubTab(sub);
