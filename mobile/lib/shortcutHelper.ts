@@ -60,30 +60,60 @@ export function findTargetDate(): Date {
   return now;
 }
 
-/**
- * 오늘/어제 중 myTeam 경기가 있는 가장 최근 날짜 탐색 (sticker 바로가기용)
- */
 export async function findRecentMyTeamGame(myTeam: string): Promise<{ gameId: string; date: string } | null> {
   const now = new Date();
+  const currentHour = now.getHours();
   const todayStr = formatDateForApi(now);
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = formatDateForApi(yesterday);
 
-  // Try today first, then yesterday
-  const dates = [todayStr, yesterdayStr];
-  for (const dateStr of dates) {
-    const scores = await cachedDailyScores(dateStr);
-    if (!scores?.games?.length) continue;
-    const match = findMyTeamGame(scores.games, myTeam);
-    if (match.found) {
-      const g = match.game;
-      const homeId = TEAM_NAME_TO_ID[g.home] || "";
-      const awayId = TEAM_NAME_TO_ID[g.away] || "";
-      const gameId = buildGameId(awayId, homeId, dateStr.replace(/-/g, ""), "0");
-      return { gameId, date: dateStr };
+  const tryResolveGame = async (dateStr: string, dateObj: Date) => {
+    const month = dateObj.getMonth() + 1;
+    const year = dateObj.getFullYear();
+    const [scheduleResult, scoresResult] = await Promise.all([
+      cachedScheduleByMonth(month, year),
+      cachedDailyScores(dateStr),
+    ]);
+    
+    const games = scheduleResult?.games ?? [];
+    const scores = scoresResult?.games ?? [];
+    
+    if (!scores.length) return null;
+
+    const dayGames = games.filter((g) => g.date === dateStr);
+    let gi = 0;
+    
+    for (const g of dayGames) {
+      const homeId = TEAM_NAME_TO_ID[g.home];
+      const awayId = TEAM_NAME_TO_ID[g.away];
+      
+      if (homeId === myTeam || awayId === myTeam) {
+        const score = scores.find((s) => TEAM_NAME_TO_ID[s.home] === homeId && TEAM_NAME_TO_ID[s.away] === awayId);
+        // 점수가 있는 완료된/진행중인 경기만 스티커 대상으로 판단
+        const isStarted = g.status === "finished" || g.status === "live" || score?.outcome != null;
+        if (score && !score.cancelled && isStarted) {
+          const mappedHomeTeam = TEAM_LIST.find((t) => t.shortName === g.home)?.id || homeId || "";
+          const mappedAwayTeam = TEAM_LIST.find((t) => t.shortName === g.away)?.id || awayId || "";
+          const builtId = buildGameId(mappedAwayTeam, mappedHomeTeam, dateStr.replace(/-/g, ""), String(gi));
+          return { gameId: builtId, date: dateStr };
+        }
+      }
+      gi++;
     }
+    return null;
+  };
+
+  // 1. 오늘 점수 있는 경기 확인
+  const todayGame = await tryResolveGame(todayStr, now);
+  if (todayGame) return todayGame;
+
+  // 2. 14시 이전이면 어제 경기 확인
+  if (currentHour < 14) {
+    const yesterdayGame = await tryResolveGame(yesterdayStr, yesterday);
+    if (yesterdayGame) return yesterdayGame;
   }
+
   return null;
 }
 
@@ -104,12 +134,17 @@ export async function getGameOptionForDate(date: Date, myTeam: string): Promise<
   const games = scheduleResult?.games ?? [];
   const scores = scoresResult?.games ?? [];
 
+  const dayGames = games.filter((g) => g.date === dateStr);
+  let gi = 0;
+
   // Find game matching myTeam in schedule
-  for (const g of games) {
-    if (g.date !== dateStr) continue;
+  for (const g of dayGames) {
     const homeId = TEAM_NAME_TO_ID[g.home];
     const awayId = TEAM_NAME_TO_ID[g.away];
-    if (homeId !== myTeam && awayId !== myTeam) continue;
+    if (homeId !== myTeam && awayId !== myTeam) {
+      gi++;
+      continue;
+    }
 
     // Find matching score entry
     const score = scores.find(
@@ -118,7 +153,7 @@ export async function getGameOptionForDate(date: Date, myTeam: string): Promise<
 
     const mappedHomeTeam = TEAM_LIST.find((t) => t.shortName === g.home)?.id || homeId || "";
     const mappedAwayTeam = TEAM_LIST.find((t) => t.shortName === g.away)?.id || awayId || "";
-    const builtId = buildGameId(mappedAwayTeam, mappedHomeTeam, dateStr, String(g.gameIdx || 0));
+    const builtId = buildGameId(mappedAwayTeam, mappedHomeTeam, dateStr.replace(/-/g, ""), String(gi));
 
     return {
       gameId: builtId,
