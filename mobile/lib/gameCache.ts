@@ -78,7 +78,7 @@ function scheduleRetry<T>(key: string, fetcher: () => Promise<T | null>, cachedA
     try {
       // Don't write if cache was refreshed since this retry started
       if (cachedAt) {
-        const current = await db.getCache(key);
+        const current = db.getCache(key);
         if (current && current.updatedAt > cachedAt) {
           retryCounts.delete(key);
           return;
@@ -86,7 +86,7 @@ function scheduleRetry<T>(key: string, fetcher: () => Promise<T | null>, cachedA
       }
       const fresh = await withConcurrencyLimit(() => fetcher());
       if (fresh) {
-        await db.setCache(key, JSON.stringify(fresh));
+        db.setCache(key, JSON.stringify(fresh));
         retryCounts.delete(key);
       } else {
         // null response (including 429/5xx) — continue backoff chain
@@ -118,7 +118,7 @@ async function fetchWithCache<T>(
   ttl: number,
   fetcher: () => Promise<T | null>
 ): Promise<T | null> {
-  const cached = await db.getCache(cacheKeyStr);
+  const cached = db.getCache(cacheKeyStr);
   if (cached) {
     const parsed = safeParse(cached.data);
     if (parsed && Date.now() - cached.updatedAt < ttl) {
@@ -126,7 +126,7 @@ async function fetchWithCache<T>(
     }
     // If parse failed or TTL expired, delete stale entry
     if (!parsed) {
-      await db.deleteCache(cacheKeyStr);
+      db.deleteCache(cacheKeyStr);
     }
   }
 
@@ -137,7 +137,7 @@ async function fetchWithCache<T>(
   const promise = (async (): Promise<T | null> => {
     const fresh = await withConcurrencyLimit(() => fetcher());
     if (fresh) {
-      await db.setCache(cacheKeyStr, JSON.stringify(fresh));
+      db.setCache(cacheKeyStr, JSON.stringify(fresh));
       return fresh;
     }
     // API failed — return stale cache if available, retry in background
@@ -248,12 +248,12 @@ export async function cachedDailyScores(date: string): Promise<{ games: ScoreEnt
 
   // Before making an individual API call, check if the bulk aggregate is cached.
   // This prevents 100+ individual requests when cache is cold (e.g. calendar preload).
-  const bulkCached = await db.getCache(cacheKey("scores", "__all__"));
+  const bulkCached = db.getCache(cacheKey("scores", "__all__"));
   if (bulkCached) {
     const bulkData = safeParse(bulkCached.data) as Record<string, ScoreEntry[]> | null;
     if (bulkData?.[date]) {
       // Write to per-date cache for future fast lookups
-      await db.setCache(cacheKey("scores", date), JSON.stringify({ games: bulkData[date] }));
+      db.setCache(cacheKey("scores", date), JSON.stringify({ games: bulkData[date] }));
       return { games: bulkData[date] };
     }
   }
@@ -271,7 +271,7 @@ export async function cachedDailyScores(date: string): Promise<{ games: ScoreEnt
 
 // Read cached all-scores without triggering any API call (cache hit only)
 export async function readCachedAllScores(): Promise<Record<string, ScoreEntry[]> | null> {
-  const cached = await db.getCache(cacheKey("scores", "__all__"));
+  const cached = db.getCache(cacheKey("scores", "__all__"));
   if (!cached) return null;
   const parsed = safeParse(cached.data) as Record<string, ScoreEntry[]> | null;
   return parsed ?? null;
@@ -327,7 +327,7 @@ export async function cachedAllDailyScores(year?: number): Promise<Record<string
   const allScoresCacheKey = cacheKey("scores", "__all__");
 
   // ─── Step 1: Try aggregate cache ───
-  const cached = await db.getCache(allScoresCacheKey);
+  const cached = db.getCache(allScoresCacheKey);
   if (cached) {
     const parsed = safeParse(cached.data) as Record<string, ScoreEntry[]> | null;
     if (parsed && Date.now() - cached.updatedAt < ALL_SCORES_TTL) return parsed;
@@ -362,7 +362,7 @@ export async function cachedAllDailyScores(year?: number): Promise<Record<string
   // If all dates are warm, no API call needed
   if (coldDates.length === 0) {
     // Still write the aggregate key for next time
-    await db.setCache(allScoresCacheKey, JSON.stringify(result));
+    db.setCache(allScoresCacheKey, JSON.stringify(result));
     return result;
   }
 
@@ -390,10 +390,10 @@ export async function cachedAllDailyScores(year?: number): Promise<Record<string
     // Populate per-date cache for newly fetched dates
     for (const [date, games] of Object.entries(data.dates)) {
       const key = cacheKey("scores", date);
-      await db.setCache(key, JSON.stringify({ games }));
+      db.setCache(key, JSON.stringify({ games }));
     }
 
-    await db.setCache(allScoresCacheKey, JSON.stringify(dates));
+    db.setCache(allScoresCacheKey, JSON.stringify(dates));
     return dates;
   })();
 

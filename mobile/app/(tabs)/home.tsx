@@ -134,7 +134,6 @@ export default function HomeScreen() {
   const todayBackChecked = useRef(false);
   const [showHomeStickerCoach, setShowHomeStickerCoach] = useState(false);
   const homeStickerCoachCheckedRef = useRef(false);
-  const homeStickerCoachPendingRef = useRef(false);
   const showCoachMarkRef = useRef(false);
   const scheduleCache = useRef<{ month: number; year: number; games: ScheduleGame[] } | null>(null);
   const [resultByDate, setResultByDate] = useState<Record<string, number>>({});
@@ -512,9 +511,7 @@ export default function HomeScreen() {
   // when viewing a day that has sticker-eligible games (finished/live today or yesterday before 14:00)
   useEffect(() => {
     if (showCoachMark || showTodayBackCoach || showHomeStickerCoach) return;
-    if (todayBackChecked.current && !showTodayBackCoach) return;
     if (homeStickerCoachCheckedRef.current) return;
-    if (homeStickerCoachPendingRef.current) return;
 
     const viewedDateStr = formatDateStr(selectedDate);
     const games = gamesByDate[viewedDateStr];
@@ -534,7 +531,6 @@ export default function HomeScreen() {
     });
     if (!hasStickerEligible) return;
 
-    homeStickerCoachPendingRef.current = false;
     try {
       const todayBackSeen = getTodayBackCoachSeen();
       const homeStickerSeen = getHomeStickerCoachSeen();

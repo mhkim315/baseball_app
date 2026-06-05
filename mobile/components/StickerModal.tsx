@@ -197,10 +197,8 @@ export default function StickerModal({
     (async () => {
       try {
         const year = parseInt(date.slice(0, 4), 10);
-        const [teamStreakData, records] = await Promise.all([
-          computeTeamStreak(year, targetTeam, isLive ? date : undefined),
-          getJikgwanRecords(),
-        ]);
+        const teamStreakData = await computeTeamStreak(year, targetTeam, isLive ? date : undefined);
+        const records = getJikgwanRecords();
         if (!cancelled) {
           setRawTeamStreak(teamStreakData);
           setAllRecords(records);

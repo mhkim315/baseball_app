@@ -360,13 +360,13 @@ export default function MyScreen() {
     }
   }, [openAchievement, router]);
 
-  const loadData = useCallback(async () => {
-    try { const nick = await getNickname(); setNicknameState(nick ?? ""); } catch (e) { console.warn("getNickname failed", e); }
-    try { const profile = await getProfileImage(); setProfileImageState(profile); } catch (e) { console.warn("getProfileImage failed", e); }
-    try { const unlocked = await getUnlockedEmotions(); setUnlockedEmotions(unlocked); } catch (e) { console.warn("getUnlockedEmotions failed", e); }
+  const loadData = useCallback(() => {
+    try { const nick = getNickname(); setNicknameState(nick ?? ""); } catch (e) { console.warn("getNickname failed", e); }
+    try { const profile = getProfileImage(); setProfileImageState(profile); } catch (e) { console.warn("getProfileImage failed", e); }
+    try { const unlocked = getUnlockedEmotions(); setUnlockedEmotions(unlocked); } catch (e) { console.warn("getUnlockedEmotions failed", e); }
     try {
-      const allRecords = await getJikgwanRecords();
-      const totemStats = await getAllTotemStats(allRecords);
+      const allRecords = getJikgwanRecords();
+      const totemStats = getAllTotemStats(allRecords);
       setTotems(totemStats);
     } catch (e) {
       console.warn("getJikgwanRecords/getAllTotemStats failed", e);
@@ -423,11 +423,11 @@ export default function MyScreen() {
     }
   };
 
-  const handleSaveNickname = async () => {
+  const handleSaveNickname = () => {
     const trimmed = nicknameInput.trim();
     if (!trimmed) return;
     try {
-      await setNickname(trimmed);
+      setNickname(trimmed);
       setNicknameState(trimmed);
       setShowNicknameModal(false);
     } catch (e) {
@@ -435,9 +435,9 @@ export default function MyScreen() {
     }
   };
 
-  const handleSelectProfileChar = async (char: string) => {
+  const handleSelectProfileChar = (char: string) => {
     try {
-      await setProfileImage("character", char);
+      setProfileImage("character", char);
       setProfileImageState({ type: "character", value: char });
       setShowProfilePicker(false);
     } catch (e) {
@@ -851,18 +851,18 @@ export default function MyScreen() {
                 <Pressable style={styles.modalCancel} onPress={() => setShowTotemModal(false)} hitSlop={8}>
                   <Text style={styles.modalCancelText}>취소</Text>
                 </Pressable>
-                <Pressable style={[styles.modalSave, !totemName.trim() && { opacity: 0.4 }]} disabled={!totemName.trim()} onPress={async () => {
+                <Pressable style={[styles.modalSave, !totemName.trim() && { opacity: 0.4 }]} disabled={!totemName.trim()} onPress={() => {
                   if (!totemName.trim()) return;
                   try {
                     if (editingTotem) {
-                      await updateTotem(editingTotem.id, {
+                      updateTotem(editingTotem.id, {
                         name: totemName.trim(),
                         emoji: totemEmoji || "🍀",
                         description: totemDesc.trim() || null,
                         color: totemColor.trim() || null,
                       });
                     } else {
-                      await addTotem(totemName.trim(), totemEmoji || "🍀", totemDesc.trim() || undefined, totemColor.trim() || undefined);
+                      addTotem(totemName.trim(), totemEmoji || "🍀", totemDesc.trim() || undefined, totemColor.trim() || undefined);
                     }
                     setShowTotemModal(false);
                     loadData();
@@ -887,10 +887,10 @@ export default function MyScreen() {
               토템을 삭제할 때 연결된 기록을{'\n'}어떻게 처리할까요?
             </Text>
             <View style={{ gap: 8 }}>
-              <Pressable style={{ alignItems: "center", paddingVertical: 14, borderRadius: 12, backgroundColor: myTeamColor }} onPress={async () => {
+              <Pressable style={{ alignItems: "center", paddingVertical: 14, borderRadius: 12, backgroundColor: myTeamColor }} onPress={() => {
                 if (!showTotemDeleteConfirm) return;
                 try {
-                  await deleteTotem(showTotemDeleteConfirm.id, true);
+                  deleteTotem(showTotemDeleteConfirm.id, true);
                   setShowTotemDeleteConfirm(null);
                   loadData();
                 } catch (e) {
@@ -899,10 +899,10 @@ export default function MyScreen() {
               }}>
                 <Text style={{ fontSize: 14, fontWeight: "600", color: "#fff" }}>기록 유지 (토템만 제거)</Text>
               </Pressable>
-              <Pressable style={{ alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.muted }} onPress={async () => {
+              <Pressable style={{ alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.muted }} onPress={() => {
                 if (!showTotemDeleteConfirm) return;
                 try {
-                  await deleteTotem(showTotemDeleteConfirm.id, false);
+                  deleteTotem(showTotemDeleteConfirm.id, false);
                   setShowTotemDeleteConfirm(null);
                   loadData();
                 } catch (e) {
