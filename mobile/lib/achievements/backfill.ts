@@ -9,7 +9,7 @@ import { cachedDailyScores } from "@/lib/gameCache";
  * Returns the number of records that were updated.
  */
 export async function backfillLiveRecords(): Promise<number> {
-  const records = await getJikgwanRecords();
+  const records = getJikgwanRecords();
   const liveRecords = records.filter((r) => r.game_status === "live");
   if (liveRecords.length === 0) return 0;
 
@@ -65,7 +65,7 @@ export async function backfillLiveRecords(): Promise<number> {
         }
       }
 
-      await updateJikgwanRecord(rec.id, {
+      updateJikgwanRecord(rec.id, {
         score_away: finalAwayScore,
         score_home: finalHomeScore,
         is_win: isWin,

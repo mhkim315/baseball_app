@@ -10,13 +10,13 @@ export interface Collection {
 
 const COLLECTION_ALLOWED_COLUMNS = new Set(["name", "description", "photos"]);
 
-export async function addCollection(
+export function addCollection(
   name: string,
   description?: string,
   photos?: string
-): Promise<number> {
-  const database = await getDb();
-  const result = await database.runAsync(
+): number {
+  const database = getDb();
+  const result = database.runSync(
     "INSERT INTO collections (name, description, photos) VALUES (?, ?, ?)",
     name,
     description ?? null,
@@ -25,11 +25,11 @@ export async function addCollection(
   return result.lastInsertRowId ?? 0;
 }
 
-export async function updateCollection(
+export function updateCollection(
   id: number,
   fields: { name?: string; description?: string | null; photos?: string | null }
-): Promise<void> {
-  const database = await getDb();
+): void {
+  const database = getDb();
   const setClauses: string[] = [];
   const values: any[] = [];
   for (const [key, value] of Object.entries(fields)) {
@@ -43,20 +43,20 @@ export async function updateCollection(
   }
   if (setClauses.length === 0) return;
   values.push(id);
-  await database.runAsync(
+  database.runSync(
     `UPDATE collections SET ${setClauses.join(", ")} WHERE id = ?`,
     ...values
   );
 }
 
-export async function deleteCollection(id: number): Promise<void> {
-  const database = await getDb();
-  await database.runAsync("DELETE FROM collections WHERE id = ?", id);
+export function deleteCollection(id: number): void {
+  const database = getDb();
+  database.runSync("DELETE FROM collections WHERE id = ?", id);
 }
 
-export async function getAllCollections(): Promise<Collection[]> {
-  const database = await getDb();
-  return database.getAllAsync<Collection>(
+export function getAllCollections(): Collection[] {
+  const database = getDb();
+  return database.getAllSync<Collection>(
     "SELECT * FROM collections ORDER BY created_at DESC"
   );
 }

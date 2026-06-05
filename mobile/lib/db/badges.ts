@@ -10,31 +10,31 @@ export interface Badge {
   reward_emotion?: string | null;
 }
 
-export async function setBadgeRewardEmotion(badgeKey: string, emotion: string): Promise<void> {
-  const database = await getDb();
-  await database.runAsync(
+export function setBadgeRewardEmotion(badgeKey: string, emotion: string): void {
+  const database = getDb();
+  database.runSync(
     "UPDATE badges SET reward_emotion = ? WHERE badge_key = ?",
     emotion, badgeKey
   );
 }
 
-export async function getBadges(): Promise<Badge[]> {
-  const database = await getDb();
-  return database.getAllAsync<Badge>("SELECT * FROM badges");
+export function getBadges(): Badge[] {
+  const database = getDb();
+  return database.getAllSync<Badge>("SELECT * FROM badges");
 }
 
-export async function getBadgesByDate(date: string): Promise<Badge[]> {
-  const database = await getDb();
-  return database.getAllAsync<Badge>(
+export function getBadgesByDate(date: string): Badge[] {
+  const database = getDb();
+  return database.getAllSync<Badge>(
     "SELECT * FROM badges WHERE unlocked_date = ?", date
   );
 }
 
-export async function upsertBadge(
+export function upsertBadge(
   badge: Omit<Badge, "is_notified"> & { is_notified?: number }
-): Promise<void> {
-  const database = await getDb();
-  await database.runAsync(
+): void {
+  const database = getDb();
+  database.runSync(
     `INSERT OR REPLACE INTO badges (id, badge_key, unlocked_date, progress_current, progress_target, is_notified)
      VALUES (?, ?, ?, ?, ?, ?)`,
     badge.id, badge.badge_key, badge.unlocked_date ?? null,
@@ -42,17 +42,17 @@ export async function upsertBadge(
   );
 }
 
-export async function checkAttendance(): Promise<number> {
-  const database = await getDb();
+export function checkAttendance(): number {
+  const database = getDb();
   const today = new Date();
   const todayStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
 
-  await database.runAsync(
+  database.runSync(
     "INSERT OR IGNORE INTO attendance (date) VALUES (?)",
     todayStr
   );
 
-  const rows = await database.getAllAsync<{ date: string }>(
+  const rows = database.getAllSync<{ date: string }>(
     "SELECT date FROM attendance ORDER BY date DESC"
   );
 
@@ -70,9 +70,9 @@ export async function checkAttendance(): Promise<number> {
   return streak;
 }
 
-export async function getTotalAttendanceDays(): Promise<number> {
-  const database = await getDb();
-  const row = await database.getFirstAsync<{ count: number }>(
+export function getTotalAttendanceDays(): number {
+  const database = getDb();
+  const row = database.getFirstSync<{ count: number }>(
     "SELECT COUNT(DISTINCT date) AS count FROM attendance"
   );
   return row?.count ?? 0;

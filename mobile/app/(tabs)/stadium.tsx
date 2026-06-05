@@ -63,15 +63,14 @@ export default function StadiumTab() {
 
   useEffect(() => {
     if (!myTeam || loading || stadiumCoachChecked.current) return;
-    getStadiumCoachSeen().then(async (seen) => {
-      if (!seen) {
-        await setStadiumCoachSeen();
+    try {
+      if (!getStadiumCoachSeen()) {
         stadiumCoachChecked.current = true;
         setShowStadiumCoach(true);
       } else {
         stadiumCoachChecked.current = true;
       }
-    }).catch((e) => { console.warn("coach: stadium", e); });
+    } catch (e) { console.warn("coach: stadium", e); }
   }, [myTeam, loading]);
 
   // Dismiss stadium coach mark on navigation away
@@ -137,7 +136,7 @@ export default function StadiumTab() {
           <CoachMark
             visible showChevrons={false} arrowDirection="up" arrowAlign="right"
             text="다른팀 정보를 보려면 여기를 눌러주세요"
-            onDismiss={() => setShowStadiumCoach(false)}
+            onDismiss={() => { setStadiumCoachSeen(); setShowStadiumCoach(false); }}
           />
         </View>
       )}

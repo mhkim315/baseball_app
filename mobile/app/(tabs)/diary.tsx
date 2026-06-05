@@ -17,7 +17,7 @@ import AchievementModal from "@/components/AchievementModal";
 import ConfettiOverlay from "@/components/ConfettiOverlay";
 import ExpenseModal from "@/components/ExpenseModal";
 import CoachMark from "@/components/CoachMark";
-import { getJikgwanRecords, deleteJikgwanRecord, getAllExpenses, getExpensesByDate, type JikgwanRecord, type Expense, type Badge, getDiaryCoachSeen, setDiaryCoachSeen, getVisitCount, getDiarySearchCoachSeen, setDiarySearchCoachSeen } from "@/lib/db";
+import { getJikgwanRecords, deleteJikgwanRecord, getAllExpenses, getExpensesByDate, type JikgwanRecord, type Expense, type Badge, getDiaryCoachSeen, setDiaryCoachSeen, getVisitCount } from "@/lib/db";
 import { readCachedAllScores } from "@/lib/gameCache";
 
 import { parseGameTeamIds } from "@shared/constants";
@@ -168,10 +168,6 @@ export default function DiaryScreen() {
   const [showDiaryCoach, setShowDiaryCoach] = useState(false);
   const diaryCoachChecked = useRef(false);
 
-  // Diary deep discovery: Search coach (timeline tab — visit 2)
-  const [showDiarySearchCoach, setShowDiarySearchCoach] = useState(false);
-  const diarySearchCoachChecked = useRef(false);
-
   // Route params for tab/sub navigation (used by shortcut)
   const { tab, sub } = useLocalSearchParams<{ tab?: string; sub?: string }>();
   const router = useRouter();
@@ -245,7 +241,6 @@ export default function DiaryScreen() {
     setActiveTab(tab);
     setShowSearch(false);
     setSearchQuery("");
-    setShowDiarySearchCoach(false);
   }, []);
 
   const handleMomentumScrollEnd = useCallback(
@@ -278,10 +273,8 @@ export default function DiaryScreen() {
     setLoadState("loading");
     setLoadError(null);
     try {
-      const [data, exps] = await Promise.all([
-        getJikgwanRecords(),
-        getAllExpenses(),
-      ]);
+      const data = getJikgwanRecords();
+      const exps = getAllExpenses();
       // Enrich records missing scores from local cache only (no API call)
       const missingDateSet = new Set<string>();
       for (const r of data) {
@@ -349,38 +342,21 @@ export default function DiaryScreen() {
   // Diary coach mark: show once when no records exist
   useEffect(() => {
     if (loadState !== "success" || records.length !== 0 || diaryCoachChecked.current) return;
-    getDiaryCoachSeen().then(async (seen) => {
-      if (!seen) {
-        await setDiaryCoachSeen();
+    try {
+      if (!getDiaryCoachSeen()) {
         diaryCoachChecked.current = true;
         setShowDiaryCoach(true);
       } else {
         diaryCoachChecked.current = true;
       }
-    }).catch((e) => { console.warn("coach: diary", e); });
+    } catch (e) { console.warn("coach: diary", e); }
   }, [loadState, records]);
 
-  // Diary deep discovery: Search coach (timeline tab — visit 2)
-  useEffect(() => {
-    if (loadState !== "success" || records.length === 0 || showDiaryCoach) return;
-    if (diarySearchCoachChecked.current) return;
-    if (activeTab !== "timeline") return;
-    getDiarySearchCoachSeen().then(async (seen) => {
-      if (!seen) {
-        await setDiarySearchCoachSeen();
-        diarySearchCoachChecked.current = true;
-        setShowDiarySearchCoach(true);
-      } else {
-        diarySearchCoachChecked.current = true;
-      }
-    }).catch((e) => { console.warn("coach: diarySearch", e); });
-  }, [loadState, records.length, activeTab, showDiaryCoach]);
-
-  // Dismiss deep discovery coach mark on navigation away
+  // Dismiss coach mark on navigation away
   const diaryNav = useNavigation();
   useEffect(() => {
     const unsubscribe = diaryNav.addListener("blur", () => {
-      setShowDiarySearchCoach(false);
+      setShowDiaryCoach(false);
     });
     return unsubscribe;
   }, [diaryNav]);
@@ -393,18 +369,18 @@ export default function DiaryScreen() {
 
   const handleDelete = async (id: number) => {
     try {
-      await deleteJikgwanRecord(id);
+      deleteJikgwanRecord(id);
       if (expenseSheetDate) {
         const dateStr = `${expenseSheetDate.getFullYear()}.${String(expenseSheetDate.getMonth() + 1).padStart(2, "0")}.${String(expenseSheetDate.getDate()).padStart(2, "0")}`;
         try {
-          const exps = await getExpensesByDate(dateStr);
+          const exps = getExpensesByDate(dateStr);
           setSheetExpenses(exps);
         } catch {}
       }
       await loadData();
       await checkBadges();
     } catch {
-      Alert.alert("삭제 오류", "기록을 삭제하지 못했습니다");
+      Alert.alert("삭제 확인", "기록을 삭제하시겠습니까?");
     }
   };
 
@@ -425,7 +401,7 @@ export default function DiaryScreen() {
     if (expenseSheetDate) {
       const dateStr = `${expenseSheetDate.getFullYear()}.${String(expenseSheetDate.getMonth() + 1).padStart(2, "0")}.${String(expenseSheetDate.getDate()).padStart(2, "0")}`;
       try {
-        const exps = await getExpensesByDate(dateStr);
+        const exps = getExpensesByDate(dateStr);
         setSheetExpenses(exps);
       } catch {}
     }
@@ -439,7 +415,7 @@ export default function DiaryScreen() {
     if (expenseSheetDate) {
       const dateStr = `${expenseSheetDate.getFullYear()}.${String(expenseSheetDate.getMonth() + 1).padStart(2, "0")}.${String(expenseSheetDate.getDate()).padStart(2, "0")}`;
       try {
-        const exps = await getExpensesByDate(dateStr);
+        const exps = getExpensesByDate(dateStr);
         setSheetExpenses(exps);
       } catch {}
     }
@@ -452,7 +428,7 @@ export default function DiaryScreen() {
     try {
       if (expenseSheetDate) {
         const dateStr = `${expenseSheetDate.getFullYear()}.${String(expenseSheetDate.getMonth() + 1).padStart(2, "0")}.${String(expenseSheetDate.getDate()).padStart(2, "0")}`;
-        const exps = await getExpensesByDate(dateStr);
+        const exps = getExpensesByDate(dateStr);
         setSheetExpenses(exps);
       }
       await loadData();
@@ -476,10 +452,10 @@ export default function DiaryScreen() {
     }
   };
 
-  const handleSelectExpenseDate = async (date: Date) => {
+  const handleSelectExpenseDate = (date: Date) => {
     try {
       const dateStr = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
-      const exps = await getExpensesByDate(dateStr);
+      const exps = getExpensesByDate(dateStr);
       setExpenseSheetDate(date);
       setSheetExpenses(exps);
     } catch (e) {
@@ -566,7 +542,7 @@ export default function DiaryScreen() {
           {activeTab === "timeline" && (
           <Pressable
             style={[styles.viewModeBtn, { marginRight: 6 }, showSearch && { backgroundColor: myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground }]}
-            onPress={() => { setShowSearch(!showSearch); setShowDiarySearchCoach(false); if (showSearch) setSearchQuery(""); }}
+            onPress={() => { setShowSearch(!showSearch); if (showSearch) setSearchQuery(""); }}
           >
             <Text style={[styles.viewModeBtnText, showSearch && styles.viewModeBtnTextActive, { fontSize: 15 }]}>⌕</Text>
           </Pressable>
@@ -786,15 +762,6 @@ export default function DiaryScreen() {
         </View>
       </Modal>
 
-      {/* Diary deep discovery coach mark */}
-      {showDiarySearchCoach && (
-        <View style={{ position: "absolute", top: 105, right: 20, zIndex: 100, elevation: 10, shadowColor: "transparent", width: Math.min(260, screenWidth - 40) }}>
-          <CoachMark visible showChevrons={false} arrowDirection="down" arrowAlign="right"
-            text="검색 아이콘을 눌러 메모, 구장, 상대팀으로 기록을 찾아보세요"
-            onDismiss={() => setShowDiarySearchCoach(false)} />
-        </View>
-      )}
-
       {/* Diary coach mark */}
       {showDiaryCoach && (
         <View style={{ position: "absolute", right: 20, bottom: 100, zIndex: 100, elevation: 10, shadowColor: "transparent", width: Math.min(280, screenWidth - 40) }}>
@@ -804,7 +771,7 @@ export default function DiaryScreen() {
             arrowDirection="down"
             arrowAlign="right"
             text="+ 버튼을 눌러 첫 직관 기록을 작성해보세요"
-            onDismiss={() => setShowDiaryCoach(false)}
+            onDismiss={() => { setDiaryCoachSeen(); setShowDiaryCoach(false); }}
           />
         </View>
       )}

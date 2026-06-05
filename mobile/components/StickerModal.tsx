@@ -183,7 +183,7 @@ export default function StickerModal({
   // ─── Load unlocked backgrounds ───
   useEffect(() => {
     if (!visible) return;
-    getUnlockedBackgrounds().then((list) => setUnlockedBg(new Set(list)));
+    try { setUnlockedBg(new Set(getUnlockedBackgrounds())); } catch {}
   }, [visible]);
 
   // ─── Effect 1: Load raw data ───

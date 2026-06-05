@@ -19,14 +19,14 @@ export interface TotemWithStats extends Totem {
   currentStreak: number;
 }
 
-export async function addTotem(
+export function addTotem(
   name: string,
   emoji?: string,
   description?: string,
   color?: string
-): Promise<number> {
-  const database = await getDb();
-  const result = await database.runAsync(
+): number {
+  const database = getDb();
+  const result = database.runSync(
     "INSERT INTO totems (name, emoji, description, color) VALUES (?, ?, ?, ?)",
     name,
     emoji || "🍀",
@@ -38,11 +38,11 @@ export async function addTotem(
 
 const TOTEM_ALLOWED_COLUMNS = new Set(["name", "emoji", "description", "color"]);
 
-export async function updateTotem(
+export function updateTotem(
   id: number,
   fields: { name?: string; emoji?: string; description?: string | null; color?: string | null }
-): Promise<void> {
-  const database = await getDb();
+): void {
+  const database = getDb();
   const setClauses: string[] = [];
   const values: any[] = [];
   for (const [key, value] of Object.entries(fields)) {
@@ -56,50 +56,50 @@ export async function updateTotem(
   }
   if (setClauses.length === 0) return;
   values.push(id);
-  await database.runAsync(
+  database.runSync(
     `UPDATE totems SET ${setClauses.join(", ")} WHERE id = ?`,
     ...values
   );
 }
 
-export async function deleteTotem(id: number, keepRecords: boolean): Promise<void> {
-  const database = await getDb();
+export function deleteTotem(id: number, keepRecords: boolean): void {
+  const database = getDb();
   if (keepRecords) {
-    await database.runAsync("UPDATE totems SET hidden = 1 WHERE id = ?", id);
+    database.runSync("UPDATE totems SET hidden = 1 WHERE id = ?", id);
   } else {
-    await database.runAsync("DELETE FROM diary_totems WHERE totem_id = ?", id);
-    await database.runAsync("DELETE FROM totems WHERE id = ?", id);
+    database.runSync("DELETE FROM diary_totems WHERE totem_id = ?", id);
+    database.runSync("DELETE FROM totems WHERE id = ?", id);
   }
 }
 
-export async function getAllTotems(): Promise<Totem[]> {
-  const database = await getDb();
-  return database.getAllAsync<Totem>(
+export function getAllTotems(): Totem[] {
+  const database = getDb();
+  return database.getAllSync<Totem>(
     "SELECT * FROM totems WHERE hidden = 0 ORDER BY created_at DESC"
   );
 }
 
-export async function addDiaryTotem(recordId: number, totemId: number): Promise<void> {
-  const database = await getDb();
-  await database.runAsync(
+export function addDiaryTotem(recordId: number, totemId: number): void {
+  const database = getDb();
+  database.runSync(
     "INSERT OR IGNORE INTO diary_totems (record_id, totem_id) VALUES (?, ?)",
     recordId,
     totemId
   );
 }
 
-export async function removeDiaryTotem(recordId: number, totemId: number): Promise<void> {
-  const database = await getDb();
-  await database.runAsync(
+export function removeDiaryTotem(recordId: number, totemId: number): void {
+  const database = getDb();
+  database.runSync(
     "DELETE FROM diary_totems WHERE record_id = ? AND totem_id = ?",
     recordId,
     totemId
   );
 }
 
-export async function getDiaryTotems(recordId: number): Promise<Totem[]> {
-  const database = await getDb();
-  return database.getAllAsync<Totem>(
+export function getDiaryTotems(recordId: number): Totem[] {
+  const database = getDb();
+  return database.getAllSync<Totem>(
     `SELECT t.* FROM totems t
      INNER JOIN diary_totems dt ON dt.totem_id = t.id
      WHERE dt.record_id = ?
@@ -108,11 +108,11 @@ export async function getDiaryTotems(recordId: number): Promise<Totem[]> {
   );
 }
 
-export async function setDiaryTotems(recordId: number, totemIds: number[]): Promise<void> {
-  const database = await getDb();
-  await database.runAsync("DELETE FROM diary_totems WHERE record_id = ?", recordId);
+export function setDiaryTotems(recordId: number, totemIds: number[]): void {
+  const database = getDb();
+  database.runSync("DELETE FROM diary_totems WHERE record_id = ?", recordId);
   for (const totemId of totemIds) {
-    await database.runAsync(
+    database.runSync(
       "INSERT OR IGNORE INTO diary_totems (record_id, totem_id) VALUES (?, ?)",
       recordId,
       totemId
@@ -120,21 +120,21 @@ export async function setDiaryTotems(recordId: number, totemIds: number[]): Prom
   }
 }
 
-export async function getTotemStats(
+export function getTotemStats(
   totemId: number,
   records: JikgwanRecord[]
-): Promise<TotemWithStats> {
-  const database = await getDb();
-  const [totem] = await database.getAllAsync<Totem>(
+): TotemWithStats {
+  const database = getDb();
+  const [totem] = database.getAllSync<Totem>(
     "SELECT * FROM totems WHERE id = ?",
     totemId
   );
   if (!totem) throw new Error(`getTotemStats: totem ${totemId} not found`);
   const recordIds = new Set(
-    (await database.getAllAsync<{ record_id: number }>(
+    database.getAllSync<{ record_id: number }>(
       "SELECT record_id FROM diary_totems WHERE totem_id = ?",
       totemId
-    )).map((r) => r.record_id)
+    ).map((r) => r.record_id)
   );
 
   let count = 0, wins = 0, draws = 0, losses = 0;
@@ -179,9 +179,9 @@ export async function getTotemStats(
   };
 }
 
-export async function getAllTotemStats(records: JikgwanRecord[], includeHidden = false): Promise<TotemWithStats[]> {
-  const database = await getDb();
-  const totems = await database.getAllAsync<Totem>(
+export function getAllTotemStats(records: JikgwanRecord[], includeHidden = false): TotemWithStats[] {
+  const database = getDb();
+  const totems = database.getAllSync<Totem>(
     includeHidden
       ? "SELECT * FROM totems ORDER BY created_at DESC"
       : "SELECT * FROM totems WHERE hidden = 0 ORDER BY created_at DESC"
@@ -189,7 +189,7 @@ export async function getAllTotemStats(records: JikgwanRecord[], includeHidden =
   const results: TotemWithStats[] = [];
   for (const t of totems) {
     try {
-      const stats = await getTotemStats(t.id, records);
+      const stats = getTotemStats(t.id, records);
       results.push(stats);
     } catch (e) {
       console.warn(`getTotemStats failed for totem ${t.id}`, e);
@@ -203,7 +203,7 @@ export async function getAllTotemStats(records: JikgwanRecord[], includeHidden =
   return results.sort((a, b) => b.winRate - a.winRate || b.count - a.count);
 }
 
-export async function deleteDiaryTotemsByRecordId(recordId: number): Promise<void> {
-  const database = await getDb();
-  await database.runAsync("DELETE FROM diary_totems WHERE record_id = ?", recordId);
+export function deleteDiaryTotemsByRecordId(recordId: number): void {
+  const database = getDb();
+  database.runSync("DELETE FROM diary_totems WHERE record_id = ?", recordId);
 }

@@ -102,7 +102,7 @@ export default function BadgeCollectionModal({ visible, onClose, myTeam }: Badge
   useFocusEffect(useCallback(() => {
     if (visible) {
       setLoading(true);
-      getBadges().then(setBadges).catch(() => {}).finally(() => setLoading(false));
+      try { setBadges(getBadges()); } catch {} finally { setLoading(false); }
     }
   }, [visible]));
 

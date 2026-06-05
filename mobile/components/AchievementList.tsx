@@ -31,10 +31,9 @@ export default function AchievementList({ records }: AchievementListProps) {
   const [catFilter, setCatFilter] = useState<CatKey>("all");
   // Load badges on mount
   useEffect(() => {
-    getBadges().then((data) => {
-      setBadges(data);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    try {
+      setBadges(getBadges());
+    } catch {} finally { setLoading(false); }
   }, []);
 
   const levelInfo = useMemo(() => computeLevel(badges), [badges]);

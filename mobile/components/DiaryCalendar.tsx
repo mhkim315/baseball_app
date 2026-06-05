@@ -50,7 +50,8 @@ export default function DiaryCalendar({
   useEffect(() => {
     if (!isAchievement) { setBadgeMap(new Map()); return; }
     const emojiByKey = new Map(BADGE_DEFINITIONS.map((d) => [d.badgeKey, d.emoji]));
-    getBadges().then((badges) => {
+    try {
+      const badges = getBadges();
       const map = new Map<string, string[]>();
       for (const b of badges) {
         if (!b.unlocked_date) continue;
@@ -60,7 +61,7 @@ export default function DiaryCalendar({
         map.set(b.unlocked_date, list);
       }
       setBadgeMap(map);
-    }).catch(() => {});
+    } catch {} finally { setLoading(false); }
   }, [year, month, isAchievement]);
 
   // Fetch schedule + scores for the month

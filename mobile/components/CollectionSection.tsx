@@ -13,7 +13,7 @@ export default function CollectionSection({ onPress }: Props) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAllCollections().then(setCollections).catch(() => {}).finally(() => setLoading(false));
+    try { setCollections(getAllCollections()); } catch {} finally { setLoading(false); }
   }, []);
 
   if (loading) return null;

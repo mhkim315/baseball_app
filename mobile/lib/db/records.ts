@@ -25,9 +25,9 @@ export interface JikgwanRecord {
   game_status: string | null;
 }
 
-export async function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "created_at">): Promise<number> {
-  const database = await getDb();
-  const result = await database.runAsync(
+export function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "created_at">): number {
+  const database = getDb();
+  const result = database.runSync(
     `INSERT INTO jikgwan_records
       (game_id, date, photo_path, photos, memo, score_away, score_home, emotion, frame_style, stadium, is_win, cheered_team, is_live, seat, game_type, game_status)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -51,17 +51,17 @@ export async function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "creat
   return result.lastInsertRowId ?? 0;
 }
 
-export async function getJikgwanRecords(): Promise<JikgwanRecord[]> {
-  const database = await getDb();
-  return database.getAllAsync<JikgwanRecord>(
+export function getJikgwanRecords(): JikgwanRecord[] {
+  const database = getDb();
+  return database.getAllSync<JikgwanRecord>(
     "SELECT * FROM jikgwan_records ORDER BY date DESC, id DESC"
   );
 }
 
-export async function getJikgwanRecordsByMonth(year: number, month: number): Promise<JikgwanRecord[]> {
-  const database = await getDb();
+export function getJikgwanRecordsByMonth(year: number, month: number): JikgwanRecord[] {
+  const database = getDb();
   const prefix = `${year}.${String(month).padStart(2, "0")}`;
-  return database.getAllAsync<JikgwanRecord>(
+  return database.getAllSync<JikgwanRecord>(
     "SELECT * FROM jikgwan_records WHERE date LIKE ? ORDER BY date DESC, id DESC",
     `${prefix}%`
   );
@@ -73,11 +73,11 @@ const JIKGWAN_ALLOWED_COLUMNS = new Set([
   "score_away", "score_home", "stadium", "game_id", "game_type", "game_status",
 ]);
 
-export async function updateJikgwanRecord(
+export function updateJikgwanRecord(
   id: number,
   fields: Partial<Pick<JikgwanRecord, "memo" | "emotion" | "three_line_1" | "three_line_2" | "three_line_3" | "frame_style" | "is_win" | "photos" | "cheered_team" | "is_live" | "seat" | "score_away" | "score_home" | "stadium" | "game_id" | "game_type" | "game_status">>
-): Promise<void> {
-  const database = await getDb();
+): void {
+  const database = getDb();
   const setClauses: string[] = [];
   const values: any[] = [];
   for (const [key, value] of Object.entries(fields)) {
@@ -90,26 +90,26 @@ export async function updateJikgwanRecord(
   }
   if (setClauses.length === 0) return;
   values.push(id);
-  await database.runAsync(
+  database.runSync(
     `UPDATE jikgwan_records SET ${setClauses.join(", ")} WHERE id = ?`,
     ...values
   );
 }
 
-export async function deleteJikgwanRecord(id: number): Promise<void> {
-  const database = await getDb();
-  await database.runAsync("DELETE FROM diary_totems WHERE record_id = ?", id);
-  await database.runAsync("DELETE FROM jikgwan_records WHERE id = ?", id);
+export function deleteJikgwanRecord(id: number): void {
+  const database = getDb();
+  database.runSync("DELETE FROM diary_totems WHERE record_id = ?", id);
+  database.runSync("DELETE FROM jikgwan_records WHERE id = ?", id);
 }
 
 // --- Win Rate ---
 
-export async function updateWinRate(
+export function updateWinRate(
   teamId: string,
   result: "win" | "draw" | "loss"
-): Promise<void> {
-  const database = await getDb();
-  const existing = await database.getFirstAsync<{
+): void {
+  const database = getDb();
+  const existing = database.getFirstSync<{
     total_games: number;
     wins: number;
     draws: number;
@@ -121,7 +121,7 @@ export async function updateWinRate(
   const draws = (existing?.draws ?? 0) + (result === "draw" ? 1 : 0);
   const losses = (existing?.losses ?? 0) + (result === "loss" ? 1 : 0);
 
-  await database.runAsync(
+  database.runSync(
     `INSERT OR REPLACE INTO win_rate_cache (team_id, total_games, wins, draws, losses, updated_at)
      VALUES (?, ?, ?, ?, ?, datetime('now'))`,
     teamId,
@@ -132,15 +132,15 @@ export async function updateWinRate(
   );
 }
 
-export async function getWinRate(teamId: string): Promise<{
+export function getWinRate(teamId: string): {
   total: number;
   wins: number;
   draws: number;
   losses: number;
   winRate: number;
-} | null> {
-  const database = await getDb();
-  const row = await database.getFirstAsync<{
+} | null {
+  const database = getDb();
+  const row = database.getFirstSync<{
     total_games: number;
     wins: number;
     draws: number;
@@ -158,18 +158,16 @@ export async function getWinRate(teamId: string): Promise<{
   };
 }
 
-export async function getWinRates(): Promise<
-  Array<{
-    teamId: string;
-    total: number;
-    wins: number;
-    draws: number;
-    losses: number;
-    winRate: number;
-  }>
-> {
-  const database = await getDb();
-  const rows = await database.getAllAsync<{
+export function getWinRates(): Array<{
+  teamId: string;
+  total: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  winRate: number;
+}> {
+  const database = getDb();
+  const rows = database.getAllSync<{
     team_id: string;
     total_games: number;
     wins: number;
@@ -187,12 +185,12 @@ export async function getWinRates(): Promise<
   }));
 }
 
-export async function getTeamDiaryStats(teamId: string): Promise<{
+export function getTeamDiaryStats(teamId: string): {
   overall: { total: number; wins: number; draws: number; losses: number; winRate: number };
   live: { total: number; wins: number; draws: number; losses: number; winRate: number } | null;
-}> {
-  const database = await getDb();
-  const rows = await database.getAllAsync<{ is_win: number; is_live: number | null }>(
+} {
+  const database = getDb();
+  const rows = database.getAllSync<{ is_win: number; is_live: number | null }>(
     "SELECT is_win, is_live FROM jikgwan_records WHERE cheered_team = ? AND is_win IS NOT NULL",
     teamId
   );

@@ -1,79 +1,79 @@
 import { DEFAULT_BACKGROUNDS } from "@/lib/backgrounds";
 import { getDb } from "./connection";
 
-export async function getSetting(key: string): Promise<string | null> {
-  const database = await getDb();
-  const row = await database.getFirstAsync<{ value: string }>(
+export function getSetting(key: string): string | null {
+  const database = getDb();
+  const row = database.getFirstSync<{ value: string }>(
     "SELECT value FROM user_settings WHERE key = ?",
     key
   );
   return row?.value ?? null;
 }
 
-export async function setSetting(key: string, value: string): Promise<void> {
-  const database = await getDb();
-  await database.runAsync(
+export function setSetting(key: string, value: string): void {
+  const database = getDb();
+  database.runSync(
     "INSERT OR REPLACE INTO user_settings (key, value) VALUES (?, ?)",
     key,
     value
   );
 }
 
-export async function getMyTeam(): Promise<string | null> {
+export function getMyTeam(): string | null {
   return getSetting("my_team");
 }
 
-export async function setMyTeam(teamId: string): Promise<void> {
-  await setSetting("my_team", teamId);
+export function setMyTeam(teamId: string): void {
+  setSetting("my_team", teamId);
 }
 
-export async function getNickname(): Promise<string | null> {
+export function getNickname(): string | null {
   return getSetting("nickname");
 }
 
-export async function setNickname(name: string): Promise<void> {
-  await setSetting("nickname", name);
+export function setNickname(name: string): void {
+  setSetting("nickname", name);
 }
 
-export async function getInstallDate(): Promise<string> {
-  const existing = await getSetting("install_date");
+export function getInstallDate(): string {
+  const existing = getSetting("install_date");
   if (existing) return existing;
   const now = new Date();
   const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
-  await setSetting("install_date", dateStr);
+  setSetting("install_date", dateStr);
   return dateStr;
 }
 
-export async function getProfileImage(): Promise<{ type: string; value: string } | null> {
-  const raw = await getSetting("profile_image");
+export function getProfileImage(): { type: string; value: string } | null {
+  const raw = getSetting("profile_image");
   if (raw) {
     try { return JSON.parse(raw); } catch {}
   }
-  const type = await getSetting("profile_image_type");
-  const value = await getSetting("profile_image_value");
+  const type = getSetting("profile_image_type");
+  const value = getSetting("profile_image_value");
   if (type && value) return { type, value };
   return null;
 }
 
-export async function setProfileImage(type: string, value: string): Promise<void> {
-  await setSetting("profile_image", JSON.stringify({ type, value }));
+export function setProfileImage(type: string, value: string): void {
+  setSetting("profile_image", JSON.stringify({ type, value }));
 }
 
-export async function getUnlockedEmotions(): Promise<string[]> {
-  const raw = await getSetting("unlocked_emotions");
+export function getUnlockedEmotions(): string[] {
+  const raw = getSetting("unlocked_emotions");
   if (raw) {
     try { return JSON.parse(raw); } catch {}
   }
   const basic = ["default", "sad", "joyful"];
-  await setSetting("unlocked_emotions", JSON.stringify(basic));
+  setSetting("unlocked_emotions", JSON.stringify(basic));
   return basic;
 }
 
-export async function addUnlockedEmotion(emotion: string): Promise<void> {
-  const database = await getDb();
-  await database.runAsync("BEGIN IMMEDIATE");
+export function addUnlockedEmotion(emotion: string): void {
+  const database = getDb();
+  database.runSync("BEGIN IMMEDIATE");
   try {
-    const row = await database.getFirstAsync<{ value: string }>(
+    const row = database.getFirstSync<{ value: string }>(
       "SELECT value FROM user_settings WHERE key = 'unlocked_emotions'"
     );
     let current: string[];
@@ -84,34 +84,34 @@ export async function addUnlockedEmotion(emotion: string): Promise<void> {
     }
     if (!current.includes(emotion)) {
       current.push(emotion);
-      await database.runAsync(
+      database.runSync(
         "INSERT OR REPLACE INTO user_settings (key, value) VALUES ('unlocked_emotions', ?)",
         JSON.stringify(current)
       );
     }
-    await database.runAsync("COMMIT");
+    database.runSync("COMMIT");
   } catch (e) {
-    await database.runAsync("ROLLBACK");
+    database.runSync("ROLLBACK");
     throw e;
   }
 }
 
-export async function getUnlockedBackgrounds(): Promise<string[]> {
-  const raw = await getSetting("unlocked_backgrounds");
+export function getUnlockedBackgrounds(): string[] {
+  const raw = getSetting("unlocked_backgrounds");
   if (raw) {
     try { return JSON.parse(raw); } catch {}
   }
   const basic = [...DEFAULT_BACKGROUNDS];
-  await setSetting("unlocked_backgrounds", JSON.stringify(basic));
+  setSetting("unlocked_backgrounds", JSON.stringify(basic));
   return basic;
 }
 
-export async function addUnlockedBackgrounds(bgKeys: string[]): Promise<void> {
+export function addUnlockedBackgrounds(bgKeys: string[]): void {
   if (bgKeys.length === 0) return;
-  const database = await getDb();
-  await database.runAsync("BEGIN IMMEDIATE");
+  const database = getDb();
+  database.runSync("BEGIN IMMEDIATE");
   try {
-    const row = await database.getFirstAsync<{ value: string }>(
+    const row = database.getFirstSync<{ value: string }>(
       "SELECT value FROM user_settings WHERE key = 'unlocked_backgrounds'"
     );
     let current: string[];
@@ -128,121 +128,100 @@ export async function addUnlockedBackgrounds(bgKeys: string[]): Promise<void> {
       }
     }
     if (changed) {
-      await database.runAsync(
+      database.runSync(
         "INSERT OR REPLACE INTO user_settings (key, value) VALUES ('unlocked_backgrounds', ?)",
         JSON.stringify(current)
       );
     }
-    await database.runAsync("COMMIT");
+    database.runSync("COMMIT");
   } catch (e) {
-    await database.runAsync("ROLLBACK");
+    database.runSync("ROLLBACK");
     throw e;
   }
 }
 
 // === Coach Marks ===
 
-export async function getHomeCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_home_coach")) === "true";
+export function getHomeCoachSeen(): boolean {
+  return getSetting("has_seen_home_coach") === "true";
 }
-export async function setHomeCoachSeen(): Promise<void> {
-  await setSetting("has_seen_home_coach", "true");
-}
-
-export async function getTodayBackCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_today_back_coach")) === "true";
-}
-export async function setTodayBackCoachSeen(): Promise<void> {
-  await setSetting("has_seen_today_back_coach", "true");
+export function setHomeCoachSeen(): void {
+  setSetting("has_seen_home_coach", "true");
 }
 
-export async function getHomeStickerCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_home_sticker_coach")) === "true";
+export function getTodayBackCoachSeen(): boolean {
+  return getSetting("has_seen_today_back_coach") === "true";
 }
-export async function setHomeStickerCoachSeen(): Promise<void> {
-  await setSetting("has_seen_home_sticker_coach", "true");
-}
-
-export async function getHomeCalendarCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_home_calendar_coach")) === "true";
-}
-export async function setHomeCalendarCoachSeen(): Promise<void> {
-  await setSetting("has_seen_home_calendar_coach", "true");
+export function setTodayBackCoachSeen(): void {
+  setSetting("has_seen_today_back_coach", "true");
 }
 
-export async function getGameStickerCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_game_sticker_coach")) === "true";
+export function getHomeStickerCoachSeen(): boolean {
+  return getSetting("has_seen_home_sticker_coach") === "true";
 }
-export async function setGameStickerCoachSeen(): Promise<void> {
-  await setSetting("has_seen_game_sticker_coach", "true");
-}
-
-export async function getDetailStickerCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_detail_sticker_coach")) === "true";
-}
-export async function setDetailStickerCoachSeen(): Promise<void> {
-  await setSetting("has_seen_detail_sticker_coach", "true");
+export function setHomeStickerCoachSeen(): void {
+  setSetting("has_seen_home_sticker_coach", "true");
 }
 
-export async function getCheerTeamCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_cheer_team_coach")) === "true";
+export function getGameStickerCoachSeen(): boolean {
+  return getSetting("has_seen_game_sticker_coach") === "true";
 }
-export async function setCheerTeamCoachSeen(): Promise<void> {
-  await setSetting("has_seen_cheer_team_coach", "true");
-}
-
-export async function getRankYearCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_rank_year_coach")) === "true";
-}
-export async function setRankYearCoachSeen(): Promise<void> {
-  await setSetting("has_seen_rank_year_coach", "true");
+export function setGameStickerCoachSeen(): void {
+  setSetting("has_seen_game_sticker_coach", "true");
 }
 
-export async function getDiaryCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_diary_coach")) === "true";
+export function getCheerTeamCoachSeen(): boolean {
+  return getSetting("has_seen_cheer_team_coach") === "true";
 }
-export async function setDiaryCoachSeen(): Promise<void> {
-  await setSetting("has_seen_diary_coach", "true");
-}
-
-export async function getDiarySearchCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_diary_search_coach")) === "true";
-}
-export async function setDiarySearchCoachSeen(): Promise<void> {
-  await setSetting("has_seen_diary_search_coach", "true");
+export function setCheerTeamCoachSeen(): void {
+  setSetting("has_seen_cheer_team_coach", "true");
 }
 
-export async function getStadiumCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_stadium_coach")) === "true";
+export function getRankYearCoachSeen(): boolean {
+  return getSetting("has_seen_rank_year_coach") === "true";
 }
-export async function setStadiumCoachSeen(): Promise<void> {
-  await setSetting("has_seen_stadium_coach", "true");
+export function setRankYearCoachSeen(): void {
+  setSetting("has_seen_rank_year_coach", "true");
 }
 
-export async function getMyCoachSeen(): Promise<boolean> {
-  return (await getSetting("has_seen_my_coach")) === "true";
+export function getDiaryCoachSeen(): boolean {
+  return getSetting("has_seen_diary_coach") === "true";
 }
-export async function setMyCoachSeen(): Promise<void> {
-  await setSetting("has_seen_my_coach", "true");
+export function setDiaryCoachSeen(): void {
+  setSetting("has_seen_diary_coach", "true");
+}
+
+export function getStadiumCoachSeen(): boolean {
+  return getSetting("has_seen_stadium_coach") === "true";
+}
+export function setStadiumCoachSeen(): void {
+  setSetting("has_seen_stadium_coach", "true");
+}
+
+export function getMyCoachSeen(): boolean {
+  return getSetting("has_seen_my_coach") === "true";
+}
+export function setMyCoachSeen(): void {
+  setSetting("has_seen_my_coach", "true");
 }
 
 // === Visit Count ===
-export async function getVisitCount(): Promise<number> {
-  const val = await getSetting("visit_count");
+export function getVisitCount(): number {
+  const val = getSetting("visit_count");
   return val ? parseInt(val, 10) : 0;
 }
 
-export async function incrementVisitCount(): Promise<number> {
-  const current = await getVisitCount();
+export function incrementVisitCount(): number {
+  const current = getVisitCount();
   const next = current + 1;
-  await setSetting("visit_count", String(next));
+  setSetting("visit_count", String(next));
   return next;
 }
 
 // === Shortcut ===
-export async function getShortcut(): Promise<string | null> {
+export function getShortcut(): string | null {
   return getSetting("shortcut");
 }
-export async function setShortcut(type: string): Promise<void> {
-  await setSetting("shortcut", type);
+export function setShortcut(type: string): void {
+  setSetting("shortcut", type);
 }

@@ -14,10 +14,9 @@ export default function AchievementWidget() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getBadges().then((data) => {
-      setBadges(data);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    try {
+      setBadges(getBadges());
+    } catch {} finally { setLoading(false); }
   }, []);
 
   const levelInfo = computeLevel(badges);

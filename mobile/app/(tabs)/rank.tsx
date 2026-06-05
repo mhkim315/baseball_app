@@ -81,15 +81,14 @@ export default function RankScreen() {
 
 	  useEffect(() => {
 	    if (loading || error || rankYearCoachChecked.current) return;
-	    getRankYearCoachSeen().then(async (seen) => {
-	      if (!seen) {
-	        await setRankYearCoachSeen();
+	    try {
+	      if (!getRankYearCoachSeen()) {
 	        rankYearCoachChecked.current = true;
 	        setShowRankYearCoach(true);
 	      } else {
 	        rankYearCoachChecked.current = true;
 	      }
-	    }).catch((e) => { console.warn("coach: rankYear", e); });
+	    } catch (e) { console.warn("coach: rankYear", e); }
 	  }, [loading, error]);
 
   const navigationRank = useNavigation();
@@ -262,7 +261,7 @@ export default function RankScreen() {
             <CoachMark
               visible showChevrons={false} arrowDirection="up" arrowAlign="right"
               text="연도를 변경하여 지난 시즌 순위를 확인해보세요"
-              onDismiss={() => setShowRankYearCoach(false)}
+              onDismiss={() => { setRankYearCoachSeen(); setShowRankYearCoach(false); }}
             />
           </View>
         )}

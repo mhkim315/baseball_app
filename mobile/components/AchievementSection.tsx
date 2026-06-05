@@ -16,7 +16,9 @@ export default function AchievementSection({ onPress }: Props) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getBadges().then(setBadges).catch(() => {}).finally(() => setLoading(false));
+    try {
+      setBadges(getBadges());
+    } catch {} finally { setLoading(false); }
   }, []);
 
   if (loading) return null;

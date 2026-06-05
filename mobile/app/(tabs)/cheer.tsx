@@ -61,15 +61,14 @@ export default function CheerScreen() {
 
 	  useEffect(() => {
 	    if (!myTeam || loading || cheerTeamCoachChecked.current) return;
-	    getCheerTeamCoachSeen().then(async (seen) => {
-	      if (!seen) {
-	        await setCheerTeamCoachSeen();
+	    try {
+	      if (!getCheerTeamCoachSeen()) {
 	        cheerTeamCoachChecked.current = true;
 	        setShowCheerTeamCoach(true);
 	      } else {
 	        cheerTeamCoachChecked.current = true;
 	      }
-	    }).catch((e) => { console.warn("coach: cheerTeam", e); });
+	    } catch (e) { console.warn("coach: cheerTeam", e); }
 	  }, [myTeam, loading]);
 
   // Dismiss on navigation away
@@ -150,7 +149,7 @@ export default function CheerScreen() {
           <CoachMark
             visible showChevrons={false} arrowDirection="up" arrowAlign="right"
             text="다른팀 응원가 정보를 보려면 여기를 눌러주세요"
-            onDismiss={() => setShowCheerTeamCoach(false)}
+            onDismiss={() => { setCheerTeamCoachSeen(); setShowCheerTeamCoach(false); }}
           />
         </View>
       )}

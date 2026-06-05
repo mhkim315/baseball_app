@@ -35,7 +35,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 import { backfillLiveRecords, evaluateBadges, grantRandomCharacter } from "@/lib/achievements";
-import { type Badge, getTodayBackCoachSeen, setTodayBackCoachSeen, getHomeCoachSeen, setHomeCoachSeen, getHomeStickerCoachSeen, setHomeStickerCoachSeen, getVisitCount, getHomeCalendarCoachSeen, setHomeCalendarCoachSeen, getShortcut, setShortcut as saveShortcut } from "@/lib/db";
+import { type Badge, getTodayBackCoachSeen, setTodayBackCoachSeen, getHomeCoachSeen, setHomeCoachSeen, getHomeStickerCoachSeen, setHomeStickerCoachSeen, getVisitCount, getShortcut, setShortcut as saveShortcut } from "@/lib/db";
 import { findTargetDate, getGameOptionForDate, findRecentMyTeamGame, type ShortcutType } from "@/lib/shortcutHelper";
 import type { GameOption } from "@/components/diary/useDiaryForm";
 
@@ -135,12 +135,6 @@ export default function HomeScreen() {
   const [showHomeStickerCoach, setShowHomeStickerCoach] = useState(false);
   const homeStickerCoachCheckedRef = useRef(false);
   const homeStickerCoachPendingRef = useRef(false);
-  const homeSCRef = useRef(false);
-
-  // Home deep discovery: Calendar coach mark
-  const [showHomeCalendarCoach, setShowHomeCalendarCoach] = useState(false);
-  const homeDeepCoachChecked = useRef(false);
-  const homeDeepCoachPending = useRef(false);
   const showCoachMarkRef = useRef(false);
   const scheduleCache = useRef<{ month: number; year: number; games: ScheduleGame[] } | null>(null);
 
@@ -430,16 +424,19 @@ export default function HomeScreen() {
   // On mount: show coach mark first (if not seen), then run badge check after dismiss
   // On foreground: only run badge check (coach already handled on mount)
   useEffect(() => {
-    InteractionManager.runAfterInteractions(async () => {
-      try {
-        if (!(await getHomeCoachSeen())) {
-          await setHomeCoachSeen();
-          setShowCoachMark(true);
-        } else {
+    try {
+      if (!getHomeCoachSeen()) {
+        setShowCoachMark(true);
+      } else {
+        InteractionManager.runAfterInteractions(() => {
           runBadgeCheck();
-        }
-      } catch { runBadgeCheck(); }
-    });
+        });
+      }
+    } catch {
+      InteractionManager.runAfterInteractions(() => {
+        runBadgeCheck();
+      });
+    }
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
         prefetchOnAppInit();
@@ -456,6 +453,7 @@ export default function HomeScreen() {
 
   const handleCoachDismiss = useCallback(() => {
     setShowCoachMark(false);
+    setHomeCoachSeen();
     runBadgeCheck();
   }, [runBadgeCheck]);
 
@@ -464,22 +462,21 @@ export default function HomeScreen() {
     if (isToday(selectedDate)) {
       const todayStr = formatDateStr(new Date());
       const todayGames = gamesByDate[todayStr];
-      if (!todayGames) return; // data not loaded yet
+      if (!todayGames) return;
       if (todayGames.length === 0) {
-        todayBackChecked.current = true; // no games today, skip permanently
+        todayBackChecked.current = true;
         return;
       }
       if (hasLeftTodayRef.current && !todayBackChecked.current) {
         if (showCoachMark) return;
-        getTodayBackCoachSeen().then(async (seen) => {
-          if (!seen) {
-            await setTodayBackCoachSeen();
+        try {
+          if (!getTodayBackCoachSeen()) {
             todayBackChecked.current = true;
             setShowTodayBackCoach(true);
           } else {
             todayBackChecked.current = true;
           }
-        }).catch((e) => { console.warn("coach: todayBack", e); });
+        } catch (e) { console.warn("coach: todayBack", e); }
       }
     } else {
       hasLeftTodayRef.current = true;
@@ -490,7 +487,7 @@ export default function HomeScreen() {
   // when viewing a day that has sticker-eligible games (finished/live today or yesterday before 14:00)
   useEffect(() => {
     if (showCoachMark || showTodayBackCoach || showHomeStickerCoach) return;
-    if (todayBackChecked.current && !showTodayBackCoach) return; // today-back in-flight
+    if (todayBackChecked.current && !showTodayBackCoach) return;
     if (homeStickerCoachCheckedRef.current) return;
     if (homeStickerCoachPendingRef.current) return;
 
@@ -498,7 +495,6 @@ export default function HomeScreen() {
     const games = gamesByDate[viewedDateStr];
     if (!games || games.length === 0) return;
 
-    // sticker eligibility: finished/live today, or yesterday before 14:00
     const todayStr = formatDateStr(new Date());
     const currentHour = new Date().getHours();
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
@@ -513,64 +509,40 @@ export default function HomeScreen() {
     });
     if (!hasStickerEligible) return;
 
-    homeStickerCoachPendingRef.current = true;
-    Promise.all([getTodayBackCoachSeen(), getHomeStickerCoachSeen()])
-      .then(async ([todayBackSeen, homeStickerSeen]) => {
-        homeStickerCoachPendingRef.current = false;
-        if (homeStickerSeen) {
-          homeStickerCoachCheckedRef.current = true;
-          return;
-        }
-        if (todayBackSeen && !homeStickerCoachCheckedRef.current) {
-          homeStickerCoachCheckedRef.current = true;
-          homeSCRef.current = true;
-          await setHomeStickerCoachSeen();
-          setShowHomeStickerCoach(true);
-        }
-      })
-      .catch((e) => { console.warn("coach: homeSticker", e); homeStickerCoachPendingRef.current = false; });
+    homeStickerCoachPendingRef.current = false;
+    try {
+      const todayBackSeen = getTodayBackCoachSeen();
+      const homeStickerSeen = getHomeStickerCoachSeen();
+      if (homeStickerSeen) {
+        homeStickerCoachCheckedRef.current = true;
+        return;
+      }
+      if (todayBackSeen && !homeStickerCoachCheckedRef.current) {
+        homeStickerCoachCheckedRef.current = true;
+        setShowHomeStickerCoach(true);
+      }
+    } catch (e) { console.warn("coach: homeSticker", e); }
   }, [selectedDate, gamesByDate, showCoachMark, showTodayBackCoach, showHomeStickerCoach]);
 
-	  // Home deep discovery: Calendar coach mark
-	  useEffect(() => {
-	    if (showCoachMark || showTodayBackCoach || showHomeStickerCoach) return;
-	    if (showHomeCalendarCoach) return;
-	    if (homeDeepCoachChecked.current || homeDeepCoachPending.current) return;
-	    homeDeepCoachPending.current = true;
-	    getHomeCalendarCoachSeen().then(async (seen) => {
-	        // Re-check after async — swipe coach may have rendered via InteractionManager
-	        if (showCoachMarkRef.current) {
-	          homeDeepCoachPending.current = false;
-	          return;
-	        }
-	        if (!seen) {
-	          await setHomeCalendarCoachSeen();
-	          homeDeepCoachChecked.current = true;
-	          setShowHomeCalendarCoach(true);
-	        } else {
-	          homeDeepCoachChecked.current = true;
-	        }
-	        homeDeepCoachPending.current = false;
-	      }).catch((e) => { console.warn("coach: homeCalendar", e); homeDeepCoachPending.current = false; });
-	  }, [showCoachMark, showTodayBackCoach, showHomeStickerCoach, showHomeCalendarCoach]);
 
   // Shortcut: load setting on focus, auto-set diary_write for returning users
   useFocusEffect(useCallback(() => {
-    getShortcut().then(async (s) => {
+    try {
+      const s = getShortcut();
       if (s === null) {
-        const vc = await getVisitCount();
+        const vc = getVisitCount();
         if (vc >= 2) {
-          await saveShortcut("diary_write");
+          saveShortcut("diary_write");
           setShortcut("diary_write");
           return;
         }
       }
       setShortcut(s as ShortcutType | null);
-    }).catch(() => {});
+    } catch {}
   }, []));
 
-  const handleShortcutSelect = async (type: ShortcutType) => {
-    await saveShortcut(type);
+  const handleShortcutSelect = (type: ShortcutType) => {
+    saveShortcut(type);
     setShortcut(type);
     setShowShortcutPicker(false);
   };
@@ -682,12 +654,8 @@ export default function HomeScreen() {
         dense={!isMyTeamGame}
         onClick={() => {
           setShowTodayBackCoach(false);
-          const addSC = homeSCRef.current;
-          if (homeSCRef.current) {
-            homeSCRef.current = false;
-            setShowHomeStickerCoach(false);
-          }
-          router.push(`/game/${item.gameId}?ap=${encodeURIComponent(item.awayPitcher || "")}&hp=${encodeURIComponent(item.homePitcher || "")}${addSC ? "&sc=1" : ""}`);
+          setShowHomeStickerCoach(false);
+          router.push(`/game/${item.gameId}?ap=${encodeURIComponent(item.awayPitcher || "")}&hp=${encodeURIComponent(item.homePitcher || "")}`);
         }}
       />
     );
@@ -790,20 +758,13 @@ export default function HomeScreen() {
               return hasSticker
                 ? "경기 카드를 눌러 오늘 경기의 스티커를 만들어보세요."
                 : "경기 카드를 눌러 경기 상세를 확인하고 일기를 적어보세요";
-            })()} onDismiss={() => setShowTodayBackCoach(false)} />
+            })()} onDismiss={() => { setTodayBackCoachSeen(); setShowTodayBackCoach(false); }} />
           </View>
         )}
         {showHomeStickerCoach && (
           <View style={{ position: "absolute", top: 0, left: 16, right: 16, zIndex: 100, elevation: 5, shadowColor: "transparent" }}>
             <CoachMark visible showChevrons={false} text="카드를 눌러 경기 스티커를 생성해보세요"
-              onDismiss={() => { homeSCRef.current = false; setShowHomeStickerCoach(false); }} />
-          </View>
-        )}
-        {showHomeCalendarCoach && !showCoachMark && !showTodayBackCoach && !showHomeStickerCoach && (
-          <View style={{ position: "absolute", top: 0, left: 16, zIndex: 100, elevation: 5, shadowColor: "transparent", maxWidth: 280 }}>
-            <CoachMark visible showChevrons={false} arrowDirection="up" arrowAlign="left"
-              text="캘린더를 열어 다른 날짜의 경기를 한눈에 확인하세요"
-              onDismiss={() => setShowHomeCalendarCoach(false)} />
+              onDismiss={() => { setHomeStickerCoachSeen(); setShowHomeStickerCoach(false); }} />
           </View>
         )}
         <ScrollView
@@ -812,7 +773,7 @@ export default function HomeScreen() {
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           onMomentumScrollEnd={handlePageSwipe}
-          onScrollBeginDrag={() => { lastActedPageRef.current = 1; if (showCoachMark) handleCoachDismiss(); setShowTodayBackCoach(false); if (homeSCRef.current) { homeSCRef.current = false; setShowHomeStickerCoach(false); } setShowHomeCalendarCoach(false); setShowShortcutPicker(false); }}
+          onScrollBeginDrag={() => { lastActedPageRef.current = 1; if (showCoachMark) handleCoachDismiss(); setShowTodayBackCoach(false); setShowHomeStickerCoach(false); setShowShortcutPicker(false); }}
           style={{ flex: 1 }}
         >
           {(["prev", "current", "next"] as const).map((slot, idx) => {

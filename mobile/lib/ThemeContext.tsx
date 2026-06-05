@@ -16,11 +16,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState<boolean | null>(null);
 
   useEffect(() => {
-    getSetting("dark_mode").then((val) => {
+    try {
+      const val = getSetting("dark_mode");
       if (val === "1") setIsDark(true);
       else if (val === "0") setIsDark(false);
       else setIsDark(systemScheme === "dark");
-    });
+    } catch {}
   }, []);
 
   const setDarkMode = useCallback((dark: boolean) => {

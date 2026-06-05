@@ -152,8 +152,8 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
 
   useEffect(() => {
     if (visible) {
-      getUnlockedEmotions().then(setUnlockedEmotions).catch(() => {});
-      getAllTotems().then(setAllTotems).catch(() => {});
+      try { setUnlockedEmotions(getUnlockedEmotions()); } catch {}
+      try { setAllTotems(getAllTotems()); } catch {}
       setSelectedTotemIds([]);
       setCheeredTeam(null);
       setPendingExpenses([]);
@@ -173,15 +173,16 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
         setIsLive(editRecord.is_live !== 0);
         setSeat(editRecord.seat || "");
         setGames([]);
-        getExpensesByRecordId(editRecord.id).then((exps) => {
+        try {
+          const exps = getExpensesByRecordId(editRecord.id);
           setPendingExpenses(exps.map((e) => ({ category: e.category as ExpenseCategory, amount: String(e.amount), memo: e.memo || "" })));
           expensesLoadedRef.current = true;
-        }).catch(() => {
+        } catch {
           expensesLoadedRef.current = false;
-        });
-        getDiaryTotems(editRecord.id).then((totems) => {
-          setSelectedTotemIds(totems.map((t) => t.id));
-        }).catch(() => {});
+        }
+        try {
+          setSelectedTotemIds(getDiaryTotems(editRecord.id).map((t) => t.id));
+        } catch {}
       } else if (presetGame) {
         setStep("write");
         setSelectedDate(presetDate || new Date());
@@ -470,14 +471,14 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
         }
       } catch {}
 
-      const database = await getDb();
-      await database.withTransactionAsync(async () => {
+      getDb().runSync("BEGIN IMMEDIATE");
+      try {
         let recordId: number;
         if (editRecord) {
           recordId = editRecord.id;
           if (expensesLoadedRef.current) {
             try {
-              await deleteExpensesByRecordId(recordId);
+              deleteExpensesByRecordId(recordId);
             } catch (e) {
               console.warn("Failed to delete old expenses (non-critical)", e);
             }
@@ -485,9 +486,9 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
           for (const exp of expensesToSave) {
             const amt = parseInt(String(exp.amount).replace(/,/g, ""));
             if (!amt || amt <= 0) continue;
-            await addExpense({ record_id: recordId, date: dateStr, category: exp.category, amount: amt, memo: exp.memo || null });
+            addExpense({ record_id: recordId, date: dateStr, category: exp.category, amount: amt, memo: exp.memo || null });
           }
-          await updateJikgwanRecord(recordId, {
+          updateJikgwanRecord(recordId, {
             memo: content.trim(),
             emotion: emotion || null,
             photos: photosJson,
@@ -503,7 +504,7 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
             game_status: selectedGame?.gameStatus || editRecord.game_status || null,
           });
         } else {
-          recordId = await addJikgwanRecord({
+          recordId = addJikgwanRecord({
             game_id: gameId || "",
             date: dateStr,
             photo_path: savedPhotoUris[0] || null,
@@ -527,11 +528,15 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
           for (const exp of expensesToSave) {
             const amt = parseInt(String(exp.amount).replace(/,/g, ""));
             if (!amt || amt <= 0) continue;
-            await addExpense({ record_id: recordId, date: dateStr, category: exp.category, amount: amt, memo: exp.memo || null });
+            addExpense({ record_id: recordId, date: dateStr, category: exp.category, amount: amt, memo: exp.memo || null });
           }
         }
-        await setDiaryTotems(recordId, selectedTotemIds);
-      });
+        setDiaryTotems(recordId, selectedTotemIds);
+        getDb().runSync("COMMIT");
+      } catch (e) {
+        getDb().runSync("ROLLBACK");
+        throw e;
+      }
 
       onSaved();
     } catch (e) {

@@ -3,29 +3,18 @@ import * as SQLite from "expo-sqlite";
 const CACHE_VERSION = 4;
 
 let db: SQLite.SQLiteDatabase | null = null;
-let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
-export async function getDb(): Promise<SQLite.SQLiteDatabase> {
-  if (dbPromise) return dbPromise;
-  if (!dbPromise) {
-    dbPromise = (async () => {
-      try {
-        db = await SQLite.openDatabaseAsync("fullcount.db");
-        await initSchema(db);
-        return db;
-      } catch (e) {
-        console.error("DB init failed, resetting for retry", e);
-        dbPromise = null;
-        db = null;
-        throw e;
-      }
-    })();
+export function getDb(): SQLite.SQLiteDatabase {
+  if (!db) {
+    db = SQLite.openDatabaseSync("fullcount.db");
+    initSchema();
   }
-  return dbPromise;
+  return db;
 }
 
-async function initSchema(database: SQLite.SQLiteDatabase): Promise<void> {
-  await database.execAsync(`
+function initSchema(): void {
+  const database = getDb();
+  database.execSync(`
     CREATE TABLE IF NOT EXISTS user_settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
@@ -113,23 +102,23 @@ async function initSchema(database: SQLite.SQLiteDatabase): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_diary_totems_record ON diary_totems(record_id);
     CREATE INDEX IF NOT EXISTS idx_diary_totems_totem ON diary_totems(totem_id);
   `);
-  await migrateJikgwanSchema(database);
-  await migrateTotemSchema(database);
-  await migrateBadgesSchema(database);
-  await migrateCollectionSchema(database);
+  migrateJikgwanSchema();
+  migrateTotemSchema();
+  migrateBadgesSchema();
+  migrateCollectionSchema();
   // Clean up cache entries older than 30 days on app start
-  await database.runAsync(
+  database.runSync(
     "DELETE FROM api_cache WHERE updated_at < ?",
     Date.now() - 30 * 86400_000
   );
   // Invalidate all cache if version changed (forces re-fetch after server changes)
-  const cachedVer = await database.getFirstAsync<{ value: string }>(
+  const cachedVer = database.getFirstSync<{ value: string }>(
     "SELECT value FROM user_settings WHERE key = ?",
     "api_cache_version"
   );
   if (!cachedVer || cachedVer.value !== String(CACHE_VERSION)) {
-    await database.runAsync("DELETE FROM api_cache");
-    await database.runAsync(
+    database.runSync("DELETE FROM api_cache");
+    database.runSync(
       "INSERT OR REPLACE INTO user_settings (key, value) VALUES (?, ?)",
       "api_cache_version",
       String(CACHE_VERSION)
@@ -137,7 +126,8 @@ async function initSchema(database: SQLite.SQLiteDatabase): Promise<void> {
   }
 }
 
-async function migrateJikgwanSchema(database: SQLite.SQLiteDatabase): Promise<void> {
+function migrateJikgwanSchema(): void {
+  const database = getDb();
   const columns = [
     { name: "emotion", type: "TEXT", dflt: "NULL" },
     { name: "three_line_1", type: "TEXT", dflt: "NULL" },
@@ -153,69 +143,72 @@ async function migrateJikgwanSchema(database: SQLite.SQLiteDatabase): Promise<vo
     { name: "game_type", type: "TEXT", dflt: "NULL" },
     { name: "game_status", type: "TEXT", dflt: "NULL" },
   ];
-  const existing = await database.getAllAsync<{ name: string }>(
+  const existing = database.getAllSync<{ name: string }>(
     "PRAGMA table_info(jikgwan_records)"
   );
   const existingNames = new Set(existing.map((c) => c.name));
   for (const col of columns) {
     if (existingNames.has(col.name)) continue;
-    await database.execAsync(
+    database.execSync(
       `ALTER TABLE jikgwan_records ADD COLUMN ${col.name} ${col.type} DEFAULT ${col.dflt}`
     );
   }
 }
 
-async function migrateTotemSchema(database: SQLite.SQLiteDatabase): Promise<void> {
+function migrateTotemSchema(): void {
+  const database = getDb();
   const columns = [
     { name: "hidden", type: "INTEGER", dflt: "0" },
   ];
-  const existing = await database.getAllAsync<{ name: string }>(
+  const existing = database.getAllSync<{ name: string }>(
     "PRAGMA table_info(totems)"
   );
   const existingNames = new Set(existing.map((c) => c.name));
   for (const col of columns) {
     if (existingNames.has(col.name)) continue;
-    await database.execAsync(
+    database.execSync(
       `ALTER TABLE totems ADD COLUMN ${col.name} ${col.type} DEFAULT ${col.dflt}`
     );
   }
 }
 
-async function migrateBadgesSchema(database: SQLite.SQLiteDatabase): Promise<void> {
+function migrateBadgesSchema(): void {
+  const database = getDb();
   const columns = [
     { name: "reward_emotion", type: "TEXT", dflt: "NULL" },
   ];
-  const existing = await database.getAllAsync<{ name: string }>(
+  const existing = database.getAllSync<{ name: string }>(
     "PRAGMA table_info(badges)"
   );
   const existingNames = new Set(existing.map((c) => c.name));
   for (const col of columns) {
     if (existingNames.has(col.name)) continue;
-    await database.execAsync(
+    database.execSync(
       `ALTER TABLE badges ADD COLUMN ${col.name} ${col.type} DEFAULT ${col.dflt}`
     );
   }
 }
 
-async function migrateCollectionSchema(database: SQLite.SQLiteDatabase): Promise<void> {
+function migrateCollectionSchema(): void {
+  const database = getDb();
   const columns = [
     { name: "photos", type: "TEXT", dflt: "NULL" },
   ];
-  const existing = await database.getAllAsync<{ name: string }>(
+  const existing = database.getAllSync<{ name: string }>(
     "PRAGMA table_info(collections)"
   );
   const existingNames = new Set(existing.map((c) => c.name));
   for (const col of columns) {
     if (existingNames.has(col.name)) continue;
-    await database.execAsync(
+    database.execSync(
       `ALTER TABLE collections ADD COLUMN ${col.name} ${col.type} DEFAULT ${col.dflt}`
     );
   }
 }
 
-export async function resetAllData(): Promise<void> {
-  const database = await getDb();
-  await database.execAsync(`
+export function resetAllData(): void {
+  const database = getDb();
+  database.execSync(`
     DELETE FROM jikgwan_records;
     DELETE FROM expenses;
     DELETE FROM win_rate_cache;

@@ -134,7 +134,7 @@ export default function DiaryStats({ records, teamId, year }: DiaryStatsProps) {
   const streakActive = useMemo(() => computeStreakStats(activeRecords, year), [activeRecords, year]);
   const activeScoring = useMemo(() => teamId ? computeAttendanceScoring(teamRecords, teamId, year) : null, [teamRecords, teamId, year]);
   const [totemStats, setTotemStats] = useState<TotemWithStats[]>([]);
-  useEffect(() => { getAllTotemStats(activeRecords, true).then(setTotemStats).catch((e) => console.warn("getAllTotemStats failed", e)); }, [activeRecords]);
+  useEffect(() => { try { setTotemStats(getAllTotemStats(activeRecords, true)); } catch (e) { console.warn("getAllTotemStats failed", e); } }, [activeRecords]);
 
   const grayHex = isDark ? "#333" : "#e0e0e0";
   const streakColor = streakActive.currentType === "W" ? "#22c55e" : streakActive.currentType === "L" ? "#ef4444" : theme.mutedForeground;

@@ -335,16 +335,14 @@ export async function cachedAllDailyScores(year?: number): Promise<Record<string
 
   // ─── Step 2: Reconstruct from per-date caches ───
   // Per-date caches have correct TTLs (past = ∞, today = 5min, future = 1hr).
-  // Use Promise.all for parallel SQLite reads to minimize latency.
   const seasonDates = dateRangeForSeason(targetYear);
   const result: Record<string, ScoreEntry[]> = {};
   const coldDates: string[] = [];
 
-  const perDateEntries = await Promise.all(
-    seasonDates.map((date) =>
-      db.getCache(cacheKey("scores", date)).then((entry) => ({ date, entry }))
-    )
-  );
+  const perDateEntries = seasonDates.map((date) => ({
+    date,
+    entry: db.getCache(cacheKey("scores", date)),
+  }));
   for (const { date, entry } of perDateEntries) {
     if (!entry) {
       coldDates.push(date);

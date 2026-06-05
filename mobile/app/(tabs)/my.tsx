@@ -379,7 +379,7 @@ export default function MyScreen() {
   useFocusEffect(
     useCallback(() => {
       loadData();
-      getShortcut().then((s) => setShortcut(s as ShortcutType | null));
+      try { setShortcut(getShortcut() as ShortcutType | null); } catch {}
     }, [loadData])
   );
 
@@ -390,19 +390,18 @@ export default function MyScreen() {
   useEffect(() => {
     if (myCoachChecked.current) return;
     if (totems.length !== 0) return;
-    getMyCoachSeen().then(async (seen) => {
-      if (!seen) {
-        await setMyCoachSeen();
+    try {
+      if (!getMyCoachSeen()) {
         myCoachChecked.current = true;
         setShowMyCoach(true);
       } else {
         myCoachChecked.current = true;
       }
-    }).catch((e) => { console.warn("coach: my", e); });
+    } catch (e) { console.warn("coach: my", e); }
   }, [totems]);
 
-  const handleShortcutSelect = async (type: ShortcutType) => {
-    await saveShortcut(type);
+  const handleShortcutSelect = (type: ShortcutType) => {
+    saveShortcut(type);
     setShortcut(type);
     setShowShortcutPicker(false);
   };
@@ -563,7 +562,7 @@ export default function MyScreen() {
             <CoachMark
               visible showChevrons={false} arrowDirection="up"
               text="나만의 승리 토템을 만들어보세요"
-              onDismiss={() => setShowMyCoach(false)}
+              onDismiss={() => { setMyCoachSeen(); setShowMyCoach(false); }}
             />
           </View>
         )}
