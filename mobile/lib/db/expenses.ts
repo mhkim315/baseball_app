@@ -1,4 +1,5 @@
 import { getDb } from "./connection";
+import { formatMonthKey } from "../dateUtils";
 
 export interface Expense {
   id: number;
@@ -62,7 +63,7 @@ export function getExpensesByDate(date: string): Expense[] {
 }
 
 export function getExpensesByMonth(year: number, month: number): Expense[] {
-  const prefix = `${year}.${String(month).padStart(2, "0")}`;
+  const prefix = formatMonthKey(year, month);
   if (expensesCache !== null) {
     return expensesCache.filter((e) => e.date.startsWith(prefix));
   }

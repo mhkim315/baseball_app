@@ -3,6 +3,7 @@ import { resolveIsWin } from "@/lib/expenseStats";
 import { parseGameTeamIds } from "@shared/constants";
 import { computeStreakStats } from "@/lib/stats";
 import { findStreakQualifyingDateLoss } from "../helpers";
+import { parseDotDate } from "@/lib/dateUtils";
 
 export const SECRET_BADGES: BadgeDefinition[] = [
   {
@@ -555,10 +556,9 @@ export const SECRET_BADGES: BadgeDefinition[] = [
     check: (records) => {
       const match = records.find((r) => {
         if (r.cheered_team !== "kt") return false;
-        const parts = r.date.split(".");
-        if (parts.length < 2) return false;
-        const month = parseInt(parts[1], 10);
-        return month >= 6 && month <= 8;
+        const p = parseDotDate(r.date);
+        if (!p) return false;
+        return p[1] >= 6 && p[1] <= 8;
       });
       return {
         unlocked: !!match,

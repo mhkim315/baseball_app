@@ -23,6 +23,7 @@ import { readCachedAllScores } from "@/lib/gameCache";
 
 import { parseGameTeamIds } from "@shared/constants";
 import { TEAM_COLORS } from "@shared/teamColors";
+import { formatDate, dotToDash } from "@/lib/dateUtils";
 import MyButton from "@/components/MyButton";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
@@ -281,14 +282,14 @@ export default function DiaryScreen() {
       const missingDateSet = new Set<string>();
       for (const r of data) {
         if (r.score_away != null && r.score_home != null && !(r.score_away === 0 && r.score_home === 0)) continue;
-        missingDateSet.add(r.date.split(".").join("-"));
+        missingDateSet.add(dotToDash(r.date));
       }
       if (missingDateSet.size > 0) {
         const cachedScores = await readCachedAllScores();
         if (cachedScores) {
           for (const r of data) {
             if (r.score_away != null && r.score_home != null && !(r.score_away === 0 && r.score_home === 0)) continue;
-            const dayEntries = cachedScores[r.date.split(".").join("-")];
+            const dayEntries = cachedScores[dotToDash(r.date)];
             if (!dayEntries) continue;
             const { awayId, homeId } = parseGameTeamIds(r.game_id);
             if (!awayId || !homeId) continue;
@@ -377,7 +378,7 @@ export default function DiaryScreen() {
     try {
       deleteJikgwanRecord(id);
       if (expenseSheetDate) {
-        const dateStr = `${expenseSheetDate.getFullYear()}.${String(expenseSheetDate.getMonth() + 1).padStart(2, "0")}.${String(expenseSheetDate.getDate()).padStart(2, "0")}`;
+        const dateStr = formatDate(expenseSheetDate);
         try {
           const exps = getExpensesByDate(dateStr);
           setSheetExpenses(exps);
@@ -405,7 +406,7 @@ export default function DiaryScreen() {
     setEditingRecord(null);
     setPresetDate(null);
     if (expenseSheetDate) {
-      const dateStr = `${expenseSheetDate.getFullYear()}.${String(expenseSheetDate.getMonth() + 1).padStart(2, "0")}.${String(expenseSheetDate.getDate()).padStart(2, "0")}`;
+      const dateStr = formatDate(expenseSheetDate);
       try {
         const exps = getExpensesByDate(dateStr);
         setSheetExpenses(exps);
@@ -419,7 +420,7 @@ export default function DiaryScreen() {
     setShowExpenseModal(false);
     setExpensePresetDate(null);
     if (expenseSheetDate) {
-      const dateStr = `${expenseSheetDate.getFullYear()}.${String(expenseSheetDate.getMonth() + 1).padStart(2, "0")}.${String(expenseSheetDate.getDate()).padStart(2, "0")}`;
+      const dateStr = formatDate(expenseSheetDate);
       try {
         const exps = getExpensesByDate(dateStr);
         setSheetExpenses(exps);
@@ -446,7 +447,7 @@ export default function DiaryScreen() {
   const handleSelectDate = (date: Date) => {
     setCalYear(date.getFullYear());
     setCalMonth(date.getMonth());
-    const dateStr = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
+    const dateStr = formatDate(date);
     const hasRecord = records.some((r) => r.date === dateStr);
     if (hasRecord) {
       handleTabChange("timeline");
@@ -460,7 +461,7 @@ export default function DiaryScreen() {
 
   const handleSelectExpenseDate = (date: Date) => {
     try {
-      const dateStr = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
+      const dateStr = formatDate(date);
       const exps = getExpensesByDate(dateStr);
       setExpenseSheetDate(date);
       setSheetExpenses(exps);

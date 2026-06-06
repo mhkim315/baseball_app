@@ -8,6 +8,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import type { JikgwanRecord, Expense } from "@/lib/db";
 import { formatAmount, getCategoryIcons, resolveIsWin } from "@/lib/expenseStats";
+import { parseDotDate } from "@/lib/dateUtils";
 
 interface WebzineCardProps {
   record: JikgwanRecord;
@@ -156,11 +157,11 @@ export default function WebzineCard({ record, teamId, expenses, onPress, onLongP
 }
 
 function formatDateKR(dateStr: string): string {
-  const p = dateStr.split(".");
-  if (p.length === 3) {
-    const d = new Date(+p[0], +p[1] - 1, +p[2]);
+  const p = parseDotDate(dateStr);
+  if (p) {
+    const d = new Date(p[0], p[1] - 1, p[2]);
     const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
-    return `${+p[0]}.${+p[1]}.${+p[2]} (${dayNames[d.getDay()]})`;
+    return `${p[0]}.${p[1]}.${p[2]} (${dayNames[d.getDay()]})`;
   }
   return dateStr;
 }

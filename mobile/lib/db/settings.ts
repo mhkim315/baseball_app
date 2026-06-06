@@ -1,5 +1,6 @@
 import { DEFAULT_BACKGROUNDS } from "@/lib/backgrounds";
 import { getDb } from "./connection";
+import { formatDate } from "../dateUtils";
 
 export function getSetting(key: string): string | null {
   const database = getDb();
@@ -39,7 +40,7 @@ export function getInstallDate(): string {
   const existing = getSetting("install_date");
   if (existing) return existing;
   const now = new Date();
-  const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
+  const dateStr = formatDate(now);
   setSetting("install_date", dateStr);
   return dateStr;
 }

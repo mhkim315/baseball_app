@@ -1,4 +1,5 @@
 import { getDb } from "./connection";
+import { formatDate } from "../dateUtils";
 
 // ── 메모리 캐시 ──
 let badgesCache: Badge[] | null = null;
@@ -59,7 +60,7 @@ export function upsertBadge(
 export function checkAttendance(): number {
   const database = getDb();
   const today = new Date();
-  const todayStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
+  const todayStr = formatDate(today);
 
   database.runSync(
     "INSERT OR IGNORE INTO attendance (date) VALUES (?)",
@@ -73,7 +74,7 @@ export function checkAttendance(): number {
   let streak = 0;
   const checkDate = new Date(today);
   for (const row of rows) {
-    const expected = `${checkDate.getFullYear()}.${String(checkDate.getMonth() + 1).padStart(2, "0")}.${String(checkDate.getDate()).padStart(2, "0")}`;
+    const expected = formatDate(checkDate);
     if (row.date === expected) {
       streak++;
       checkDate.setDate(checkDate.getDate() - 1);

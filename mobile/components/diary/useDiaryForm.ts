@@ -5,6 +5,7 @@ import * as ImagePicker from "expo-image-picker";
 import { TEAM_LIST } from "@shared/teamColors";
 import { parseGameTeamIds, getDaysInMonth, getFirstDayOfMonth, formatDate, formatDateForApi, DEFAULT_TEAM_ID, buildGameId } from "@shared/constants";
 import { useTheme } from "@/lib/ThemeContext";
+import { parseDotDate } from "@/lib/dateUtils";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 import { getDb, addJikgwanRecord, updateJikgwanRecord, getUnlockedEmotions } from "@/lib/db";
@@ -163,8 +164,8 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
       setNewExpenseMemo("");
       if (editRecord) {
         setStep("write");
-        const parts = editRecord.date.split(".");
-        setSelectedDate(parts.length === 3 ? new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])) : new Date());
+        const p = parseDotDate(editRecord.date);
+        setSelectedDate(p ? new Date(p[0], p[1] - 1, p[2]) : new Date());
         setSelectedGame(null);
         setEmotion(editRecord.emotion || null);
         setContent(editRecord.memo || "");
@@ -435,9 +436,9 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
       let isWin: number | null = null;
 
       const isFutureGame = (() => {
-        const parts = dateStr.split(".");
-        if (parts.length !== 3) return false;
-        const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        const p2 = parseDotDate(dateStr);
+        if (!p2) return false;
+        const d = new Date(p2[0], p2[1] - 1, p2[2]);
         const today2 = new Date(); today2.setHours(0, 0, 0, 0);
         return d > today2;
       })();

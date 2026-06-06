@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { View, Text, Pressable, StyleSheet, ActivityIndicator, Animated } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { TEAM_COLORS, teamPrimaryColor } from "@shared/teamColors";
-import { parseGameTeamIds, getWinBadge, getDaysInMonth, getFirstDayOfMonth } from "@shared/constants";
+import { parseGameTeamIds, getWinBadge, getDaysInMonth, getFirstDayOfMonth, formatDateForApi } from "@shared/constants";
 import { EMOTION_CHARACTER, type CharacterEmotion } from "@/lib/emotions";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme } from "@/lib/ThemeContext";
@@ -331,7 +331,7 @@ export default function DiaryCalendar({
 
           const dateStr = `${year}.${String(month + 1).padStart(2, "0")}.${String(cell.day).padStart(2, "0")}`;
           const apiDateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(cell.day).padStart(2, "0")}`;
-          const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+          const todayStr = formatDateForApi(today);
           const isFuture = apiDateStr > todayStr;
           const isToday = apiDateStr === todayStr;
 

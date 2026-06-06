@@ -1,4 +1,5 @@
 import { getDb } from "./connection";
+import { formatMonthKey } from "../dateUtils";
 
 // ── 메모리 캐시: 탭 전환 시 매번 DB 풀스캔 방지 (Sync API JS 스레드 블로킹 해결) ──
 let recordsCache: JikgwanRecord[] | null = null;
@@ -69,7 +70,7 @@ export function getJikgwanRecords(): JikgwanRecord[] {
 }
 
 export function getJikgwanRecordsByMonth(year: number, month: number): JikgwanRecord[] {
-  const prefix = `${year}.${String(month).padStart(2, "0")}`;
+  const prefix = formatMonthKey(year, month);
   if (recordsCache !== null) {
     return recordsCache.filter((r) => r.date.startsWith(prefix));
   }

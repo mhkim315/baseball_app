@@ -6,7 +6,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useTheme } from "@/lib/ThemeContext";
 import BottomSheet from "@/components/BottomSheet";
 import ExpenseForm from "@/components/ExpenseForm";
-import { getDaysInMonth, getFirstDayOfMonth } from "@shared/constants";
+import { getDaysInMonth, getFirstDayOfMonth, formatDate } from "@shared/constants";
 import { addExpense, type ExpenseCategory } from "@/lib/db";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -61,7 +61,7 @@ export default function ExpenseModal({ visible, onClose, onSaved, presetDate }: 
     }
   }, [visible, presetDate]);
 
-  const dateStr = `${selectedDate.getFullYear()}.${String(selectedDate.getMonth() + 1).padStart(2, "0")}.${String(selectedDate.getDate()).padStart(2, "0")}`;
+  const dateStr = formatDate(selectedDate);
 
   const handleSave = async () => {
     const amt = parseInt(amount.replace(/,/g, ""));

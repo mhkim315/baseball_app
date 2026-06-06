@@ -1,5 +1,6 @@
 import type { Badge, JikgwanRecord } from "@/lib/db";
 import { BADGE_DEFINITIONS } from "./definitions";
+import { formatDate } from "@/lib/dateUtils";
 
 export interface BadgeEvaluationContext {
   records: JikgwanRecord[];
@@ -37,7 +38,7 @@ export function computeBadgeResults(context: BadgeEvaluationContext): BadgeUpdat
     todayStr ??
     (() => {
       const today = new Date();
-      return `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
+      return formatDate(today);
     })();
 
   const existingMap = new Map(existingBadges.map((b) => [b.badge_key, b]));

@@ -1,7 +1,8 @@
-import { parseGameTeamIds } from "@shared/constants";
+import { parseGameTeamIds, formatDate } from "@shared/constants";
 import type { JikgwanRecord } from "@/lib/db";
 import { filterByGameType } from "@/lib/gameTypeFilter";
 import { resolveIsWin } from "@/lib/expenseStats";
+import { parseDotDate, dashToDot } from "./dateUtils";
 
 export interface DiaryStats {
   totalGames: number;
@@ -84,11 +85,9 @@ export interface StreakStat {
 const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
 
 export function parseDateStr(dateStr: string): Date | null {
-  const normalized = dateStr.replace(/-/g, ".");
-  const parts = normalized.split(".");
-  if (parts.length !== 3) return null;
-  const [y, m, d] = parts.map(Number);
-  return new Date(y, m - 1, d);
+  const p = parseDotDate(dashToDot(dateStr));
+  if (!p) return null;
+  return new Date(p[0], p[1] - 1, p[2]);
 }
 
 function opponentTeam(gameId: string, cheeredTeam: string): string {
@@ -126,7 +125,7 @@ export function computeDiaryStats(records: JikgwanRecord[], year?: number, gameT
   for (let i = 0; i < dates.length; i++) {
     const expected = new Date(today);
     expected.setDate(expected.getDate() - i);
-    const expectedStr = `${expected.getFullYear()}.${String(expected.getMonth() + 1).padStart(2, "0")}.${String(expected.getDate()).padStart(2, "0")}`;
+    const expectedStr = formatDate(expected);
     if (dates[i] === expectedStr) {
       currentStreak++;
     } else {

@@ -2,6 +2,7 @@ import { getJikgwanRecords, updateJikgwanRecord, type JikgwanRecord } from "@/li
 import { parseGameTeamIds } from "@shared/constants";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { cachedDailyScores } from "@/lib/gameCache";
+import { dotToDash } from "@/lib/dateUtils";
 
 /**
  * Backfill records saved during live games with final scores once the game finishes.
@@ -16,7 +17,7 @@ export async function backfillLiveRecords(): Promise<number> {
   // Group by date to batch daily score fetches
   const byDate = new Map<string, JikgwanRecord[]>();
   for (const rec of liveRecords) {
-    const dateKey = rec.date.replace(/\./g, "-"); // YYYY.MM.DD → YYYY-MM-DD
+    const dateKey = dotToDash(rec.date); // YYYY.MM.DD → YYYY-MM-DD
     if (!byDate.has(dateKey)) byDate.set(dateKey, []);
     byDate.get(dateKey)!.push(rec);
   }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { View, Text, ScrollView, ActivityIndicator, Pressable, StyleSheet } from "react-native";
 import { TEAM_COLORS } from "@shared/teamColors";
-import { TEAM_NAME_TO_ID } from "@shared/constants";
+import { TEAM_NAME_TO_ID, formatDate } from "@shared/constants";
 import { type StandingRow } from "@/lib/api";
 import { cachedStandings } from "@/lib/gameCache";
 import { HISTORICAL_STANDINGS } from "@/lib/standingsData";
@@ -20,11 +20,6 @@ function parseWLT(wlt: string | undefined | null): { wins: number; draws: number
   return { wins: parseInt(m[1]), draws: parseInt(m[2]), losses: parseInt(m[3]) };
 }
 
-function formatDate(isoStr: string): string {
-  const d = new Date(isoStr);
-  if (isNaN(d.getTime())) return isoStr;
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
-}
 
 function streakColor(streak: string | undefined | null): string {
   if (streak?.includes("승")) return "#2563eb";
@@ -329,7 +324,7 @@ export default function RankScreen() {
           </View>
 
           {fetchedAt && (
-            <Text style={styles.footer}>{formatDate(fetchedAt)} 기준</Text>
+            <Text style={styles.footer}>{formatDate(new Date(fetchedAt))} 기준</Text>
           )}
         </ScrollView>
       )}

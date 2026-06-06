@@ -3,6 +3,7 @@ import { View, Text, Pressable, FlatList, StyleSheet } from "react-native";
 import { useTheme } from "@/lib/ThemeContext";
 import { EXPENSE_CATEGORIES, deleteExpense, type Expense } from "@/lib/db";
 import { formatAmount } from "@/lib/expenseStats";
+import { formatDate } from "@/lib/dateUtils";
 
 interface ExpenseBottomSheetProps {
   date: Date | null;
@@ -41,9 +42,7 @@ export default function ExpenseBottomSheet({ date, expenses, onClose, onRefresh,
     );
   }, [handleDelete]);
 
-  const dateStr = useMemo(() => date
-    ? `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`
-    : "", [date]);
+  const dateStr = useMemo(() => date ? formatDate(date) : "", [date]);
 
   const styles = useMemo(() => StyleSheet.create({
     overlay: {

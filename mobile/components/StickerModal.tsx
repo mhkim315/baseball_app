@@ -13,6 +13,7 @@ import { computeStreakStats, computeDiaryStats } from "@/lib/stats";
 import { resolveIsWin } from "@/lib/expenseStats";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { STADIUM_BRIEFS, TEAM_STADIUM_MAP } from "@/lib/stadiumData";
+import { dashToDot } from "@/lib/dateUtils";
 import { BgKey, BG_OPTIONS } from "@/lib/backgrounds";
 import { useTheme } from "@/lib/ThemeContext";
 import { useTeam } from "@/lib/TeamContext";
@@ -236,7 +237,7 @@ export default function StickerModal({
     const virtualRecord: JikgwanRecord = {
       id: 0,
       game_id: gameId ?? "",
-      date: date.replace(/-/g, "."),
+      date: dashToDot(date),
       photo_path: null,
       photos: null,
       memo: null,

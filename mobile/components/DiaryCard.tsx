@@ -5,6 +5,7 @@ import { TeamBadge } from "@/components/TeamBadge";
 import { EMOTION_CHARACTER, type CharacterEmotion } from "@/lib/emotions";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { parseGameTeamIds, getWinBadge } from "@shared/constants";
+import { parseDotDate } from "@/lib/dateUtils";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import type { JikgwanRecord, Expense } from "@/lib/db";
@@ -20,8 +21,8 @@ interface DiaryCardProps {
 }
 
 function formatDisplayDate(dateStr: string): string {
-  const p = dateStr.split(".");
-  if (p.length === 3) return `${parseInt(p[0])}.${parseInt(p[1])}.${parseInt(p[2])}`;
+  const p = parseDotDate(dateStr);
+  if (p) return `${p[0]}.${p[1]}.${p[2]}`;
   return dateStr;
 }
 
@@ -37,9 +38,9 @@ function parsePhotos(record: JikgwanRecord): string[] {
 }
 
 function isUpcoming(dateStr: string, scoreAway: number | null, scoreHome: number | null): boolean {
-  const parts = dateStr.split(".");
-  if (parts.length !== 3) return false;
-  const d = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+  const p = parseDotDate(dateStr);
+  if (!p) return false;
+  const d = new Date(p[0], p[1] - 1, p[2]);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   if (d > today) return true;

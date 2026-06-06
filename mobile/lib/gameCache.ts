@@ -20,149 +20,12 @@ import { LOCAL_SCHEDULE, LOCAL_SCORES } from "./scheduleData";
 import { EXHIBITION_SCORES } from "./exhibitionData";
 import { POSTSEASON_SCHEDULE, POSTSEASON_SCORES } from "./postseasonData";
 import type { CheerSection, PlayerCheer } from "./api";
-
-function cacheKey(name: string, id: string): string {
-  return `${name}:${id}`;
-}
+import { fetchWithCache, ttlForDate, safeParse, cacheKey } from "./cacheUtils";
+import { normalizeDate } from "./dateUtils";
 
 const now = () => new Date();
 const todayStr = () => now().toISOString().slice(0, 10);
 const thisYear = () => now().getFullYear();
-
-const pendingFetches = new Map<string, Promise<unknown | null>>();
-
-// Global concurrency limiter — max 3 concurrent API calls
-const MAX_CONCURRENT = 3;
-let inFlight = 0;
-const requestQueue: (() => void)[] = [];
-
-function acquireSlot(): Promise<void> {
-  if (inFlight < MAX_CONCURRENT) {
-    inFlight++;
-    return Promise.resolve();
-  }
-  return new Promise<void>((resolve) => {
-    requestQueue.push(() => { inFlight++; resolve(); });
-  });
-}
-
-function releaseSlot() {
-  inFlight--;
-  const next = requestQueue.shift();
-  if (next) next();
-}
-
-async function withConcurrencyLimit<T>(fn: () => Promise<T>): Promise<T> {
-  await acquireSlot();
-  try {
-    return await fn();
-  } finally {
-    releaseSlot();
-  }
-}
-
-// Background retry after API failure — exponential backoff: 5s, 15s, 45s
-const RETRY_DELAYS = [5_000, 15_000, 45_000];
-const retryCounts = new Map<string, number>();
-
-function scheduleRetry<T>(key: string, fetcher: () => Promise<T | null>, cachedAt?: number) {
-  const done = retryCounts.get(key) ?? 0;
-  if (done >= RETRY_DELAYS.length) {
-    retryCounts.delete(key);
-    return;
-  }
-  retryCounts.set(key, done + 1);
-  const baseDelay = RETRY_DELAYS[done];
-  const jitter = baseDelay * (0.7 + Math.random() * 0.6); // ±30%
-  setTimeout(async () => {
-    try {
-      // Don't write if cache was refreshed since this retry started
-      if (cachedAt) {
-        const current = db.getCache(key);
-        if (current && current.updatedAt > cachedAt) {
-          retryCounts.delete(key);
-          return;
-        }
-      }
-      const fresh = await withConcurrencyLimit(() => fetcher());
-      if (fresh) {
-        db.setCache(key, JSON.stringify(fresh));
-        retryCounts.delete(key);
-      } else {
-        // null response (including 429/5xx) — continue backoff chain
-        scheduleRetry(key, fetcher, cachedAt);
-      }
-    } catch {
-      scheduleRetry(key, fetcher, cachedAt);
-    }
-  }, Math.round(jitter));
-}
-
-function safeParse(json: string): unknown | null {
-  try {
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-}
-
-function ttlForDate(dateStr: string): number {
-  const today = todayStr();
-  if (dateStr < today) return Infinity;       // past: never expire
-  if (dateStr === today) return 300_000;      // today: 5 minutes
-  return 3600_000;                             // future: 1 hour
-}
-
-async function fetchWithCache<T>(
-  cacheKeyStr: string,
-  ttl: number,
-  fetcher: () => Promise<T | null>
-): Promise<T | null> {
-  const cached = db.getCache(cacheKeyStr);
-  if (cached) {
-    const parsed = safeParse(cached.data);
-    if (parsed && Date.now() - cached.updatedAt < ttl) {
-      return parsed as T;
-    }
-    // If parse failed or TTL expired, delete stale entry
-    if (!parsed) {
-      db.deleteCache(cacheKeyStr);
-    }
-  }
-
-  // In-flight dedup: reuse an ongoing fetch for the same key
-  const pending = pendingFetches.get(cacheKeyStr);
-  if (pending) return pending.then((r) => r as T | null);
-
-  const promise = (async (): Promise<T | null> => {
-    const fresh = await withConcurrencyLimit(() => fetcher());
-    if (fresh) {
-      db.setCache(cacheKeyStr, JSON.stringify(fresh));
-      return fresh;
-    }
-    // API failed — return stale cache if available, retry in background
-    if (cached) {
-      const parsed = safeParse(cached.data);
-      if (parsed) {
-        scheduleRetry(cacheKeyStr, fetcher, cached.updatedAt);
-        return parsed as T;
-      }
-    }
-    // No stale cache — still retry in background so next attempt may succeed
-    scheduleRetry(cacheKeyStr, fetcher);
-    return null;
-  })();
-
-  pendingFetches.set(cacheKeyStr, promise);
-  try {
-    return await promise;
-  } finally {
-    // 2s cooldown before clearing dedup key, so concurrent callers
-    // during a failure burst share the same null result instead of
-    // each creating a new API request that also hits the rate limit.
-    setTimeout(() => pendingFetches.delete(cacheKeyStr), 2000);
-  }
-}
 
 // Fallback cheering data for when the server endpoint hasn't been deployed yet
 // Cheer data sourced from mobile/lib/cheerData.ts (same data as web's client/src/lib/cheerData.ts)
@@ -177,12 +40,6 @@ export async function cachedCheeringSongs(teamId: string): Promise<{ sections: C
 export async function cachedCheeringPlayers(teamId: string): Promise<{ players: PlayerCheer[] } | null> {
   const players = CHEER_PLAYERS[teamId];
   return players ? { players } : null;
-}
-
-// Ensure date is YYYY-MM-DD regardless of server response format
-function normalizeDate(d: string): string {
-  if (/^\d{8}$/.test(d)) return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
-  return d;
 }
 
 // Schedule by month — never changes, cache forever (key includes year)

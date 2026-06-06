@@ -1,6 +1,7 @@
 import { type Expense, type ExpenseCategory, EXPENSE_CATEGORIES, type JikgwanRecord } from "@/lib/db";
 import { parseGameTeamIds } from "@shared/constants";
 import { filterByGameType } from "@/lib/gameTypeFilter";
+import { parseDotDate, formatMonthKey } from "./dateUtils";
 
 export interface CategoryTotal {
   category: ExpenseCategory;
@@ -24,9 +25,8 @@ export interface ExpenseStats {
 
 export function computeExpenseStats(expenses: Expense[], seasonYear = 2026): ExpenseStats {
   const seasonExpenses = expenses.filter((e) => {
-    const parts = e.date.split(".");
-    if (parts.length !== 3) return false;
-    return parseInt(parts[0]) === seasonYear;
+    const p = parseDotDate(e.date);
+    return p !== null && p[0] === seasonYear;
   });
 
   // Category totals
@@ -47,9 +47,9 @@ export function computeExpenseStats(expenses: Expense[], seasonYear = 2026): Exp
   // Monthly breakdown
   const monthMap = new Map<string, { amount: number; catMap: Map<ExpenseCategory, number> }>();
   for (const e of seasonExpenses) {
-    const parts = e.date.split(".");
-    if (parts.length !== 3) continue;
-    const key = `${parts[0]}-${parts[1]}`;
+    const p = parseDotDate(e.date);
+    if (!p) continue;
+    const key = `${p[0]}-${String(p[1]).padStart(2, "0")}`;
     if (!monthMap.has(key)) {
       monthMap.set(key, { amount: 0, catMap: new Map() });
     }
@@ -80,11 +80,9 @@ export function computeExpenseStats(expenses: Expense[], seasonYear = 2026): Exp
 export function getDailyTotals(expenses: Expense[], year: number, month: number): Map<number, number> {
   const totals = new Map<number, number>();
   for (const e of expenses) {
-    const parts = e.date.split(".");
-    if (parts.length < 3) continue;
-    if (parseInt(parts[0]) !== year || parseInt(parts[1]) !== month + 1) continue;
-    const day = parseInt(parts[2]);
-    if (isNaN(day)) continue;
+    const p = parseDotDate(e.date);
+    if (!p || p[0] !== year || p[1] !== month + 1) continue;
+    const day = p[2];
     totals.set(day, (totals.get(day) || 0) + e.amount);
   }
   return totals;

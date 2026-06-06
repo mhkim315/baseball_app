@@ -1,6 +1,7 @@
 import type { BadgeDefinition } from "../types";
 import { resolveIsWin } from "@/lib/expenseStats";
 import { parseGameTeamIds } from "@shared/constants";
+import { parseDotDate } from "@/lib/dateUtils";
 
 export const MILESTONE_BADGES: BadgeDefinition[] = [
   // ── 직관 마일스톤 (5) ──
@@ -297,11 +298,8 @@ export const MILESTONE_BADGES: BadgeDefinition[] = [
     progressTarget: 1,
     check: (records) => {
       const match = records.find((r) => {
-        const parts = r.date.split(".");
-        if (parts.length < 3) return false;
-        const month = parseInt(parts[1], 10);
-        const day = parseInt(parts[2], 10);
-        return month === 3 && day >= 20;
+        const p = parseDotDate(r.date);
+        return p !== null && p[1] === 3 && p[2] >= 20;
       });
       return {
         unlocked: !!match,

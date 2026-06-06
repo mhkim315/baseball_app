@@ -18,6 +18,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { resolveVenue } from "@/lib/stadiumData";
 import { getGameStickerCoachSeen, setGameStickerCoachSeen } from "@/lib/db";
+import { parseDashDate } from "@/lib/dateUtils";
 
 
 /** 스티커 생성 가능 여부 — sc=1 자동열기 + canMakeSticker 버튼 양쪽에서 사용 */
@@ -37,7 +38,9 @@ function canMakeStickerForGame(detail: GameDetail, now: Date): boolean {
   if (isYesterday && now.getHours() >= 14) return false;
 
   // isLive와 동일한 구조: status || (오늘+시간지남) || (오늘+이닝데이터)
-  const [gy, gm, gd] = dateStr.split("-").map(Number);
+  const dashParsed = parseDashDate(dateStr);
+  if (!dashParsed) return false;
+  const [gy, gm, gd] = dashParsed;
   const [gh, gmn] = (detail.gameInfo?.time || "18:30").split(":").map(Number);
   const gameHasStarted = now >= new Date(gy, gm - 1, gd, gh, gmn, 0, 0);
   const hasInningData = !!detail.scoreBoard?.inn;
@@ -640,7 +643,8 @@ export default function GameDetailScreen() {
   const isGameActive = hasScoreData || hasFinishedSignals;
 
   const [gh, gm] = (detail.gameInfo?.time || scheduleTimeRef.current || "18:30").split(":").map(Number);
-  const [y, m, d] = detail.date.split("-").map(Number);
+  const dashParsed2 = parseDashDate(detail.date);
+  const [y, m, d] = dashParsed2 ?? [0, 0, 0];
   const startTime = new Date(y, m - 1, d, gh, gm, 0, 0);
   const gameHasStarted = new Date() >= startTime;
   const hasInningData = !!detail.scoreBoard?.inn;
