@@ -82,12 +82,20 @@ export function createApi(options: ApiClientOptions) {
       fetchedAt: string;
       rows: StandingRow[];
     } | null> =>
-      client.get<StandingRow[]>("/standings").then((rows) => {
+      client.get<any[]>("/standings").then((rows) => {
         if (!rows) return null;
+        const normalized: StandingRow[] = rows.map((r) => ({
+          rank: r.rank,
+          teamName: r.teamName ?? r.team_id ?? "",
+          winRate: r.winRate ?? r.win_rate ?? 0,
+          wlt: r.wlt || `${r.wins ?? 0}승${r.draws ?? 0}무${r.losses ?? 0}패`,
+          gamesBehind: r.gamesBehind ?? r.game_back ?? null,
+          streak: r.streak ?? "",
+        }));
         return {
           source: "api",
           fetchedAt: new Date().toISOString(),
-          rows,
+          rows: normalized,
         };
       }),
 
@@ -121,7 +129,7 @@ export function createApi(options: ApiClientOptions) {
       client.get<{ years: number[] }>("/seasons"),
 
     fetchScoreSummary: (year: number): Promise<{ year: number; teams: ScoreSummaryRow[] } | null> =>
-      client.get<{ year: number; teams: ScoreSummaryRow[] }>(`/score-summary/${year}`),
+      client.get<{ year: number; teams: ScoreSummaryRow[] }>(`/api/score-summary/${year}`),
 
     fetchRegularGames: (
       year: number
