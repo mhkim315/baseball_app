@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import {
-  View, Text, Pressable, StyleSheet, ScrollView, Keyboard, Platform, Animated,
+  View, Text, Pressable, StyleSheet, ScrollView, Platform, Animated,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useTheme } from "@/lib/ThemeContext";
+import { useKeyboardHeight } from "@/lib/hooks/useKeyboardHeight";
 import BottomSheet from "@/components/BottomSheet";
 import ExpenseForm from "@/components/ExpenseForm";
 import { getDaysInMonth, getFirstDayOfMonth, formatDate } from "@shared/constants";
@@ -31,21 +32,8 @@ export default function ExpenseModal({ visible, onClose, onSaved, presetDate }: 
   const [category, setCategory] = useState<ExpenseCategory>("food");
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const keyboardHeight = useKeyboardHeight();
   const scrollRef = useRef<ScrollView>(null);
-
-  // Track keyboard height for ScrollView padding
-  useEffect(() => {
-    const show = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      (e) => setKeyboardHeight(e.endCoordinates.height)
-    );
-    const hide = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => setKeyboardHeight(0)
-    );
-    return () => { show.remove(); hide.remove(); };
-  }, []);
 
   // Reset on open
   useEffect(() => {
@@ -241,7 +229,6 @@ export default function ExpenseModal({ visible, onClose, onSaved, presetDate }: 
             <View style={styles.header}>
               <Pressable style={styles.headerBackBtn} onPress={() => {
                 setStep("calendar");
-                setKeyboardHeight(0);
               }} hitSlop={8}>
                 <Text style={styles.headerBackText}>← 뒤로</Text>
               </Pressable>
@@ -260,7 +247,7 @@ export default function ExpenseModal({ visible, onClose, onSaved, presetDate }: 
                 memo={memo}
                 onMemoChange={setMemo}
                 onSave={handleSave}
-                onCancel={() => { setStep("calendar"); setKeyboardHeight(0); }}
+                onCancel={() => { setStep("calendar"); }}
                 saveLabel="저장"
                 cancelLabel="취소"
                 autoFocusAmount

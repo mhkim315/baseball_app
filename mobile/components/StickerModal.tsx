@@ -17,6 +17,7 @@ import { dashToDot } from "@/lib/dateUtils";
 import { BgKey, BG_OPTIONS } from "@/lib/backgrounds";
 import { useTheme } from "@/lib/ThemeContext";
 import { useTeam } from "@/lib/TeamContext";
+import { useKeyboardHeight } from "@/lib/hooks/useKeyboardHeight";
 import ColorPicker from "@/components/ColorPicker";
 import SimpleAlert from "@/components/SimpleAlert";
 
@@ -59,6 +60,9 @@ export default function StickerModal({
   const { theme } = useTheme();
   const { myTeam } = useTeam();
   const viewRef = useRef<View>(null);
+  const keyboardHeight = useKeyboardHeight();
+  const scrollRef = useRef<ScrollView>(null);
+  const hashSectionY = useRef(0);
 
   // Live Score Controls
   const [localScoreBoard, setLocalScoreBoard] = useState<ScoreBoardInn | null>(null);
@@ -337,8 +341,21 @@ export default function StickerModal({
     onClose();
   }, [onClose]);
 
+  const handleHashFocus = useCallback(() => {
+    scrollRef.current?.scrollTo({ y: Math.max(0, hashSectionY.current - 16), animated: true });
+  }, []);
+
+  // Scroll to hash section after keyboard finishes opening
+  useEffect(() => {
+    if (keyboardHeight > 0 && showBadge) {
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollTo({ y: Math.max(0, hashSectionY.current - 16), animated: true });
+      });
+    }
+  }, [keyboardHeight, showBadge]);
+
   return (
-    <BottomSheet visible={visible} onClose={handleClose} maxHeight="88%">
+    <BottomSheet visible={visible} onClose={handleClose} maxHeight="95%" fillHeight>
       {/* Header */}
       <View style={s.header}>
           <Text style={s.headerTitle}>스티커 만들기</Text>
@@ -347,50 +364,51 @@ export default function StickerModal({
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-          {/* ── Sticker Preview ── */}
-          <View style={[s.previewArea, { backgroundColor: theme.muted }]}>
-            {loading ? (
-              <View style={s.loadingWrap}>
-                <ActivityIndicator color={theme.mutedForeground} />
-              </View>
-            ) : (
-              <View ref={viewRef} collapsable={false}>
-                <StickerContent
-                  awayTeam={awayDisplay}
-                  homeTeam={homeDisplay}
-                  awayTeamColor={awayColor}
-                  homeTeamColor={homeColor}
-                  awayScore={localAwayScore}
-                  homeScore={localHomeScore}
-                  awayRank={awayRank}
-                  homeRank={homeRank}
-                  date={date}
-                  scoreBoard={localScoreBoard ?? null}
-                  rheb={rheb ?? null}
-                  gameResult={actualResult}
-                  liveInningLabel={isLive && localScoreBoard ? (() => {
-                    const i = getInningInfo(localScoreBoard);
-                    return i ? `${i.inning}회${i.isTop ? "초" : "말"}` : undefined;
-                  })() : undefined}
-                  liveTimestamp={isLive ? liveTimestamp : undefined}
-                  background={background}
-                  stroke={stroke}
-                  strokeColor={strokeColor}
-                  showBadge={showBadge}
-                  showScoreboard={showScoreboard}
-                  textColor={textColor || undefined}
-                  badgeBackgroundColor={badgeColor === null ? undefined : (badgeColor || "")}
-                  teamTag={teamTag}
-                  myTag={myTag}
-                  customTag={customTag}
-                  statsMode={statsMode}
-                  stats={stats}
-                  venue={stadiumName}
-                />
-              </View>
-            )}
-          </View>
+        {/* ── Sticker Preview (fixed) ── */}
+        <View style={[s.previewArea, { backgroundColor: theme.muted }]}>
+          {loading ? (
+            <View style={s.loadingWrap}>
+              <ActivityIndicator color={theme.mutedForeground} />
+            </View>
+          ) : (
+            <View ref={viewRef} collapsable={false}>
+              <StickerContent
+                awayTeam={awayDisplay}
+                homeTeam={homeDisplay}
+                awayTeamColor={awayColor}
+                homeTeamColor={homeColor}
+                awayScore={localAwayScore}
+                homeScore={localHomeScore}
+                awayRank={awayRank}
+                homeRank={homeRank}
+                date={date}
+                scoreBoard={localScoreBoard ?? null}
+                rheb={rheb ?? null}
+                gameResult={actualResult}
+                liveInningLabel={isLive && localScoreBoard ? (() => {
+                  const i = getInningInfo(localScoreBoard);
+                  return i ? `${i.inning}회${i.isTop ? "초" : "말"}` : undefined;
+                })() : undefined}
+                liveTimestamp={isLive ? liveTimestamp : undefined}
+                background={background}
+                stroke={stroke}
+                strokeColor={strokeColor}
+                showBadge={showBadge}
+                showScoreboard={showScoreboard}
+                textColor={textColor || undefined}
+                badgeBackgroundColor={badgeColor === null ? undefined : (badgeColor || "")}
+                teamTag={teamTag}
+                myTag={myTag}
+                customTag={customTag}
+                statsMode={statsMode}
+                stats={stats}
+                venue={stadiumName}
+              />
+            </View>
+          )}
+        </View>
+
+        <ScrollView ref={scrollRef} style={{ flexGrow: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 + keyboardHeight }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
 
           {/* ── Live Score Control ── */}
           {isLive && localScoreBoard && (
@@ -565,7 +583,7 @@ export default function StickerModal({
 
           {/* Hashtag edit inputs */}
           {showBadge && (
-            <View style={s.hashSection}>
+            <View style={s.hashSection} onLayout={(e) => { hashSectionY.current = e.nativeEvent.layout.y; }}>
               <Text style={s.hashLabel}>해시태그 직접 입력</Text>
               <View style={s.hashInputRow}>
                 <Text style={s.hashPrefix}>#</Text>
@@ -576,6 +594,7 @@ export default function StickerModal({
                   placeholder="팀 태그 (자동)"
                   placeholderTextColor="#ccc"
                   maxLength={15}
+                  onFocus={handleHashFocus}
                 />
               </View>
               <View style={s.hashInputRow}>
@@ -587,6 +606,7 @@ export default function StickerModal({
                   placeholder="내 태그 (자동)"
                   placeholderTextColor="#ccc"
                   maxLength={15}
+                  onFocus={handleHashFocus}
                 />
               </View>
               <View style={s.hashInputRow}>
@@ -598,6 +618,7 @@ export default function StickerModal({
                   placeholder="태그입력"
                   placeholderTextColor="#ccc"
                   maxLength={15}
+                  onFocus={handleHashFocus}
                 />
               </View>
             </View>
@@ -645,7 +666,7 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 5,
   },
   headerTitle: { fontSize: 18, fontWeight: "700" },
   closeBtn: { fontSize: 20, color: "#999" },
@@ -653,9 +674,11 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 16,
-    paddingVertical: 24,
-    marginHorizontal: 0,
-    marginBottom: 24,
+    paddingVertical: 8,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    overflow: "hidden",
+    minHeight: 100,
   },
   loadingWrap: { height: 300, justifyContent: "center" },
   controlSection: { marginBottom: 20 },

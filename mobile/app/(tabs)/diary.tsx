@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet, RefreshControl, ScrollView, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, Modal, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, RefreshControl, ScrollView, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, Modal, ActivityIndicator, Platform } from "react-native";
 import { useFocusEffect, useNavigation, useLocalSearchParams, useRouter } from "expo-router";
 import DiaryTimeline from "@/components/DiaryTimeline";
 import WebzineTimeline from "@/components/WebzineTimeline";
@@ -23,6 +23,7 @@ import { readCachedAllScores } from "@/lib/gameCache";
 
 import { parseGameTeamIds } from "@shared/constants";
 import { TEAM_COLORS } from "@shared/teamColors";
+import { useKeyboardHeight } from "@/lib/hooks/useKeyboardHeight";
 import { formatDate, dotToDash } from "@/lib/dateUtils";
 import MyButton from "@/components/MyButton";
 import { useTheme } from "@/lib/ThemeContext";
@@ -49,6 +50,7 @@ const SUB_TABS: { key: SubTab; label: string }[] = [
 
 export default function DiaryScreen() {
   const { theme, isDark } = useTheme();
+  const keyboardHeight = useKeyboardHeight();
   const styles = useMemo(() => StyleSheet.create({
     container: {
       flex: 1,
@@ -606,7 +608,7 @@ export default function DiaryScreen() {
       )}
 
       {/* Tab content — horizontal paging scroll */}
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, marginBottom: Platform.OS === "ios" ? keyboardHeight : 0 }}>
         <ScrollView
           ref={tabScrollRef}
           horizontal

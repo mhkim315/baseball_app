@@ -15,6 +15,7 @@ import {
 import { useRouter, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import { Linking } from "react-native";
 import Constants from "expo-constants";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
 import { DEFAULT_TEAM_ID } from "@shared/constants";
 import { TeamBadge } from "@/components/TeamBadge";
@@ -55,6 +56,7 @@ import { getMyCoachSeen, setMyCoachSeen, getVisitCount, getShortcut, setShortcut
 import { SHORTCUT_LABELS, type ShortcutType } from "@/lib/shortcutHelper";
 
 export default function MyScreen() {
+  const insets = useSafeAreaInsets();
   const { theme, isDark, toggleTheme } = useTheme();
   const styles = useMemo(() => StyleSheet.create({
     container: {
@@ -614,6 +616,7 @@ export default function MyScreen() {
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
@@ -800,7 +803,7 @@ export default function MyScreen() {
 
       {/* Totem Create/Edit Modal */}
       <Modal visible={showTotemModal} transparent animationType="fade" onRequestClose={() => setShowTotemModal(false)}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>{editingTotem ? "토템 수정" : "토템 추가"}</Text>

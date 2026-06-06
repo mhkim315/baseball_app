@@ -27,6 +27,7 @@
         "backgroundColor": "#fde8d6"
       },
       "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "resize",
       "package": "kr.fullcount.app",
       "versionCode": 16
     },

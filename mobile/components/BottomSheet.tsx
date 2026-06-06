@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   View, Text, Pressable, StyleSheet,
   Animated, BackHandler, PanResponder,
-  Modal, Dimensions,
+  Modal, useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/lib/ThemeContext";
@@ -15,6 +15,7 @@ interface BottomSheetProps {
   showHandle?: boolean;
   swipeToClose?: boolean;
   hardwareBackPress?: boolean;
+  fillHeight?: boolean;
 }
 
 export default function BottomSheet({
@@ -25,21 +26,23 @@ export default function BottomSheet({
   showHandle = true,
   swipeToClose = false,
   hardwareBackPress = true,
+  fillHeight = false,
 }: BottomSheetProps) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const sheetTranslateY = useRef(new Animated.Value(500)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const [shouldRender, setShouldRender] = useState(false);
 
-  // Convert percentage maxHeight to pixel value — Modal 내부에서 백분율 해석이 안전하지 않음
+  // Convert percentage maxHeight to pixel value — react to keyboard resize on Android
   const sheetPixelMax = useMemo(() => {
     if (typeof maxHeight === "string" && maxHeight.endsWith("%")) {
       const pct = parseFloat(maxHeight) / 100;
-      return Dimensions.get("window").height * pct;
+      return windowHeight * pct;
     }
     return 0;
-  }, [maxHeight]);
+  }, [maxHeight, windowHeight]);
 
   // Wrap onClose in ref to avoid stale closures in useEffect/useCallback
   const onCloseRef = useRef(onClose);
@@ -152,7 +155,7 @@ export default function BottomSheet({
         </Animated.View>
 
         {/* Sheet */}
-        <Animated.View style={[styles.sheet, { maxHeight: sheetPixelMax, transform: [{ translateY: sheetTranslateY }], paddingBottom: Math.max(insets.bottom, 8) }]}>
+        <Animated.View style={[styles.sheet, { maxHeight: sheetPixelMax, ...(fillHeight ? { height: sheetPixelMax } : {}), transform: [{ translateY: sheetTranslateY }], paddingBottom: Math.max(insets.bottom, 8) }]}>
           {showHandle && (
             <View style={styles.handleRow} {...sheetPan.panHandlers}>
               <View style={styles.handle} />

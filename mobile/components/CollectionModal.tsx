@@ -4,6 +4,7 @@ import {
   Image, StyleSheet, KeyboardAvoidingView, Platform, Dimensions, AppState,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export default function CollectionModal({ visible, onClose, onSave }: Props) {
+  const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { myTeam } = useTeam();
   const teamColor = myTeam ? teamPrimaryColor(myTeam, false) : "#888";
@@ -441,7 +443,7 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
 
   return (
       <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}>
           <View style={styles.overlay}>
             <View style={[styles.content, { backgroundColor: theme.card, borderColor: theme.border }]}>
               {view === "list" && renderList()}

@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { StyleSheet, Animated, Keyboard, Platform, AppState } from "react-native";
+import { StyleSheet, Animated, Platform, AppState } from "react-native";
 import { Gesture } from "react-native-gesture-handler";
 import * as ImagePicker from "expo-image-picker";
 import { TEAM_LIST } from "@shared/teamColors";
 import { parseGameTeamIds, getDaysInMonth, getFirstDayOfMonth, formatDate, formatDateForApi, DEFAULT_TEAM_ID, buildGameId } from "@shared/constants";
 import { useTheme } from "@/lib/ThemeContext";
 import { parseDotDate } from "@/lib/dateUtils";
+import { useKeyboardHeight } from "@/lib/hooks/useKeyboardHeight";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 import { getDb, addJikgwanRecord, updateJikgwanRecord, getUnlockedEmotions } from "@/lib/db";
@@ -101,7 +102,7 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
     message: string;
     onOk?: () => void;
   }>({ visible: false, title: "", message: "" });
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const keyboardHeight = useKeyboardHeight();
   const [cropUri, setCropUri] = useState<string | null>(null);
   const cropQueueRef = useRef<string[]>([]);
   const cropQueueIndexRef = useRef(0);
@@ -124,17 +125,6 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
     cells.push({ day: d, isToday: isCurrentMonth && today.getDate() === d });
   }
 
-  useEffect(() => {
-    const show = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      (e) => setKeyboardHeight(e.endCoordinates.height)
-    );
-    const hide = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => setKeyboardHeight(0)
-    );
-    return () => { show.remove(); hide.remove(); };
-  }, []);
 
   // Recover pending picker results when app returns to foreground
   useEffect(() => {
