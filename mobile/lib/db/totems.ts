@@ -179,28 +179,82 @@ export function getTotemStats(
   };
 }
 
+// ── 캐시: tab 전환 시 N+1 쿼리 재실행 방지 ──
+let totemStatsCache: TotemWithStats[] | null = null;
+let totemStatsRecordsRef: JikgwanRecord[] | null = null;
+
+export function invalidateTotemStatsCache(): void {
+  totemStatsCache = null;
+  totemStatsRecordsRef = null;
+}
+
 export function getAllTotemStats(records: JikgwanRecord[], includeHidden = false): TotemWithStats[] {
+  // 캐시 히트: 같은 records 배열(= 동일 DB 상태)이면 재사용
+  if (!includeHidden && totemStatsCache && totemStatsRecordsRef === records) {
+    return totemStatsCache;
+  }
+
   const database = getDb();
   const totems = database.getAllSync<Totem>(
     includeHidden
       ? "SELECT * FROM totems ORDER BY created_at DESC"
       : "SELECT * FROM totems WHERE hidden = 0 ORDER BY created_at DESC"
   );
+
+  // 단일 쿼리로 전체 diary_totems 매핑 조회 (N+1 방지)
+  const allMappings = database.getAllSync<{ record_id: number; totem_id: number }>(
+    "SELECT record_id, totem_id FROM diary_totems"
+  );
+  const totemRecordIds: Record<number, Set<number>> = {};
+  for (const m of allMappings) {
+    if (!totemRecordIds[m.totem_id]) totemRecordIds[m.totem_id] = new Set();
+    totemRecordIds[m.totem_id].add(m.record_id);
+  }
+
   const results: TotemWithStats[] = [];
   for (const t of totems) {
-    try {
-      const stats = getTotemStats(t.id, records);
-      results.push(stats);
-    } catch (e) {
-      console.warn(`getTotemStats failed for totem ${t.id}`, e);
-      results.push({
-        ...t,
-        count: 0, wins: 0, draws: 0, losses: 0,
-        winRate: 0, currentStreak: 0,
-      });
+    const rIds = totemRecordIds[t.id] ?? new Set<number>();
+    let count = 0, wins = 0, draws = 0, losses = 0;
+    const datedResults: { date: string; isWin: number | null }[] = [];
+
+    for (const r of records) {
+      if (!rIds.has(r.id)) continue;
+      count++;
+      const iw = r.is_win;
+      if (iw === 1) wins++;
+      else if (iw === 0) losses++;
+      else draws++;
+      datedResults.push({ date: r.date, isWin: iw });
     }
+
+    datedResults.sort((a, b) => a.date.localeCompare(b.date));
+    let currentStreak = 0;
+    for (let i = datedResults.length - 1; i >= 0; i--) {
+      const res = datedResults[i];
+      if (res.isWin === 1) {
+        if (currentStreak >= 0) currentStreak++;
+        else break;
+      } else if (res.isWin === 0) {
+        if (currentStreak <= 0) currentStreak--;
+        else break;
+      } else break;
+    }
+
+    results.push({
+      id: t.id, name: t.name, emoji: t.emoji,
+      description: t.description, color: t.color, created_at: t.created_at,
+      count, wins, draws, losses,
+      winRate: count > 0 ? wins / count : 0,
+      currentStreak,
+    });
   }
-  return results.sort((a, b) => b.winRate - a.winRate || b.count - a.count);
+
+  const sorted = results.sort((a, b) => b.winRate - a.winRate || b.count - a.count);
+  if (!includeHidden) {
+    totemStatsCache = sorted;
+    totemStatsRecordsRef = records;
+  }
+  return sorted;
 }
 
 export function deleteDiaryTotemsByRecordId(recordId: number): void {

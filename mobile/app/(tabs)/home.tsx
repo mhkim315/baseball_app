@@ -458,18 +458,18 @@ export default function HomeScreen() {
     }
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
-        prefetchOnAppInit();
-        runBadgeCheck();
-        try {
-          const records = getJikgwanRecords();
-          const map: Record<string, number> = {};
-          for (const r of records) {
-            if (r.is_win == null) continue;
-            map[r.date.replace(/\./g, "-")] = r.is_win;
-          }
-          setResultByDate(map);
-        } catch {}
         InteractionManager.runAfterInteractions(() => {
+          prefetchOnAppInit();
+          runBadgeCheck();
+          try {
+            const records = getJikgwanRecords();
+            const map: Record<string, number> = {};
+            for (const r of records) {
+              if (r.is_win == null) continue;
+              map[r.date.replace(/\./g, "-")] = r.is_win;
+            }
+            setResultByDate(map);
+          } catch {}
           load();
         });
       }

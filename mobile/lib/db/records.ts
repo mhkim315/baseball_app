@@ -1,5 +1,12 @@
 import { getDb } from "./connection";
 
+// ── 메모리 캐시: 탭 전환 시 매번 DB 풀스캔 방지 (Sync API JS 스레드 블로킹 해결) ──
+let recordsCache: JikgwanRecord[] | null = null;
+
+export function invalidateRecordsCache(): void {
+  recordsCache = null;
+}
+
 export interface JikgwanRecord {
   id: number;
   game_id: string;
@@ -26,6 +33,7 @@ export interface JikgwanRecord {
 }
 
 export function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "created_at">): number {
+  invalidateRecordsCache();
   const database = getDb();
   const result = database.runSync(
     `INSERT INTO jikgwan_records
@@ -52,15 +60,20 @@ export function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "created_at"
 }
 
 export function getJikgwanRecords(): JikgwanRecord[] {
+  if (recordsCache !== null) return recordsCache;
   const database = getDb();
-  return database.getAllSync<JikgwanRecord>(
+  recordsCache = database.getAllSync<JikgwanRecord>(
     "SELECT * FROM jikgwan_records ORDER BY date DESC, id DESC"
   );
+  return recordsCache;
 }
 
 export function getJikgwanRecordsByMonth(year: number, month: number): JikgwanRecord[] {
-  const database = getDb();
   const prefix = `${year}.${String(month).padStart(2, "0")}`;
+  if (recordsCache !== null) {
+    return recordsCache.filter((r) => r.date.startsWith(prefix));
+  }
+  const database = getDb();
   return database.getAllSync<JikgwanRecord>(
     "SELECT * FROM jikgwan_records WHERE date LIKE ? ORDER BY date DESC, id DESC",
     `${prefix}%`
@@ -77,6 +90,7 @@ export function updateJikgwanRecord(
   id: number,
   fields: Partial<Pick<JikgwanRecord, "memo" | "emotion" | "three_line_1" | "three_line_2" | "three_line_3" | "frame_style" | "is_win" | "photos" | "cheered_team" | "is_live" | "seat" | "score_away" | "score_home" | "stadium" | "game_id" | "game_type" | "game_status">>
 ): void {
+  invalidateRecordsCache();
   const database = getDb();
   const setClauses: string[] = [];
   const values: any[] = [];

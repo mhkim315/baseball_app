@@ -1,5 +1,12 @@
 import { getDb } from "./connection";
 
+// ── 메모리 캐시 ──
+let badgesCache: Badge[] | null = null;
+
+export function invalidateBadgesCache(): void {
+  badgesCache = null;
+}
+
 export interface Badge {
   id: string;
   badge_key: string;
@@ -11,6 +18,7 @@ export interface Badge {
 }
 
 export function setBadgeRewardEmotion(badgeKey: string, emotion: string): void {
+  invalidateBadgesCache();
   const database = getDb();
   database.runSync(
     "UPDATE badges SET reward_emotion = ? WHERE badge_key = ?",
@@ -19,8 +27,10 @@ export function setBadgeRewardEmotion(badgeKey: string, emotion: string): void {
 }
 
 export function getBadges(): Badge[] {
+  if (badgesCache !== null) return badgesCache;
   const database = getDb();
-  return database.getAllSync<Badge>("SELECT * FROM badges");
+  badgesCache = database.getAllSync<Badge>("SELECT * FROM badges");
+  return badgesCache;
 }
 
 export function getBadgesByDate(date: string): Badge[] {
@@ -33,6 +43,7 @@ export function getBadgesByDate(date: string): Badge[] {
 export function upsertBadge(
   badge: Omit<Badge, "is_notified"> & { is_notified?: number }
 ): void {
+  invalidateBadgesCache();
   const database = getDb();
   database.runSync(
     `INSERT OR REPLACE INTO badges (id, badge_key, unlocked_date, progress_current, progress_target, is_notified)

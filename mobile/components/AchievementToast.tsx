@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
-import { Animated, Text, Pressable, StyleSheet, View, LayoutAnimation, Easing } from "react-native";
+import { Animated, Text, Pressable, StyleSheet, View, Easing } from "react-native";
 import { useTheme } from "@/lib/ThemeContext";
 import { BADGE_DEFINITIONS } from "@/lib/achievements";
 import { TeamBadge } from "@/components/TeamBadge";
@@ -76,11 +76,6 @@ export default function AchievementToast({ badges, rewards, teamId, onDismiss, o
         useNativeDriver: true,
       }),
     ]).start(() => {
-      // Collapse gap after item is invisible
-      LayoutAnimation.configureNext({
-        duration: 200,
-        update: { type: "easeInEaseOut" },
-      });
       setItems((prev) => prev.filter((i) => i.id !== id));
     });
   }, []);

@@ -21,7 +21,15 @@ export const EXPENSE_CATEGORIES = {
 
 export type ExpenseCategory = keyof typeof EXPENSE_CATEGORIES;
 
+// ── 메모리 캐시: 탭 전환 시 JS 스레드 블로킹 방지 ──
+let expensesCache: Expense[] | null = null;
+
+export function invalidateExpensesCache(): void {
+  expensesCache = null;
+}
+
 export function addExpense(expense: Omit<Expense, "id" | "created_at">): number {
+  invalidateExpensesCache();
   const database = getDb();
   const result = database.runSync(
     "INSERT INTO expenses (record_id, date, category, amount, memo) VALUES (?, ?, ?, ?, ?)",
@@ -51,8 +59,11 @@ export function getExpensesByDate(date: string): Expense[] {
 }
 
 export function getExpensesByMonth(year: number, month: number): Expense[] {
-  const database = getDb();
   const prefix = `${year}.${String(month).padStart(2, "0")}`;
+  if (expensesCache !== null) {
+    return expensesCache.filter((e) => e.date.startsWith(prefix));
+  }
+  const database = getDb();
   return database.getAllSync<Expense>(
     "SELECT * FROM expenses WHERE date LIKE ? ORDER BY date DESC, amount DESC",
     `${prefix}%`
@@ -60,10 +71,12 @@ export function getExpensesByMonth(year: number, month: number): Expense[] {
 }
 
 export function getAllExpenses(): Expense[] {
+  if (expensesCache !== null) return expensesCache;
   const database = getDb();
-  return database.getAllSync<Expense>(
+  expensesCache = database.getAllSync<Expense>(
     "SELECT * FROM expenses ORDER BY date DESC, amount DESC"
   );
+  return expensesCache;
 }
 
 export function getExpensesByRecordIds(recordIds: number[]): Expense[] {
@@ -82,6 +95,7 @@ export function updateExpense(
   id: number,
   fields: Partial<Pick<Expense, "category" | "amount" | "memo">>
 ): void {
+  invalidateExpensesCache();
   const database = getDb();
   const setClauses: string[] = [];
   const values: any[] = [];
@@ -102,11 +116,13 @@ export function updateExpense(
 }
 
 export function deleteExpense(id: number): void {
+  invalidateExpensesCache();
   const database = getDb();
   database.runSync("DELETE FROM expenses WHERE id = ?", id);
 }
 
 export function deleteExpensesByRecordId(recordId: number): void {
+  invalidateExpensesCache();
   const database = getDb();
   database.runSync("DELETE FROM expenses WHERE record_id = ?", recordId);
 }
