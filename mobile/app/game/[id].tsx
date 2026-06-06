@@ -20,6 +20,39 @@ import { resolveVenue } from "@/lib/stadiumData";
 import { getGameStickerCoachSeen, setGameStickerCoachSeen } from "@/lib/db";
 
 
+/** 스티커 생성 가능 여부 — sc=1 자동열기 + canMakeSticker 버튼 양쪽에서 사용 */
+function canMakeStickerForGame(detail: GameDetail, now: Date): boolean {
+  const status = detail.gameInfo?.status;
+  if (status === "cancelled") return false;
+
+  const dateStr = detail.date;
+  const todayStr = formatDateForApi(now);
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = formatDateForApi(yesterday);
+  const isToday = dateStr === todayStr;
+  const isYesterday = dateStr === yesterdayStr;
+
+  if (!isToday && !isYesterday) return false;
+  if (isYesterday && now.getHours() >= 14) return false;
+
+  // isLive와 동일한 구조: status || (오늘+시간지남) || (오늘+이닝데이터)
+  const [gy, gm, gd] = dateStr.split("-").map(Number);
+  const [gh, gmn] = (detail.gameInfo?.time || "18:30").split(":").map(Number);
+  const gameHasStarted = now >= new Date(gy, gm - 1, gd, gh, gmn, 0, 0);
+  const hasInningData = !!detail.scoreBoard?.inn;
+  const isGameActive = status === "finished" || status === "live"
+    || (isToday && gameHasStarted)
+    || (isToday && hasInningData);
+  if (!isGameActive) return false;
+
+  // 점수 데이터 확인 — 1회초 0:0 등 초반에는 scoreBoard.rheb만 있을 수 있음
+  const hasScore = !!detail.score || !!(detail.scoreBoard?.rheb);
+  if (!hasScore) return false;
+
+  return true;
+}
+
 const POSITION_LABELS: Record<string, string> = {
   "1": "1B", "2": "2B", "3": "3B",
   "유": "SS", "포": "C", "중": "CF",
@@ -352,23 +385,10 @@ export default function GameDetailScreen() {
   // Detail sticker coach & auto-open modal for sc=1
   useEffect(() => {
     if (sc !== "1") return;
-    if (!detail || detail.gameInfo?.status === "cancelled") return;
+    if (!detail) return;
     setShowStickerCoach(false);
 
-    const isFinishedOrLive = detail.gameInfo?.status === "finished" || detail.gameInfo?.status === "live";
-    const hasScore = !!detail.score;
-    const gameDateStr = detail.date;
-    const now = new Date();
-    const todayStr = formatDateForApi(now);
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = formatDateForApi(yesterday);
-    const isToday = gameDateStr === todayStr;
-    const isYesterday = gameDateStr === yesterdayStr;
-    const isBefore1400 = now.getHours() < 14;
-    const canMake = isFinishedOrLive && hasScore && (isToday || (isYesterday && isBefore1400));
-
-    if (canMake) {
+    if (canMakeStickerForGame(detail, new Date())) {
       setShowStickerModal(true);
     } else {
       setShowStickerTimeAlert(true);
@@ -650,11 +670,7 @@ export default function GameDetailScreen() {
   const awayWin = isFinished && gs ? gs.away > gs.home : null;
   const homeWin = isFinished && gs ? gs.home > gs.away : null;
   const isDraw = isFinished && gs ? gs.away === gs.home : false;
-  const gameDateOnly = new Date(y, m - 1, d);
-  const daysSinceGame = Math.floor((Date.now() - gameDateOnly.getTime()) / (1000 * 60 * 60 * 24));
-  const canMakeSticker = (isFinished || isLive) && !!gs && (
-    isToday || (daysSinceGame === 1 && new Date().getHours() < 14)
-  );
+  const canMakeSticker = canMakeStickerForGame(detail, now);
   const awayEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : awayWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";
   const homeEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : homeWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";
 
