@@ -90,8 +90,19 @@ export async function findRecentMyTeamGame(myTeam: string): Promise<{ gameId: st
       
       if (homeId === myTeam || awayId === myTeam) {
         const score = scores.find((s) => TEAM_NAME_TO_ID[s.home] === homeId && TEAM_NAME_TO_ID[s.away] === awayId);
-        // 점수가 있는 완료된/진행중인 경기만 스티커 대상으로 판단
-        const isStarted = g.status === "finished" || g.status === "live" || (score != null && score.homeScore != null);
+        // ScheduleGame 객체에는 status 필드가 없는 경우가 많으므로 시간 기반 추론 추가
+        let isStarted = false;
+        if (g.status === "finished" || g.status === "live") {
+          isStarted = true;
+        } else {
+          const [gh, gmn] = (g.time || "18:30").split(":").map(Number);
+          const gameTime = new Date(year, month - 1, dateObj.getDate(), gh, gmn, 0, 0);
+          if (dateStr === todayStr) {
+            isStarted = now >= gameTime;
+          } else {
+            isStarted = score != null;
+          }
+        }
         if (score && !score.cancelled && isStarted) {
           const mappedHomeTeam = TEAM_LIST.find((t) => t.shortName === g.home)?.id || homeId || "";
           const mappedAwayTeam = TEAM_LIST.find((t) => t.shortName === g.away)?.id || awayId || "";
