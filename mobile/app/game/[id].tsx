@@ -18,7 +18,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { resolveVenue } from "@/lib/stadiumData";
 import { getGameStickerCoachSeen, setGameStickerCoachSeen } from "@/lib/db";
-import { parseDashDate } from "@/lib/dateUtils";
+import { parseDashDate, dotToDash } from "@/lib/dateUtils";
 
 
 /** 스티커 생성 가능 여부 — sc=1 자동열기 + canMakeSticker 버튼 양쪽에서 사용 */
@@ -26,7 +26,7 @@ function canMakeStickerForGame(detail: GameDetail, now: Date): boolean {
   const status = detail.gameInfo?.status;
   if (status === "cancelled") return false;
 
-  const dateStr = detail.date;
+  const dateStr = dotToDash(detail.date);
   const todayStr = formatDateForApi(now);
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
@@ -634,8 +634,8 @@ export default function GameDetailScreen() {
 
   const now = new Date();
   const todayStr = formatDateForApi(now);
-  const isFuture = detail.date > todayStr;
-  const isToday = detail.date === todayStr;
+  const isFuture = dotToDash(detail.date) > todayStr;
+  const isToday = dotToDash(detail.date) === todayStr;
   const isCancelled = detail.gameInfo?.status === "cancelled" || scoreFallback?.cancelled === true || detail.etcRecords?.some(r => r.how?.includes("취소") || r.result?.includes("취소")) === true;
 
   const hasScoreData = gameScore !== null;
