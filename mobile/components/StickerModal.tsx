@@ -18,6 +18,7 @@ import { BgKey, BG_OPTIONS } from "@/lib/backgrounds";
 import { useTheme } from "@/lib/ThemeContext";
 import { useTeam } from "@/lib/TeamContext";
 import { useKeyboardHeight } from "@/lib/hooks/useKeyboardHeight";
+import { usePressOnce } from "@/lib/hooks/usePressOnce";
 import ColorPicker from "@/components/ColorPicker";
 import SimpleAlert from "@/components/SimpleAlert";
 
@@ -300,7 +301,7 @@ export default function StickerModal({
   }, [loading, allRecords, statsMode, actualResult, rawTeamStreak, targetTeam, homeTeam, myTeam, awayTeam, date]);
 
   // Handle copy to clipboard
-  const handleCopyClipboard = useCallback(async () => {
+  const handleCopyClipboard = usePressOnce(useCallback(async () => {
     setCapturing(true);
     try {
       const base64 = await captureRef(viewRef.current, { format: "png", result: "base64" });
@@ -311,10 +312,9 @@ export default function StickerModal({
     } finally {
       setCapturing(false);
     }
-  }, []);
+  }, []), 500);
 
-  // Handle share
-  const handleShare = useCallback(async () => {
+  const handleShare = usePressOnce(useCallback(async () => {
     setCapturing(true);
     try {
       const uri = await captureRef(viewRef.current, { format: "png", result: "tmpfile" });
@@ -324,10 +324,9 @@ export default function StickerModal({
     } finally {
       setCapturing(false);
     }
-  }, []);
+  }, []), 500);
 
-  // Reset state on close
-  const handleClose = useCallback(() => {
+  const handleClose = usePressOnce(useCallback(() => {
     setBackground("transparent");
     setStroke(true);
     setStrokeColor("#ffffff");
@@ -339,7 +338,7 @@ export default function StickerModal({
     setCapturing(false);
     setCustomTag("");
     onClose();
-  }, [onClose]);
+  }, [onClose]), 500);
 
   const handleHashFocus = useCallback(() => {
     scrollRef.current?.scrollTo({ y: Math.max(0, hashSectionY.current - 16), animated: true });
