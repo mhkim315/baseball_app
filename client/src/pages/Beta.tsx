@@ -7,8 +7,8 @@ export default function Beta() {
     <div className="min-h-screen pb-20 md:pb-8">
       {/* Mobile header */}
       <div className="md:hidden px-5 pt-6 pb-4">
-        <h1 className="text-xl font-bold">풀카운트 안드로이드 앱</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">비공개 테스터 모집</p>
+        <h1 className="text-xl font-bold">풀카운트 앱</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">iOS 정식 출시 · Android 비공개 테스트</p>
       </div>
 
       <div className="max-w-lg mx-auto px-4 mt-2 md:mt-6">
@@ -52,8 +52,25 @@ export default function Beta() {
             </div>
           </div>
 
-          <div className="bg-primary/10 rounded-xl p-4 border border-primary/20">
-            <h3 className="font-bold text-foreground text-sm">비공개 테스터 모집</h3>
+          {/* iOS - App Store */}
+          <a
+            href="https://apps.apple.com/kr/app/%ED%92%80%EC%B9%B4%EC%9A%B4%ED%8A%B8-%EC%A7%81%EA%B4%80-%EA%B8%B0%EB%A1%9D/id6775470174"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block bg-primary/10 rounded-xl p-4 border border-primary/20 active:scale-[0.98] transition-transform"
+          >
+            <h3 className="font-bold text-foreground text-sm">🍎 iOS — App Store에서 다운로드</h3>
+            <p className="text-muted-foreground text-xs mt-1">
+              풀카운트가 App Store에 정식 출시되었습니다. 지금 바로 다운로드하세요.
+            </p>
+            <p className="text-xs text-primary font-medium mt-2">
+              App Store 열기 →
+            </p>
+          </a>
+
+          {/* Android - Private test */}
+          <div className="bg-card rounded-xl p-4 border border-border">
+            <h3 className="font-bold text-foreground text-sm">🤖 Android — 비공개 테스터 모집</h3>
             <p className="text-muted-foreground text-xs mt-1">
               정식 출시에 앞서 비공개 테스터를 모집합니다.
               아래 이메일로 구글 계정 이메일 주소를 보내주시면 Play Store에서 먼저 앱을 받을 수 있습니다.
