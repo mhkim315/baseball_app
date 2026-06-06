@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback, useMemo } from "react";
-import { View, Text, Image, ScrollView, FlatList, StyleSheet, ActivityIndicator, Pressable, PanResponder, LayoutAnimation, Platform, UIManager, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, AppState, InteractionManager, Alert } from "react-native";
+import { View, Text, Image, ScrollView, FlatList, StyleSheet, ActivityIndicator, Pressable, PanResponder, LayoutAnimation, Platform, UIManager, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, AppState, InteractionManager } from "react-native";
 
 import { useRouter, useFocusEffect } from "expo-router";
 import DateStrip from "@/components/DateStrip";
@@ -25,6 +25,7 @@ import { getInningInfo } from "@shared/gameStatus";
 import MyButton from "@/components/MyButton";
 import ShortcutButton from "@/components/ShortcutButton";
 import ShortcutPickerModal from "@/components/ShortcutPickerModal";
+import SimpleAlert from "@/components/SimpleAlert";
 import DiaryEntryModal from "@/components/DiaryEntryModal";
 import ExpenseModal from "@/components/ExpenseModal";
 import AchievementToast from "@/components/AchievementToast";
@@ -133,6 +134,9 @@ export default function HomeScreen() {
   const hasLeftTodayRef = useRef(false);
   const todayBackChecked = useRef(false);
   const [showHomeStickerCoach, setShowHomeStickerCoach] = useState(false);
+  const [showNoStickerAlert, setShowNoStickerAlert] = useState(false);
+  const [showNoGameAlert, setShowNoGameAlert] = useState(false);
+  const [showShortcutErrorAlert, setShowShortcutErrorAlert] = useState(false);
   const homeStickerCoachCheckedRef = useRef(false);
   const showCoachMarkRef = useRef(false);
   const scheduleCache = useRef<{ month: number; year: number; games: ScheduleGame[] } | null>(null);
@@ -579,7 +583,7 @@ export default function HomeScreen() {
             setShortcutGameOption(gameOpt);
             setShowDiaryEntryModal(true);
           } else {
-            Alert.alert("알림", "해당 날짜에 응원팀 경기가 없습니다");
+            setShowNoGameAlert(true);
           }
           break;
         }
@@ -588,7 +592,7 @@ export default function HomeScreen() {
           if (result) {
             router.push(`/game/${result.gameId}?sc=1`);
           } else {
-            Alert.alert("알림", "표시할 경기가 없습니다");
+            setShowNoStickerAlert(true);
           }
           break;
         }
@@ -602,7 +606,7 @@ export default function HomeScreen() {
         }
       }
     } catch (e) {
-      Alert.alert("오류", "바로가기 실행 중 문제가 발생했습니다");
+      setShowShortcutErrorAlert(true);
     }
   };
 
@@ -848,6 +852,27 @@ export default function HomeScreen() {
         onClose={() => setShowExpenseModal(false)}
         onSaved={() => setShowExpenseModal(false)}
         presetDate={new Date()}
+      />
+      <SimpleAlert
+        visible={showNoStickerAlert}
+        title="알림"
+        message={"스티커는 경기 시작부터\n다음날 14시까지 만들 수 있어요"}
+        confirmText="확인"
+        onClose={() => setShowNoStickerAlert(false)}
+      />
+      <SimpleAlert
+        visible={showNoGameAlert}
+        title="알림"
+        message="해당 날짜에 응원팀 경기가 없습니다"
+        confirmText="확인"
+        onClose={() => setShowNoGameAlert(false)}
+      />
+      <SimpleAlert
+        visible={showShortcutErrorAlert}
+        title="오류"
+        message="바로가기 실행 중 문제가 발생했습니다"
+        confirmText="확인"
+        onClose={() => setShowShortcutErrorAlert(false)}
       />
     </View>
   );

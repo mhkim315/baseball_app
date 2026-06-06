@@ -10,11 +10,12 @@ interface SimpleAlertProps {
   cancelText?: string;
   onCancel?: () => void;
   onClose: () => void;
+  confirmDestructive?: boolean;
 }
 
 export default function SimpleAlert({
   visible, title, message,
-  confirmText = "확인", onConfirm, cancelText, onCancel, onClose,
+  confirmText = "확인", onConfirm, cancelText, onCancel, onClose, confirmDestructive,
 }: SimpleAlertProps) {
   const { theme } = useTheme();
 
@@ -39,7 +40,7 @@ export default function SimpleAlert({
               <Pressable style={[s.cancelBtn, s.btnInRow, { borderColor: theme.border }]} onPress={handleCancel}>
                 <Text style={[s.cancelText, { color: theme.mutedForeground }]}>{cancelText}</Text>
               </Pressable>
-              <Pressable style={[s.confirmBtn, s.btnInRow, { backgroundColor: theme.foreground }]} onPress={handleConfirm}>
+              <Pressable style={[s.confirmBtn, s.btnInRow, { backgroundColor: confirmDestructive ? "#ef4444" : theme.foreground }]} onPress={handleConfirm}>
                 <Text style={[s.confirmText, { color: theme.background }]}>{confirmText}</Text>
               </Pressable>
             </View>

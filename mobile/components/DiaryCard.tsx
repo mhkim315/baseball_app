@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
-import { View, Text, Image, Pressable, ScrollView, Alert, StyleSheet, NativeSyntheticEvent, NativeScrollEvent, useWindowDimensions } from "react-native";
+import { View, Text, Image, Pressable, ScrollView, StyleSheet, NativeSyntheticEvent, NativeScrollEvent, useWindowDimensions } from "react-native";
+import SimpleAlert from "@/components/SimpleAlert";
 import { TeamBadge } from "@/components/TeamBadge";
 import { EMOTION_CHARACTER, type CharacterEmotion } from "@/lib/emotions";
 import { TEAM_COLORS } from "@shared/teamColors";
@@ -55,6 +56,7 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit, e
   const photoWidth = screenWidth;
   const photos = useMemo(() => parsePhotos(record), [record.photos, record.photo_path]);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width);
     setPhotoIndex(idx);
@@ -344,15 +346,21 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit, e
           <Text style={styles.actionText}>수정</Text>
         </Pressable>
         <View style={{ flex: 1 }} />
-        <Pressable onPress={() => {
-          Alert.alert("삭제", "이 직관기록을 삭제할까요?", [
-            { text: "취소", style: "cancel" },
-            { text: "삭제", style: "destructive", onPress: () => onDelete?.(record) },
-          ]);
-        }} style={styles.actionBtn}>
+        <Pressable onPress={() => setShowDeleteConfirm(true)} style={styles.actionBtn}>
           <Text style={[styles.actionText, { color: "#ef4444" }]}>삭제</Text>
         </Pressable>
       </View>
+      <SimpleAlert
+        visible={showDeleteConfirm}
+        title="삭제"
+        message="이 직관기록을 삭제할까요?"
+        confirmText="삭제"
+        confirmDestructive
+        cancelText="취소"
+        onConfirm={() => onDelete?.(record)}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onClose={() => setShowDeleteConfirm(false)}
+      />
     </View>
   );
 }

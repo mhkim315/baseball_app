@@ -7,7 +7,6 @@ import {
   TextInput,
   Modal,
   Switch,
-  Alert,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -51,6 +50,7 @@ import EmojiPicker from "@/components/EmojiPicker";
 import ColorPicker from "@/components/ColorPicker";
 import CoachMark from "@/components/CoachMark";
 import ShortcutPickerModal from "@/components/ShortcutPickerModal";
+import SimpleAlert from "@/components/SimpleAlert";
 import { getMyCoachSeen, setMyCoachSeen, getVisitCount, getShortcut, setShortcut as saveShortcut } from "@/lib/db";
 import { SHORTCUT_LABELS, type ShortcutType } from "@/lib/shortcutHelper";
 
@@ -333,6 +333,7 @@ export default function MyScreen() {
   const [showTeamPicker, setShowTeamPicker] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showResetComplete, setShowResetComplete] = useState(false);
+  const [showResetErrorAlert, setShowResetErrorAlert] = useState(false);
   const [showYearInReview, setShowYearInReview] = useState(false);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [showCollectionModal, setShowCollectionModal] = useState(false);
@@ -691,7 +692,7 @@ export default function MyScreen() {
                     setShowResetComplete(true);
                   } catch (e) {
                     console.warn("resetAllData failed", e);
-                    Alert.alert("오류", "데이터 초기화에 실패했습니다. 다시 시도해주세요.");
+                    setShowResetErrorAlert(true);
                   }
                 }}
               >
@@ -703,28 +704,14 @@ export default function MyScreen() {
       </Modal>
 
       {/* Reset complete modal */}
-      <Modal visible={showResetComplete} transparent animationType="fade" onRequestClose={() => setShowResetComplete(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>완료</Text>
-            <Text style={{ fontSize: 14, color: theme.mutedForeground, marginBottom: 16, lineHeight: 20, textAlign: "center" }}>
-              모든 데이터가 초기화되었습니다.
-            </Text>
-            <View style={styles.modalButtons}>
-              <Pressable
-                style={[styles.modalSave, { backgroundColor: theme.primary }]}
-                onPress={() => {
-                  setShowResetComplete(false);
-                  router.replace("/onboarding");
-                }}
-                hitSlop={8}
-              >
-                <Text style={styles.modalSaveText}>확인</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <SimpleAlert
+        visible={showResetComplete}
+        title="완료"
+        message="모든 데이터가 초기화되었습니다."
+        confirmText="확인"
+        onConfirm={() => { setShowResetComplete(false); router.replace("/onboarding"); }}
+        onClose={() => { setShowResetComplete(false); router.replace("/onboarding"); }}
+      />
 
       {/* Totem List Modal */}
       <Modal visible={showTotemList} transparent animationType="slide" onRequestClose={() => setShowTotemList(false)}>
@@ -982,6 +969,13 @@ export default function MyScreen() {
         onClose={() => setShowShortcutPicker(false)}
         currentShortcut={shortcut}
         onSelect={handleShortcutSelect}
+      />
+      <SimpleAlert
+        visible={showResetErrorAlert}
+        title="오류"
+        message="데이터 초기화에 실패했습니다.\n다시 시도해주세요."
+        confirmText="확인"
+        onClose={() => setShowResetErrorAlert(false)}
       />
     </ScrollView>
   );

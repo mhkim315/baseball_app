@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet, RefreshControl, ScrollView, Alert, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, Modal, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, RefreshControl, ScrollView, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent, Modal, ActivityIndicator } from "react-native";
 import { useFocusEffect, useNavigation, useLocalSearchParams, useRouter } from "expo-router";
 import DiaryTimeline from "@/components/DiaryTimeline";
 import WebzineTimeline from "@/components/WebzineTimeline";
@@ -11,6 +11,7 @@ import DiaryStats from "@/components/DiaryStats";
 import DiaryEntryModal from "@/components/DiaryEntryModal";
 import ExpenseBottomSheet from "@/components/ExpenseBottomSheet";
 import ExpenseStats from "@/components/ExpenseStats";
+import SimpleAlert from "@/components/SimpleAlert";
 
 import AchievementToast from "@/components/AchievementToast";
 import AchievementModal from "@/components/AchievementModal";
@@ -167,6 +168,7 @@ export default function DiaryScreen() {
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [showDiaryCoach, setShowDiaryCoach] = useState(false);
   const diaryCoachChecked = useRef(false);
+  const [showDeleteErrorAlert, setShowDeleteErrorAlert] = useState(false);
 
   // Route params for tab/sub navigation (used by shortcut)
   const { tab, sub } = useLocalSearchParams<{ tab?: string; sub?: string }>();
@@ -384,7 +386,7 @@ export default function DiaryScreen() {
       await loadData();
       await checkBadges();
     } catch {
-      Alert.alert("삭제 확인", "기록을 삭제하시겠습니까?");
+      setShowDeleteErrorAlert(true);
     }
   };
 
@@ -809,6 +811,13 @@ export default function DiaryScreen() {
       <AchievementModal
         visible={showAchievementModal}
         onClose={() => setShowAchievementModal(false)}
+      />
+      <SimpleAlert
+        visible={showDeleteErrorAlert}
+        title="오류"
+        message="기록 삭제 중 문제가 발생했습니다"
+        confirmText="확인"
+        onClose={() => setShowDeleteErrorAlert(false)}
       />
 
     </View>

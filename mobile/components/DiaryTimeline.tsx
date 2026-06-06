@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
-import { View, Text, FlatList, StyleSheet, RefreshControl, Alert } from "react-native";
+import { View, Text, FlatList, StyleSheet, RefreshControl } from "react-native";
 import * as Sharing from "expo-sharing";
 import DiaryCard from "@/components/DiaryCard";
+import SimpleAlert from "@/components/SimpleAlert";
 import ConfirmModal from "@/components/ConfirmModal";
 import { useTheme } from "@/lib/ThemeContext";
 import type { JikgwanRecord, Expense } from "@/lib/db";
@@ -21,6 +22,7 @@ interface DiaryTimelineProps {
 export default function DiaryTimeline({ records, teamId, onDelete, onEdit, onRefresh, refreshing, expensesByRecordId, scrollTargetDate }: DiaryTimelineProps) {
   const { theme } = useTheme();
   const [deleteTarget, setDeleteTarget] = useState<JikgwanRecord | null>(null);
+  const [showShareErrorAlert, setShowShareErrorAlert] = useState(false);
   const flatListRef = useRef<FlatList<JikgwanRecord>>(null);
 
   useEffect(() => {
@@ -38,7 +40,7 @@ export default function DiaryTimeline({ records, teamId, onDelete, onEdit, onRef
       }
     } catch (e) {
       console.warn("Share failed", e);
-      Alert.alert("공유 실패", "공유를 실행하지 못했습니다\n잠시 후 다시 시도해 주세요");
+      setShowShareErrorAlert(true);
     }
   }, []);
 
@@ -110,6 +112,13 @@ export default function DiaryTimeline({ records, teamId, onDelete, onEdit, onRef
         destructive
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}
+      />
+      <SimpleAlert
+        visible={showShareErrorAlert}
+        title="공유 실패"
+        message={"공유를 실행하지 못했습니다\n잠시 후 다시 시도해 주세요"}
+        confirmText="확인"
+        onClose={() => setShowShareErrorAlert(false)}
       />
     </>
   );
