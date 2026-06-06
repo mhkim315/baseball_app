@@ -34,6 +34,9 @@ export function getBadges(): Badge[] {
 }
 
 export function getBadgesByDate(date: string): Badge[] {
+  if (badgesCache !== null) {
+    return badgesCache.filter((b) => b.unlocked_date === date);
+  }
   const database = getDb();
   return database.getAllSync<Badge>(
     "SELECT * FROM badges WHERE unlocked_date = ?", date

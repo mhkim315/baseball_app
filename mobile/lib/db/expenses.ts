@@ -51,6 +51,9 @@ export function getExpensesByRecordId(recordId: number): Expense[] {
 }
 
 export function getExpensesByDate(date: string): Expense[] {
+  if (expensesCache !== null) {
+    return expensesCache.filter((e) => e.date === date);
+  }
   const database = getDb();
   return database.getAllSync<Expense>(
     "SELECT * FROM expenses WHERE date = ? ORDER BY amount DESC",

@@ -224,4 +224,5 @@ export function resetAllData(): void {
   require("./records").invalidateRecordsCache();
   require("./expenses").invalidateExpensesCache();
   require("./badges").invalidateBadgesCache();
+  require("./totems").invalidateTotemStatsCache();
 }
