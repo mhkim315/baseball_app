@@ -488,7 +488,7 @@ export default function DiaryStats({ records, teamId, year }: DiaryStatsProps) {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>방문한 구장</Text>
         {stadiumStatsLive.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.stadiumGrid}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.stadiumGrid} nestedScrollEnabled>
             {stadiumStatsLive.map((ss) => {
               const bg = interpolateColor(grayHex, teamColor, ss.winRate);
               const fg = brightness(bg) > 150 ? '#000' : '#fff';
@@ -560,7 +560,7 @@ export default function DiaryStats({ records, teamId, year }: DiaryStatsProps) {
       {totemStats.some((t) => t.count > 0) && (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>토템 승률</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} nestedScrollEnabled>
             {totemStats.filter((t) => t.count > 0).map((t) => {
               const chipColor = t.color || theme.border;
               const wrPct = t.count > 0 ? Math.round(t.winRate * 100) : 0;
