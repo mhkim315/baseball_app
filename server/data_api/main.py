@@ -322,22 +322,48 @@ def get_schedule(year: int = None):
 
 
 def _enrich_schedule_times(games_list: list) -> list:
-    """Override schedule times with actual values from today-games.json (today/tomorrow only)."""
-    today_data = load_json("today-games.json")
-    if not today_data:
-        return games_list
-    # Build lookup: (date, away_team, home_team) -> time
+    """Override schedule times with actual values from today-games.json (today/tomorrow only).
+    Falls back to game-records JSON files for past games."""
     time_lookup = {}
-    for tg in today_data.get("games", []) + today_data.get("nextGames", []):
-        tg_date = tg.get("date", "")
-        tg_time = tg.get("time")
-        away = tg.get("away", {})
-        home = tg.get("home", {})
-        if tg_date and tg_time and isinstance(away, dict) and isinstance(home, dict):
-            key = (tg_date.replace("-", ""), away.get("name", ""), home.get("name", ""))
-            time_lookup[key] = tg_time
-    if not time_lookup:
-        return games_list
+
+    # 1. Enrich from today-games.json (today/tomorrow)
+    today_data = load_json("today-games.json")
+    if today_data:
+        for tg in today_data.get("games", []) + today_data.get("nextGames", []):
+            tg_date = tg.get("date", "")
+            tg_time = tg.get("time")
+            away = tg.get("away", {})
+            home = tg.get("home", {})
+            if tg_date and tg_time and isinstance(away, dict) and isinstance(home, dict):
+                key = (tg_date.replace("-", ""), away.get("name", ""), home.get("name", ""))
+                time_lookup[key] = tg_time
+
+    # 2. Enrich from game-records (past games not covered by today-games.json)
+    name_to_team_id = {v: k for k, v in TEAM_NAME_MAP.items()}
+    for g in games_list:
+        key = (g.get("date", ""), g.get("away", ""), g.get("home", ""))
+        if key in time_lookup:
+            continue
+        d = g.get("date", "")
+        if len(d) == 8:
+            date_str = f"{d[:4]}-{d[4:6]}-{d[6:8]}"
+        else:
+            date_str = d
+        home_name = g.get("home", "")
+        home_id = name_to_team_id.get(home_name)
+        if not home_id:
+            continue
+        record_path = DATA_DIR / "teams" / home_id / "game-records" / f"{date_str}.json"
+        if record_path.exists():
+            try:
+                with open(record_path, "r", encoding="utf-8") as f:
+                    record = json.load(f)
+                gt = record.get("gameInfo", {}).get("gtime")
+                if gt:
+                    time_lookup[key] = gt
+            except Exception:
+                pass
+
     enriched = []
     for g in games_list:
         g = dict(g)  # shallow copy to avoid mutating cached data
@@ -647,6 +673,7 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
     pitching_result = []
     etc_records = []
     lineup_confirmed = False
+    game_time_from_records = None
 
     for team_id, side in [(away_team, "away"), (home_team, "home")]:
         if dh_game_number >= 1:
@@ -693,6 +720,25 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
                     pass
         elif len(lineup[side]) > 0:
             lineup_confirmed = True
+
+    # Extract actual game time from game-records (authoritative source)
+    if not game_time_from_records:
+        for team_id in (away_team, home_team):
+            record_path = DATA_DIR / "teams" / team_id / "game-records" / f"{date_str}.json"
+            if dh_game_number >= 1:
+                alt_path = DATA_DIR / "teams" / team_id / "game-records" / f"{date_str}_dh2.json"
+                if alt_path.exists():
+                    record_path = alt_path
+            if record_path.exists():
+                try:
+                    with open(record_path, "r", encoding="utf-8") as f:
+                        rec = json.load(f)
+                    gt = rec.get("gameInfo", {}).get("gtime")
+                    if gt:
+                        game_time_from_records = gt
+                        break
+                except Exception:
+                    pass
 
     if game_data:
         away_s = game_data.get("awayStarter") or (game_data.get("away", {}).get("starter") if isinstance(game_data.get("away"), dict) else None)
@@ -742,7 +788,8 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
     if game_data:
         if isinstance(game_data.get("away"), dict):
             time_val = game_data.get("time")
-            # Fallback: query DB directly for correct time
+            if not time_val or time_val == "18:30":
+                time_val = game_time_from_records
             if not time_val or time_val == "18:30":
                 db_time = _get_db_game_time(game_id)
                 if db_time:
@@ -755,8 +802,15 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
             if "score" in game_data:
                 result["score"] = game_data["score"]
         else:
+            time_val = game_data.get("gtime") or game_data.get("time")
+            if not time_val or time_val == "18:30":
+                time_val = game_time_from_records
+            if not time_val or time_val == "18:30":
+                db_time = _get_db_game_time(game_id)
+                if db_time:
+                    time_val = db_time
             result["gameInfo"] = {
-                "time": game_data.get("gtime") or game_data.get("time", "18:30"),
+                "time": time_val or "18:30",
                 "venue": game_data.get("stadium") or game_data.get("venue", ""),
                 "status": "finished" if game_data.get("awayScore") is not None else "scheduled",
             }

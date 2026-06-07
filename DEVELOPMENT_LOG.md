@@ -2073,3 +2073,52 @@ key = (tg_date.replace("-", ""), away.get("name", ""), home.get("name", ""))  # 
 | `mobile/app/(tabs)/diary.tsx` | Route params 탭 이동 |
 | `mobile/app/game/[id].tsx` | sc=1 스티커 시간 체크 + SimpleAlert |
 | `mobile/lib/shortcutHelper.ts` | cancelled 경기 필터링 |
+
+---
+
+## Phase 17-8: 키보드 대응 통일 및 스티커 바로가기 버그 수정 (2026-06-07)
+
+### 키보드 대응 통일
+- `lib/hooks/useKeyboardHeight.ts` 신규 생성 (10줄 중복 리스너 공통화)
+- **StickerModal**: 해시태그 입력 시 키보드 가림 현상 해결
+  - `useKeyboardHeight()` + `contentContainerStyle paddingBottom` + `keyboardDismissMode="interactive"`
+  - `BottomSheet`에 `fillHeight` prop 추가 (Yoga maxHeight 스크롤뷰 바운딩 문제 해결)
+  - `useWindowDimensions()`로 Android resize 모드 대응
+  - 해시태그 onFocus 시 `scrollTo` 자동 스크롤
+  - 미리보기 ScrollView 외부 고정, 여백 최소화 (previewArea paddingVertical: 8, header paddingVertical: 5)
+- **diary.tsx**: 검색바 키보드 대응 (`useKeyboardHeight`, iOS만 marginBottom)
+- **CollectionModal / my.tsx**: KAV에 `keyboardVerticalOffset` 추가 (safe area 기반)
+- **useDiaryForm.ts / ExpenseModal.tsx**: inline 키보드 리스너 → `useKeyboardHeight()` 훅으로 교체
+- **app.json**: `softwareKeyboardLayoutMode: "resize"` 명시
+
+### usePressOnce 훅
+- `lib/hooks/usePressOnce.ts` 신규 생성 — cooldown 500ms 내 중복 실행 방지
+- StickerModal: handleClose, handleCopyClipboard, handleShare에 적용
+
+### 스티커 바로가기 자정 이후 버그 수정
+- **원인**: `findRecentMyTeamGame`의 `isStarted` 판단이 `score != null`을 fallback으로 사용
+  - `ScoreEntry.homeScore`가 `number` 타입이라 `0 != null`이 항상 `true` → 시작 전 오늘 경기를 "시작됨"으로 오판
+  - API의 `g.status = "scheduled"`가 있어도 `|| score != null`이 덮어씀
+- **수정**: 시간 기반 추론으로 전환
+  - `g.status`가 "finished"/"live" → 즉시 시작됨
+  - 그 외 → 오늘 경기면 `now >= gameTime` 확인, 과거 경기면 `score != null` fallback
+  - `g.time`은 서버 스케줄에서 매번 업데이트되므로 정확
+
+### 빌드
+- iOS: v1.0.15 (versionCode 16)
+- Android: v1.0.15 (versionCode 17), AAB 출시 준비 완료
+
+### 변경 파일
+| 파일 | 변경 |
+|---|---|
+| `mobile/lib/hooks/useKeyboardHeight.ts` | **신규** — 키보드 높이 리스너 공통 훅 |
+| `mobile/lib/hooks/usePressOnce.ts` | **신규** — 중복 터치 방지 훅 |
+| `mobile/components/StickerModal.tsx` | 키보드 대응, 미리보기 고정, usePressOnce |
+| `mobile/components/BottomSheet.tsx` | fillHeight prop, useWindowDimensions |
+| `mobile/app/(tabs)/diary.tsx` | 검색바 키보드 대응 |
+| `mobile/components/CollectionModal.tsx` | KAV keyboardVerticalOffset |
+| `mobile/app/(tabs)/my.tsx` | KAV keyboardVerticalOffset (2곳) |
+| `mobile/components/diary/useDiaryForm.ts` | useKeyboardHeight 적용 |
+| `mobile/components/ExpenseModal.tsx` | useKeyboardHeight 적용 |
+| `mobile/app.json` | softwareKeyboardLayoutMode 명시, versionCode 17 |
+| `mobile/lib/shortcutHelper.ts` | isStarted 시간 기반 추론 수정 |

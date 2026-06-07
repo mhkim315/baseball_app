@@ -52,7 +52,7 @@ export class ApiClient {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), this.timeout);
       try {
-        const res = await fetch(url, { signal: controller.signal });
+        const res = await fetch(url, { signal: controller.signal, cache: "no-store" });
         clearTimeout(timer);
         if (!res.ok) throw new HttpError(res.status);
         const json = await res.json();
@@ -78,7 +78,7 @@ export class ApiClient {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), this.timeout);
       try {
-        const res = await fetch(url, { signal: controller.signal });
+        const res = await fetch(url, { signal: controller.signal, cache: "no-store" });
         clearTimeout(timer);
         if (!res.ok) throw new HttpError(res.status);
         const json = await res.json();

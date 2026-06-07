@@ -37,16 +37,20 @@ function canMakeStickerForGame(detail: GameDetail, now: Date): boolean {
   if (!isToday && !isYesterday) return false;
   if (isYesterday && now.getHours() >= 14) return false;
 
-  // isLive와 동일한 구조: status || (오늘+시간지남) || (오늘+이닝데이터)
-  const dashParsed = parseDashDate(dateStr);
-  if (!dashParsed) return false;
-  const [gy, gm, gd] = dashParsed;
-  const [gh, gmn] = (detail.gameInfo?.time || "18:30").split(":").map(Number);
-  const gameHasStarted = now >= new Date(gy, gm - 1, gd, gh, gmn, 0, 0);
-  const hasInningData = !!detail.scoreBoard?.inn;
+  // "finished" 상태이지만 경기 시작 전이면 오래된 캐시 데이터 → 거부
+  if (status === "finished") {
+    const dashParsed = parseDashDate(dateStr);
+    if (dashParsed) {
+      const [gy, gm, gd] = dashParsed;
+      const [gh, gmn] = (detail.gameInfo?.time || "18:30").split(":").map(Number);
+      const startTime = new Date(gy, gm - 1, gd, gh, gmn, 0, 0);
+      if (now < startTime) return false;
+    }
+  }
+
+  // 게임 실제 진행 여부: 상태가 live/finished 이거나 이닝 데이터가 있을 때만
   const isGameActive = status === "finished" || status === "live"
-    || (isToday && gameHasStarted)
-    || (isToday && hasInningData);
+    || !!detail.scoreBoard?.inn?.home?.length;
   if (!isGameActive) return false;
 
   // 점수 데이터 확인 — 1회초 0:0 등 초반에는 scoreBoard.rheb만 있을 수 있음
@@ -186,7 +190,7 @@ export default function GameDetailScreen() {
             gameInfo: {
               time: scheduleEntry.time || "13:00",
               venue: resolveVenue(homeId, scheduleEntry.venue || ""),
-              status: "finished",
+              status: scheduleEntry.status || "scheduled",
             },
           });
           setLoading(false);

@@ -385,9 +385,9 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
       setNewExpenseMemo("");
     }
 
-    if (!content.trim() && photoUris.length === 0) {
+    if (!emotion) {
       savingRef.current = false;
-      setSimpleAlert({ visible: true, title: "알림", message: "사진이나 내용을 입력해주세요" });
+      setSimpleAlert({ visible: true, title: "알림", message: "감정표현을 선택해주세요" });
       return;
     }
     setSaving(true);

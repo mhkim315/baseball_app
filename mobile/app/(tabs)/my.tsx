@@ -342,13 +342,6 @@ export default function MyScreen() {
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [unlockedEmotions, setUnlockedEmotions] = useState<string[]>([]);
 
-  // ── Debug: iOS Modal touch bug (my탭 토템 모달 먹통) ──
-  const totemDebugRef = useRef(1);
-  const dbg = useCallback((msg: string, extra?: unknown) => {
-    const id = totemDebugRef.current++;
-    console.log(`[TOTEM-DEBUG:${id}] ${msg}`, extra ?? "");
-  }, []);
-
   // Totem state
   const [totems, setTotems] = useState<TotemWithStats[]>([]);
   const [showTotemModal, setShowTotemModal] = useState(false);
@@ -372,30 +365,27 @@ export default function MyScreen() {
   }, [openAchievement, router]);
 
   const loadData = useCallback(() => {
-    dbg("loadData() 실행");
     try { const nick = getNickname(); setNicknameState(nick ?? ""); } catch (e) { console.warn("getNickname failed", e); }
     try { const profile = getProfileImage(); setProfileImageState(profile); } catch (e) { console.warn("getProfileImage failed", e); }
     try { const unlocked = getUnlockedEmotions(); setUnlockedEmotions(unlocked); } catch (e) { console.warn("getUnlockedEmotions failed", e); }
     try {
       const allRecords = getJikgwanRecords();
       const totemStats = getAllTotemStats(allRecords);
-      dbg(`loadData: totems=${totemStats.length}개`);
       setTotems(totemStats);
     } catch (e) {
       console.warn("getJikgwanRecords/getAllTotemStats failed", e);
     }
-  }, [dbg]);
+  }, []);
 
   const [shortcut, setShortcut] = useState<ShortcutType | null>(null);
   const [showShortcutPicker, setShowShortcutPicker] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
-      dbg("useFocusEffect — 화면 포커스 획득");
       loadData();
       try { setShortcut(getShortcut() as ShortcutType | null); } catch {}
-      return () => { dbg("useFocusEffect cleanup — 화면 포커스 상실"); };
-    }, [loadData, dbg])
+      return () => { };
+    }, [loadData])
   );
 
   // My tab coach mark: show once when first loaded with no totems
@@ -554,7 +544,7 @@ export default function MyScreen() {
         <Text style={styles.sectionTitle}>모아보기</Text>
         <Pressable
           style={[styles.myTeamRow, { gap: 12, marginBottom: 12 }]}
-          onPress={() => { dbg("시즌 리캡 onPress → setShowYearInReview(true)"); setShowYearInReview(true); }}
+          onPress={() => { setShowYearInReview(true); }}
         >
           <Text style={{ fontSize: 28 }}>⚾</Text>
           <View style={{ flex: 1 }}>
@@ -568,11 +558,11 @@ export default function MyScreen() {
           <Text style={styles.myTeamArrow}>›</Text>
         </Pressable>
 
-        <AchievementSection onPress={() => { dbg("도전과제 onPress → showAchievementModal=true"); setShowAchievementModal(true); }} />
+        <AchievementSection onPress={() => { setShowAchievementModal(true); }} />
 
-        <CollectionSection onPress={() => { dbg("직관모아보기 onPress → showCollectionModal=true"); setShowCollectionModal(true); }} />
+        <CollectionSection onPress={() => { setShowCollectionModal(true); }} />
 
-        <TotemSection onPress={() => { dbg("TotemSection onPress → showTotemList=true"); setShowMyCoach(false); setShowTotemList(true); }} totems={totems} />
+        <TotemSection onPress={() => { setShowMyCoach(false); setShowTotemList(true); }} totems={totems} />
         {showMyCoach && (
           <View style={{ marginTop: 8 }}>
             <CoachMark
@@ -586,7 +576,7 @@ export default function MyScreen() {
         {/* Shortcut section */}
         <Pressable
           style={[styles.myTeamRow, { gap: 12, marginTop: 12 }]}
-          onPress={() => { dbg("바로가기 onPress → setShowShortcutPicker(true)"); setShowShortcutPicker(true); }}
+          onPress={() => { setShowShortcutPicker(true); }}
         >
           <Text style={{ fontSize: 28 }}>⚡</Text>
           <View style={{ flex: 1 }}>
@@ -730,7 +720,7 @@ export default function MyScreen() {
       />
 
       {/* Totem List Modal (create/edit/delete는 인라인 오버레이 — iOS Modal 중첩 버그 방지) */}
-      <Modal visible={showTotemList} transparent animationType="slide" onRequestClose={() => { dbg("TotemList onRequestClose"); setShowTotemList(false); }}>
+      <Modal visible={showTotemList} transparent animationType="slide" onRequestClose={() => { setShowTotemList(false); }}>
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" }}>
           <View style={{ height: Dimensions.get("window").height * 0.85, borderTopLeftRadius: 24, borderTopRightRadius: 24, borderWidth: 1, borderBottomWidth: 0, borderColor: theme.border, padding: 24, paddingBottom: 40, backgroundColor: theme.card }}>
             {showTotemModal ? (
@@ -770,14 +760,13 @@ export default function MyScreen() {
                   <ColorPicker selected={totemColor} onSelect={setTotemColor} />
 
                   <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
-                    <Pressable style={{ flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.secondary }} onPress={() => { dbg("취소 버튼 → showTotemModal=false"); setShowTotemModal(false); }} hitSlop={8}>
+                    <Pressable style={{ flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.secondary }} onPress={() => { setShowTotemModal(false); }} hitSlop={8}>
                       <Text style={{ fontSize: 14, color: theme.mutedForeground }}>취소</Text>
                     </Pressable>
                     <Pressable style={[{ flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.foreground }, !totemName.trim() && { opacity: 0.4 }]} disabled={!totemName.trim()} onPress={() => {
                       if (!totemName.trim()) return;
                       try {
                         if (editingTotem) {
-                          dbg(`저장(수정): id=${editingTotem.id}, name="${totemName.trim()}"`);
                           updateTotem(editingTotem.id, {
                             name: totemName.trim(),
                             emoji: totemEmoji || "🍀",
@@ -785,7 +774,6 @@ export default function MyScreen() {
                             color: totemColor.trim() || null,
                           });
                         } else {
-                          dbg(`저장(추가): name="${totemName.trim()}"`);
                           addTotem(totemName.trim(), totemEmoji || "🍀", totemDesc.trim() || undefined, totemColor.trim() || undefined);
                         }
                         setShowTotemModal(false);
@@ -841,7 +829,6 @@ export default function MyScreen() {
                   <Text style={{ fontSize: 18, fontWeight: "bold", color: theme.foreground }}>나의 토템</Text>
                   <View style={{ flexDirection: "row", gap: 12 }}>
                     <Pressable onPress={() => {
-                      dbg("➕ 버튼 탭 → showTotemModal=true, editingTotem=null");
                       setEditingTotem(null);
                       setTotemName("");
                       setTotemEmoji("");
@@ -851,7 +838,7 @@ export default function MyScreen() {
                     }}>
                       <Text style={{ fontSize: 22, color: theme.foreground }}>+</Text>
                     </Pressable>
-                    <Pressable onPress={() => { dbg("✕ 닫기 버튼 → showTotemList=false"); setShowTotemList(false); }} hitSlop={12}>
+                    <Pressable onPress={() => { setShowTotemList(false); }} hitSlop={12}>
                       <Text style={{ fontSize: 22, color: theme.mutedForeground }}>✕</Text>
                     </Pressable>
                   </View>
@@ -871,7 +858,6 @@ export default function MyScreen() {
                           <Pressable
                             key={t.id}
                             onPress={() => {
-                              dbg(`토템 "${t.name}"(id=${t.id}) 탭 → showTotemModal=true`);
                               setEditingTotem(t);
                               setTotemName(t.name);
                               setTotemEmoji(t.emoji);
@@ -889,7 +875,7 @@ export default function MyScreen() {
                             <View style={{ position: "relative", alignItems: "center" }}>
                               <Pressable
                                 hitSlop={6}
-                                onPress={(e) => { e.stopPropagation?.(); dbg(`토템 "${t.name}" ✕ 삭제 버튼 탭`); setShowTotemDeleteConfirm(t); }}
+                                onPress={(e) => { e.stopPropagation?.(); setShowTotemDeleteConfirm(t); }}
                                 style={{ position: "absolute", right: -4, top: -2, zIndex: 1, width: 22, height: 22, borderRadius: 11, backgroundColor: theme.muted, alignItems: "center", justifyContent: "center" }}
                               >
                                 <Text style={{ fontSize: 13, color: theme.mutedForeground }}>✕</Text>
@@ -969,8 +955,8 @@ export default function MyScreen() {
       </Modal>
 
       {/* Year in Review Modal */}
-      <Modal visible={showYearInReview} animationType="slide" onRequestClose={() => { dbg("YearInReview onRequestClose"); setShowYearInReview(false); }}>
-        <YearInReview year={reviewYear} onClose={() => { dbg("YearInReview onClose"); setShowYearInReview(false); }} />
+      <Modal visible={showYearInReview} animationType="slide" onRequestClose={() => { setShowYearInReview(false); }}>
+        <YearInReview year={reviewYear} onClose={() => { setShowYearInReview(false); }} />
       </Modal>
 
       {/* Achievement Modal */}

@@ -90,15 +90,15 @@ export async function findRecentMyTeamGame(myTeam: string): Promise<{ gameId: st
       
       if (homeId === myTeam || awayId === myTeam) {
         const score = scores.find((s) => TEAM_NAME_TO_ID[s.home] === homeId && TEAM_NAME_TO_ID[s.away] === awayId);
-        // ScheduleGame 객체에는 status 필드가 없는 경우가 많으므로 시간 기반 추론 추가
+        // ScheduleGame 객체에는 status 필드가 없는 경우가 많으므로 점수 기반 추론 추가
         let isStarted = false;
         if (g.status === "finished" || g.status === "live") {
           isStarted = true;
         } else {
-          const [gh, gmn] = (g.time || "18:30").split(":").map(Number);
-          const gameTime = new Date(year, month - 1, dateObj.getDate(), gh, gmn, 0, 0);
+          // 오늘 경기는 시간이 지났다고 시작된 것이 아님 (API 상태가 live/finished여야 실제 진행)
+          // 어제 이전 경기는 스코어 존재 = 경기 종료로 간주
           if (dateStr === todayStr) {
-            isStarted = now >= gameTime;
+            isStarted = (score && (score.awayScore > 0 || score.homeScore > 0)) ?? false;
           } else {
             isStarted = score != null;
           }
