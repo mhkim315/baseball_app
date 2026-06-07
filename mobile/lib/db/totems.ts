@@ -33,6 +33,7 @@ export function addTotem(
     description ?? null,
     color ?? null
   );
+  invalidateTotemStatsCache();
   return result.lastInsertRowId ?? 0;
 }
 
@@ -60,6 +61,7 @@ export function updateTotem(
     `UPDATE totems SET ${setClauses.join(", ")} WHERE id = ?`,
     ...values
   );
+  invalidateTotemStatsCache();
 }
 
 export function deleteTotem(id: number, keepRecords: boolean): void {
@@ -70,6 +72,7 @@ export function deleteTotem(id: number, keepRecords: boolean): void {
     database.runSync("DELETE FROM diary_totems WHERE totem_id = ?", id);
     database.runSync("DELETE FROM totems WHERE id = ?", id);
   }
+  invalidateTotemStatsCache();
 }
 
 export function getAllTotems(): Totem[] {

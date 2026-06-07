@@ -52,6 +52,7 @@ import ColorPicker from "@/components/ColorPicker";
 import CoachMark from "@/components/CoachMark";
 import ShortcutPickerModal from "@/components/ShortcutPickerModal";
 import SimpleAlert from "@/components/SimpleAlert";
+import { useKeyboardHeight } from "@/lib/hooks/useKeyboardHeight";
 import { getMyCoachSeen, setMyCoachSeen, getVisitCount, getShortcut, setShortcut as saveShortcut } from "@/lib/db";
 import { SHORTCUT_LABELS, type ShortcutType } from "@/lib/shortcutHelper";
 
@@ -341,6 +342,13 @@ export default function MyScreen() {
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [unlockedEmotions, setUnlockedEmotions] = useState<string[]>([]);
 
+  // ── Debug: iOS Modal touch bug (my탭 토템 모달 먹통) ──
+  const totemDebugRef = useRef(1);
+  const dbg = useCallback((msg: string, extra?: unknown) => {
+    const id = totemDebugRef.current++;
+    console.log(`[TOTEM-DEBUG:${id}] ${msg}`, extra ?? "");
+  }, []);
+
   // Totem state
   const [totems, setTotems] = useState<TotemWithStats[]>([]);
   const [showTotemModal, setShowTotemModal] = useState(false);
@@ -364,26 +372,30 @@ export default function MyScreen() {
   }, [openAchievement, router]);
 
   const loadData = useCallback(() => {
+    dbg("loadData() 실행");
     try { const nick = getNickname(); setNicknameState(nick ?? ""); } catch (e) { console.warn("getNickname failed", e); }
     try { const profile = getProfileImage(); setProfileImageState(profile); } catch (e) { console.warn("getProfileImage failed", e); }
     try { const unlocked = getUnlockedEmotions(); setUnlockedEmotions(unlocked); } catch (e) { console.warn("getUnlockedEmotions failed", e); }
     try {
       const allRecords = getJikgwanRecords();
       const totemStats = getAllTotemStats(allRecords);
+      dbg(`loadData: totems=${totemStats.length}개`);
       setTotems(totemStats);
     } catch (e) {
       console.warn("getJikgwanRecords/getAllTotemStats failed", e);
     }
-  }, []);
+  }, [dbg]);
 
   const [shortcut, setShortcut] = useState<ShortcutType | null>(null);
   const [showShortcutPicker, setShowShortcutPicker] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
+      dbg("useFocusEffect — 화면 포커스 획득");
       loadData();
       try { setShortcut(getShortcut() as ShortcutType | null); } catch {}
-    }, [loadData])
+      return () => { dbg("useFocusEffect cleanup — 화면 포커스 상실"); };
+    }, [loadData, dbg])
   );
 
   // My tab coach mark: show once when first loaded with no totems
@@ -448,6 +460,7 @@ export default function MyScreen() {
     }
   };
 
+  const keyboardHeight = useKeyboardHeight();
   const myTeamColor = myTeam ? teamPrimaryColor(myTeam, isDark) : "#888";
 
   // Sort: basic (always unlocked) → unlocked non-basic → locked
@@ -541,7 +554,7 @@ export default function MyScreen() {
         <Text style={styles.sectionTitle}>모아보기</Text>
         <Pressable
           style={[styles.myTeamRow, { gap: 12, marginBottom: 12 }]}
-          onPress={() => setShowYearInReview(true)}
+          onPress={() => { dbg("시즌 리캡 onPress → setShowYearInReview(true)"); setShowYearInReview(true); }}
         >
           <Text style={{ fontSize: 28 }}>⚾</Text>
           <View style={{ flex: 1 }}>
@@ -555,11 +568,11 @@ export default function MyScreen() {
           <Text style={styles.myTeamArrow}>›</Text>
         </Pressable>
 
-        <AchievementSection onPress={() => setShowAchievementModal(true)} />
+        <AchievementSection onPress={() => { dbg("도전과제 onPress → showAchievementModal=true"); setShowAchievementModal(true); }} />
 
-        <CollectionSection onPress={() => setShowCollectionModal(true)} />
+        <CollectionSection onPress={() => { dbg("직관모아보기 onPress → showCollectionModal=true"); setShowCollectionModal(true); }} />
 
-        <TotemSection onPress={() => { setShowMyCoach(false); setShowTotemList(true); }} totems={totems} />
+        <TotemSection onPress={() => { dbg("TotemSection onPress → showTotemList=true"); setShowMyCoach(false); setShowTotemList(true); }} totems={totems} />
         {showMyCoach && (
           <View style={{ marginTop: 8 }}>
             <CoachMark
@@ -573,7 +586,7 @@ export default function MyScreen() {
         {/* Shortcut section */}
         <Pressable
           style={[styles.myTeamRow, { gap: 12, marginTop: 12 }]}
-          onPress={() => setShowShortcutPicker(true)}
+          onPress={() => { dbg("바로가기 onPress → setShowShortcutPicker(true)"); setShowShortcutPicker(true); }}
         >
           <Text style={{ fontSize: 28 }}>⚡</Text>
           <View style={{ flex: 1 }}>
@@ -716,198 +729,198 @@ export default function MyScreen() {
         onClose={() => { setShowResetComplete(false); router.replace("/onboarding"); }}
       />
 
-      {/* Totem List Modal */}
-      <Modal visible={showTotemList} transparent animationType="slide" onRequestClose={() => setShowTotemList(false)}>
+      {/* Totem List Modal (create/edit/delete는 인라인 오버레이 — iOS Modal 중첩 버그 방지) */}
+      <Modal visible={showTotemList} transparent animationType="slide" onRequestClose={() => { dbg("TotemList onRequestClose"); setShowTotemList(false); }}>
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" }}>
           <View style={{ height: Dimensions.get("window").height * 0.85, borderTopLeftRadius: 24, borderTopRightRadius: 24, borderWidth: 1, borderBottomWidth: 0, borderColor: theme.border, padding: 24, paddingBottom: 40, backgroundColor: theme.card }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <Text style={{ fontSize: 18, fontWeight: "bold", color: theme.foreground }}>나의 토템</Text>
-                <View style={{ flexDirection: "row", gap: 12 }}>
-                  <Pressable onPress={() => {
-                    setEditingTotem(null);
-                    setTotemName("");
-                    setTotemEmoji("");
-                    setTotemDesc("");
-                    setTotemColor("");
-                    setShowTotemModal(true);
-                  }}>
-                    <Text style={{ fontSize: 22, color: theme.foreground }}>+</Text>
-                  </Pressable>
-                  <Pressable onPress={() => setShowTotemList(false)} hitSlop={12}>
-                    <Text style={{ fontSize: 22, color: theme.mutedForeground }}>✕</Text>
-                  </Pressable>
-                </View>
-              </View>
-              {totems.length === 0 ? (
-                <Text style={{ fontSize: 13, color: theme.mutedForeground, paddingVertical: 32, textAlign: "center" }}>
-                  아직 등록된 토템이 없어요.{'\n'}토템을 추가해보세요!
-                </Text>
-              ) : (
-                <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-                    {totems.map((t) => {
-                      const chipColor = t.color || theme.border;
-                      const wrPct = t.count > 0 ? Math.round(t.winRate * 100) : 0;
-                      const teamColor_ = myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground;
-                      return (
-                        <Pressable
-                          key={t.id}
-                          onPress={() => {
-                            setEditingTotem(t);
-                            setTotemName(t.name);
-                            setTotemEmoji(t.emoji);
-                            setTotemDesc(t.description || "");
-                            setTotemColor(t.color || "");
-                            setShowTotemModal(true);
-                          }}
-                          style={{
-                            width: "47%", borderRadius: 16, borderWidth: 1,
-                            borderColor: chipColor,
-                            backgroundColor: chipColor + "10",
-                            padding: 14, paddingTop: 8, gap: 6,
-                          }}
-                        >
-                          <View style={{ position: "relative", alignItems: "center" }}>
-                            <Pressable
-                              hitSlop={6}
-                              onPress={(e) => { e.stopPropagation?.(); setShowTotemDeleteConfirm(t); }}
-                              style={{ position: "absolute", right: -4, top: -2, zIndex: 1, width: 22, height: 22, borderRadius: 11, backgroundColor: theme.muted, alignItems: "center", justifyContent: "center" }}
-                            >
-                              <Text style={{ fontSize: 13, color: theme.mutedForeground }}>✕</Text>
-                            </Pressable>
-                            <Text style={{ fontSize: 28 }}>{t.emoji}</Text>
-                          </View>
-                          <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground, textAlign: "center" }} numberOfLines={1}>
-                            {t.name}
-                          </Text>
-                          <View style={{ flexDirection: "row", justifyContent: "center", gap: 12 }}>
-                            <Text style={{ fontSize: 12, color: theme.mutedForeground }}>{t.count}회</Text>
-                            <Text style={{ fontSize: 12, fontWeight: "600", color: teamColor_ }}>
-                              {wrPct}%
-                            </Text>
-                            {t.currentStreak > 1 && (
-                              <Text style={{ fontSize: 12, color: t.currentStreak > 0 ? "#22c55e" : "#ef4444" }}>
-                                {t.currentStreak}{t.currentStreak > 0 ? "연승" : "연패"}
-                              </Text>
-                            )}
-                          </View>
-                        </Pressable>
-                      );
-                    })}
+            {showTotemModal ? (
+              <View style={{ flex: 1 }}>
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 80 + keyboardHeight }}>
+                  <Text style={{ fontSize: 18, fontWeight: "bold", color: theme.foreground, marginBottom: 8, textAlign: "center" }}>
+                    {editingTotem ? "토템 수정" : "토템 추가"}
+                  </Text>
+                  <Text style={{ fontSize: 12, color: theme.mutedForeground, marginBottom: 16, textAlign: "center" }}>
+                    {editingTotem ? "토템 정보를 수정하세요" : "나만의 승리 토템을 만들어보세요!"}
+                  </Text>
+
+                  <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>이름 *</Text>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: theme.muted, borderRadius: 12, padding: 14, fontSize: 16, color: theme.foreground, marginBottom: 16 }]}
+                    value={totemName}
+                    onChangeText={setTotemName}
+                    placeholder="토템 이름"
+                    placeholderTextColor="#666"
+                    maxLength={30}
+                  />
+
+                  <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>이모지</Text>
+                  <EmojiPicker selected={totemEmoji} onSelect={setTotemEmoji} />
+
+                  <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>설명</Text>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: theme.muted, borderRadius: 12, padding: 14, fontSize: 16, color: theme.foreground, marginBottom: 16 }]}
+                    value={totemDesc}
+                    onChangeText={setTotemDesc}
+                    placeholder="이 토템은... (선택사항)"
+                    placeholderTextColor="#666"
+                    maxLength={100}
+                  />
+
+                  <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>색상</Text>
+                  <ColorPicker selected={totemColor} onSelect={setTotemColor} />
+
+                  <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
+                    <Pressable style={{ flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.secondary }} onPress={() => { dbg("취소 버튼 → showTotemModal=false"); setShowTotemModal(false); }} hitSlop={8}>
+                      <Text style={{ fontSize: 14, color: theme.mutedForeground }}>취소</Text>
+                    </Pressable>
+                    <Pressable style={[{ flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.foreground }, !totemName.trim() && { opacity: 0.4 }]} disabled={!totemName.trim()} onPress={() => {
+                      if (!totemName.trim()) return;
+                      try {
+                        if (editingTotem) {
+                          dbg(`저장(수정): id=${editingTotem.id}, name="${totemName.trim()}"`);
+                          updateTotem(editingTotem.id, {
+                            name: totemName.trim(),
+                            emoji: totemEmoji || "🍀",
+                            description: totemDesc.trim() || null,
+                            color: totemColor.trim() || null,
+                          });
+                        } else {
+                          dbg(`저장(추가): name="${totemName.trim()}"`);
+                          addTotem(totemName.trim(), totemEmoji || "🍀", totemDesc.trim() || undefined, totemColor.trim() || undefined);
+                        }
+                        setShowTotemModal(false);
+                        loadData();
+                      } catch (e) {
+                        console.warn("totem save failed", e);
+                      }
+                    }}>
+                      <Text style={{ fontSize: 14, fontWeight: "600", color: theme.background }}>{editingTotem ? "수정" : "추가"}</Text>
+                    </Pressable>
                   </View>
                 </ScrollView>
-              )}
+              </View>
+            ) : showTotemDeleteConfirm ? (
+              <View style={{ flex: 1, justifyContent: "center" }}>
+                <View style={{ backgroundColor: theme.card, borderRadius: 20, padding: 24, width: "100%", maxWidth: 340, alignSelf: "center" }}>
+                  <Text style={{ fontSize: 18, fontWeight: "bold", color: theme.foreground, marginBottom: 16, textAlign: "center" }}>"{showTotemDeleteConfirm.name}" 삭제</Text>
+                  <Text style={{ fontSize: 14, color: theme.mutedForeground, marginBottom: 16, lineHeight: 20, textAlign: "center" }}>
+                    토템을 삭제할 때 연결된 기록을{'\n'}어떻게 처리할까요?
+                  </Text>
+                  <View style={{ gap: 8 }}>
+                    <Pressable style={{ alignItems: "center", paddingVertical: 14, borderRadius: 12, backgroundColor: myTeamColor }} onPress={() => {
+                      try {
+                        deleteTotem(showTotemDeleteConfirm.id, true);
+                        setShowTotemDeleteConfirm(null);
+                        loadData();
+                      } catch (e) {
+                        console.warn("totem delete failed", e);
+                      }
+                    }}>
+                      <Text style={{ fontSize: 14, fontWeight: "600", color: "#fff" }}>기록 유지 (토템만 제거)</Text>
+                    </Pressable>
+                    <Pressable style={{ alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.muted }} onPress={() => {
+                      try {
+                        deleteTotem(showTotemDeleteConfirm.id, false);
+                        setShowTotemDeleteConfirm(null);
+                        loadData();
+                      } catch (e) {
+                        console.warn("totem delete failed", e);
+                      }
+                    }}>
+                      <Text style={{ fontSize: 14, fontWeight: "600", color: "#ef4444" }}>기록에서도 제거</Text>
+                    </Pressable>
+                    <Pressable style={{ alignItems: "center", paddingVertical: 10, borderRadius: 12, marginTop: 4 }} onPress={() => setShowTotemDeleteConfirm(null)} hitSlop={8}>
+                      <Text style={{ fontSize: 14, color: theme.mutedForeground }}>취소</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              </View>
+            ) : (
+              <>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <Text style={{ fontSize: 18, fontWeight: "bold", color: theme.foreground }}>나의 토템</Text>
+                  <View style={{ flexDirection: "row", gap: 12 }}>
+                    <Pressable onPress={() => {
+                      dbg("➕ 버튼 탭 → showTotemModal=true, editingTotem=null");
+                      setEditingTotem(null);
+                      setTotemName("");
+                      setTotemEmoji("");
+                      setTotemDesc("");
+                      setTotemColor("");
+                      setShowTotemModal(true);
+                    }}>
+                      <Text style={{ fontSize: 22, color: theme.foreground }}>+</Text>
+                    </Pressable>
+                    <Pressable onPress={() => { dbg("✕ 닫기 버튼 → showTotemList=false"); setShowTotemList(false); }} hitSlop={12}>
+                      <Text style={{ fontSize: 22, color: theme.mutedForeground }}>✕</Text>
+                    </Pressable>
+                  </View>
+                </View>
+                {totems.length === 0 ? (
+                  <Text style={{ fontSize: 13, color: theme.mutedForeground, paddingVertical: 32, textAlign: "center" }}>
+                    아직 등록된 토템이 없어요.{'\n'}토템을 추가해보세요!
+                  </Text>
+                ) : (
+                  <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                      {totems.map((t) => {
+                        const chipColor = t.color || theme.border;
+                        const wrPct = t.count > 0 ? Math.round(t.winRate * 100) : 0;
+                        const teamColor_ = myTeam ? teamPrimaryColor(myTeam, isDark) : theme.foreground;
+                        return (
+                          <Pressable
+                            key={t.id}
+                            onPress={() => {
+                              dbg(`토템 "${t.name}"(id=${t.id}) 탭 → showTotemModal=true`);
+                              setEditingTotem(t);
+                              setTotemName(t.name);
+                              setTotemEmoji(t.emoji);
+                              setTotemDesc(t.description || "");
+                              setTotemColor(t.color || "");
+                              setShowTotemModal(true);
+                            }}
+                            style={{
+                              width: "47%", borderRadius: 16, borderWidth: 1,
+                              borderColor: chipColor,
+                              backgroundColor: chipColor + "10",
+                              padding: 14, paddingTop: 8, gap: 6,
+                            }}
+                          >
+                            <View style={{ position: "relative", alignItems: "center" }}>
+                              <Pressable
+                                hitSlop={6}
+                                onPress={(e) => { e.stopPropagation?.(); dbg(`토템 "${t.name}" ✕ 삭제 버튼 탭`); setShowTotemDeleteConfirm(t); }}
+                                style={{ position: "absolute", right: -4, top: -2, zIndex: 1, width: 22, height: 22, borderRadius: 11, backgroundColor: theme.muted, alignItems: "center", justifyContent: "center" }}
+                              >
+                                <Text style={{ fontSize: 13, color: theme.mutedForeground }}>✕</Text>
+                              </Pressable>
+                              <Text style={{ fontSize: 28 }}>{t.emoji}</Text>
+                            </View>
+                            <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground, textAlign: "center" }} numberOfLines={1}>
+                              {t.name}
+                            </Text>
+                            <View style={{ flexDirection: "row", justifyContent: "center", gap: 12 }}>
+                              <Text style={{ fontSize: 12, color: theme.mutedForeground }}>{t.count}회</Text>
+                              <Text style={{ fontSize: 12, fontWeight: "600", color: teamColor_ }}>
+                                {wrPct}%
+                              </Text>
+                              {t.currentStreak > 1 && (
+                                <Text style={{ fontSize: 12, color: t.currentStreak > 0 ? "#22c55e" : "#ef4444" }}>
+                                  {t.currentStreak}{t.currentStreak > 0 ? "연승" : "연패"}
+                                </Text>
+                              )}
+                            </View>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  </ScrollView>
+                )}
+              </>
+            )}
             </View>
           </View>
         </Modal>
-
-      {/* Totem Create/Edit Modal */}
-      <Modal visible={showTotemModal} transparent animationType="fade" onRequestClose={() => setShowTotemModal(false)}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>{editingTotem ? "토템 수정" : "토템 추가"}</Text>
-              <Text style={{ fontSize: 12, color: theme.mutedForeground, marginBottom: 12, textAlign: "center" }}>
-                {editingTotem ? "토템 정보를 수정하세요" : "나만의 승리 토템을 만들어보세요!"}
-              </Text>
-
-              <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>이름 *</Text>
-              <TextInput
-                style={styles.input}
-                value={totemName}
-                onChangeText={setTotemName}
-                placeholder="토템 이름"
-                placeholderTextColor="#666"
-                maxLength={30}
-              />
-
-              <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>이모지</Text>
-              <EmojiPicker selected={totemEmoji} onSelect={setTotemEmoji} />
-
-              <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>설명</Text>
-              <TextInput
-                style={styles.input}
-                value={totemDesc}
-                onChangeText={setTotemDesc}
-                placeholder="이 토템은... (선택사항)"
-                placeholderTextColor="#666"
-                maxLength={100}
-              />
-
-              <Text style={{ fontSize: 12, fontWeight: "600", color: theme.mutedForeground, marginBottom: 4 }}>색상</Text>
-              <ColorPicker selected={totemColor} onSelect={setTotemColor} />
-
-              <View style={styles.modalButtons}>
-                <Pressable style={styles.modalCancel} onPress={() => setShowTotemModal(false)} hitSlop={8}>
-                  <Text style={styles.modalCancelText}>취소</Text>
-                </Pressable>
-                <Pressable style={[styles.modalSave, !totemName.trim() && { opacity: 0.4 }]} disabled={!totemName.trim()} onPress={() => {
-                  if (!totemName.trim()) return;
-                  try {
-                    if (editingTotem) {
-                      updateTotem(editingTotem.id, {
-                        name: totemName.trim(),
-                        emoji: totemEmoji || "🍀",
-                        description: totemDesc.trim() || null,
-                        color: totemColor.trim() || null,
-                      });
-                    } else {
-                      addTotem(totemName.trim(), totemEmoji || "🍀", totemDesc.trim() || undefined, totemColor.trim() || undefined);
-                    }
-                    setShowTotemModal(false);
-                    loadData();
-                  } catch (e) {
-                    console.warn("totem save failed", e);
-                  }
-                }}>
-                  <Text style={styles.modalSaveText}>{editingTotem ? "수정" : "추가"}</Text>
-                </Pressable>
-              </View>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-
-      {/* Totem Delete Confirm */}
-      <Modal visible={!!showTotemDeleteConfirm} transparent animationType="fade" onRequestClose={() => setShowTotemDeleteConfirm(null)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>"{showTotemDeleteConfirm?.name}" 삭제</Text>
-            <Text style={{ fontSize: 14, color: theme.mutedForeground, marginBottom: 16, lineHeight: 20, textAlign: "center" }}>
-              토템을 삭제할 때 연결된 기록을{'\n'}어떻게 처리할까요?
-            </Text>
-            <View style={{ gap: 8 }}>
-              <Pressable style={{ alignItems: "center", paddingVertical: 14, borderRadius: 12, backgroundColor: myTeamColor }} onPress={() => {
-                if (!showTotemDeleteConfirm) return;
-                try {
-                  deleteTotem(showTotemDeleteConfirm.id, true);
-                  setShowTotemDeleteConfirm(null);
-                  loadData();
-                } catch (e) {
-                  console.warn("totem delete failed", e);
-                }
-              }}>
-                <Text style={{ fontSize: 14, fontWeight: "600", color: "#fff" }}>기록 유지 (토템만 제거)</Text>
-              </Pressable>
-              <Pressable style={{ alignItems: "center", paddingVertical: 12, borderRadius: 12, backgroundColor: theme.muted }} onPress={() => {
-                if (!showTotemDeleteConfirm) return;
-                try {
-                  deleteTotem(showTotemDeleteConfirm.id, false);
-                  setShowTotemDeleteConfirm(null);
-                  loadData();
-                } catch (e) {
-                  console.warn("totem delete failed", e);
-                }
-              }}>
-                <Text style={{ fontSize: 14, fontWeight: "600", color: "#ef4444" }}>기록에서도 제거</Text>
-              </Pressable>
-              <Pressable style={{ alignItems: "center", paddingVertical: 10, borderRadius: 12, marginTop: 4 }} onPress={() => setShowTotemDeleteConfirm(null)} hitSlop={8}>
-                <Text style={{ fontSize: 14, color: theme.mutedForeground }}>취소</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* Profile Character Picker Modal */}
       <Modal visible={showProfilePicker} transparent animationType="fade">
@@ -956,8 +969,8 @@ export default function MyScreen() {
       </Modal>
 
       {/* Year in Review Modal */}
-      <Modal visible={showYearInReview} animationType="slide">
-        <YearInReview year={reviewYear} onClose={() => setShowYearInReview(false)} />
+      <Modal visible={showYearInReview} animationType="slide" onRequestClose={() => { dbg("YearInReview onRequestClose"); setShowYearInReview(false); }}>
+        <YearInReview year={reviewYear} onClose={() => { dbg("YearInReview onClose"); setShowYearInReview(false); }} />
       </Modal>
 
       {/* Achievement Modal */}
