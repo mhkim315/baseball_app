@@ -3,8 +3,11 @@ import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemeProvider, useTheme } from "@/lib/ThemeContext";
 import { TeamProvider } from "@/lib/TeamContext";
-import React from "react";
-import { View, Text, Pressable } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { View, Text, Pressable, InteractionManager } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
+
+SplashScreen.preventAutoHideAsync();
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -46,6 +49,15 @@ class ErrorBoundary extends React.Component<
 
 function RootLayoutInner() {
   const { isDark } = useTheme();
+  const hideSplashCalled = useRef(false);
+
+  useEffect(() => {
+    InteractionManager.runAfterInteractions(() => {
+      if (hideSplashCalled.current) return;
+      hideSplashCalled.current = true;
+      SplashScreen.hideAsync();
+    });
+  }, []);
 
   return (
     <>

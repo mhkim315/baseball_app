@@ -1,6 +1,7 @@
 import * as SQLite from "expo-sqlite";
 
 const CACHE_VERSION = 4;
+const SCHEMA_VERSION = 1;
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -102,6 +103,16 @@ function initSchema(): void {
     CREATE INDEX IF NOT EXISTS idx_diary_totems_record ON diary_totems(record_id);
     CREATE INDEX IF NOT EXISTS idx_diary_totems_totem ON diary_totems(totem_id);
   `);
+
+  // Skip migrations and cache cleanup if schema is already up-to-date
+  const schemaVer = database.getFirstSync<{ value: string }>(
+    "SELECT value FROM user_settings WHERE key = ?",
+    "schema_version"
+  );
+  if (schemaVer && schemaVer.value === String(SCHEMA_VERSION)) {
+    return;
+  }
+
   migrateJikgwanSchema();
   migrateTotemSchema();
   migrateBadgesSchema();
@@ -124,6 +135,11 @@ function initSchema(): void {
       String(CACHE_VERSION)
     );
   }
+  database.runSync(
+    "INSERT OR REPLACE INTO user_settings (key, value) VALUES (?, ?)",
+    "schema_version",
+    String(SCHEMA_VERSION)
+  );
 }
 
 function migrateJikgwanSchema(): void {
