@@ -17,7 +17,6 @@ import {
 import { resizePhoto, savePhoto, generatePhotoName, deletePhoto } from "@/lib/camera";
 import EmojiPicker from "@/components/EmojiPicker";
 import ColorPicker from "@/components/ColorPicker";
-import SimpleAlert from "@/components/SimpleAlert";
 
 interface Props {
   visible: boolean;
@@ -455,35 +454,51 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
         </KeyboardAvoidingView>
 
         {/* Fullscreen photo viewer */}
-        <Modal visible={!!fullscreenUri} transparent animationType="fade" onRequestClose={() => setFullscreenUri(null)}>
-          <Pressable
-            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.95)", justifyContent: "center", alignItems: "center" }}
-            onPress={() => setFullscreenUri(null)}
-          >
-            {fullscreenUri && (
+        {!!fullscreenUri && (
+          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }}>
+            <Pressable
+              style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.95)", justifyContent: "center", alignItems: "center" }}
+              onPress={() => setFullscreenUri(null)}
+            >
               <Image source={{ uri: fullscreenUri }} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
-            )}
-          </Pressable>
-        </Modal>
+            </Pressable>
+          </View>
+        )}
 
-        {/* Simple alert */}
-        <SimpleAlert
-          visible={alert.visible}
-          title={alert.title}
-          message={alert.message}
-          onClose={() => setAlert({ ...alert, visible: false })}
-        />
+        {/* Alert inline overlay */}
+        {alert.visible && (
+          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }}>
+            <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", alignItems: "center" }} onPress={() => setAlert({ ...alert, visible: false })}>
+              <Pressable onPress={() => {}} style={{ borderRadius: 18, padding: 28, minWidth: 280, maxWidth: 320, alignItems: "center", backgroundColor: theme.card }}>
+                <Text style={{ fontSize: 17, fontWeight: "700", marginBottom: 8, color: theme.foreground }}>{alert.title}</Text>
+                <Text style={{ fontSize: 14, textAlign: "center", marginBottom: 20, lineHeight: 20, color: theme.mutedForeground }}>{alert.message}</Text>
+                <Pressable style={{ alignSelf: "stretch", paddingVertical: 12, borderRadius: 12, alignItems: "center", backgroundColor: theme.foreground }} onPress={() => setAlert({ ...alert, visible: false })}>
+                  <Text style={{ fontSize: 14, fontWeight: "700", color: theme.background }}>확인</Text>
+                </Pressable>
+              </Pressable>
+            </Pressable>
+          </View>
+        )}
 
-        {/* Confirm delete alert */}
-        <SimpleAlert
-          visible={confirmAlert.visible}
-          title={confirmAlert.title}
-          message={confirmAlert.message}
-          confirmText="삭제"
-          onConfirm={confirmAlert.onConfirm}
-          cancelText="취소"
-          onClose={() => setConfirmAlert({ ...confirmAlert, visible: false })}
-        />
+        {/* Confirm delete alert inline overlay */}
+        {confirmAlert.visible && (
+          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }}>
+            <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", alignItems: "center" }} onPress={() => setConfirmAlert({ ...confirmAlert, visible: false })}>
+              <Pressable onPress={() => {}} style={{ borderRadius: 18, padding: 28, minWidth: 280, maxWidth: 320, alignItems: "center", backgroundColor: theme.card }}>
+                <Text style={{ fontSize: 17, fontWeight: "700", marginBottom: 8, color: theme.foreground }}>{confirmAlert.title}</Text>
+                <Text style={{ fontSize: 14, textAlign: "center", marginBottom: 20, lineHeight: 20, color: theme.mutedForeground }}>{confirmAlert.message}</Text>
+                <View style={{ flexDirection: "row", gap: 10, alignSelf: "stretch" }}>
+                  <Pressable style={{ flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 1, alignItems: "center", borderColor: theme.border }} onPress={() => setConfirmAlert({ ...confirmAlert, visible: false })}>
+                    <Text style={{ fontSize: 14, fontWeight: "600", color: theme.mutedForeground }}>취소</Text>
+                  </Pressable>
+                  <Pressable style={{ flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: "center", backgroundColor: "#ef4444" }} onPress={() => { confirmAlert.onConfirm(); setConfirmAlert({ ...confirmAlert, visible: false }); }}>
+                    <Text style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>삭제</Text>
+                  </Pressable>
+                </View>
+              </Pressable>
+            </Pressable>
+          </View>
+        )}
       </Modal>
   );
 }

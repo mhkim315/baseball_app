@@ -203,9 +203,9 @@ export default function BadgeCollectionModal({ visible, onClose, myTeam }: Badge
           )}
         </ScrollView>
 
-        {/* Badge detail popup */}
+        {/* Badge detail popup — 인라인 오버레이 (iOS Modal 중첩 버그 방지) */}
         {detailDef && (
-          <Modal transparent animationType="fade" visible={!!detailDef} onRequestClose={() => setDetailBadgeKey(null)}>
+          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
             <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)" }} onPress={() => setDetailBadgeKey(null)}>
               <BadgeDetailPopup
                 badge={detailBadge}
@@ -214,7 +214,7 @@ export default function BadgeCollectionModal({ visible, onClose, myTeam }: Badge
                 onClose={() => setDetailBadgeKey(null)}
               />
             </Pressable>
-          </Modal>
+          </View>
         )}
       </View>
     </Modal>

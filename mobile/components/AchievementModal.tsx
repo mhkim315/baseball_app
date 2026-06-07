@@ -140,9 +140,9 @@ export default function AchievementModal({ visible, onClose }: Props) {
           </ScrollView>
         )}
 
-        {/* Badge detail popup */}
+        {/* Badge detail popup — 인라인 오버레이 (iOS Modal 중첩 버그 방지) */}
         {detailDef && (
-          <Modal transparent animationType="fade" visible={!!detailDef} onRequestClose={() => setDetailBadgeKey(null)}>
+          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
             <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)" }} onPress={() => setDetailBadgeKey(null)}>
               <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
                 <View style={{ width: "100%", maxWidth: 300, borderRadius: 20, borderWidth: 1, padding: 28, alignItems: "center", gap: 8, backgroundColor: theme.card, borderColor: theme.border }}>
@@ -181,7 +181,7 @@ export default function AchievementModal({ visible, onClose }: Props) {
                 </View>
               </View>
             </Pressable>
-          </Modal>
+          </View>
         )}
       </View>
     </Modal>

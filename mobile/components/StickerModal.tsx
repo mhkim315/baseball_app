@@ -20,7 +20,6 @@ import { useTeam } from "@/lib/TeamContext";
 import { useKeyboardHeight } from "@/lib/hooks/useKeyboardHeight";
 import { usePressOnce } from "@/lib/hooks/usePressOnce";
 import ColorPicker from "@/components/ColorPicker";
-import SimpleAlert from "@/components/SimpleAlert";
 
 interface ScoreBoardInn {
   away: (number | null)[];
@@ -649,12 +648,19 @@ export default function StickerModal({
 
           <Text style={s.hint}>스티커를 클립보드에 복사해서 인스타그램 스토리에 붙여넣기 하세요.</Text>
         </ScrollView>
-    <SimpleAlert
-      visible={alert.visible}
-      title={alert.title}
-      message={alert.message}
-      onClose={() => setAlert({ ...alert, visible: false })}
-    />
+        {alert.visible && (
+          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }}>
+            <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", alignItems: "center" }} onPress={() => setAlert({ ...alert, visible: false })}>
+              <Pressable onPress={() => {}} style={{ borderRadius: 18, padding: 28, minWidth: 280, maxWidth: 320, alignItems: "center", backgroundColor: theme.card }}>
+                <Text style={{ fontSize: 17, fontWeight: "700", marginBottom: 8, color: theme.foreground }}>{alert.title}</Text>
+                <Text style={{ fontSize: 14, textAlign: "center", marginBottom: 20, lineHeight: 20, color: theme.mutedForeground }}>{alert.message}</Text>
+                <Pressable style={{ alignSelf: "stretch", paddingVertical: 12, borderRadius: 12, alignItems: "center", backgroundColor: theme.foreground }} onPress={() => setAlert({ ...alert, visible: false })}>
+                  <Text style={{ fontSize: 14, fontWeight: "700", color: theme.background }}>확인</Text>
+                </Pressable>
+              </Pressable>
+            </Pressable>
+          </View>
+        )}
     </BottomSheet>
   );
 }

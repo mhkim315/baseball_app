@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, useCallback } from "react";
 import {
-  Modal, View, Text, Pressable, Image, StyleSheet,
+  View, Text, Pressable, Image, StyleSheet,
   Dimensions, GestureResponderEvent, NativeSyntheticEvent, ImageLoadEventData,
 } from "react-native";
 import { useTheme } from "@/lib/ThemeContext";
@@ -143,7 +143,6 @@ export default function PhotoCropper({ visible, imageUri, onCrop, onCancel }: Ph
   if (!visible) return null;
 
   return (
-    <Modal transparent visible={visible} onRequestClose={onCancel} statusBarTranslucent>
       <View style={styles.overlay}>
         <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700", marginBottom: 16 }}>
           사진 영역 선택
@@ -188,6 +187,5 @@ export default function PhotoCropper({ visible, imageUri, onCrop, onCancel }: Ph
           </Pressable>
         </View>
       </View>
-    </Modal>
   );
 }

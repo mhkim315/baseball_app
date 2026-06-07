@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Modal } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import BottomSheet from "@/components/BottomSheet";
 import PhotoCropper from "@/components/PhotoCropper";
 import type { JikgwanRecord } from "@/lib/db";
@@ -154,7 +154,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
             )}
           </View>
         )}
-      <Modal transparent visible={form.simpleAlert.visible} onRequestClose={closeAlert}>
+      {form.simpleAlert.visible && (
         <View style={form.styles.alertOverlay}>
           <View style={form.styles.alertCard}>
             <Text style={form.styles.alertTitle}>{form.simpleAlert.title}</Text>
@@ -167,7 +167,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
             </Pressable>
           </View>
         </View>
-      </Modal>
+      )}
 
       <PhotoCropper
         visible={!!form.cropUri}
