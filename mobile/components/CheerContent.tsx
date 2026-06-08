@@ -55,7 +55,15 @@ export default function CheerContent({ teamId, activeTab, expandedSection, onTog
       cachedCheeringPlayers(teamId),
     ]).then(([songsData, playersData]) => {
       if (cancelled) return;
-      if (songsData) setSections(songsData.sections);
+      if (songsData) {
+        const enhanced = songsData.sections.map((section) => {
+          if (teamId === "doosan" && section.title === "초반 분위기 올릴 때") {
+            return { ...section, songs: [...section.songs, { name: "서울의 베어스", youtubeUrl: "https://www.youtube.com/watch?v=uhnm7qf9UBg" }] };
+          }
+          return section;
+        });
+        setSections(enhanced);
+      }
       if (playersData) setPlayers(playersData.players);
 
       const tryTodayLineup = () =>

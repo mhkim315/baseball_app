@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { EMOTION_CHARACTER } from "@/lib/emotions";
 import { TeamBadge } from "@/components/TeamBadge";
@@ -142,15 +143,29 @@ export default function DiaryStats({ records, teamId, year }: DiaryStatsProps) {
 
   function RingSection({ stats, label }: { stats: Stats; label: string }) {
     const wrPct = stats.totalGames > 0 ? (stats.winRate * 100).toFixed(1) : "-";
+    const progress = stats.totalGames > 0 ? Math.min(stats.winRate, 1) : 0;
+    const size = 120;
+    const strokeWidth = 8;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference * (1 - progress);
     return (
       <View style={styles.dualRingCol}>
         <Text style={styles.cardTitle}>{label}</Text>
         <View style={styles.ringContainer}>
-          <View style={[styles.ringOuter, { borderColor: theme.border }]}>
-            <View style={[styles.ringInner, { borderColor: teamColor }]}>
-              <Text style={[styles.ringValue, { color: teamColor }]}>{wrPct}%</Text>
-              <Text style={styles.ringLabel}>승률</Text>
-            </View>
+          <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={styles.ringSvg}>
+            <Circle cx={size / 2} cy={size / 2} r={radius} stroke={theme.border} strokeWidth={strokeWidth} fill="none" />
+            <Circle
+              cx={size / 2} cy={size / 2} r={radius}
+              stroke={teamColor} strokeWidth={strokeWidth} fill="none"
+              strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              rotation="-90" origin={`${size / 2}, ${size / 2}`}
+            />
+          </Svg>
+          <View style={styles.ringCenterText}>
+            <Text style={[styles.ringValue, { color: teamColor }]}>{wrPct}%</Text>
+            <Text style={styles.ringLabel}>승률</Text>
           </View>
         </View>
         <View style={styles.recordRow}>
@@ -209,23 +224,16 @@ export default function DiaryStats({ records, teamId, year }: DiaryStatsProps) {
       marginHorizontal: 8,
     },
     ringContainer: {
+      width: 120,
+      height: 120,
+      justifyContent: "center",
       alignItems: "center",
       marginBottom: 16,
     },
-    ringOuter: {
-      width: 120,
-      height: 120,
-      borderRadius: 60,
-      borderWidth: 8,
-      justifyContent: "center",
-      alignItems: "center",
+    ringSvg: {
+      position: "absolute",
     },
-    ringInner: {
-      width: 96,
-      height: 96,
-      borderRadius: 48,
-      borderWidth: 6,
-      justifyContent: "center",
+    ringCenterText: {
       alignItems: "center",
     },
     ringValue: {
