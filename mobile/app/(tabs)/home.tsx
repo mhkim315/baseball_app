@@ -24,6 +24,7 @@ import { getInningInfo } from "@shared/gameStatus";
 
 import MyButton from "@/components/MyButton";
 import ShortcutButton from "@/components/ShortcutButton";
+import TicketReportModal from "@/components/TicketReportModal";
 import ShortcutPickerModal from "@/components/ShortcutPickerModal";
 import SimpleAlert from "@/components/SimpleAlert";
 import DiaryEntryModal from "@/components/DiaryEntryModal";
@@ -137,6 +138,7 @@ export default function HomeScreen() {
   const [showNoStickerAlert, setShowNoStickerAlert] = useState(false);
   const [showNoGameAlert, setShowNoGameAlert] = useState(false);
   const [showShortcutErrorAlert, setShowShortcutErrorAlert] = useState(false);
+  const [showTicketReport, setShowTicketReport] = useState(false);
   const homeStickerCoachCheckedRef = useRef(false);
   const showCoachMarkRef = useRef(false);
   const scheduleCache = useRef<{ month: number; year: number; games: ScheduleGame[] } | null>(null);
@@ -715,6 +717,29 @@ export default function HomeScreen() {
         <MyButton color={myTeam ? teamPrimaryColor(myTeam, isDark) : undefined} />
       </View>
 
+      {/* Ticket report banner */}
+      <Pressable
+        onPress={() => setShowTicketReport(true)}
+        style={({ pressed }) => ({
+          flexDirection: "row",
+          alignItems: "center",
+          marginHorizontal: 16,
+          paddingVertical: 10,
+          paddingHorizontal: 16,
+          borderRadius: 12,
+          backgroundColor: pressed ? theme.secondary : theme.card,
+          borderWidth: 1,
+          borderColor: theme.border,
+          marginBottom: 8,
+        })}
+      >
+        <Text style={{ fontSize: 16, marginRight: 8 }}>🚫</Text>
+        <Text style={{ fontSize: 14, fontWeight: "600", color: theme.destructive || "#e53935", flex: 1 }}>
+          암표 신고하기
+        </Text>
+        <Text style={{ fontSize: 12, color: theme.mutedForeground }}>정가 확인 →</Text>
+      </Pressable>
+
       <AchievementToast
         badges={toastBadges}
         rewards={toastRewards}
@@ -873,6 +898,10 @@ export default function HomeScreen() {
         message="바로가기 실행 중 문제가 발생했습니다"
         confirmText="확인"
         onClose={() => setShowShortcutErrorAlert(false)}
+      />
+      <TicketReportModal
+        visible={showTicketReport}
+        onClose={() => setShowTicketReport(false)}
       />
     </View>
   );
