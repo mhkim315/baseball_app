@@ -25,11 +25,13 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
   const { theme } = useTheme();
   const [step, setStep] = useState<Step>("team");
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const [selectedTier, setSelectedTier] = useState(0);
 
   const teamData = selectedTeam ? TICKET_PRICES[selectedTeam] : null;
 
   const handleSelectTeam = (teamId: string) => {
     setSelectedTeam(teamId);
+    setSelectedTier(0);
     setStep("seats");
   };
 
@@ -58,7 +60,7 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
     container: {
       paddingHorizontal: 20,
       paddingBottom: 32,
-      minHeight: 400,
+      flex: 1,
     },
     headerRow: {
       flexDirection: "row",
@@ -74,6 +76,11 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
       fontWeight: "600",
     },
     title: {
+      fontSize: 18,
+      fontWeight: "bold",
+      textAlign: "center",
+    },
+    headerTitle: {
       fontSize: 18,
       fontWeight: "bold",
       textAlign: "center",
@@ -110,6 +117,27 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
       color: theme.foreground,
     },
 
+    // Tier tabs
+    tierRow: {
+      flexDirection: "row",
+      gap: 6,
+    },
+    tierTab: {
+      paddingVertical: 6,
+      paddingHorizontal: 14,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.border,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    tierTabText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: theme.mutedForeground,
+      lineHeight: 18,
+    },
+
     // Seats
     categoryGroup: {
       marginBottom: 20,
@@ -144,21 +172,6 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
       fontSize: 11,
       color: theme.mutedForeground,
     },
-    priceRow: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      marginTop: 6,
-      gap: 6,
-    },
-    priceTag: {
-      fontSize: 12,
-      color: theme.secondaryForeground,
-      backgroundColor: theme.secondary,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 6,
-    },
-
     // Report button
     reportBtn: {
       backgroundColor: theme.destructive || "#e53935",
@@ -177,7 +190,7 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
   const teamColor = selectedTeam ? (TEAM_COLORS[selectedTeam]?.primary || theme.primary) : theme.primary;
 
   return (
-    <BottomSheet visible={visible} onClose={onClose}>
+    <BottomSheet visible={visible} onClose={onClose} maxHeight="92%" fillHeight>
       <View style={styles.container}>
         {step === "team" ? (
           <>
@@ -185,7 +198,7 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
             <Text style={styles.subtitle}>
               관람한 경기 구단을 선택한 후{'\n'}앉았던 좌석의 정가를 확인하세요
             </Text>
-            <ScrollView style={{ maxHeight: 480 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
               {TEAMS.map((team) => (
                 <Pressable
                   key={team.teamId}
@@ -204,37 +217,64 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
               <Pressable onPress={handleBack} style={styles.backBtn}>
                 <Text style={[styles.backText, { color: teamColor }]}>← 뒤로</Text>
               </Pressable>
-              <Text style={[styles.title, { color: theme.foreground }]}>
+              <Text style={[styles.headerTitle, { color: theme.foreground }]}>
                 {teamData?.teamName || ""}
               </Text>
               <View style={{ width: 50 }} />
             </View>
-            <Text style={styles.subtitle}>
-              좌석 등급: {teamData?.tierNames.join(" / ")}
-            </Text>
-            <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+            {/* Tier tabs */}
+            {teamData && teamData.tierNames.length > 0 && (
+              <View style={{ marginBottom: 12 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View style={styles.tierRow}>
+                    {teamData.tierNames.map((tier, ti) => (
+                      <Pressable
+                        key={ti}
+                        onPress={() => setSelectedTier(ti)}
+                        style={[
+                          styles.tierTab,
+                          selectedTier === ti && {
+                            borderColor: teamColor,
+                            backgroundColor: teamColor + "18",
+                          },
+                        ]}
+                      >
+                        <Text style={[
+                          styles.tierTabText,
+                          selectedTier === ti && { color: teamColor },
+                        ]}>
+                          {tier}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
+            )}
+            <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
               {groupedSeats.map(([category, seats]) => (
                 <View key={category} style={styles.categoryGroup}>
                   <Text style={styles.categoryTitle}>{category}</Text>
-                  {seats.map((seat, i) => (
-                    <View key={i} style={styles.seatItem}>
-                      <View style={styles.seatNameRow}>
-                        <Text style={styles.seatName}>{seat.name}</Text>
-                        {seat.note && <Text style={styles.seatNote}>{seat.note}</Text>}
+                  {seats.map((seat, i) => {
+                    const price = seat.prices[selectedTier];
+                    const priceStr = price > 0 ? `${price.toLocaleString()}원` : "무료";
+                    return (
+                      <View key={i} style={styles.seatItem}>
+                        <View style={styles.seatNameRow}>
+                          <Text style={styles.seatName}>{seat.name}</Text>
+                          {seat.note && <Text style={styles.seatNote}>{seat.note}</Text>}
+                        </View>
+                        <Text style={{
+                          fontSize: 16,
+                          fontWeight: "700",
+                          color: teamColor,
+                          marginTop: 4,
+                        }}>
+                          {priceStr}
+                        </Text>
                       </View>
-                      <View style={styles.priceRow}>
-                        {seat.prices.map((price, pi) => {
-                          const tier = teamData?.tierNames[pi];
-                          const priceStr = price > 0 ? `${price.toLocaleString()}원` : "무료";
-                          return (
-                            <Text key={pi} style={styles.priceTag}>
-                              {tier ? `${tier} ` : ""}{priceStr}
-                            </Text>
-                          );
-                        })}
-                      </View>
-                    </View>
-                  ))}
+                    );
+                  })}
                 </View>
               ))}
             </ScrollView>
