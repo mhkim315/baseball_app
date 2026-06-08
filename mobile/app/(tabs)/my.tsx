@@ -52,6 +52,7 @@ import ColorPicker from "@/components/ColorPicker";
 import CoachMark from "@/components/CoachMark";
 import ShortcutPickerModal from "@/components/ShortcutPickerModal";
 import SimpleAlert from "@/components/SimpleAlert";
+import TicketReportModal from "@/components/TicketReportModal";
 import { useKeyboardHeight } from "@/lib/hooks/useKeyboardHeight";
 import { getMyCoachSeen, setMyCoachSeen, getVisitCount, getShortcut, setShortcut as saveShortcut } from "@/lib/db";
 import { SHORTCUT_LABELS, type ShortcutType } from "@/lib/shortcutHelper";
@@ -352,6 +353,7 @@ export default function MyScreen() {
   const [totemDesc, setTotemDesc] = useState("");
   const [totemColor, setTotemColor] = useState("");
   const [showTotemDeleteConfirm, setShowTotemDeleteConfirm] = useState<Totem | null>(null);
+  const [showTicketReport, setShowTicketReport] = useState(false);
 
   const { openAchievement } = useLocalSearchParams<{ openAchievement?: string }>();
   const reviewYear = new Date().getFullYear();
@@ -553,6 +555,22 @@ export default function MyScreen() {
             </Text>
             <Text style={{ fontSize: 12, color: theme.mutedForeground, marginTop: 2 }}>
               나의 야구 시즌을 돌아보기
+            </Text>
+          </View>
+          <Text style={styles.myTeamArrow}>›</Text>
+        </Pressable>
+
+        <Pressable
+          style={[styles.myTeamRow, { gap: 12, marginBottom: 12 }]}
+          onPress={() => setShowTicketReport(true)}
+        >
+          <Text style={{ fontSize: 28 }}>🚫</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 14, fontWeight: "700", color: theme.destructive || "#e53935" }}>
+              암표 신고하기
+            </Text>
+            <Text style={{ fontSize: 12, color: theme.mutedForeground, marginTop: 2 }}>
+              좌석 정가 확인 후 신고
             </Text>
           </View>
           <Text style={styles.myTeamArrow}>›</Text>
@@ -978,6 +996,10 @@ export default function MyScreen() {
         message="데이터 초기화에 실패했습니다.\n다시 시도해주세요."
         confirmText="확인"
         onClose={() => setShowResetErrorAlert(false)}
+      />
+      <TicketReportModal
+        visible={showTicketReport}
+        onClose={() => setShowTicketReport(false)}
       />
     </ScrollView>
   );
