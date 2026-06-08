@@ -135,7 +135,10 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
       const raw = data.split(",")[1];
       const outFile = new File(Paths.cache, `sr_${Date.now()}.png`);
       outFile.create({ overwrite: true });
-      outFile.write(raw, { encoding: "base64" });
+      const binaryStr = atob(raw);
+      const bytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+      outFile.write(bytes);
       setCombinedUri(outFile.uri);
       base64Ref.current = [];
     } catch (e: any) {
