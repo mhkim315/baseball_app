@@ -256,7 +256,7 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
                 <View key={category} style={styles.categoryGroup}>
                   <Text style={styles.categoryTitle}>{category}</Text>
                   {seats.map((seat, i) => {
-                    const price = seat.prices[selectedTier];
+                    const price = seat.prices[selectedTier] ?? 0;
                     const priceStr = price > 0 ? `${price.toLocaleString()}원` : "무료";
                     return (
                       <View key={i} style={styles.seatItem}>
