@@ -75,10 +75,11 @@ export default function CheerScreen() {
   const navigation = useNavigation();
   useEffect(() => {
     const unsubscribe = navigation.addListener("blur", () => {
+      if (showCheerTeamCoach) { setCheerTeamCoachSeen(); }
       setShowCheerTeamCoach(false);
     });
     return unsubscribe;
-  }, [navigation]);
+  }, [navigation, showCheerTeamCoach]);
 
   const handleTabPress = useCallback((tab: TabId) => {
     setActiveTab(tab);
@@ -137,7 +138,7 @@ export default function CheerScreen() {
             currentTeamId={activeTeam}
             myTeam={myTeam}
             onSelectTeam={setDisplayTeam}
-            onPress={() => setShowCheerTeamCoach(false)}
+            onPress={() => { if (showCheerTeamCoach) { setCheerTeamCoachSeen(); } setShowCheerTeamCoach(false); }}
           />
         )}
         {myTeam && <View style={{ width: 4 }} />}

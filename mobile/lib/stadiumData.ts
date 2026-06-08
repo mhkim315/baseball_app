@@ -40,7 +40,7 @@ export const STADIUM_BRIEFS: Record<string, StadiumBrief> = {
   "1": {
     id: "1", name: "잠실야구장", location: "서울 송파구", capacity: "25,553석",
     homeTeams: "LG 트윈스, 두산 베어스",
-    ticket: { purchase: "LG: 티켓링크 / 두산: 인터파크", price: "9,000원(외야)~90,000원(프리미엄)" },
+    ticket: { purchase: "LG: 티켓링크 / 두산: 인터파크", price: "10,000원(외야)~90,000원(프리미엄)" },
     parking: { fee: "경기일 선불 6,000원", note: "5부제 시행, 주차면 876면으로 축소. 대중교통 강력 권장" },
     transit: { subway: "2호선/9호선 종합운동장역 5·6번 출구 도보 5분", bus: "301, 333, 341, 345, 350, 360" },
   },

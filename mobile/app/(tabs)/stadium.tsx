@@ -77,10 +77,11 @@ export default function StadiumTab() {
   const navigation = useNavigation();
   useEffect(() => {
     const unsubscribe = navigation.addListener("blur", () => {
+      if (showStadiumCoach) { setStadiumCoachSeen(); }
       setShowStadiumCoach(false);
     });
     return unsubscribe;
-  }, [navigation]);
+  }, [navigation, showStadiumCoach]);
 
   if (loading) {
     return (
@@ -126,10 +127,10 @@ export default function StadiumTab() {
           currentTeamId={activeTeam}
           myTeam={myTeam}
           onSelectTeam={setDisplayTeam}
-          onPress={() => setShowStadiumCoach(false)}
+          onPress={() => { if (showStadiumCoach) { setStadiumCoachSeen(); } setShowStadiumCoach(false); }}
         />
         <View style={{ width: 4 }} />
-        <MyButton color={myTeamColor} onPress={() => setShowStadiumCoach(false)} />
+        <MyButton color={myTeamColor} onPress={() => { if (showStadiumCoach) { setStadiumCoachSeen(); } setShowStadiumCoach(false); }} />
       </View>
       {showStadiumCoach && (
         <View style={{ paddingHorizontal: 20, marginTop: 4 }}>
