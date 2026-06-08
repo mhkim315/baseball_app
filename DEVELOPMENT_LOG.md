@@ -2122,3 +2122,64 @@ key = (tg_date.replace("-", ""), away.get("name", ""), home.get("name", ""))  # 
 | `mobile/components/ExpenseModal.tsx` | useKeyboardHeight 적용 |
 | `mobile/app.json` | softwareKeyboardLayoutMode 명시, versionCode 17 |
 | `mobile/lib/shortcutHelper.ts` | isStarted 시간 기반 추론 수정 |
+
+---
+
+## Phase 17-9: 초기 진입 버벅임 완화 + ScrollView 중첩 수정 (2026-06-07)
+
+### 스키마 버전 체크로 warm start 최적화
+- **`connection.ts`**: `SCHEMA_VERSION=1` 상수 추가
+  - DB `user_settings`에 저장된 `schema_version` 확인 후 일치 시 4개 `PRAGMA table_info()` 마이그레이션 + 30일 캐시 정리 모두 skip
+  - 첫 실행에만 마이그레이션 실행 후 `schema_version` 저장
+  - 2회차 이후 initSchema 블로킹 시간 약 50% 감소
+
+### SplashScreen 제어로 초기화 중 버벅임 차단
+- `expo-splash-screen` 설치
+- **`_layout.tsx`**: `SplashScreen.preventAutoHideAsync()` 모듈 최상단 호출
+- `RootLayoutInner`에서 `useEffect` + `InteractionManager.runAfterInteractions`로 첫 렌더링 + 동기 DB 작업 완료 후 `SplashScreen.hideAsync()`
+- 이전: 스플래시 사라진 후 UI 멈춤 노출 → 이후: 스플래시 유지 → 준비되면 전환
+
+### DiaryStats 수평 ScrollView 중첩 문제
+- **원인**: `diary.tsx`의 외부 `pagingEnabled` ScrollView가 가로 제스처를 가로채 내부 토템/구장 ScrollView가 동작하지 않음
+- **수정**: `DiaryStats.tsx`의 토템 승률 + 방문 구장 ScrollView에 `nestedScrollEnabled` 추가
+- 5개 이상 토템 설정 시 5번째부터 잘리던 문제 해결
+
+### 기타
+- 직관 기록 최소조건 변경: 사진/일기 필수 → 감정표현 선택으로 (`useDiaryForm.ts`)
+- iOS NSURLCache 문제 해결: `shared/api-client.ts`에 `cache: "no-store"` 적용
+- 경기 시간 18:30 폴백 근본 수정: 서버 `main.py`에서 game-records JSON을 게임 시간 출처로 통일
+- TOTEM-DEBUG 로그 제거 (`my.tsx`)
+
+### 버전
+- v1.1.0 (iOS), versionCode 18 (Android)
+
+### 커밋
+| 해시 | 설명 |
+|------|------|
+| `de35fbf` | `fix: 초기 진입 버벅임 완화 — 스키마 버전 체크 + SplashScreen 제어` |
+| `5231289` | `fix: DiaryStats 토템/구장 수평 스크롤 nestedScrollEnabled 추가` |
+
+## Phase 17-10: 암표 신고 증빙사진 첨부 — WebView Canvas 이어붙이기 (2026-06-09)
+
+### 증빙사진 이어붙이기 기능
+- 기존 TicketReportModal에 사진 첨부 단계(photos step) 추가
+- **프로세스**: 구단 선택 → 좌석 조회 → 증빙사진 선택(최대 4장) → 이미지 이어붙이기 → 갤러리 저장
+
+### 기술 구현
+- **이미지 합성**: WebView + Canvas HTML에 이미지를 base64 data URL로 전달, 세로로 드로잉 후 `toDataURL()`로 하나의 PNG 추출
+- **이미지 처리**: `expo-image-manipulator`로 각 이미지를 1080w PNG로 리사이즈 → `File.base64()`로 base64 변환
+- **WebView 메시지**: `ReactNativeWebView.postMessage()`로 합성 결과 수신, `File.write(raw, { encoding: "base64" })`로 캐시 저장
+- **갤러리 저장**: `MediaLibrary.requestPermissionsAsync(true)` (writeOnly) + `createAssetAsync()`
+- **알림 통일**: 모든 `Alert.alert()` → `SimpleAlert` 네이티브 스타일 컴포넌트로 교체
+- **해결한 버그**: data URL `data:image/png;base64,` 프리픽스 누락으로 WebView 이미지 로딩 실패, MediaLibrary AUDIO 권한 에러
+
+### 의존성
+- `expo-media-library` 추가 (갤러리 저장)
+
+### 버전
+- v1.1.1 (변경 없음)
+
+### 커밋
+| 해시 | 설명 |
+|------|------|
+| (아래) | `feat: 증빙사진 첨부 — WebView Canvas 이미지 이어붙이기 + 갤러리 저장` |
