@@ -2182,4 +2182,10 @@ key = (tg_date.replace("-", ""), away.get("name", ""), home.get("name", ""))  # 
 ### 커밋
 | 해시 | 설명 |
 |------|------|
-| (아래) | `feat: 증빙사진 첨부 — WebView Canvas 이미지 이어붙이기 + 갤러리 저장` |
+| `6d4f6ae` | `feat: 증빙사진 첨부 — WebView Canvas 이미지 이어붙이기 + 갤러리 저장` |
+| `ca831d9` | `fix: iOS File.write encoding 미지원 — atob→Uint8Array 변환` |
+
+### iOS File.write 호환성 수정
+- **원인**: `expo-file-system` v19 iOS에서 `File.write(content, { encoding: "base64" })`가 encoding 파라미터를 지원하지 않아 `InvalidArgsNumberException` 발생
+- **수정**: `atob()`로 base64 디코딩 후 `Uint8Array`로 변환 → `outFile.write(bytes)` 호출 (TypedArray overload 사용)
+- Swift 구현체: `func write(_ content: TypedArray)` — `Data(bytes: content.rawPointer, count: content.byteLength).write(to: url)`

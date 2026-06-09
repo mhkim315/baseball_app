@@ -1,4 +1,5 @@
 import { cachedDailyScores, cachedScheduleByMonth } from "@/lib/gameCache";
+import type { ScheduleGame } from "@shared/types";
 import { TEAM_NAME_TO_ID, formatDateForApi, buildGameId } from "@shared/constants";
 import { TEAM_LIST } from "@shared/teamColors";
 import { resolveVenue } from "@/lib/stadiumData";
@@ -68,6 +69,14 @@ export async function findRecentMyTeamGame(myTeam: string): Promise<{ gameId: st
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = formatDateForApi(yesterday);
 
+  /** 경기 시작 시각이 현재보다 이전인지 확인 */
+  function hasGameTimePassed(g: ScheduleGame): boolean {
+    const gameTime = g.time || "18:30";
+    const [gh, gm] = gameTime.split(":").map(Number);
+    const gameStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), gh, gm);
+    return now >= gameStart;
+  }
+
   const tryResolveGame = async (dateStr: string, dateObj: Date) => {
     const month = dateObj.getMonth() + 1;
     const year = dateObj.getFullYear();
@@ -75,42 +84,35 @@ export async function findRecentMyTeamGame(myTeam: string): Promise<{ gameId: st
       cachedScheduleByMonth(month, year),
       cachedDailyScores(dateStr),
     ]);
-    
+
     const games = scheduleResult?.games ?? [];
     const scores = scoresResult?.games ?? [];
-    
-    if (!scores.length) return null;
 
     const dayGames = games.filter((g) => g.date === dateStr);
-    let gi = 0;
-    
+
     for (const g of dayGames) {
       const homeId = TEAM_NAME_TO_ID[g.home];
       const awayId = TEAM_NAME_TO_ID[g.away];
-      
+
       if (homeId === myTeam || awayId === myTeam) {
         const score = scores.find((s) => TEAM_NAME_TO_ID[s.home] === homeId && TEAM_NAME_TO_ID[s.away] === awayId);
-        // ScheduleGame 객체에는 status 필드가 없는 경우가 많으므로 점수 기반 추론 추가
-        let isStarted = false;
-        if (g.status === "finished" || g.status === "live") {
-          isStarted = true;
-        } else {
-          // 오늘 경기는 시간이 지났다고 시작된 것이 아님 (API 상태가 live/finished여야 실제 진행)
-          // 어제 이전 경기는 스코어 존재 = 경기 종료로 간주
-          if (dateStr === todayStr) {
-            isStarted = (score && (score.awayScore > 0 || score.homeScore > 0)) ?? false;
-          } else {
-            isStarted = score != null;
-          }
-        }
-        if (score && !score.cancelled && isStarted) {
+
+        // 취소 경기 스킵
+        if (score?.cancelled) continue;
+
+        // 시작 여부 판단: 상태, 점수, 시간 순으로 fallback
+        const isStarted = g.status === "finished" || g.status === "live"
+          || (score != null && (dateStr < todayStr || score.awayScore > 0 || score.homeScore > 0))
+          || (dateStr === todayStr && hasGameTimePassed(g));
+
+        if (isStarted) {
+          const suffix = g.gameIdx != null ? String(g.gameIdx) : "0";
           const mappedHomeTeam = TEAM_LIST.find((t) => t.shortName === g.home)?.id || homeId || "";
           const mappedAwayTeam = TEAM_LIST.find((t) => t.shortName === g.away)?.id || awayId || "";
-          const builtId = buildGameId(mappedAwayTeam, mappedHomeTeam, dateStr.replace(/-/g, ""), String(gi));
+          const builtId = buildGameId(mappedAwayTeam, mappedHomeTeam, dateStr.replace(/-/g, ""), suffix);
           return { gameId: builtId, date: dateStr };
         }
       }
-      gi++;
     }
     return null;
   };
@@ -146,25 +148,21 @@ export async function getGameOptionForDate(date: Date, myTeam: string): Promise<
   const scores = scoresResult?.games ?? [];
 
   const dayGames = games.filter((g) => g.date === dateStr);
-  let gi = 0;
 
-  // Find game matching myTeam in schedule
   for (const g of dayGames) {
     const homeId = TEAM_NAME_TO_ID[g.home];
     const awayId = TEAM_NAME_TO_ID[g.away];
-    if (homeId !== myTeam && awayId !== myTeam) {
-      gi++;
-      continue;
-    }
+    if (homeId !== myTeam && awayId !== myTeam) continue;
 
     // Find matching score entry
     const score = scores.find(
       (s) => TEAM_NAME_TO_ID[s.home] === homeId && TEAM_NAME_TO_ID[s.away] === awayId
     );
 
+    const suffix = g.gameIdx != null ? String(g.gameIdx) : "0";
     const mappedHomeTeam = TEAM_LIST.find((t) => t.shortName === g.home)?.id || homeId || "";
     const mappedAwayTeam = TEAM_LIST.find((t) => t.shortName === g.away)?.id || awayId || "";
-    const builtId = buildGameId(mappedAwayTeam, mappedHomeTeam, dateStr.replace(/-/g, ""), String(gi));
+    const builtId = buildGameId(mappedAwayTeam, mappedHomeTeam, dateStr.replace(/-/g, ""), suffix);
 
     return {
       gameId: builtId,
