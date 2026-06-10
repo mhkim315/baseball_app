@@ -624,7 +624,9 @@ export default function GameDetailScreen() {
   const away = TEAM_COLORS[detail.awayTeam];
   const homeLineup = detail.lineup?.home || [];
   const awayLineup = detail.lineup?.away || [];
-  const gameScore = detail.score ?? (scoreFallback ? { away: scoreFallback.awayScore, home: scoreFallback.homeScore } : null)
+  // scoreFallback 우선 (daily-scores API, shortcut에서 갱신됨), detail.score는 game-detail 캐시로 지연 가능
+  const gameScore = (scoreFallback ? { away: scoreFallback.awayScore, home: scoreFallback.homeScore } : null)
+    ?? detail.score
     ?? (detail.scoreBoard?.rheb ? { away: detail.scoreBoard.rheb.away.r, home: detail.scoreBoard.rheb.home.r } : null);
 
   // Only show expected pitchers/lineup for tomorrow (today+1); beyond that is undecided
