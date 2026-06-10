@@ -105,11 +105,10 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
     setProcessing(true);
 
     try {
-      const resized = await Promise.all(
-        selectedPhotos.map((uri) =>
-          manipulateAsync(uri, [{ resize: { width: STITCH_W } }], { format: SaveFormat.JPEG })
-        )
-      );
+      const resized = [];
+      for (const uri of selectedPhotos) {
+        resized.push(await manipulateAsync(uri, [{ resize: { width: STITCH_W } }], { format: SaveFormat.JPEG }));
+      }
       const base64List = await Promise.all(
         resized.map((r) => new File(r.uri).base64())
       );

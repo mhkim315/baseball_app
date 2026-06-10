@@ -655,13 +655,15 @@ export default function GameDetailScreen() {
   const gameHasStarted = new Date() >= startTime;
   const hasInningData = !!detail.scoreBoard?.inn;
 
-  // ── 이중 방어: resolveGames(daily-scores.json) + 서버(gameInfo) 상태를 모두 고려 ──
+  // ── 삼중 방어: resolveGames(daily-scores.json) + 서버(gameInfo) + 투수기록(승패투수) ──
   const hasOutcome = scoreFallback && scoreFallback.outcome !== null && !scoreFallback.cancelled;
+  const hasPitchingOutcome = detail.pitchingResult && detail.pitchingResult.some(p => p.wls === "W" || p.wls === "L");
   const currentStatus = resolvedStatusRef.current || detail.gameInfo?.status;
 
   const isFinished = !isCancelled && !isFuture && (
     hasOutcome ||
     currentStatus === "finished" ||
+    hasPitchingOutcome ||
     (isGameActive && !isToday && gameHasStarted)
   );
   const isLive = !isCancelled && !isFinished && (

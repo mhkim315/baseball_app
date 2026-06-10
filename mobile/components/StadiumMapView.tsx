@@ -100,6 +100,9 @@ export default function StadiumMapView({ spots, center, zoom = 15, focusedSpotId
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
         onTouchCancel={onTouchCancel}
+        onContentProcessDidTerminate={() => {
+          webViewRef.current?.reload();
+        }}
         javaScriptEnabled
         domStorageEnabled
         originWhitelist={[]}
