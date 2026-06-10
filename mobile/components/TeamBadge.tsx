@@ -32,9 +32,8 @@ export function TeamBadge({ teamId, size = "md", emotion = "default", variant = 
   const handleError = useCallback(() => {
     retryRef.current += 1;
     setImgFailed(true);
-    if (retryRef.current < 3) {
-      setTimeout(() => setImgFailed(false), 3000);
-    }
+    const delay = Math.min(3000 * retryRef.current, 30000);
+    setTimeout(() => setImgFailed(false), delay);
   }, []);
 
   if (!team) return null;
