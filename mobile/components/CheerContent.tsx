@@ -7,7 +7,7 @@ import type { CheerSection, PlayerCheer, TodayGame, ScoreEntry } from "@/lib/api
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 
-const IMAGE_BASE = "https://fullcount.kr";
+const IMAGE_BASE = "https://api.fullcount.kr/static";
 
 const RULES = [
   { title: "이닝(회)", desc: "공격(초)·수비(말)가 한 바퀴 도는 단위예요. 공격측에서 아웃 세 개가 나오면 그 이닝은 끝나요." },

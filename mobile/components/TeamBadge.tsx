@@ -6,7 +6,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import type { CharacterEmotion } from "@/lib/emotions";
 import { LOCAL_CHARACTERS, BASIC_EMOTIONS } from "@/lib/characterAssets";
 
-const IMAGE_BASE = "https://fullcount.kr";
+const IMAGE_BASE = "https://api.fullcount.kr/static";
 
 interface TeamBadgeProps {
   teamId: string;

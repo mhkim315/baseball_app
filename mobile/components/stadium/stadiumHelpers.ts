@@ -1,7 +1,7 @@
 import type { FoodPlace } from "@/lib/api";
 import { FOOD_CATEGORIES } from "@/lib/stadiumData";
 
-export const IMAGE_BASE = "https://fullcount.kr";
+export const IMAGE_BASE = "https://api.fullcount.kr/static";
 
 export const TABS = [
   { id: "info", label: "기본정보" },
