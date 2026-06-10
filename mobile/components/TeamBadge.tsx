@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { useTheme } from "@/lib/ThemeContext";
 import type { CharacterEmotion } from "@/lib/emotions";
+import { LOCAL_CHARACTERS, BASIC_EMOTIONS } from "@/lib/characterAssets";
 
 const IMAGE_BASE = "https://fullcount.kr";
 
@@ -41,23 +42,25 @@ export function TeamBadge({ teamId, size = "md", emotion = "default", variant = 
   const px = sizePx[size];
 
   if (variant === "character") {
+    const isBasic = BASIC_EMOTIONS.has(emotion);
+    const localSrc = isBasic ? LOCAL_CHARACTERS[`${teamId}_${emotion}`] : null;
     const baseImgSrc = `${IMAGE_BASE}/team-characters/${teamId}_${emotion}.png`;
-    const imgSrc = retryRef.current > 0 ? `${baseImgSrc}?r=${retryRef.current}` : baseImgSrc;
+    const imgSrc = localSrc || (retryRef.current > 0 ? `${baseImgSrc}?r=${retryRef.current}` : baseImgSrc);
     const bgColor = hexToRgba(isDark && team.primaryLight ? team.primaryLight : team.primary, 0.35);
 
     return (
       <View style={[styles.characterContainer, { width: px, height: px, borderRadius: px / 2, backgroundColor: bgColor }]}>
-        {imgFailed ? (
+        {imgFailed && !localSrc ? (
           <Text style={[styles.fallbackText, { color: team.secondary, fontSize: textSize[size] }]}>
             {team.shortName}
           </Text>
         ) : (
           <Image
-            key={imgSrc}
-            source={{ uri: imgSrc }}
+            key={typeof imgSrc === 'string' ? imgSrc : `${teamId}_${emotion}`}
+            source={localSrc || { uri: imgSrc as string }}
             style={{ width: px, height: px, borderRadius: px / 2 }}
             contentFit="cover"
-            onError={handleError}
+            onError={localSrc ? undefined : handleError}
           />
         )}
       </View>
