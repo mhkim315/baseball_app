@@ -74,11 +74,6 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
   };
 
   const handlePickPhotos = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      setSa({ visible: true, title: "권한 필요", message: "앨범 접근 권한이 필요합니다." });
-      return;
-    }
     const remain = 4 - selectedPhotos.length;
     if (remain <= 0) return;
 

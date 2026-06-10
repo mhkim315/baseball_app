@@ -1,6 +1,6 @@
 # Fullcount.kr Mobile App — 개발 작업 문서
 
-> 마지막 업데이트: 2026-05-28 (Phase 14)
+> 마지막 업데이트: 2026-06-10 (Phase 17-12)
 > 
 > 이 문서는 이전 대화 컨텍스트가 만료되어도 작업을 이어갈 수 있도록 상세히 기록합니다.
 
@@ -2189,3 +2189,78 @@ key = (tg_date.replace("-", ""), away.get("name", ""), home.get("name", ""))  # 
 - **원인**: `expo-file-system` v19 iOS에서 `File.write(content, { encoding: "base64" })`가 encoding 파라미터를 지원하지 않아 `InvalidArgsNumberException` 발생
 - **수정**: `atob()`로 base64 디코딩 후 `Uint8Array`로 변환 → `outFile.write(bytes)` 호출 (TypedArray overload 사용)
 - Swift 구현체: `func write(_ content: TypedArray)` — `Data(bytes: content.rawPointer, count: content.byteLength).write(to: url)`
+
+---
+
+## Phase 17-11: 암표 신고 시스템 문서화 + 스티커 바로가기 버그 수정 (2026-06-09~10)
+
+### 암표 신고 시스템 문서화
+- `docs/ticket-report-system.md` 신규 작성
+- 배경/기획 의도, 데이터 수집 과정, 3단계 UI 프로세스, WebView Canvas 합성 기술 구현, iOS 호환성 이슈, 앱 분리 시 고려사항 포함
+- 다른 에이전트와 협업 시 전체 맥락 전달용
+
+### 스티커 바로가기 버그 수정
+**파일:** `mobile/lib/shortcutHelper.ts`
+
+**버그:** 경기상세에서 스티커 생성은 가능하지만, 바로가기(ShortcutButton → "스티커 만들기")에서는 `findRecentMyTeamGame()`이 게임을 찾지 못함.
+
+**원인 3가지:**
+
+| 문제 | 설명 |
+|------|------|
+| `isStarted` 조건 누락 | `score.awayScore > 0 \|\| score.homeScore > 0`만 체크 → 0-0 라이브 경기 감지 불가 |
+| `if (!scores.length) return null` | dailyScores API에 아직 데이터 없으면 바로 포기. 경기상세는 game-detail API(다른 파이프라인)라 영향 없음 |
+| `gi` = 배열 인덱스 | `dayGames` 배열 인덱스를 gameId suffix로 사용 → DH convention(0/1/2)과 불일치 |
+
+**수정:**
+1. **시간 기반 fallback** `hasGameTimePassed(g)` — 경기 시간이 지났으면 started로 간주
+2. **조기 return 제거** — scores 없어도 schedule 데이터로 게임 발견 가능
+3. **gameId suffix** — `g.gameIdx ?? "0"` 사용, DH convention 준수
+
+**검증:** `npx tsc --noEmit` — 에러 0 ✅
+
+**커밋:**
+| 해시 | 설명 |
+|------|------|
+| `e37b8d6` | `fix: 스티커 바로가기 — isStarted 시간 기반 fallback + early return 제거 + gameIdx suffix` |
+
+---
+
+## Phase 17-12: 감정표현 번들 + Android 크래시 수정 (2026-06-10)
+
+### 감정표현 이미지 70장 앱 번들 포함
+- `assets/team-characters/`에 70개 PNG (10구단 × 7기본 감정) 저장 (~4MB)
+- `lib/characterAssets.ts` 자동 생성 — `require()`로 로컬 이미지 매핑
+- `TeamBadge.tsx` 수정:
+  - 기본 감정(7종) → 로컬 이미지 우선 로딩 (`LOCAL_CHARACTERS[{teamId}_{emotion}]`)
+  - 비기본 감정(27종 확장) → 기존 네트워크 URL 로딩 유지
+  - 이미지 폴백 재시도: 3회 제한 제거 → 지수 백오프 (3초~최대30초)
+  - `onError`: 로컬 이미지일 땐 undefined (재시도 불필요)
+
+### Android 크래시 수정 (v1.1.2→v1.1.3)
+**문제:** Android v1.1.2 실행 즉시 "풀카운트 앱에 버그가 있어 앱을 종료합니다" 크래시
+
+**원인:** `expo-splash-screen ^56.0.10`이 Expo SDK 54와 네이티브 ABI 불일치
+- `de35fbf` 커밋에서 `expo-splash-screen`을 `npm install`로 수동 추가 → 최신 버전(56.x) 설치
+- 다른 `expo-*` 패키지들은 `npx expo install`로 SDK 54에 맞게 설치됨
+- iOS는 네이티브 모듈 바인딩이 Android보다 관대해서 영향 없었음
+
+**수정:**
+```
+npm install expo-splash-screen  # ^56.0.10 (잘못됨)
+→ npx expo install expo-splash-screen  # ~31.0.13 (SDK 54 정식)
+```
+
+**교훈:** Expo 패키지는 반드시 `npx expo install`로 설치할 것. `npm install`은 최신 SDK용 버전을 설치함.
+
+### 버전
+- v1.1.3 (versionCode 22), Android AAB 빌드 완료
+- iOS v1.1.1 (별도 빌드 필요)
+
+### 커밋
+| 해시 | 설명 |
+|------|------|
+| `6e4d3ce` | `feat: 감정표현 이미지 70장 번들 포함 (기본 7종 × 10구단)` |
+| `ea3320d` | `fix: TeamBadge 이미지 로드 재시도 무한 지속 (3→max 30s 지수 백오프)` |
+| `c42d744` | `chore: bump version 1.1.1 → 1.1.2 (Android versionCode 21)` |
+| `9d54daf` | `fix: expo-splash-screen SDK 54 버전 고정 (^56.0.10 → ~31.0.13)` |

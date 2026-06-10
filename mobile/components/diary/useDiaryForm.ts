@@ -324,12 +324,6 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
   };
 
   const handleFullGalleryPick = async () => {
-    const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!granted) {
-      setSimpleAlert({ visible: true, title: "권한 필요", message: "앨범 접근 권한이 필요합니다" });
-      return;
-    }
-
     const launchPicker = () => ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       quality: 0.8,

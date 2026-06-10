@@ -91,12 +91,6 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
   }, []);
 
   const handleAddPhoto = async () => {
-    const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!granted) {
-      setAlert({ visible: true, title: "권한 필요", message: "사진 라이브러리 접근 권한이 필요합니다." });
-      return;
-    }
-
     const launchPicker = () => ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       quality: 0.85,
