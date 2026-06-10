@@ -7,7 +7,9 @@ import React, { useEffect, useRef } from "react";
 import { View, Text, Pressable, InteractionManager } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 
-SplashScreen.preventAutoHideAsync();
+try {
+  SplashScreen.preventAutoHideAsync();
+} catch (e) {}
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -24,6 +26,9 @@ class ErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("Root ErrorBoundary caught:", error, errorInfo);
+    try {
+      SplashScreen.hideAsync().catch(() => {});
+    } catch (e) {}
   }
 
   render() {
@@ -52,11 +57,17 @@ function RootLayoutInner() {
   const hideSplashCalled = useRef(false);
 
   useEffect(() => {
-    InteractionManager.runAfterInteractions(() => {
-      if (hideSplashCalled.current) return;
-      hideSplashCalled.current = true;
-      SplashScreen.hideAsync();
-    });
+    if (hideSplashCalled.current) return;
+    hideSplashCalled.current = true;
+
+    const hide = async () => {
+      try {
+        await SplashScreen.hideAsync();
+      } catch (e) {
+        setTimeout(hide, 100);
+      }
+    };
+    setTimeout(hide, 50);
   }, []);
 
   return (

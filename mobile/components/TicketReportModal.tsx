@@ -39,7 +39,7 @@ var c=document.getElementById("c"),ctx=c.getContext("2d"),W=${STITCH_W},h=0,i,ih
 for(i=0;i<imgs.length;i++)h+=imgs[i].height/imgs[i].width*W;
 c.width=W;c.height=Math.ceil(h);var y=0;
 for(i=0;i<imgs.length;i++){ih=imgs[i].height/imgs[i].width*W;ctx.drawImage(imgs[i],0,y,W,ih);y+=ih}
-window.ReactNativeWebView.postMessage(c.toDataURL("image/png"));
+window.ReactNativeWebView.postMessage(c.toDataURL("image/jpeg", 0.8));
 }).catch(function(e){window.ReactNativeWebView.postMessage("ERROR:"+e)});
 </script></body></html>`;
 }
@@ -69,8 +69,12 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
     setSelectedTeam(null);
   };
 
-  const handleReport = () => {
-    Linking.openURL(REPORT_URL);
+  const handleReport = async () => {
+    try {
+      await Linking.openURL(REPORT_URL);
+    } catch (e) {
+      setSa({ visible: true, title: "오류", message: "신고 페이지를 열 수 없습니다." });
+    }
   };
 
   const handlePickPhotos = async () => {
@@ -103,7 +107,7 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
     try {
       const resized = await Promise.all(
         selectedPhotos.map((uri) =>
-          manipulateAsync(uri, [{ resize: { width: STITCH_W } }], { format: SaveFormat.PNG })
+          manipulateAsync(uri, [{ resize: { width: STITCH_W } }], { format: SaveFormat.JPEG })
         )
       );
       const base64List = await Promise.all(
@@ -124,11 +128,15 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
     if (data.startsWith("ERROR:")) {
       setSa({ visible: true, title: "오류", message: data });
       setCombinedUri(null);
+      base64Ref.current = [];
       return;
     }
     try {
-      const raw = data.split(",")[1];
-      const outFile = new File(Paths.cache, `sr_${Date.now()}.png`);
+      const parts = data.split(",");
+      const raw = parts.length > 1 ? parts[1] : null;
+      if (!raw) throw new Error("Invalid base64 data");
+
+      const outFile = new File(Paths.cache, `sr_${Date.now()}.jpg`);
       outFile.create({ overwrite: true });
       const binaryStr = atob(raw);
       const bytes = new Uint8Array(binaryStr.length);
@@ -140,6 +148,7 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
       console.error(e);
       setSa({ visible: true, title: "오류", message: "저장 실패: " + (e?.message || "") });
       setCombinedUri(null);
+      base64Ref.current = [];
     }
   }, []);
 
@@ -166,8 +175,8 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
   // Group seats by category
   const groupedSeats = useMemo(() => {
     if (!teamData) return [];
-    const groups = new Map<string, typeof teamData.seats>();
-    for (const seat of teamData.seats) {
+    const groups = new Map<string, NonNullable<typeof teamData>['seats']>();
+    for (const seat of teamData.seats ?? []) {
       const existing = groups.get(seat.category) || [];
       existing.push(seat);
       groups.set(seat.category, existing);
@@ -403,7 +412,7 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
               </Text>
               <View style={{ width: 50 }} />
             </View>
-            {teamData && teamData.tierNames.length > 0 && (
+            {teamData && teamData.tierNames?.length > 0 && (
               <View style={{ marginBottom: 12 }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View style={styles.tierRow}>
@@ -436,7 +445,7 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
                 <View key={category} style={styles.categoryGroup}>
                   <Text style={styles.categoryTitle}>{category}</Text>
                   {seats.map((seat, i) => {
-                    const price = seat.prices[selectedTier] ?? 0;
+                    const price = seat.prices?.[selectedTier] ?? 0;
                     const priceStr = price > 0 ? `${price.toLocaleString()}원` : "무료";
                     return (
                       <View key={i} style={styles.seatItem}>
@@ -576,6 +585,11 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
                 originWhitelist={["*"]}
                 source={{ html: buildCombineHtml(base64Ref.current) }}
                 onMessage={handleWebViewMessage}
+                onContentProcessDidTerminate={() => {
+                  setSa({ visible: true, title: "오류", message: "메모리 초과로 병합이 중단되었습니다." });
+                  setCombinedUri(null);
+                  base64Ref.current = [];
+                }}
                 javaScriptEnabled
               />
             )}

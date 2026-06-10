@@ -23,17 +23,22 @@ export function TeamBadge({ teamId, size = "md", emotion = "default", variant = 
   const { isDark } = useTheme();
   const [imgFailed, setImgFailed] = useState(false);
   const retryRef = useRef(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     retryRef.current = 0;
     setImgFailed(false);
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, [teamId, variant, emotion]);
 
   const handleError = useCallback(() => {
+    if (retryRef.current >= 3) return;
     retryRef.current += 1;
     setImgFailed(true);
-    const delay = Math.min(3000 * retryRef.current, 30000);
-    setTimeout(() => setImgFailed(false), delay);
+    const delay = Math.min(3000 * (2 ** (retryRef.current - 1)), 30000);
+    timeoutRef.current = setTimeout(() => setImgFailed(false), delay);
   }, []);
 
   if (!team) return null;
