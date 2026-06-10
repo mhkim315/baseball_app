@@ -34,10 +34,12 @@ export function TeamBadge({ teamId, size = "md", emotion = "default", variant = 
   }, [teamId, variant, emotion]);
 
   const handleError = useCallback(() => {
-    if (retryRef.current >= 3) return;
     retryRef.current += 1;
     setImgFailed(true);
-    const delay = Math.min(3000 * (2 ** (retryRef.current - 1)), 30000);
+    // 1~3회: 3s→6s→12s 빠른 재시도, 4회 이상: 60s 간격 느린 재시도 (영구 포기 방지)
+    const delay = retryRef.current <= 3
+      ? 3000 * (2 ** (retryRef.current - 1))
+      : 60000;
     timeoutRef.current = setTimeout(() => setImgFailed(false), delay);
   }, []);
 
