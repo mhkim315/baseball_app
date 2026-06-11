@@ -112,6 +112,7 @@ export function updateJikgwanRecord(
 }
 
 export function deleteJikgwanRecord(id: number): void {
+  invalidateRecordsCache();
   const database = getDb();
   database.runSync("DELETE FROM diary_totems WHERE record_id = ?", id);
   database.runSync("DELETE FROM jikgwan_records WHERE id = ?", id);

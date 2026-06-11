@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
+import { View, Text, Pressable, ScrollView, StyleSheet, Modal } from "react-native";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme } from "@/lib/ThemeContext";
 import { ALL_CHARACTERS, EMOTION_CHARACTER } from "@/lib/emotions";
@@ -117,9 +117,9 @@ export default function EmotionPicker({ value, onChange, teamId, unlockedEmotion
       </View>
       </ScrollView>
       {lockedAlert && (
-        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }}>
+        <Modal transparent animationType="fade" onRequestClose={() => setLockedAlert(false)}>
           <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", alignItems: "center" }} onPress={() => setLockedAlert(false)}>
-            <Pressable onPress={() => {}} style={{ borderRadius: 18, padding: 28, minWidth: 280, maxWidth: 320, alignItems: "center", backgroundColor: theme.card }}>
+            <Pressable onPress={() => {}} style={{ borderRadius: 18, overflow: "hidden", padding: 28, minWidth: 280, maxWidth: 320, alignItems: "center", backgroundColor: theme.card }}>
               <Text style={{ fontSize: 17, fontWeight: "700", marginBottom: 8, color: theme.foreground }}>잠금 해제 필요</Text>
               <Text style={{ fontSize: 14, textAlign: "center", marginBottom: 20, lineHeight: 20, color: theme.mutedForeground }}>도전과제 달성 시 랜덤으로 해금됩니다.{'\n'}도전과제를 달성해서 감정표현을 모아보세요!</Text>
               <Pressable style={{ alignSelf: "stretch", paddingVertical: 12, borderRadius: 12, alignItems: "center", backgroundColor: theme.foreground }} onPress={() => setLockedAlert(false)}>
@@ -127,7 +127,7 @@ export default function EmotionPicker({ value, onChange, teamId, unlockedEmotion
               </Pressable>
             </Pressable>
           </Pressable>
-        </View>
+        </Modal>
       )}
     </View>
   );
