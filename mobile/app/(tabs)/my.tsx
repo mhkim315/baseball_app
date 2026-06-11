@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  Animated,
 } from "react-native";
 import { useRouter, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import { Linking } from "react-native";
@@ -354,6 +355,60 @@ export default function MyScreen() {
   const [totemColor, setTotemColor] = useState("");
   const [showTotemDeleteConfirm, setShowTotemDeleteConfirm] = useState<Totem | null>(null);
   const [showTicketReport, setShowTicketReport] = useState(false);
+
+  // ── Totem list spring animation ──
+  const [totemRender, setTotemRender] = useState(false);
+  const totemSlide = useRef(new Animated.Value(500)).current;
+  const totemBackdrop = useRef(new Animated.Value(0)).current;
+
+  const animateTotemIn = useCallback(() => {
+    totemSlide.setValue(500); totemBackdrop.setValue(0);
+    Animated.parallel([
+      Animated.spring(totemSlide, { toValue: 0, useNativeDriver: true, tension: 50, friction: 9 }),
+      Animated.timing(totemBackdrop, { toValue: 1, duration: 250, useNativeDriver: true }),
+    ]).start();
+  }, [totemSlide, totemBackdrop]);
+
+  const animateTotemOut = useCallback((cb?: () => void) => {
+    Animated.parallel([
+      Animated.timing(totemSlide, { toValue: 500, duration: 280, useNativeDriver: true }),
+      Animated.timing(totemBackdrop, { toValue: 0, duration: 250, useNativeDriver: true }),
+    ]).start(() => { setTotemRender(false); cb?.(); });
+  }, [totemSlide, totemBackdrop]);
+
+  useEffect(() => {
+    if (showTotemList) { if (!totemRender) setTotemRender(true); else animateTotemIn(); }
+    else if (totemRender) animateTotemOut();
+  }, [showTotemList, totemRender, animateTotemIn, animateTotemOut]);
+
+  const closeTotem = useCallback(() => animateTotemOut(() => setShowTotemList(false)), [animateTotemOut]);
+
+  // ── Year in Review spring animation ──
+  const [yrRender, setYrRender] = useState(false);
+  const yrSlide = useRef(new Animated.Value(500)).current;
+  const yrBackdrop = useRef(new Animated.Value(0)).current;
+
+  const animateYrIn = useCallback(() => {
+    yrSlide.setValue(500); yrBackdrop.setValue(0);
+    Animated.parallel([
+      Animated.spring(yrSlide, { toValue: 0, useNativeDriver: true, tension: 50, friction: 9 }),
+      Animated.timing(yrBackdrop, { toValue: 1, duration: 250, useNativeDriver: true }),
+    ]).start();
+  }, [yrSlide, yrBackdrop]);
+
+  const animateYrOut = useCallback((cb?: () => void) => {
+    Animated.parallel([
+      Animated.timing(yrSlide, { toValue: 500, duration: 280, useNativeDriver: true }),
+      Animated.timing(yrBackdrop, { toValue: 0, duration: 250, useNativeDriver: true }),
+    ]).start(() => { setYrRender(false); cb?.(); });
+  }, [yrSlide, yrBackdrop]);
+
+  useEffect(() => {
+    if (showYearInReview) { if (!yrRender) setYrRender(true); else animateYrIn(); }
+    else if (yrRender) animateYrOut();
+  }, [showYearInReview, yrRender, animateYrIn, animateYrOut]);
+
+  const closeYr = useCallback(() => animateYrOut(() => setShowYearInReview(false)), [animateYrOut]);
 
   const { openAchievement } = useLocalSearchParams<{ openAchievement?: string }>();
   const reviewYear = new Date().getFullYear();
@@ -738,9 +793,10 @@ export default function MyScreen() {
       />
 
       {/* Totem List Modal (create/edit/delete는 인라인 오버레이 — iOS Modal 중첩 버그 방지) */}
-      <Modal visible={showTotemList} transparent animationType="slide" onRequestClose={() => { setShowTotemList(false); }}>
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" }}>
-          <View style={{ height: Dimensions.get("window").height * 0.85, borderTopLeftRadius: 24, borderTopRightRadius: 24, borderWidth: 1, borderBottomWidth: 0, borderColor: theme.border, padding: 24, paddingBottom: 40, backgroundColor: theme.card }}>
+      <Modal visible={totemRender} transparent animationType="none" onRequestClose={closeTotem}>
+        <View style={{ flex: 1, justifyContent: "flex-end" }}>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: totemBackdrop, backgroundColor: "rgba(0,0,0,0.7)" }]} />
+          <Animated.View style={{ height: Dimensions.get("window").height * 0.85, borderTopLeftRadius: 24, borderTopRightRadius: 24, borderWidth: 1, borderBottomWidth: 0, borderColor: theme.border, padding: 24, paddingBottom: 40, backgroundColor: theme.card, transform: [{ translateY: totemSlide }] }}>
             {showTotemModal ? (
               <View style={{ flex: 1 }}>
                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 80 + keyboardHeight }}>
@@ -845,7 +901,7 @@ export default function MyScreen() {
               <>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <Text style={{ fontSize: 18, fontWeight: "bold", color: theme.foreground }}>나의 토템</Text>
-                  <View style={{ flexDirection: "row", gap: 12 }}>
+                  <View style={{ flexDirection: "row", gap: 20 }}>
                     <Pressable onPress={() => {
                       setEditingTotem(null);
                       setTotemName("");
@@ -853,10 +909,10 @@ export default function MyScreen() {
                       setTotemDesc("");
                       setTotemColor("");
                       setShowTotemModal(true);
-                    }}>
-                      <Text style={{ fontSize: 22, color: theme.foreground }}>+</Text>
+                    }} style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 8, backgroundColor: theme.muted }}>
+                      <Text style={{ fontSize: 13, fontWeight: "600", color: theme.foreground }}>+ 추가</Text>
                     </Pressable>
-                    <Pressable onPress={() => { setShowTotemList(false); }} hitSlop={12}>
+                    <Pressable onPress={closeTotem} hitSlop={12}>
                       <Text style={{ fontSize: 22, color: theme.mutedForeground }}>✕</Text>
                     </Pressable>
                   </View>
@@ -922,7 +978,7 @@ export default function MyScreen() {
                 )}
               </>
             )}
-            </View>
+            </Animated.View>
           </View>
         </Modal>
 
@@ -973,8 +1029,13 @@ export default function MyScreen() {
       </Modal>
 
       {/* Year in Review Modal */}
-      <Modal visible={showYearInReview} animationType="slide" onRequestClose={() => { setShowYearInReview(false); }}>
-        <YearInReview year={reviewYear} onClose={() => { setShowYearInReview(false); }} />
+      <Modal visible={yrRender} transparent animationType="none" onRequestClose={closeYr}>
+        <View style={{ flex: 1, justifyContent: "flex-end" }}>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: yrBackdrop, backgroundColor: "rgba(0,0,0,0.7)" }]} />
+          <Animated.View style={{ flex: 1, maxHeight: Dimensions.get("window").height * 0.9, borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: theme.background, overflow: "hidden", transform: [{ translateY: yrSlide }] }}>
+            <YearInReview year={reviewYear} onClose={closeYr} />
+          </Animated.View>
+        </View>
       </Modal>
 
       {/* Achievement Modal */}

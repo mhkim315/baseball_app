@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   View, Text, Pressable, Modal, TextInput, ScrollView,
-  Image, StyleSheet, KeyboardAvoidingView, Platform, Dimensions, AppState,
+  Image, StyleSheet, KeyboardAvoidingView, Platform, Dimensions, AppState, Animated,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -43,6 +43,43 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
   const [alert, setAlert] = useState<{ visible: boolean; title: string; message: string }>({ visible: false, title: "", message: "" });
   const [confirmAlert, setConfirmAlert] = useState<{ visible: boolean; title: string; message: string; onConfirm: () => void }>({ visible: false, title: "", message: "", onConfirm: () => {} });
   const [registering, setRegistering] = useState(false);
+
+  // ── Spring animation ──
+  const [shouldRender, setShouldRender] = useState(false);
+  const slideAnim = useRef(new Animated.Value(500)).current;
+  const backdropAnim = useRef(new Animated.Value(0)).current;
+
+  const animateIn = useCallback(() => {
+    slideAnim.setValue(500);
+    backdropAnim.setValue(0);
+    Animated.parallel([
+      Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, tension: 50, friction: 9 }),
+      Animated.timing(backdropAnim, { toValue: 1, duration: 250, useNativeDriver: true }),
+    ]).start();
+  }, [slideAnim, backdropAnim]);
+
+  const animateOut = useCallback((callback?: () => void) => {
+    Animated.parallel([
+      Animated.timing(slideAnim, { toValue: 500, duration: 280, useNativeDriver: true }),
+      Animated.timing(backdropAnim, { toValue: 0, duration: 250, useNativeDriver: true }),
+    ]).start(() => {
+      setShouldRender(false);
+      callback?.();
+    });
+  }, [slideAnim, backdropAnim]);
+
+  useEffect(() => {
+    if (visible) {
+      if (!shouldRender) setShouldRender(true);
+      else animateIn();
+    } else if (shouldRender) {
+      animateOut();
+    }
+  }, [visible, shouldRender, animateIn, animateOut]);
+
+  const handleClose = useCallback(() => {
+    animateOut(() => onClose());
+  }, [animateOut, onClose]);
 
   const load = useCallback(async () => {
     try {
@@ -225,9 +262,9 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
     <View style={{ flex: 1 }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <Text style={{ fontSize: 18, fontWeight: "bold", color: theme.foreground }}>컬렉션</Text>
-        <View style={{ flexDirection: "row", gap: 12 }}>
-          <Pressable onPress={() => openForm()}>
-            <Text style={{ fontSize: 22, color: theme.foreground }}>+</Text>
+        <View style={{ flexDirection: "row", gap: 20 }}>
+          <Pressable onPress={() => openForm()} style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 8, backgroundColor: theme.muted }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: theme.foreground }}>+ 추가</Text>
           </Pressable>
           <Pressable onPress={onClose} hitSlop={12}>
             <Text style={{ fontSize: 22, color: theme.mutedForeground }}>✕</Text>
@@ -435,15 +472,16 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
   );
 
   return (
-      <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Modal visible={shouldRender} transparent animationType="none" onRequestClose={handleClose}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}>
-          <View style={styles.overlay}>
-            <View style={[styles.content, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={{ flex: 1, justifyContent: "flex-end" }}>
+            <Animated.View style={[StyleSheet.absoluteFill, { opacity: backdropAnim, backgroundColor: "rgba(0,0,0,0.7)" }]} />
+            <Animated.View style={[styles.content, { backgroundColor: theme.card, borderColor: theme.border, transform: [{ translateY: slideAnim }] }]}>
               {view === "list" && renderList()}
               {view === "form" && renderForm()}
               {view === "detail" && renderDetail()}
               {view === "totemPopup" && renderTotemPopup()}
-            </View>
+            </Animated.View>
           </View>
         </KeyboardAvoidingView>
 

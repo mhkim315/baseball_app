@@ -51,11 +51,10 @@ export default function YearInReview({ year, onClose }: YearInReviewProps) {
     container: { flex: 1, backgroundColor: theme.background },
     header: {
       flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-      paddingTop: 60, paddingHorizontal: 20, paddingBottom: 16,
+      paddingTop: 20, paddingHorizontal: 20, paddingBottom: 16,
       backgroundColor: theme.card, borderBottomWidth: 1, borderBottomColor: theme.border,
     },
     headerTitle: { fontSize: 16, fontWeight: "700", color: theme.foreground },
-    closeBtn: { fontSize: 14, color: theme.mutedForeground },
     content: { paddingHorizontal: 20, paddingBottom: 60, gap: 20, paddingTop: 20 },
 
     cover: {
@@ -118,7 +117,7 @@ export default function YearInReview({ year, onClose }: YearInReviewProps) {
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{year} 시즌 리캡</Text>
-          <Pressable onPress={onClose} hitSlop={8}><Text style={styles.closeBtn}>닫기</Text></Pressable>
+          <Pressable onPress={onClose} hitSlop={12}><Text style={{ fontSize: 22, color: theme.mutedForeground }}>✕</Text></Pressable>
         </View>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <Text style={{ color: theme.mutedForeground, fontSize: 16 }}>데이터를 불러오는 중...</Text>
@@ -132,7 +131,7 @@ export default function YearInReview({ year, onClose }: YearInReviewProps) {
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{year} 시즌 리캡</Text>
-          <Pressable onPress={onClose} hitSlop={8}><Text style={styles.closeBtn}>닫기</Text></Pressable>
+          <Pressable onPress={onClose} hitSlop={12}><Text style={{ fontSize: 22, color: theme.mutedForeground }}>✕</Text></Pressable>
         </View>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40 }}>
           <Text style={{ fontSize: 40, marginBottom: 16 }}>⚾</Text>
@@ -157,7 +156,7 @@ export default function YearInReview({ year, onClose }: YearInReviewProps) {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{year} 시즌 리캡</Text>
-        <Pressable onPress={onClose} hitSlop={8}><Text style={styles.closeBtn}>닫기</Text></Pressable>
+        <Pressable onPress={onClose} hitSlop={12}><Text style={{ fontSize: 22, color: theme.mutedForeground }}>✕</Text></Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { View, Text, Pressable, ScrollView, Modal, StyleSheet, useWindowDimensions, type NativeSyntheticEvent, type NativeScrollEvent } from "react-native";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { View, Text, Pressable, ScrollView, Modal, StyleSheet, useWindowDimensions, type NativeSyntheticEvent, type NativeScrollEvent, Animated } from "react-native";
 import { getBadges, getJikgwanRecords, type Badge, type JikgwanRecord } from "@/lib/db";
 import { BADGE_DEFINITIONS, getVisibleBadgeDefinitions, computeLevel } from "@/lib/achievements";
 import { useTheme } from "@/lib/ThemeContext";
@@ -17,6 +17,7 @@ export default function AchievementModal({ visible, onClose }: Props) {
   const { theme } = useTheme();
   const { myTeam } = useTeam();
   const { width: screenWidth } = useWindowDimensions();
+  const screenHeight = useWindowDimensions().height;
   const scrollRef = useRef<ScrollView>(null);
   const [subTab, setSubTab] = useState<SubTab>("detail");
   const [badges, setBadges] = useState<Badge[]>([]);
@@ -54,9 +55,49 @@ export default function AchievementModal({ visible, onClose }: Props) {
   const detailDef = detailBadgeKey ? BADGE_DEFINITIONS.find((d) => d.badgeKey === detailBadgeKey) : null;
   const detailBadge = detailBadgeKey ? badgeMap.get(detailBadgeKey) : undefined;
 
+  // ── Spring animation ──
+  const [shouldRender, setShouldRender] = useState(false);
+  const slideAnim = useRef(new Animated.Value(500)).current;
+  const backdropAnim = useRef(new Animated.Value(0)).current;
+
+  const animateIn = useCallback(() => {
+    slideAnim.setValue(500);
+    backdropAnim.setValue(0);
+    Animated.parallel([
+      Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, tension: 50, friction: 9 }),
+      Animated.timing(backdropAnim, { toValue: 1, duration: 250, useNativeDriver: true }),
+    ]).start();
+  }, [slideAnim, backdropAnim]);
+
+  const animateOut = useCallback((callback?: () => void) => {
+    Animated.parallel([
+      Animated.timing(slideAnim, { toValue: 500, duration: 280, useNativeDriver: true }),
+      Animated.timing(backdropAnim, { toValue: 0, duration: 250, useNativeDriver: true }),
+    ]).start(() => {
+      setShouldRender(false);
+      callback?.();
+    });
+  }, [slideAnim, backdropAnim]);
+
+  useEffect(() => {
+    if (visible) {
+      if (!shouldRender) setShouldRender(true);
+      else animateIn();
+    } else if (shouldRender) {
+      animateOut();
+    }
+  }, [visible, shouldRender, animateIn, animateOut]);
+
+  const handleClose = useCallback(() => {
+    animateOut(() => onClose());
+  }, [animateOut, onClose]);
+
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <Modal visible={shouldRender} transparent animationType="none" onRequestClose={handleClose}>
+      <View style={{ flex: 1, justifyContent: "flex-end" }}>
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: backdropAnim, backgroundColor: "rgba(0,0,0,0.7)" }]} />
+        <Animated.View style={{ flex: 1, maxHeight: screenHeight * 0.9, borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: theme.background, overflow: "hidden", transform: [{ translateY: slideAnim }] }}>
+          <View style={styles.container}>
         {/* Header */}
         <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
           <View>
@@ -65,8 +106,8 @@ export default function AchievementModal({ visible, onClose }: Props) {
               {unlockedCount}/{visibleDefs.length} 획득 · LV.{levelInfo.level} {levelInfo.title}{levelStar}
             </Text>
           </View>
-          <Pressable onPress={onClose} hitSlop={8}>
-            <Text style={[styles.closeBtn, { color: theme.mutedForeground }]}>닫기</Text>
+          <Pressable onPress={handleClose} hitSlop={12}>
+            <Text style={{ fontSize: 22, color: theme.mutedForeground }}>✕</Text>
           </Pressable>
         </View>
 
@@ -183,6 +224,8 @@ export default function AchievementModal({ visible, onClose }: Props) {
             </Pressable>
           </View>
         )}
+          </View>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -192,12 +235,11 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start",
-    paddingTop: 60, paddingHorizontal: 20, paddingBottom: 16,
+    paddingTop: 20, paddingHorizontal: 20, paddingBottom: 16,
     borderBottomWidth: 1,
   },
   headerTitle: { fontSize: 18, fontWeight: "700" },
   headerSub: { fontSize: 11, marginTop: 2 },
-  closeBtn: { fontSize: 14, marginTop: 4 },
 
   subTabRow: { flexDirection: "row", borderBottomWidth: 1 },
   subTab: { flex: 1, alignItems: "center", paddingVertical: 10, borderBottomWidth: 2 },

@@ -396,7 +396,13 @@ export default function TicketReportModal({ visible, onClose }: { visible: boole
       <View style={styles.container}>
         {step === "team" ? (
           <>
-            <Text style={[styles.title, { color: theme.foreground }]}>암표 신고</Text>
+            <View style={styles.headerRow}>
+              <View style={{ width: 50 }} />
+              <Text style={[styles.headerTitle, { color: theme.foreground }]}>암표 신고</Text>
+              <Pressable onPress={onClose} style={styles.backBtn} hitSlop={8}>
+                <Text style={[styles.backText, { color: theme.mutedForeground }]}>✕</Text>
+              </Pressable>
+            </View>
             <Text style={styles.subtitle}>
               관람한 경기 구단을 선택한 후{'\n'}앉았던 좌석의 정가를 확인하세요
             </Text>
