@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
-import { View, Text, Image, Pressable, ScrollView, StyleSheet, NativeSyntheticEvent, NativeScrollEvent, useWindowDimensions } from "react-native";
+import { View, Text, Pressable, ScrollView, StyleSheet, NativeSyntheticEvent, NativeScrollEvent, useWindowDimensions } from "react-native";
+import { Image } from "expo-image";
 import SimpleAlert from "@/components/SimpleAlert";
 import { TeamBadge } from "@/components/TeamBadge";
 import { EMOTION_CHARACTER, type CharacterEmotion } from "@/lib/emotions";
@@ -137,7 +138,6 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit, e
     },
     photo: {
       height: 360,
-      resizeMode: "cover",
     },
     dots: {
       position: "absolute",
@@ -279,7 +279,7 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit, e
           >
             {photos.map((uri, i) => (
               <View key={i} style={{ position: "relative" }}>
-                <Image source={{ uri }} style={[styles.photo, { width: photoWidth }]} />
+                <Image source={uri} style={[styles.photo, { width: photoWidth }]} contentFit="cover" cachePolicy="disk" />
                 {(gt.awayId || gt.homeId) && !isUpcoming(record.date, record.score_away, record.score_home) && (
                   <View style={stampOverlay.container}>
                     <Text style={stampOverlay.text}>

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { TEAM_COLORS, teamPrimaryColor } from "@shared/teamColors";
 import { getDaysInMonth, getFirstDayOfMonth, formatDateForApi } from "@shared/constants";
@@ -7,7 +7,7 @@ import { type ResolvedGame, getResultLabel, getResultColor } from "@/lib/resolve
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
-export default function CalendarGridPure({
+function CalendarGridPure({
   year,
   month,
   gamesByDate,
@@ -237,3 +237,5 @@ export default function CalendarGridPure({
     </View>
   );
 }
+
+export default memo(CalendarGridPure);

@@ -236,9 +236,6 @@ export function resetAllData(): void {
     DELETE FROM diary_totems;
     DELETE FROM collections;
   `);
-  // Invalidate in-memory caches (dynamic require to avoid circular deps)
-  require("./records").invalidateRecordsCache();
-  require("./expenses").invalidateExpensesCache();
-  require("./badges").invalidateBadgesCache();
-  require("./totems").invalidateTotemStatsCache();
+  // invalidateAllCaches is in index.ts — require() avoids circular dep
+  require("./index").invalidateAllCaches();
 }

@@ -45,3 +45,11 @@ export {
   getRankYearCoachSeen, setRankYearCoachSeen,
   getShortcut, setShortcut,
 } from "./settings";
+
+/** Centralized cache invalidation — add new invalidators here only */
+export function invalidateAllCaches(): void {
+  require("./records").invalidateRecordsCache();
+  require("./expenses").invalidateExpensesCache();
+  require("./badges").invalidateBadgesCache();
+  require("./totems").invalidateTotemStatsCache();
+}

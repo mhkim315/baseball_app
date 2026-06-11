@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, memo } from "react";
 import { View, Text, Pressable, Modal, ScrollView, StyleSheet, ActivityIndicator, Animated } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { TEAM_COLORS, TEAM_LIST, teamPrimaryColor } from "@shared/teamColors";
@@ -8,7 +8,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { type ResolvedGame } from "@/lib/resolveGames";
 import CalendarGridPure from "@/components/CalendarGridPure";
 
-export default function CalendarContainer({
+const CalendarContainer = memo(function CalendarContainer({
   year,
   month,
   resolvedGames,
@@ -238,4 +238,6 @@ export default function CalendarContainer({
       </Modal>
     </View>
   );
-}
+});
+
+export default CalendarContainer;

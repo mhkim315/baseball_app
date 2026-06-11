@@ -271,7 +271,7 @@ export default function HomeScreen() {
     const todayStr = formatDateStr(new Date());
 
     Promise.all([schedulePromise, adjSchedulePromise, ...scorePromises, todayPromise])
-      .then(([scheduleGames, adjGames, ...rest]: [unknown, unknown, ...unknown[]]) => {
+      .then(async ([scheduleGames, adjGames, ...rest]: [unknown, unknown, ...unknown[]]) => {
         if (cancelled) return;
         const scoresList = rest.slice(0, 3) as ({ games: ScoreEntry[] } | null)[];
         const todayData = rest[3] as { games: TodayGame[]; nextGames?: TodayGame[] } | null;
@@ -291,49 +291,64 @@ export default function HomeScreen() {
             nextGames: nextGamesForDate,
           });
 
-          // Fallback: fetch game-detail for live games only
-          // Past games don't need pitcher info — GameCard renders without it
-          const gamesNeedingDetail = resolved.filter(
-            (g) => !isFuture && !g.isExhibition && g.status === "live"
-          );
-          if (gamesNeedingDetail.length > 0) {
-            Promise.all(
-              gamesNeedingDetail.map((g) => cachedGameDetail(g.gameId))
-            ).then((results) => {
-              if (cancelled) return;
-              setGamesByDate((prev) => ({
-                ...prev,
-                [ds]: (prev[ds] || []).map((g) => {
-                  const detail = results.find((r) => r?.gameId === g.gameId);
-                  if (!detail) return g;
-
-                  let liveInning = g.liveInning;
-                  let isTop = g.isTop;
-                  if (g.status === "live" && liveInning == null) {
-                    const info = getInningInfo(detail.scoreBoard?.inn);
-                    if (info) {
-                      liveInning = info.inning;
-                      isTop = info.isTop;
-                    } else {
-                      liveInning = 1;
-                      isTop = true;
-                    }
-                  }
-
-                  return {
-                    ...g,
-                    liveInning,
-                    isTop,
-                    homePitcher: g.homePitcher || (detail.starters?.home?.name || undefined),
-                    awayPitcher: g.awayPitcher || (detail.starters?.away?.name || undefined),
-                  };
-                }),
-              }));
-            }).catch(() => {});
-          }
 
           result[ds] = resolved;
         }
+
+        // Enrich live games with detail data (pitchers, inning info) before state update
+        const allDetailNeeded: { date: string; game: ResolvedGame }[] = [];
+        for (let i = 0; i < 3; i++) {
+          const ds = dates[i];
+          for (const g of result[ds] || []) {
+            const isFuture = ds > todayStr;
+            if (!isFuture && !g.isExhibition && g.status === "live") {
+              allDetailNeeded.push({ date: ds, game: g });
+            }
+          }
+        }
+        if (allDetailNeeded.length > 0) {
+          try {
+            const detailResults = await Promise.all(
+              allDetailNeeded.map(({ game }) => cachedGameDetail(game.gameId))
+            );
+            for (const detail of detailResults) {
+              if (!detail) continue;
+              const need = allDetailNeeded.find((n) => n.game.gameId === detail.gameId);
+              if (!need) continue;
+              const games = result[need.date];
+              if (!games) continue;
+              const idx = games.findIndex((g) => g.gameId === detail.gameId);
+              if (idx === -1) continue;
+
+              let liveInning = games[idx].liveInning;
+              let isTop = games[idx].isTop;
+              if (games[idx].status === "live" && liveInning == null) {
+                const info = getInningInfo(detail.scoreBoard?.inn);
+                if (info) {
+                  liveInning = info.inning;
+                  isTop = info.isTop;
+                } else {
+                  liveInning = 1;
+                  isTop = true;
+                }
+              }
+
+              games[idx] = {
+                ...games[idx],
+                liveInning,
+                isTop,
+                homePitcher: games[idx].homePitcher || (detail.starters?.home?.name || undefined),
+                awayPitcher: games[idx].awayPitcher || (detail.starters?.away?.name || undefined),
+              };
+            }
+          } catch {
+            // Ignore — games render without detail enrichment
+          }
+        }
+
+        // Re-check cancelled after async detail enrichment
+        if (cancelled) return;
+
         setGamesByDate(result);
         hasEverLoaded.current = true;
         setLoading(false);
@@ -618,6 +633,19 @@ export default function HomeScreen() {
     }
   };
 
+  // Stable callbacks for CalendarContainer (prevents unnecessary re-renders)
+  const handleCalSelectDate = useCallback((d: Date) => {
+    setSelectedDate(d);
+    setCalendarOpen(false);
+  }, []);
+  const handleCalMonthChange = useCallback((y: number, m: number) => {
+    setCalYear(y);
+    setCalMonth(m);
+  }, []);
+  const handleCalYearChange = useCallback((y: number) => {
+    setCalYear(y);
+  }, []);
+
   const handlePageSwipe = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const page = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
@@ -739,9 +767,9 @@ export default function HomeScreen() {
           resolvedGames={calResolvedGames}
           loading={loading}
           myTeam={myTeam}
-          onSelectDate={(d) => { setSelectedDate(d); setCalendarOpen(false); }}
-          onMonthChange={(y, m) => { setCalYear(y); setCalMonth(m); }}
-          onYearChange={(y) => setCalYear(y)}
+          onSelectDate={handleCalSelectDate}
+          onMonthChange={handleCalMonthChange}
+          onYearChange={handleCalYearChange}
         />
       </View>
       </View>

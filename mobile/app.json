@@ -2,7 +2,7 @@
   "expo": {
     "name": "풀카운트",
     "slug": "fullcount-kr",
-    "version": "1.1.5",
+    "version": "1.1.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -35,7 +35,7 @@
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VIDEO"
       ],
-      "versionCode": 24
+      "versionCode": 25
     },
     "web": {
       "favicon": "./assets/favicon.png"

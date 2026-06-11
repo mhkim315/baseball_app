@@ -35,10 +35,23 @@ var d=[${items.join(",")}];
 Promise.all(d.map(function(u){return new Promise(function(r,e){
 var img=new Image();img.onload=function(){r(img)};img.onerror=function(){e("img_load")};img.src=u
 })})).then(function(imgs){
-var c=document.getElementById("c"),ctx=c.getContext("2d"),W=${STITCH_W},h=0,i,ih;
-for(i=0;i<imgs.length;i++)h+=imgs[i].height/imgs[i].width*W;
+var c=document.getElementById("c"),ctx=c.getContext("2d"),W=${STITCH_W},h=0,i,ih,sh;
+for(i=0;i<imgs.length;i++){
+  ih=imgs[i].height/imgs[i].width*W;
+  if(ih>2160) ih=2160;
+  h+=ih;
+}
 c.width=W;c.height=Math.ceil(h);var y=0;
-for(i=0;i<imgs.length;i++){ih=imgs[i].height/imgs[i].width*W;ctx.drawImage(imgs[i],0,y,W,ih);y+=ih}
+for(i=0;i<imgs.length;i++){
+  ih=imgs[i].height/imgs[i].width*W;
+  sh=imgs[i].height;
+  if(ih>2160){
+    sh=imgs[i].width*(2160/W);
+    ih=2160;
+  }
+  ctx.drawImage(imgs[i],0,0,imgs[i].width,sh,0,y,W,ih);
+  y+=ih;
+}
 window.ReactNativeWebView.postMessage(c.toDataURL("image/jpeg", 0.8));
 }).catch(function(e){window.ReactNativeWebView.postMessage("ERROR:"+e)});
 </script></body></html>`;
