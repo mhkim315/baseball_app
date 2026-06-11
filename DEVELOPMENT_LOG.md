@@ -1,6 +1,6 @@
 # Fullcount.kr Mobile App — 개발 작업 문서
 
-> 마지막 업데이트: 2026-06-10 (Phase 17-12)
+> 마지막 업데이트: 2026-06-11 (Phase 18-2)
 > 
 > 이 문서는 이전 대화 컨텍스트가 만료되어도 작업을 이어갈 수 있도록 상세히 기록합니다.
 
@@ -2264,3 +2264,101 @@ npm install expo-splash-screen  # ^56.0.10 (잘못됨)
 | `ea3320d` | `fix: TeamBadge 이미지 로드 재시도 무한 지속 (3→max 30s 지수 백오프)` |
 | `c42d744` | `chore: bump version 1.1.1 → 1.1.2 (Android versionCode 21)` |
 | `9d54daf` | `fix: expo-splash-screen SDK 54 버전 고정 (^56.0.10 → ~31.0.13)` |
+
+---
+
+## Phase 18: v1.1.4~v1.1.5 안드로이드/iOS 안정화 (2026-06-10~11)
+
+### v1.1.4: Google Play 권한 심사 대응
+- **문제:** Play Store에서 READ_MEDIA_IMAGES/READ_MEDIA_VIDEO 권한 거절
+- **수정:** `app.json` blockedPermissions에 두 권한 추가 + `ImagePicker.requestMediaLibraryPermissionsAsync()` 3곳 삭제
+- Android Photo Picker(API 33+)는 권한 불필요
+
+### v1.1.5: 종합 안정화
+
+**스티커 바로가기 버그** (2af82a4)
+- findRecentMyTeamGame이 gameIdx 기반 suffix 사용 → resolveGames와 불일치
+- gi(배열 인덱스) 기반으로 통일
+
+**코드리뷰 4건 치명적 버그** (463f4ef)
+- SplashScreen 데드락: preventAutoHideAsync/hideAsync try/catch + ErrorBoundary hideAsync
+- TicketReportModal OOM: Canvas PNG→JPEG(0.8) + WebView onContentProcessDidTerminate
+- TeamBadge 재시도: 3회 빠른(3s→6s→12s) + 이후 60s 느린 무한재시도 + 언마운트 clearTimeout
+- TicketReportModal 크래시: tierNames?.length, prices?.[selectedTier]
+
+**원격 이미지 403 복구** (9b22453)
+- 근본 원인: fullcount.kr(Cloudflare Pages)의 `_redirects /* /index.html 200`이 모든 이미지 요청을 SPA로 라우팅
+- 서버: /var/www/static/ 생성 + nginx location /static/ (30일 캐시, CORS) + SELinux httpd_sys_content_t
+- 앱: IMAGE_BASE → api.fullcount.kr/static (TeamBadge, stadiumHelpers, CheerContent)
+
+**안드로이드 DB 좀비 현상**
+- allowBackup: false 추가 — 앱 삭제 시 Google Drive SQLite 자동복원 차단
+
+**3건 크래시 방어 + 경기종료 감지** (45ed0bd)
+- StadiumMapView: iOS WebView onContentProcessDidTerminate → reload
+- TicketReportModal: Promise.all → for...of 순차처리 (저사양 iOS 메모리)
+- app.json: iOS buildNumber "1" 추가
+- game/[id].tsx: hasPitchingOutcome — daily-scores outcome null이어도 투수기록(W/L) 있으면 경기종료
+
+### 빌드
+- Android: v1.1.5 (versionCode 24), iOS: v1.1.5 (buildNumber 1)
+- AAB: `wQjv-L9v3WyfkZ0cNW3WHkh0ZlglthSpFX9DXv-EweA`
+- IPA: `XRJqbPCw3RJn3B8kc--aSnABnMGrrOripqSyV2I8PgI`
+
+### 커밋
+| 해시 | 설명 |
+|------|------|
+| `2af82a4` | `fix: 스티커 바로가기 잘못된 경기 표시` |
+| `6b0865f` | `fix: Google Play READ_MEDIA_IMAGES/VIDEO 권한 제거` |
+| `463f4ef` | `fix: 코드리뷰 4건 치명적 버그 수정` |
+| `9b22453` | `fix: 원격 이미지 403 — IMAGE_BASE 변경 + 서버 정적파일` |
+| `45ed0bd` | `fix: 3건 크래시 방어 + 경기종료 감지 강화` |
+| `97ba65c` | `chore: bump 1.1.4 → 1.1.5 (versionCode 24)` |
+| `5415569` | `fix: TeamBadge 재시도 — 3회 빠른 후 60s 느린 무한재시도` |
+
+## Phase 18-2: outcome 필드 일괄 교정 + build_daily_scores.py 버그 수정 (2026-06-11)
+
+### 문제
+2020~2025년 데이터의 outcome(W/L/T) 필드가 약 56% 잘못 기록됨
+- 서버 daily-scores.json: **1,823건 오류** (전체 3,253 non-cancelled 중)
+- 앱 번들 scores_2021~2025.json: **1,052건 오류**
+
+### 근본 원인
+
+1. **build_daily_scores.py line 48**: `live-results.json`의 팀 상대적 outcome(`W`=해당팀 승리)을 그대로 복사. 첫 번째 팀의 데이터가 dedup 우선 적용되어 50-50 확률로 틀린 값이 저장됨
+2. **build_daily_scores.py lines 77-82**: 시범경기 전부 `outcome="W"` (홈 승리 `"L"`이 없음)
+3. **build_season.py lines 95-96**: T_SCORE/B_SCORE swap (T=Top=원정, B=Bottom=홈) — 점수 영향 있었으나 game-records 덮어쓰기로 최종 데이터는 정상
+
+### 수정
+
+**서버 build_daily_scores.py 복구 (재발 방지):**
+- `compute_outcome()` 함수 추가: 점수 기반 W/L/T 계산
+- line 48: `game.get("outcome")` → `compute_outcome(awayScore, homeScore)`
+- lines 77-82: 시범경기 `outcome` 통일 — `compute_outcome()`으로 대체
+- `update_hub_data.py` 재실행 → 모든 파생 파일 정상 재생성
+
+**서버 daily-scores.json:**
+- `recompute_outcomes.py`: 백업본 대상 1,823건 교정
+- 수정본 SCP 업로드 + nginx cache TTL 만료 대기 (300초) 후 정상 응답 확인
+
+**앱 번들 (scores_2021~2025.json 5개):**
+- 각 파일의 모든 게임 점수 기반 outcome 재계산: 1,052건 교정
+- 점수는 변경 없음, outcome 문자열만 수정
+
+### 검증
+
+| 검증 항목 | 결과 |
+|-----------|------|
+| 서버 전체 3,253 non-cancelled | ✅ 0 wrong (3,253/3,253 correct) |
+| 2020-05-05 spot check | ✅ 5/5 correct |
+| 2025-05-17 (DH 5경기) | ✅ 10/10 correct |
+| Jest tests (stats/expenseStats/sticker) | ✅ 64/64 passed |
+| 로컬 번들 5개 파일 전수검사 | ✅ 0 wrong |
+
+### 버전
+- (대기 중) v1.1.6 Android 재빌드 후 Play Store 출시 필요
+
+### 커밋
+| 해시 | 설명 |
+|------|------|
+| (대기) | `fix: outcome 필드 일괄 교정 — 2,875건 + build_daily_scores.py 점수 기반 재계산으로 변경` |
