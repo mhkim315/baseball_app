@@ -9,6 +9,18 @@ ROOT = Path(__file__).resolve().parents[1]
 KST = timezone(timedelta(hours=9))
 
 
+def compute_outcome(away_score, home_score):
+    """W = away win, L = home win, T = tie"""
+    if away_score is None or home_score is None:
+        return None
+    if away_score > home_score:
+        return "W"
+    elif home_score > away_score:
+        return "L"
+    else:
+        return "T"
+
+
 def load_json(path: str):
     with open(ROOT / path, encoding="utf-8") as f:
         return json.load(f)
@@ -45,7 +57,7 @@ def main():
                     "home": game["home"],
                     "awayScore": game.get("awayScore"),
                     "homeScore": game.get("homeScore"),
-                    "outcome": game.get("outcome"),
+                    "outcome": compute_outcome(game.get("awayScore"), game.get("homeScore")),
                     "cancelled": game.get("cancelled", False),
                     "awayStarter": game.get("awayStarter"),
                     "homeStarter": game.get("homeStarter"),
@@ -74,12 +86,7 @@ def main():
                 if date_key in scores_by_date and dedup_key in scores_by_date[date_key]:
                     continue
 
-                outcome = None
-                if g.get("awayScore") is not None and g.get("homeScore") is not None:
-                    if g["awayScore"] == g["homeScore"]:
-                        outcome = "T"
-                    else:
-                        outcome = "W"
+                outcome = compute_outcome(g.get("awayScore"), g.get("homeScore"))
 
                 src_gid = g.get("gameId", "")
                 game_id = ""
