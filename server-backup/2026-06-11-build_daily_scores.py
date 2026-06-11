@@ -57,7 +57,7 @@ def main():
                     "home": game["home"],
                     "awayScore": game.get("awayScore"),
                     "homeScore": game.get("homeScore"),
-                    "outcome": compute_outcome(game.get("awayScore"), game.get("homeScore")),
+                    "outcome": None if game.get("cancelled") else compute_outcome(game.get("awayScore"), game.get("homeScore")),
                     "cancelled": game.get("cancelled", False),
                     "awayStarter": game.get("awayStarter"),
                     "homeStarter": game.get("homeStarter"),
