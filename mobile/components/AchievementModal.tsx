@@ -16,8 +16,7 @@ type SubTab = "detail" | "collection";
 export default function AchievementModal({ visible, onClose }: Props) {
   const { theme } = useTheme();
   const { myTeam } = useTeam();
-  const { width: screenWidth } = useWindowDimensions();
-  const screenHeight = useWindowDimensions().height;
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const scrollRef = useRef<ScrollView>(null);
   const [subTab, setSubTab] = useState<SubTab>("detail");
   const [badges, setBadges] = useState<Badge[]>([]);
@@ -181,6 +180,9 @@ export default function AchievementModal({ visible, onClose }: Props) {
           </ScrollView>
         )}
 
+          </View>
+        </Animated.View>
+
         {/* Badge detail popup — 인라인 오버레이 (iOS Modal 중첩 버그 방지) */}
         {detailDef && (
           <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
@@ -224,8 +226,6 @@ export default function AchievementModal({ visible, onClose }: Props) {
             </Pressable>
           </View>
         )}
-          </View>
-        </Animated.View>
       </View>
     </Modal>
   );

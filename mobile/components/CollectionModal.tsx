@@ -266,7 +266,7 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
           <Pressable onPress={() => openForm()} style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 8, backgroundColor: theme.muted }}>
             <Text style={{ fontSize: 13, fontWeight: "600", color: theme.foreground }}>+ 추가</Text>
           </Pressable>
-          <Pressable onPress={onClose} hitSlop={12}>
+          <Pressable onPress={handleClose} hitSlop={12}>
             <Text style={{ fontSize: 22, color: theme.mutedForeground }}>✕</Text>
           </Pressable>
         </View>
@@ -536,11 +536,6 @@ export default function CollectionModal({ visible, onClose, onSave }: Props) {
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    justifyContent: "flex-end",
-  },
   content: {
     flex: 1,
     maxHeight: Dimensions.get("window").height * 0.85,
@@ -548,6 +543,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     borderWidth: 1,
     borderBottomWidth: 0,
+    overflow: "hidden",
     padding: 24,
     paddingBottom: 40,
   },
