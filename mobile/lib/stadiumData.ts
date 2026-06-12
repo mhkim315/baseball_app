@@ -40,7 +40,7 @@ export const STADIUM_BRIEFS: Record<string, StadiumBrief> = {
   "1": {
     id: "1", name: "잠실야구장", location: "서울 송파구", capacity: "25,553석",
     homeTeams: "LG 트윈스, 두산 베어스",
-    ticket: { purchase: "LG: 티켓링크/LG트윈스앱 / 두산: NOL티켓(인터파크)/두산앱", price: "10,000원(외야)~90,000원(프리미엄)" },
+    ticket: { purchase: "LG: 티켓링크/LG트윈스앱\n두산: NOL티켓(인터파크)/두산앱", price: "10,000원(외야)~90,000원(프리미엄)" },
     parking: { fee: "경기일 선불 6,000원", note: "올림픽주경기장 리모델링으로 주차면 대폭 축소. 승용차 5부제 평일 적용. 대중교통 강력 권장" },
     transit: { subway: "2호선/9호선 종합운동장역 5·6번 출구 도보 5분", bus: "301, 333, 341, 345, 350, 360" },
   },
@@ -96,7 +96,7 @@ export const STADIUM_BRIEFS: Record<string, StadiumBrief> = {
   "9": {
     id: "9", name: "창원NC파크", location: "경남 창원시", capacity: "22,112석",
     homeTeams: "NC 다이노스",
-    ticket: { purchase: "NC 다이노스 앱 / 홈페이지 / 티켓링크", price: "다이내믹 프라이싱 적용 (경기/좌석별 변동)" },
+    ticket: { purchase: "NC 다이노스 앱 / 홈페이지", price: "다이내믹 프라이싱 적용 (경기/좌석별 변동)" },
     parking: { fee: "경기시간 무료(티켓 인증 시)", note: "철골주차장/양덕공영주차장 경기 전 1시간~후 1시간 무료. 창원/진주/김해 무료 셔틀버스(6대) 운행. 대중교통 이용 시 2,000원 할인(화~금)" },
     transit: { subway: "없음 (버스 이용)", bus: "101, 102, 105, 113, 150, 151, 160, 161, 170, 171, 200, 250, 700, 710, 800" },
   },

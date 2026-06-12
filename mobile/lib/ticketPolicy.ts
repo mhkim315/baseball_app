@@ -36,12 +36,11 @@ const TICKET_POLICY: Record<string, TeamTicketPolicy> = {
       { id: "batti", name: "배티 (99,000원)", dDay: -7, time: "11:00", maxTickets: 6, seats: "전 좌석 (일부 제외)", note: "스타벅스 게이트" },
       { id: "season_member", name: "시즌티켓 회원", dDay: -7, time: "11:00", maxTickets: null, seats: "전 좌석", note: "시즌티켓 구매자 동반인 대상" },
       { id: "puri", name: "푸리 (50,000원)", dDay: -6, time: "11:00", maxTickets: 6, seats: "전 좌석 (일부 제외)", note: "스타벅스 게이트" },
-      { id: "friends", name: "프렌즈", dDay: -5, time: "11:00", maxTickets: 6, seats: "전 좌석 (일부 제외)" },
       { id: "general", name: "일반", dDay: -4, time: "11:00", maxTickets: 6, seats: "전 좌석" },
     ],
   },
   NC: {
-    name: "NC 다이노스", color: "#315288", venue: "창원NC파크", platform: "NC 다이노스 자체 앱 / 홈페이지 / 티켓링크",
+    name: "NC 다이노스", color: "#315288", venue: "창원NC파크", platform: "NC 다이노스 자체 앱 / 홈페이지",
     tiers: [
       { id: "season_n", name: "시즌티켓 회원 (N타입)", dDay: -8, time: "11:00", maxTickets: null, seats: "전 좌석", note: "고정좌석 보유자. 추가 예매 D-8 11:00" },
       { id: "mint_plus", name: "민트 멤버십 플러스", dDay: -8, time: "17:00", maxTickets: 4, seats: "전 좌석", note: "체크인 40회 달성 시 자동 승급" },

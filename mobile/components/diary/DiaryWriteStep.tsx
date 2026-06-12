@@ -102,7 +102,16 @@ export default function DiaryWriteStep({ selectedGame, editRecord, cheeredTeam, 
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>오늘의 기분</Text>
-        <EmotionPicker value={emotion} onChange={setEmotion} teamId={cheeredTeam || userTeam} unlockedEmotions={unlockedEmotions} />
+        {(() => {
+          const isMyGame = selectedGame
+            ? (selectedGame.homeTeam === userTeam || selectedGame.awayTeam === userTeam)
+            : false;
+          const emotionTeamId = cheeredTeam || (isMyGame ? userTeam : null);
+          if (!emotionTeamId) {
+            return <Text style={{ color: theme.mutedForeground, fontSize: 13, textAlign: "center", paddingVertical: 8 }}>응원팀을 먼저 선택해주세요</Text>;
+          }
+          return <EmotionPicker value={emotion} onChange={setEmotion} teamId={emotionTeamId} unlockedEmotions={unlockedEmotions} />;
+        })()}
       </View>
 
       <View style={styles.section}>
