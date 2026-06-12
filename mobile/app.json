@@ -2,7 +2,7 @@
   "expo": {
     "name": "풀카운트",
     "slug": "fullcount-kr",
-    "version": "1.1.6",
+    "version": "1.1.7",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "kr.fullcount.app",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "직관일기 작성 시 사진을 첨부하기 위해 앨범 접근 권한이 필요합니다.",
         "ITSAppUsesNonExemptEncryption": false
@@ -35,7 +35,7 @@
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VIDEO"
       ],
-      "versionCode": 25
+      "versionCode": 26
     },
     "web": {
       "favicon": "./assets/favicon.png"
