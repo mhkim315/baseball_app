@@ -58,11 +58,7 @@ def main():
                     "home": game["home"],
                     "awayScore": game.get("awayScore"),
                     "homeScore": game.get("homeScore"),
-                    "outcome": None if (
-                        game.get("cancelled") or
-                        (not (game.get("winPitcher") or game.get("losePitcher")) and
-                         (date == today_str or (game.get("awayScore") == 0 and game.get("homeScore") == 0)))
-                    ) else compute_outcome(game.get("awayScore"), game.get("homeScore")),
+                    "outcome": game.get("outcome"),
                     "cancelled": game.get("cancelled", False),
                     "awayStarter": game.get("awayStarter"),
                     "homeStarter": game.get("homeStarter"),
@@ -91,11 +87,7 @@ def main():
                 if date_key in scores_by_date and dedup_key in scores_by_date[date_key]:
                     continue
 
-                outcome = None if (
-                    g.get("cancelled") or
-                    (not (g.get("winPitcher") or g.get("losePitcher")) and
-                     (date_key == today_str or (g.get("awayScore") == 0 and g.get("homeScore") == 0)))
-                ) else compute_outcome(g.get("awayScore"), g.get("homeScore"))
+                outcome = g.get("outcome")
 
                 src_gid = g.get("gameId", "")
                 game_id = ""
