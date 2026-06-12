@@ -27,6 +27,14 @@ function streakColor(streak: string | undefined | null): string {
   return "#ef4444";
 }
 
+function formatLast10(last10?: string): string {
+  if (!last10) return "-";
+  const parts = last10.split("-");
+  if (parts.length === 2) return `${parts[0]}승${parts[1]}패`;
+  if (parts.length === 3) return `${parts[0]}승${parts[2]}무${parts[1]}패`;
+  return last10;
+}
+
 export default function RankScreen() {
   const { theme, isDark } = useTheme();
   const [year, setYear] = useState(new Date().getFullYear());
@@ -174,29 +182,39 @@ export default function RankScreen() {
       color: theme.foreground,
     },
     colRank: {
-      width: 32,
+      width: 36,
       textAlign: "center",
     },
     colTeam: {
       flex: 1,
+      marginRight: 4,
     },
     colNum: {
-      width: 36,
-      textAlign: "center",
-    },
-    colRate: {
-      width: 48,
-      textAlign: "center",
-    },
-    colGb: {
       width: 40,
       textAlign: "center",
     },
-    colStreak: {
-      width: 50,
+    colRate: {
+      width: 54,
       textAlign: "center",
-      fontSize: 12.5,
+    },
+    colGb: {
+      width: 44,
+      textAlign: "center",
+    },
+    colStreak: {
+      width: 52,
+      textAlign: "center",
+      fontSize: 13,
       fontWeight: "600",
+    },
+    colGames: {
+      width: 40,
+      textAlign: "center",
+    },
+    colLast10: {
+      width: 74,
+      textAlign: "center",
+      fontSize: 13,
     },
 
     // Rank styles
@@ -275,17 +293,20 @@ export default function RankScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={styles.table}>
             {/* Header row */}
             <View style={styles.tableHeader}>
               <Text style={[styles.cell, styles.colRank]}>#</Text>
               <Text style={[styles.cell, styles.colTeam]}>팀</Text>
+              <Text style={[styles.cell, styles.colGames]}>경기수</Text>
               <Text style={[styles.cell, styles.colNum]}>승</Text>
               <Text style={[styles.cell, styles.colNum]}>무</Text>
               <Text style={[styles.cell, styles.colNum]}>패</Text>
               <Text style={[styles.cell, styles.colRate]}>승률</Text>
               <Text style={[styles.cell, styles.colGb]}>차</Text>
               <Text style={[styles.cell, styles.colStreak]}>연속</Text>
+              <Text style={[styles.cell, styles.colLast10]}>최근10경기</Text>
             </View>
 
             {/* Data rows */}
@@ -306,6 +327,7 @@ export default function RankScreen() {
                       {team?.shortName || row.teamName}
                     </Text>
                   </View>
+                  <Text style={[styles.cell, styles.colGames]}>{row.gamesPlayed ?? "-"}</Text>
                   <Text style={[styles.cell, styles.colNum]}>{wins}</Text>
                   <Text style={[styles.cell, styles.colNum]}>{draws}</Text>
                   <Text style={[styles.cell, styles.colNum]}>{losses}</Text>
@@ -318,10 +340,12 @@ export default function RankScreen() {
                   <Text style={[styles.cell, styles.colStreak, { color: row.streak ? streakColor(row.streak) : theme.mutedForeground }]}>
                     {row.streak || "-"}
                   </Text>
+                  <Text style={[styles.cell, styles.colLast10, { color: theme.mutedForeground }]}>{formatLast10(row.last10)}</Text>
                 </View>
               );
             })}
           </View>
+          </ScrollView>
 
           {fetchedAt && (
             <Text style={styles.footer}>{formatDate(new Date(fetchedAt))} 기준</Text>

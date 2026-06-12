@@ -91,6 +91,8 @@ export function createApi(options: ApiClientOptions) {
           wlt: r.wlt || `${r.wins ?? 0}승${r.draws ?? 0}무${r.losses ?? 0}패`,
           gamesBehind: r.gamesBehind ?? r.game_back ?? null,
           streak: r.streak ?? "",
+          gamesPlayed: r.gamesPlayed ?? r.games_played ?? undefined,
+          last10: r.last10 ?? r.last_10 ?? undefined,
         }));
         return {
           source: "api",

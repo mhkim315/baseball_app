@@ -107,6 +107,8 @@ export interface StandingRow {
   wlt: string;
   gamesBehind: number;
   streak: string;
+  gamesPlayed?: number;
+  last10?: string;
 }
 
 export interface ScoreSummaryRow {
