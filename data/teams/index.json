@@ -1,0 +1,209 @@
+{
+  "teams": [
+    {
+      "id": "doosan",
+      "buttonLabel": "두산",
+      "teamName": "두산",
+      "teamShort": "두산",
+      "scheduleName": "두산",
+      "kboCode": "OB",
+      "ballparkId": "jamsil",
+      "ballparkName": "서울 잠실야구장",
+      "stadiumHubId": "1",
+      "homeUrl": "https://www.doosanbears.com/",
+      "primaryColor": "#131230",
+      "accentColor": "#C41230"
+    },
+    {
+      "id": "lg",
+      "buttonLabel": "LG",
+      "teamName": "LG",
+      "teamShort": "LG",
+      "scheduleName": "LG",
+      "kboCode": "LG",
+      "ballparkId": "jamsil",
+      "ballparkName": "서울 잠실야구장",
+      "stadiumHubId": "1",
+      "homeUrl": "https://www.lgtwins.com/",
+      "primaryColor": "#C30452",
+      "accentColor": "#000000"
+    },
+    {
+      "id": "kiwoom",
+      "buttonLabel": "키움",
+      "teamName": "키움",
+      "teamShort": "키움",
+      "scheduleName": "키움",
+      "kboCode": "WO",
+      "ballparkId": "gochuck",
+      "ballparkName": "고척스카이돔",
+      "stadiumHubId": "2",
+      "homeUrl": "https://www.heroesbaseball.co.kr/",
+      "primaryColor": "#570514",
+      "accentColor": "#B07F4A"
+    },
+    {
+      "id": "ssg",
+      "buttonLabel": "SSG",
+      "teamName": "SSG",
+      "teamShort": "SSG",
+      "scheduleName": "SSG",
+      "kboCode": "SK",
+      "ballparkId": "incheon",
+      "ballparkName": "인천 SSG 랜더스필드",
+      "stadiumHubId": "3",
+      "homeUrl": "https://www.ssglanders.com/",
+      "primaryColor": "#CE0E2D",
+      "accentColor": "#F7B500"
+    },
+    {
+      "id": "kt",
+      "buttonLabel": "KT",
+      "teamName": "KT",
+      "teamShort": "KT",
+      "scheduleName": "KT",
+      "kboCode": "KT",
+      "ballparkId": "suwon",
+      "ballparkName": "수원 KT 위즈 파크",
+      "stadiumHubId": "4",
+      "homeUrl": "https://www.ktwiz.co.kr/",
+      "primaryColor": "#000000",
+      "accentColor": "#E60012"
+    },
+    {
+      "id": "hanwha",
+      "buttonLabel": "한화",
+      "teamName": "한화",
+      "teamShort": "한화",
+      "scheduleName": "한화",
+      "kboCode": "HH",
+      "ballparkId": "daejeon",
+      "ballparkName": "대전 한화생명 이글스파크",
+      "stadiumHubId": "5",
+      "homeUrl": "https://www.hanwhaeagles.co.kr/",
+      "primaryColor": "#F37321",
+      "accentColor": "#000000"
+    },
+    {
+      "id": "samsung",
+      "buttonLabel": "삼성",
+      "teamName": "삼성",
+      "teamShort": "삼성",
+      "scheduleName": "삼성",
+      "kboCode": "SS",
+      "ballparkId": "daegu",
+      "ballparkName": "대구 삼성 라이온즈 파크",
+      "stadiumHubId": "6",
+      "homeUrl": "https://www.samsunglions.com/",
+      "primaryColor": "#074CA1",
+      "accentColor": "#C0C0C0"
+    },
+    {
+      "id": "kia",
+      "buttonLabel": "기아",
+      "teamName": "KIA",
+      "teamShort": "KIA",
+      "scheduleName": "KIA",
+      "kboCode": "HT",
+      "ballparkId": "gwangju",
+      "ballparkName": "광주 기아챔피언스필드",
+      "stadiumHubId": "7",
+      "homeUrl": "https://tigers.co.kr/",
+      "primaryColor": "#EA0029",
+      "accentColor": "#071D49"
+    },
+    {
+      "id": "lotte",
+      "buttonLabel": "롯데",
+      "teamName": "롯데",
+      "teamShort": "롯데",
+      "scheduleName": "롯데",
+      "kboCode": "LT",
+      "ballparkId": "sajik",
+      "ballparkName": "부산 사직야구장",
+      "stadiumHubId": "8",
+      "homeUrl": "https://www.giantsclub.com/",
+      "primaryColor": "#041E42",
+      "accentColor": "#D00F31"
+    },
+    {
+      "id": "nc",
+      "buttonLabel": "NC",
+      "teamName": "NC",
+      "teamShort": "NC",
+      "scheduleName": "NC",
+      "kboCode": "NC",
+      "ballparkId": "changwon",
+      "ballparkName": "창원 NC 파크",
+      "stadiumHubId": "9",
+      "homeUrl": "https://www.ncdinos.com/",
+      "primaryColor": "#1D467D",
+      "accentColor": "#C7A45D"
+    }
+  ],
+  "stadiums": {
+    "1": {
+      "id": "1",
+      "label": "잠실",
+      "ballparkId": "jamsil",
+      "seatImage": "picture/stadium-seats/jamsil.jpg",
+      "foodMapImage": "picture/food-admin-maps/jamsil.jpg"
+    },
+    "2": {
+      "id": "2",
+      "label": "고척",
+      "ballparkId": "gochuck",
+      "seatImage": "picture/stadium-seats/gochuck.jpg",
+      "foodMapImage": "picture/food-admin-maps/gochuck.jpg"
+    },
+    "3": {
+      "id": "3",
+      "label": "문학",
+      "ballparkId": "incheon",
+      "seatImage": "picture/stadium-seats/incheon.jpg",
+      "foodMapImage": "picture/food-admin-maps/incheon.jpg"
+    },
+    "4": {
+      "id": "4",
+      "label": "수원",
+      "ballparkId": "suwon",
+      "seatImage": "picture/stadium-seats/suwon.jpg",
+      "foodMapImage": "picture/food-admin-maps/suwon.jpg"
+    },
+    "5": {
+      "id": "5",
+      "label": "대전",
+      "ballparkId": "daejeon",
+      "seatImage": "picture/stadium-seats/daejeon.jpg",
+      "foodMapImage": "picture/food-admin-maps/daejeon.jpg"
+    },
+    "6": {
+      "id": "6",
+      "label": "대구",
+      "ballparkId": "daegu",
+      "seatImage": "picture/stadium-seats/daegu.jpg",
+      "foodMapImage": "picture/food-admin-maps/daegu.jpg"
+    },
+    "7": {
+      "id": "7",
+      "label": "광주",
+      "ballparkId": "gwangju",
+      "seatImage": "picture/stadium-seats/gwangju.jpg",
+      "foodMapImage": "picture/food-admin-maps/gwangju.jpg"
+    },
+    "8": {
+      "id": "8",
+      "label": "사직",
+      "ballparkId": "sajik",
+      "seatImage": "picture/stadium-seats/sajik.jpg",
+      "foodMapImage": "picture/food-admin-maps/busan.jpg"
+    },
+    "9": {
+      "id": "9",
+      "label": "창원",
+      "ballparkId": "changwon",
+      "seatImage": "picture/stadium-seats/changwon.jpg",
+      "foodMapImage": "picture/food-admin-maps/changwon.jpg"
+    }
+  }
+}

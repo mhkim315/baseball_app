@@ -1,6 +1,6 @@
 # Fullcount.kr Mobile App — 개발 작업 문서
 
-> 마지막 업데이트: 2026-06-11 (Phase 18-2)
+> 마지막 업데이트: 2026-06-12 (Phase 18-4)
 > 
 > 이 문서는 이전 대화 컨텍스트가 만료되어도 작업을 이어갈 수 있도록 상세히 기록합니다.
 
@@ -2361,4 +2361,185 @@ npm install expo-splash-screen  # ^56.0.10 (잘못됨)
 ### 커밋
 | 해시 | 설명 |
 |------|------|
-| (대기) | `fix: outcome 필드 일괄 교정 — 2,875건 + build_daily_scores.py 점수 기반 재계산으로 변경` |
+| `d3869a8` | `fix: outcome 필드 일괄 교정 — 2,875건 + build_daily_scores.py 점수 기반 재계산으로 변경` |
+
+---
+
+## Phase 18-3: 경기 상태 "finished" 오표시 + 시간 체계 버그 수정 (2026-06-11)
+
+### 문제
+모든 경기(오늘+미래 30경기)가 `"status": "finished"`로 표시됨. 앱에서 경기 시작 전인데 "경기 종료"로 보이는 현상.
+
+### 근본 원인 (2중 버그)
+
+**Bug 1 — compute_outcome(0,0) → "T" (CRITICAL):**
+- `d3869a8`에서 추가한 `compute_outcome()`가 pre-game 0-0 점수를 무승부("T")로 계산
+- `build_today_games.py`가 `if s.get("outcome"):` → `"finished"`로 판단
+- Naver API는 pre-game에 `outcome: null`을 주었는데, 점수 기반 재계산으로 바꾸면서 pre-game과 real tie 구분 불가
+
+**영향받은 코드 (모두 동일 패턴):**
+| 위치 | 파일 | 라인 | 영향 |
+|------|------|------|------|
+| today-games API | `build_today_games.py` | 253 | 모든 경기 "finished" ❌ |
+| game-detail API | `main.py` | 729 | 경기 상세 "finished" ❌ |
+| score summary | `main.py` | 427, 856 | pre-game 0-0이 통계에 포함되어 평균 왜곡 ⚠️ |
+
+**Bug 2 — 시간 비교가 현재 날짜 기준 (MEDIUM):**
+```python
+# before
+game_start = now_kst.replace(hour=gh, minute=gm)  # 오늘 날짜 기준!
+```
+미래 경기도 `now_kst.replace()`가 오늘 날짜를 사용하여 항상 과거로 판단 → `"live"`로 표시
+
+### 수정
+
+**build_daily_scores.py (서버 + 로컬 백업):**
+- `outcome` 조건을 `winPitcher/losePitcher` 존재 여부로 변경
+- Naver API는 경기 종료 시에만 `winPitcher/losePitcher` 채움 → 가장 신뢰할 수 있는 경기 종료 신호
+```python
+# before
+"outcome": None if game.get("cancelled") else compute_outcome(...)
+# after
+"outcome": None if (
+    game.get("cancelled") or
+    not (game.get("winPitcher") or game.get("losePitcher"))
+) else compute_outcome(...)
+```
+
+**build_today_games.py (서버 + 로컬 백업):**
+- 시간 비교를 게임 날짜 기준으로 변경
+```python
+# before
+game_start = now_kst.replace(hour=gh, minute=gm, second=0, microsecond=0)
+# after
+game_start = datetime(int(target_date[:4]), int(target_date[5:7]),
+                      int(target_date[8:10]), gh, gm, tzinfo=KST)
+```
+
+### 검증
+
+| 항목 | 결과 |
+|------|------|
+| 오늘 경기 (6/11 5경기) | ✅ `"live"` |
+| 미래 경기 (6/12~6/18 25경기) | ✅ `"scheduled"` |
+| daily-scores outcome | ✅ `null` (pre-game/live) |
+| 이미 종료된 경기 | ✅ `"finished"` 유지 (winPitcher/losePitcher 있음) |
+| 0-0 실제 무승부 | ✅ `winPitcher/losePitcher` 있으므로 정상 감지 |
+
+### 영향도
+- 서버 데이터 파이프라인만 수정, 앱 코드 변경 없음
+- 앱 SQLite 캐시는 5분 TTL 후 자동 갱신
+- pre-game 0-0이 score summary에서 제외되어 팀 평균 득점 정확도 향상
+
+### 버전
+- v1.1.6 (변경 없음, 서버 데이터만 교체)
+
+### 커밋
+| 해시 | 설명 |
+|------|------|
+| (로컬만) | `fix: build_daily_scores.py outcome pre-game 가드 winPitcher/losePitcher 기반으로 변경` |
+| (로컬만) | `fix: build_today_games.py 시간 비교 게임 날짜 기준으로 수정` |
+
+---
+
+## Phase 18-4: 모아보기 모달 UI 통일 + 코드리뷰 정리 (2026-06-11~12)
+
+### 변경 사항
+
+| 항목 | 파일 | 상세 |
+|------|------|------|
+| **EmotionPicker lockedAlert** | `EmotionPicker.tsx` | `position:absolute` → `<Modal transparent>`로 변경 — 확인 버튼이 컨테이너 바깥으로 잘리던 버그 수정 |
+| **직관기록 삭제 후 미갱신** | `db/records.ts` | `deleteJikgwanRecord`에 `invalidateRecordsCache()` 추가 — 삭제 후 UI 즉시 갱신되도록 수정 |
+| **TicketReportModal 뒤로가기** | `TicketReportModal.tsx` | 첫 화면(팀 선택 step)에 ✕ 닫기 버튼 추가 |
+| **모달 X 버튼 위치 통일** | `AchievementModal`, `CollectionModal`, `YearInReview`, `TicketReportModal`, `my.tsx` | X 버튼을 오른쪽으로 통일 (기존 좌/우 혼재) |
+| **모달 닫기 버튼 스타일 통일** | 전 모달 | "닫기" 텍스트 버튼 → ✕ 아이콘으로 일원화 |
+| **모달 시트 형태 통일** | `AchievementModal`, `CollectionModal`(이미 적용됨 이후 추가 모달), `YearInReview`, `my.tsx` TotemList | full-screen → bottom sheet (borderTopRadius 24, maxHeight 85~90%) |
+| **모달 애니메이션 통일** | `AchievementModal`, `CollectionModal`, `YearInReview`, `my.tsx` TotemList | `Animated.spring(tension:50, friction:9)` + `shouldRender` 패턴 적용 — 모든 모달 동일한 spring 애니메이션으로 통일 |
+| **+버튼 → +추가 텍스트 버튼** | `CollectionModal`, `my.tsx` TotemList | 기존 "+" 심볼 → "+ 추가" 텍스트 버튼 + 배경 추가, X와 간격 20px로 이격 (터치 오류 방지) |
+| **배지 상세 오버레이 클리핑** | `AchievementModal.tsx` | badge detail popup이 `overflow:hidden` 컨테이너 내부에서 잘리던 현상 수정 — overlay를 bottom sheet 밖으로 이동 |
+| **CollectionModal 코드리뷰 정리** | `CollectionModal.tsx` | 리스트 X → `handleClose` 사용, 미사용 `styles.overlay` 제거, content에 `overflow:hidden` 추가 |
+
+### 수정 파일
+- `mobile/components/EmotionPicker.tsx`
+- `mobile/lib/db/records.ts`
+- `mobile/components/TicketReportModal.tsx`
+- `mobile/components/AchievementModal.tsx`
+- `mobile/components/YearInReview.tsx`
+- `mobile/components/CollectionModal.tsx`
+- `mobile/app/(tabs)/my.tsx`
+- `server_backup_2026-05-29/build_daily_scores.py`
+
+### 커밋
+| 해시 | 설명 |
+|------|------|
+| `4f39b2c` | fix: EmotionPicker lockedAlert Modal변환 + deleteJikgwanRecord 캐시무효화 |
+| `b8e24a4` | design: 모아보기 모달 UI 통일 — X버튼 위치/시트형태/spring애니메이션 |
+| (squash) | 추가 모달 spring 변환 + handleClose + overflow 수정 |
+| `0bf5fdb` | fix: 코드리뷰 발견 4건 수정 — badge detail overflow 클리핑, CollectionModal 3건 정리 |
+
+### 특이사항
+- **learned**: React Native `Animated.spring` vs `Modal animationType="slide"`의 차이 — spring이 더 부드럽고 일관된 물리 효과 제공
+- **learned**: `<Modal transparent>`는 모든 컨텐츠 위에 렌더링되므로, `position:absolute`가 잘리는 작은 컴포넌트 내 overlay 문제 해결에 효과적
+- **learned**: `overflow: "hidden"`은 `borderRadius`가 있는 컨테이너에서 자식 컨텐츠가 모서리를 넘어갈 때 필수
+- **caution**: PowerShell here-string (`@'...'@`)은 열리는 `@'`가 반드시 컬럼 0에 위치해야 함 — `git commit -m`과 같은 줄에 쓰면 `@`가 메시지에 포함됨
+
+---
+
+## Phase 18-5: Collector 동작 방식 확인 및 or falsy-0 수정 (2026-06-12~13)
+
+### Collector 실행 방식: APScheduler (cron 아님)
+
+서버 `main.py`의 **APScheduler**가 `collector.py`의 `collect()` 함수를 주기적으로 실행. cron이나 systemd timer가 아님.
+
+```python
+# main.py (scheduler 섹션, lines 129-148)
+scheduler = BackgroundScheduler()
+
+def scheduled_collect():
+    try:
+        from collector import collect
+        collect()
+    except Exception as e:
+        print(f"Collection error: {e}")
+    _JSON_CACHE.clear()
+    load_json("today-games.json")
+    load_json("daily-scores.json")
+    next_interval = random.randint(180, 300)  # 3~5분 랜덤
+    next_run_time = datetime.now() + timedelta(seconds=next_interval)
+    scheduler.add_job(scheduled_collect, "date", run_date=next_run_time)
+
+scheduler.add_job(scheduled_collect, "date", run_date=datetime.now() + timedelta(seconds=10))
+scheduler.start()
+```
+
+- 각 실행이 완료되면 `random.randint(180, 300)`초 후 다음 실행을 1회 예약
+- 로그 확인: `journalctl -u fullcount-api.service | grep 'collect start'`
+- 로그 파일(`collector.log`)은 5/26 이후 갱신 없었음 → 서버 재시작 후 출력이 systemd journal로 변경되었기 때문
+
+### `or` falsy-0 패턴 수정
+
+**문제**: `collector.py`에서 `data.get("visitTeamScore") or data.get("homeTeamScore")` 패턴 사용. Python에서 `0 or X`는 `X`로 평가되어 셧아웃 경기(0-X, X-0)에서 점수가 잘못 기록됨.
+
+**수정**:
+```python
+# BEFORE
+away_score = data.get("visitTeamScore") or data.get("homeTeamScore")
+home_score = data.get("homeTeamScore") or data.get("visitTeamScore")
+
+# AFTER
+away_score = data.get("visitTeamScore")
+home_score = data.get("homeTeamScore")
+if away_score is None:
+    away_score = data.get("homeTeamScore")
+if home_score is None:
+    home_score = data.get("visitTeamScore")
+```
+
+**적용 대상**:
+- 로컬 `server_backup/collector.py` (`99c3a12` 커밋)
+- 서버 `/home/opc/fullcount_backend/collector.py` (직접 SSH 수정, 2026-06-12)
+
+### 확인 사항
+- collector는 3~5분 랜덤 간격으로 정상 동작 중
+- `collector.log` 파일이 멈춘 것은 서버 재시작 후 journald로 로그 출력 방식이 변경된 것 — collector 자체는 문제 없음
+- APScheduler 방식이므로 별도 cron 설정 불필요 (API 서버가 떠 있으면 자동 실행)
