@@ -2496,6 +2496,39 @@
   ],
   "2025-05-11": [
     {
+      "away": "NC",
+      "home": "두산",
+      "awayScore": 11,
+      "homeScore": 5,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "로건",
+      "losePitcher": "콜어빈",
+      "gameIdx": 0
+    },
+    {
+      "away": "NC",
+      "home": "두산",
+      "awayScore": 5,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "최성영",
+      "losePitcher": "최준호",
+      "gameIdx": 1
+    },
+    {
+      "away": "LG",
+      "home": "삼성",
+      "awayScore": 7,
+      "homeScore": 4,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "박명근",
+      "losePitcher": "김태훈",
+      "gameIdx": 0
+    },
+    {
       "away": "한화",
       "home": "키움",
       "awayScore": 8,
@@ -2515,7 +2548,7 @@
       "cancelled": false,
       "winPitcher": "화이트",
       "losePitcher": "네일",
-      "gameIdx": 1
+      "gameIdx": 0
     },
     {
       "away": "KIA",
@@ -2526,18 +2559,7 @@
       "cancelled": false,
       "winPitcher": "김광현",
       "losePitcher": "양현종",
-      "gameIdx": 2
-    },
-    {
-      "away": "LG",
-      "home": "삼성",
-      "awayScore": 7,
-      "homeScore": 4,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "박명근",
-      "losePitcher": "김태훈",
-      "gameIdx": 0
+      "gameIdx": 1
     },
     {
       "away": "롯데",
@@ -2548,7 +2570,7 @@
       "cancelled": false,
       "winPitcher": "박세웅",
       "losePitcher": "쿠에바스",
-      "gameIdx": 1
+      "gameIdx": 0
     },
     {
       "away": "롯데",
@@ -2559,29 +2581,7 @@
       "cancelled": false,
       "winPitcher": null,
       "losePitcher": null,
-      "gameIdx": 2
-    },
-    {
-      "away": "NC",
-      "home": "두산",
-      "awayScore": 11,
-      "homeScore": 5,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "로건",
-      "losePitcher": "콜어빈",
       "gameIdx": 1
-    },
-    {
-      "away": "NC",
-      "home": "두산",
-      "awayScore": 5,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "최성영",
-      "losePitcher": "최준호",
-      "gameIdx": 2
     }
   ],
   "2025-05-13": [
@@ -2814,28 +2814,6 @@
   ],
   "2025-05-17": [
     {
-      "away": "KT",
-      "home": "LG",
-      "awayScore": 12,
-      "homeScore": 4,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "오원석",
-      "losePitcher": "손주영",
-      "gameIdx": 1
-    },
-    {
-      "away": "KT",
-      "home": "LG",
-      "awayScore": 7,
-      "homeScore": 6,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "우규민",
-      "losePitcher": "김영우",
-      "gameIdx": 2
-    },
-    {
       "away": "두산",
       "home": "KIA",
       "awayScore": 2,
@@ -2844,7 +2822,7 @@
       "cancelled": false,
       "winPitcher": "네일",
       "losePitcher": "콜어빈",
-      "gameIdx": 1
+      "gameIdx": 0
     },
     {
       "away": "두산",
@@ -2855,51 +2833,29 @@
       "cancelled": false,
       "winPitcher": "양현종",
       "losePitcher": "홍민규",
-      "gameIdx": 2
-    },
-    {
-      "away": "SSG",
-      "home": "한화",
-      "awayScore": 0,
-      "homeScore": 1,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "폰세",
-      "losePitcher": "김광현",
       "gameIdx": 1
     },
     {
-      "away": "SSG",
-      "home": "한화",
-      "awayScore": 5,
-      "homeScore": 2,
+      "away": "KT",
+      "home": "LG",
+      "awayScore": 12,
+      "homeScore": 4,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "화이트",
-      "losePitcher": "와이스",
-      "gameIdx": 2
+      "winPitcher": "오원석",
+      "losePitcher": "손주영",
+      "gameIdx": 0
     },
     {
-      "away": "삼성",
-      "home": "롯데",
-      "awayScore": 5,
-      "homeScore": 7,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "송재영",
-      "losePitcher": "김재윤",
-      "gameIdx": 1
-    },
-    {
-      "away": "삼성",
-      "home": "롯데",
+      "away": "KT",
+      "home": "LG",
       "awayScore": 7,
-      "homeScore": 8,
-      "outcome": "L",
+      "homeScore": 6,
+      "outcome": "W",
       "cancelled": false,
-      "winPitcher": "정철원",
-      "losePitcher": "양창섭",
-      "gameIdx": 2
+      "winPitcher": "우규민",
+      "losePitcher": "김영우",
+      "gameIdx": 1
     },
     {
       "away": "키움",
@@ -2910,7 +2866,7 @@
       "cancelled": false,
       "winPitcher": "손주환",
       "losePitcher": "이준우",
-      "gameIdx": 1
+      "gameIdx": 0
     },
     {
       "away": "키움",
@@ -2921,7 +2877,51 @@
       "cancelled": false,
       "winPitcher": "김연주",
       "losePitcher": "최성영",
-      "gameIdx": 2
+      "gameIdx": 1
+    },
+    {
+      "away": "SSG",
+      "home": "한화",
+      "awayScore": 0,
+      "homeScore": 1,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "폰세",
+      "losePitcher": "김광현",
+      "gameIdx": 0
+    },
+    {
+      "away": "SSG",
+      "home": "한화",
+      "awayScore": 5,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "화이트",
+      "losePitcher": "와이스",
+      "gameIdx": 1
+    },
+    {
+      "away": "삼성",
+      "home": "롯데",
+      "awayScore": 5,
+      "homeScore": 7,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "송재영",
+      "losePitcher": "김재윤",
+      "gameIdx": 0
+    },
+    {
+      "away": "삼성",
+      "home": "롯데",
+      "awayScore": 7,
+      "homeScore": 8,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "정철원",
+      "losePitcher": "양창섭",
+      "gameIdx": 1
     }
   ],
   "2025-05-18": [
@@ -4472,7 +4472,7 @@
       "outcome": "W",
       "cancelled": false,
       "winPitcher": "이영하",
-      "losePitcher": "배찬��",
+      "losePitcher": "배찬승",
       "gameIdx": 0
     },
     {
@@ -5662,6 +5662,17 @@
   ],
   "2025-07-19": [
     {
+      "away": "두산",
+      "home": "SSG",
+      "awayScore": 5,
+      "homeScore": 0,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "콜어빈",
+      "losePitcher": "앤더슨",
+      "gameIdx": 0
+    },
+    {
       "away": "롯데",
       "home": "LG",
       "awayScore": 6,
@@ -5670,6 +5681,17 @@
       "cancelled": false,
       "winPitcher": "데이비슨",
       "losePitcher": "에르난데스",
+      "gameIdx": 0
+    },
+    {
+      "away": "키움",
+      "home": "삼성",
+      "awayScore": 0,
+      "homeScore": 0,
+      "outcome": null,
+      "cancelled": true,
+      "winPitcher": null,
+      "losePitcher": null,
       "gameIdx": 0
     },
     {
@@ -5682,18 +5704,29 @@
       "winPitcher": "주현상",
       "losePitcher": "우규민",
       "gameIdx": 0
+    },
+    {
+      "away": "NC",
+      "home": "KIA",
+      "awayScore": 0,
+      "homeScore": 0,
+      "outcome": null,
+      "cancelled": true,
+      "winPitcher": null,
+      "losePitcher": null,
+      "gameIdx": 0
     }
   ],
   "2025-07-20": [
     {
-      "away": "한화",
-      "home": "KT",
-      "awayScore": 10,
-      "homeScore": 0,
+      "away": "두산",
+      "home": "SSG",
+      "awayScore": 2,
+      "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "소형준",
-      "losePitcher": "류현진",
+      "winPitcher": "김택연",
+      "losePitcher": "조병현",
       "gameIdx": 0
     },
     {
@@ -5703,30 +5736,8 @@
       "homeScore": 3,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "최준용",
-      "losePitcher": "이정용",
-      "gameIdx": 0
-    },
-    {
-      "away": "NC",
-      "home": "KIA",
-      "awayScore": 2,
-      "homeScore": 3,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "전사민",
-      "losePitcher": "조상우",
-      "gameIdx": 0
-    },
-    {
-      "away": "두산",
-      "home": "SSG",
-      "awayScore": 2,
-      "homeScore": 1,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "조병현",
-      "losePitcher": "김택연",
+      "winPitcher": "이정용",
+      "losePitcher": "최준용",
       "gameIdx": 0
     },
     {
@@ -5736,8 +5747,30 @@
       "homeScore": 15,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "이준우",
-      "losePitcher": "이승현",
+      "winPitcher": "이승현",
+      "losePitcher": "이준우",
+      "gameIdx": 0
+    },
+    {
+      "away": "한화",
+      "home": "KT",
+      "awayScore": 10,
+      "homeScore": 0,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "류현진",
+      "losePitcher": "소형준",
+      "gameIdx": 0
+    },
+    {
+      "away": "NC",
+      "home": "KIA",
+      "awayScore": 2,
+      "homeScore": 3,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "조상우",
+      "losePitcher": "전사민",
       "gameIdx": 0
     }
   ],
@@ -5749,19 +5782,8 @@
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "잭로그",
-      "losePitcher": "문동주",
-      "gameIdx": 0
-    },
-    {
-      "away": "KT",
-      "home": "NC",
-      "awayScore": 7,
-      "homeScore": 0,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "라일리",
-      "losePitcher": "고영표",
+      "winPitcher": "문동주",
+      "losePitcher": "잭로그",
       "gameIdx": 0
     },
     {
@@ -5771,8 +5793,8 @@
       "homeScore": 7,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "정해영",
-      "losePitcher": "장현식",
+      "winPitcher": "장현식",
+      "losePitcher": "정해영",
       "gameIdx": 0
     },
     {
@@ -5782,8 +5804,8 @@
       "homeScore": 6,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "홍민기",
-      "losePitcher": "조영건",
+      "winPitcher": "조영건",
+      "losePitcher": "홍민기",
       "gameIdx": 0
     },
     {
@@ -5793,8 +5815,19 @@
       "homeScore": 7,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "노경은",
-      "losePitcher": "김재윤",
+      "winPitcher": "김재윤",
+      "losePitcher": "노경은",
+      "gameIdx": 0
+    },
+    {
+      "away": "KT",
+      "home": "NC",
+      "awayScore": 7,
+      "homeScore": 0,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "고영표",
+      "losePitcher": "라일리",
       "gameIdx": 0
     }
   ],
@@ -5806,19 +5839,8 @@
       "homeScore": 13,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "황준서",
-      "losePitcher": "최민석",
-      "gameIdx": 0
-    },
-    {
-      "away": "KT",
-      "home": "NC",
-      "awayScore": 9,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "로건",
-      "losePitcher": "이상동",
+      "winPitcher": "최민석",
+      "losePitcher": "황준서",
       "gameIdx": 0
     },
     {
@@ -5828,8 +5850,8 @@
       "homeScore": 5,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "조상우",
-      "losePitcher": "장현식",
+      "winPitcher": "장현식",
+      "losePitcher": "조상우",
       "gameIdx": 0
     },
     {
@@ -5839,8 +5861,8 @@
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "하영민",
-      "losePitcher": "박세웅",
+      "winPitcher": "박세웅",
+      "losePitcher": "하영민",
       "gameIdx": 0
     },
     {
@@ -5850,8 +5872,19 @@
       "homeScore": 9,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "김건우",
-      "losePitcher": "가라비토",
+      "winPitcher": "가라비토",
+      "losePitcher": "김건우",
+      "gameIdx": 0
+    },
+    {
+      "away": "KT",
+      "home": "NC",
+      "awayScore": 9,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "이상동",
+      "losePitcher": "로건",
       "gameIdx": 0
     }
   ],
@@ -5868,25 +5901,14 @@
       "gameIdx": 0
     },
     {
-      "away": "KT",
-      "home": "NC",
-      "awayScore": 5,
-      "homeScore": 4,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "목지훈",
-      "losePitcher": "배제성",
-      "gameIdx": 0
-    },
-    {
       "away": "LG",
       "home": "KIA",
       "awayScore": 8,
       "homeScore": 0,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "성영탁",
-      "losePitcher": "이정용",
+      "winPitcher": "이정용",
+      "losePitcher": "성영탁",
       "gameIdx": 0
     },
     {
@@ -5896,8 +5918,8 @@
       "homeScore": 0,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "정현우",
-      "losePitcher": "감보아",
+      "winPitcher": "감보아",
+      "losePitcher": "정현우",
       "gameIdx": 0
     },
     {
@@ -5907,23 +5929,23 @@
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김태훈",
-      "losePitcher": "이로운",
+      "winPitcher": "이로운",
+      "losePitcher": "김태훈",
+      "gameIdx": 0
+    },
+    {
+      "away": "KT",
+      "home": "NC",
+      "awayScore": 5,
+      "homeScore": 4,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "배제성",
+      "losePitcher": "목지훈",
       "gameIdx": 0
     }
   ],
   "2025-07-25": [
-    {
-      "away": "KIA",
-      "home": "롯데",
-      "awayScore": 4,
-      "homeScore": 7,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "성영탁",
-      "losePitcher": "정철원",
-      "gameIdx": 0
-    },
     {
       "away": "LG",
       "home": "두산",
@@ -5931,30 +5953,8 @@
       "homeScore": 5,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김택연",
-      "losePitcher": "장현식",
-      "gameIdx": 0
-    },
-    {
-      "away": "SSG",
-      "home": "한화",
-      "awayScore": 0,
-      "homeScore": 4,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "앤더슨",
-      "losePitcher": "와이스",
-      "gameIdx": 0
-    },
-    {
-      "away": "삼성",
-      "home": "KT",
-      "awayScore": 5,
-      "homeScore": 8,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "양창섭",
-      "losePitcher": "헤이수스",
+      "winPitcher": "장현식",
+      "losePitcher": "김택연",
       "gameIdx": 0
     },
     {
@@ -5964,23 +5964,45 @@
       "homeScore": 16,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "박주성",
-      "losePitcher": "임정호",
+      "winPitcher": "임정호",
+      "losePitcher": "박주성",
       "gameIdx": 0
-    }
-  ],
-  "2025-07-26": [
+    },
+    {
+      "away": "SSG",
+      "home": "한화",
+      "awayScore": 0,
+      "homeScore": 4,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "와이스",
+      "losePitcher": "앤더슨",
+      "gameIdx": 0
+    },
+    {
+      "away": "삼성",
+      "home": "KT",
+      "awayScore": 5,
+      "homeScore": 8,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "헤이수스",
+      "losePitcher": "양창섭",
+      "gameIdx": 0
+    },
     {
       "away": "KIA",
       "home": "롯데",
       "awayScore": 4,
-      "homeScore": 9,
+      "homeScore": 7,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "이의리",
-      "losePitcher": "정현수",
+      "winPitcher": "정철원",
+      "losePitcher": "성영탁",
       "gameIdx": 0
-    },
+    }
+  ],
+  "2025-07-26": [
     {
       "away": "LG",
       "home": "두산",
@@ -5988,8 +6010,19 @@
       "homeScore": 3,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "박신지",
-      "losePitcher": "김진성",
+      "winPitcher": "김진성",
+      "losePitcher": "박신지",
+      "gameIdx": 0
+    },
+    {
+      "away": "키움",
+      "home": "NC",
+      "awayScore": 6,
+      "homeScore": 8,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "류진욱",
+      "losePitcher": "김선기",
       "gameIdx": 0
     },
     {
@@ -5999,8 +6032,8 @@
       "homeScore": 3,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "류현진",
-      "losePitcher": "김광현",
+      "winPitcher": "김광현",
+      "losePitcher": "류현진",
       "gameIdx": 0
     },
     {
@@ -6010,34 +6043,23 @@
       "homeScore": 0,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "원상현",
-      "losePitcher": "후라도",
+      "winPitcher": "후라도",
+      "losePitcher": "원상현",
       "gameIdx": 0
     },
     {
-      "away": "키움",
-      "home": "NC",
-      "awayScore": 6,
-      "homeScore": 8,
+      "away": "KIA",
+      "home": "롯데",
+      "awayScore": 4,
+      "homeScore": 9,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "김선기",
-      "losePitcher": "류진욱",
+      "winPitcher": "정현수",
+      "losePitcher": "이의리",
       "gameIdx": 0
     }
   ],
   "2025-07-27": [
-    {
-      "away": "KIA",
-      "home": "롯데",
-      "awayScore": 3,
-      "homeScore": 5,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "이준영",
-      "losePitcher": "최준용",
-      "gameIdx": 0
-    },
     {
       "away": "LG",
       "home": "두산",
@@ -6045,30 +6067,8 @@
       "homeScore": 9,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "이지강",
-      "losePitcher": "고효준",
-      "gameIdx": 0
-    },
-    {
-      "away": "SSG",
-      "home": "한화",
-      "awayScore": 3,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "조동욱",
-      "losePitcher": "노경은",
-      "gameIdx": 0
-    },
-    {
-      "away": "삼성",
-      "home": "KT",
-      "awayScore": 3,
-      "homeScore": 4,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "이호성",
-      "losePitcher": "박영현",
+      "winPitcher": "고효준",
+      "losePitcher": "이지강",
       "gameIdx": 0
     },
     {
@@ -6078,34 +6078,45 @@
       "homeScore": 12,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "김윤하",
-      "losePitcher": "라일리",
+      "winPitcher": "라일리",
+      "losePitcher": "김윤하",
+      "gameIdx": 0
+    },
+    {
+      "away": "SSG",
+      "home": "한화",
+      "awayScore": 3,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "노경은",
+      "losePitcher": "조동욱",
+      "gameIdx": 0
+    },
+    {
+      "away": "삼성",
+      "home": "KT",
+      "awayScore": 3,
+      "homeScore": 4,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "박영현",
+      "losePitcher": "이호성",
+      "gameIdx": 0
+    },
+    {
+      "away": "KIA",
+      "home": "롯데",
+      "awayScore": 3,
+      "homeScore": 5,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "최준용",
+      "losePitcher": "이준영",
       "gameIdx": 0
     }
   ],
   "2025-07-29": [
-    {
-      "away": "KT",
-      "home": "LG",
-      "awayScore": 2,
-      "homeScore": 8,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "오원석",
-      "losePitcher": "치리노스",
-      "gameIdx": 0
-    },
-    {
-      "away": "NC",
-      "home": "롯데",
-      "awayScore": 4,
-      "homeScore": 6,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "김진호",
-      "losePitcher": "최준용",
-      "gameIdx": 0
-    },
     {
       "away": "두산",
       "home": "KIA",
@@ -6113,19 +6124,19 @@
       "homeScore": 6,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김도현",
-      "losePitcher": "최민석",
+      "winPitcher": "최민석",
+      "losePitcher": "김도현",
       "gameIdx": 0
     },
     {
-      "away": "삼성",
-      "home": "한화",
-      "awayScore": 9,
-      "homeScore": 2,
-      "outcome": "W",
+      "away": "KT",
+      "home": "LG",
+      "awayScore": 2,
+      "homeScore": 8,
+      "outcome": "L",
       "cancelled": false,
-      "winPitcher": "황준서",
-      "losePitcher": "가라비토",
+      "winPitcher": "치리노스",
+      "losePitcher": "오원석",
       "gameIdx": 0
     },
     {
@@ -6135,34 +6146,34 @@
       "homeScore": 9,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "하영민",
-      "losePitcher": "전영준",
+      "winPitcher": "전영준",
+      "losePitcher": "하영민",
       "gameIdx": 0
-    }
-  ],
-  "2025-07-30": [
+    },
     {
-      "away": "KT",
-      "home": "LG",
-      "awayScore": 0,
-      "homeScore": 5,
-      "outcome": "L",
+      "away": "삼성",
+      "home": "한화",
+      "awayScore": 9,
+      "homeScore": 2,
+      "outcome": "W",
       "cancelled": false,
-      "winPitcher": "패트릭",
-      "losePitcher": "손주영",
+      "winPitcher": "가라비토",
+      "losePitcher": "황준서",
       "gameIdx": 0
     },
     {
       "away": "NC",
       "home": "롯데",
-      "awayScore": 9,
-      "homeScore": 4,
-      "outcome": "W",
+      "awayScore": 4,
+      "homeScore": 6,
+      "outcome": "L",
       "cancelled": false,
-      "winPitcher": "홍민기",
-      "losePitcher": "전사민",
+      "winPitcher": "최준용",
+      "losePitcher": "김진호",
       "gameIdx": 0
-    },
+    }
+  ],
+  "2025-07-30": [
     {
       "away": "두산",
       "home": "KIA",
@@ -6175,14 +6186,14 @@
       "gameIdx": 0
     },
     {
-      "away": "삼성",
-      "home": "한화",
+      "away": "KT",
+      "home": "LG",
       "awayScore": 0,
       "homeScore": 5,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "최원태",
-      "losePitcher": "폰세",
+      "winPitcher": "손주영",
+      "losePitcher": "패트릭",
       "gameIdx": 0
     },
     {
@@ -6195,9 +6206,42 @@
       "winPitcher": null,
       "losePitcher": null,
       "gameIdx": 0
+    },
+    {
+      "away": "삼성",
+      "home": "한화",
+      "awayScore": 0,
+      "homeScore": 5,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "폰세",
+      "losePitcher": "최원태",
+      "gameIdx": 0
+    },
+    {
+      "away": "NC",
+      "home": "롯데",
+      "awayScore": 9,
+      "homeScore": 4,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "전사민",
+      "losePitcher": "홍민기",
+      "gameIdx": 0
     }
   ],
   "2025-07-31": [
+    {
+      "away": "두산",
+      "home": "KIA",
+      "awayScore": 2,
+      "homeScore": 3,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "한재승",
+      "losePitcher": "콜어빈",
+      "gameIdx": 0
+    },
     {
       "away": "KT",
       "home": "LG",
@@ -6205,8 +6249,30 @@
       "homeScore": 18,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "헤이수스",
-      "losePitcher": "송승기",
+      "winPitcher": "송승기",
+      "losePitcher": "헤이수스",
+      "gameIdx": 0
+    },
+    {
+      "away": "키움",
+      "home": "SSG",
+      "awayScore": 2,
+      "homeScore": 4,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "이로운",
+      "losePitcher": "전준표",
+      "gameIdx": 0
+    },
+    {
+      "away": "삼성",
+      "home": "한화",
+      "awayScore": 1,
+      "homeScore": 7,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "와이스",
+      "losePitcher": "이승민",
       "gameIdx": 0
     },
     {
@@ -6216,65 +6282,21 @@
       "homeScore": 11,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "김녹원",
-      "losePitcher": "데이비슨",
-      "gameIdx": 0
-    },
-    {
-      "away": "두산",
-      "home": "KIA",
-      "awayScore": 2,
-      "homeScore": 3,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "콜어빈",
-      "losePitcher": "한재승",
-      "gameIdx": 0
-    },
-    {
-      "away": "삼성",
-      "home": "한화",
-      "awayScore": 1,
-      "homeScore": 7,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "이승민",
-      "losePitcher": "와이스",
-      "gameIdx": 0
-    },
-    {
-      "away": "키움",
-      "home": "SSG",
-      "awayScore": 2,
-      "homeScore": 4,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "전준표",
-      "losePitcher": "이로운",
+      "winPitcher": "데이비슨",
+      "losePitcher": "김녹원",
       "gameIdx": 0
     }
   ],
   "2025-08-01": [
     {
-      "away": "한화",
-      "home": "KIA",
-      "awayScore": 2,
-      "homeScore": 3,
-      "outcome": "L",
+      "away": "SSG",
+      "home": "두산",
+      "awayScore": 7,
+      "homeScore": 2,
+      "outcome": "W",
       "cancelled": false,
-      "winPitcher": "류현진",
-      "losePitcher": "김시훈",
-      "gameIdx": 0
-    },
-    {
-      "away": "KT",
-      "home": "NC",
-      "awayScore": 3,
-      "homeScore": 5,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "소형준",
-      "losePitcher": "전사민",
+      "winPitcher": "김광현",
+      "losePitcher": "곽빈",
       "gameIdx": 0
     },
     {
@@ -6284,8 +6306,8 @@
       "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "후라도",
-      "losePitcher": "임찬규",
+      "winPitcher": "임찬규",
+      "losePitcher": "후라도",
       "gameIdx": 0
     },
     {
@@ -6295,32 +6317,65 @@
       "homeScore": 2,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "이민석",
-      "losePitcher": "알칸타라",
+      "winPitcher": "알칸타라",
+      "losePitcher": "이민석",
       "gameIdx": 0
     },
     {
-      "away": "SSG",
-      "home": "두산",
-      "awayScore": 7,
-      "homeScore": 2,
-      "outcome": "W",
+      "away": "KT",
+      "home": "NC",
+      "awayScore": 3,
+      "homeScore": 5,
+      "outcome": "L",
       "cancelled": false,
-      "winPitcher": "곽빈",
-      "losePitcher": "김광현",
+      "winPitcher": "전사민",
+      "losePitcher": "소형준",
+      "gameIdx": 0
+    },
+    {
+      "away": "한화",
+      "home": "KIA",
+      "awayScore": 2,
+      "homeScore": 3,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "김시훈",
+      "losePitcher": "류현진",
       "gameIdx": 0
     }
   ],
   "2025-08-02": [
     {
-      "away": "한화",
-      "home": "KIA",
-      "awayScore": 0,
-      "homeScore": 0,
-      "outcome": null,
-      "cancelled": true,
-      "winPitcher": null,
-      "losePitcher": null,
+      "away": "SSG",
+      "home": "두산",
+      "awayScore": 4,
+      "homeScore": 5,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "잭로그",
+      "losePitcher": "박시후",
+      "gameIdx": 0
+    },
+    {
+      "away": "LG",
+      "home": "삼성",
+      "awayScore": 3,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "유영찬",
+      "losePitcher": "김재윤",
+      "gameIdx": 0
+    },
+    {
+      "away": "롯데",
+      "home": "키움",
+      "awayScore": 3,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "정철원",
+      "losePitcher": "주승우",
       "gameIdx": 0
     },
     {
@@ -6330,45 +6385,10 @@
       "homeScore": 7,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "박영현",
-      "losePitcher": "김영규",
+      "winPitcher": "김영규",
+      "losePitcher": "박영현",
       "gameIdx": 0
     },
-    {
-      "away": "LG",
-      "home": "삼성",
-      "awayScore": 3,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "김재윤",
-      "losePitcher": "유영찬",
-      "gameIdx": 0
-    },
-    {
-      "away": "롯데",
-      "home": "키움",
-      "awayScore": 3,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "주승우",
-      "losePitcher": "정철원",
-      "gameIdx": 0
-    },
-    {
-      "away": "SSG",
-      "home": "두산",
-      "awayScore": 4,
-      "homeScore": 5,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "박시후",
-      "losePitcher": "잭로그",
-      "gameIdx": 0
-    }
-  ],
-  "2025-08-03": [
     {
       "away": "한화",
       "home": "KIA",
@@ -6378,6 +6398,41 @@
       "cancelled": true,
       "winPitcher": null,
       "losePitcher": null,
+      "gameIdx": 0
+    }
+  ],
+  "2025-08-03": [
+    {
+      "away": "SSG",
+      "home": "두산",
+      "awayScore": 3,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "조병현",
+      "losePitcher": "박신지",
+      "gameIdx": 0
+    },
+    {
+      "away": "LG",
+      "home": "삼성",
+      "awayScore": 6,
+      "homeScore": 3,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "치리노스",
+      "losePitcher": "가라비토",
+      "gameIdx": 0
+    },
+    {
+      "away": "롯데",
+      "home": "키움",
+      "awayScore": 9,
+      "homeScore": 3,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "박세웅",
+      "losePitcher": "정세영",
       "gameIdx": 0
     },
     {
@@ -6392,62 +6447,18 @@
       "gameIdx": 0
     },
     {
-      "away": "LG",
-      "home": "삼성",
-      "awayScore": 6,
-      "homeScore": 3,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "가라비토",
-      "losePitcher": "치리노스",
-      "gameIdx": 0
-    },
-    {
-      "away": "롯데",
-      "home": "키움",
-      "awayScore": 9,
-      "homeScore": 3,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "정세영",
-      "losePitcher": "박세웅",
-      "gameIdx": 0
-    },
-    {
-      "away": "SSG",
-      "home": "두산",
-      "awayScore": 3,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "박신지",
-      "losePitcher": "조병현",
+      "away": "한화",
+      "home": "KIA",
+      "awayScore": 0,
+      "homeScore": 0,
+      "outcome": null,
+      "cancelled": true,
+      "winPitcher": null,
+      "losePitcher": null,
       "gameIdx": 0
     }
   ],
   "2025-08-05": [
-    {
-      "away": "KIA",
-      "home": "롯데",
-      "awayScore": 2,
-      "homeScore": 0,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "감보아",
-      "losePitcher": "네일",
-      "gameIdx": 0
-    },
-    {
-      "away": "KT",
-      "home": "한화",
-      "awayScore": 5,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "한승혁",
-      "losePitcher": "이상동",
-      "gameIdx": 0
-    },
     {
       "away": "두산",
       "home": "LG",
@@ -6455,19 +6466,8 @@
       "homeScore": 4,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "이영하",
-      "losePitcher": "함덕주",
-      "gameIdx": 0
-    },
-    {
-      "away": "삼성",
-      "home": "SSG",
-      "awayScore": 6,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "문승원",
-      "losePitcher": "최원태",
+      "winPitcher": "함덕주",
+      "losePitcher": "이영하",
       "gameIdx": 0
     },
     {
@@ -6477,34 +6477,45 @@
       "homeScore": 5,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "배재환",
-      "losePitcher": "조영건",
+      "winPitcher": "조영건",
+      "losePitcher": "배재환",
       "gameIdx": 0
-    }
-  ],
-  "2025-08-06": [
+    },
     {
-      "away": "KIA",
-      "home": "롯데",
-      "awayScore": 1,
-      "homeScore": 7,
-      "outcome": "L",
+      "away": "삼성",
+      "home": "SSG",
+      "awayScore": 6,
+      "homeScore": 2,
+      "outcome": "W",
       "cancelled": false,
-      "winPitcher": "올러",
-      "losePitcher": "데이비슨",
+      "winPitcher": "최원태",
+      "losePitcher": "문승원",
       "gameIdx": 0
     },
     {
       "away": "KT",
       "home": "한화",
-      "awayScore": 4,
-      "homeScore": 5,
-      "outcome": "L",
+      "awayScore": 5,
+      "homeScore": 2,
+      "outcome": "W",
       "cancelled": false,
-      "winPitcher": "배제성",
-      "losePitcher": "폰세",
+      "winPitcher": "이상동",
+      "losePitcher": "한승혁",
       "gameIdx": 0
     },
+    {
+      "away": "KIA",
+      "home": "롯데",
+      "awayScore": 2,
+      "homeScore": 0,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "네일",
+      "losePitcher": "감보아",
+      "gameIdx": 0
+    }
+  ],
+  "2025-08-06": [
     {
       "away": "두산",
       "home": "LG",
@@ -6512,19 +6523,8 @@
       "homeScore": 8,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "함덕주",
-      "losePitcher": "최원준",
-      "gameIdx": 0
-    },
-    {
-      "away": "삼성",
-      "home": "SSG",
-      "awayScore": 4,
-      "homeScore": 5,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "이승현",
-      "losePitcher": "앤더슨",
+      "winPitcher": "최원준",
+      "losePitcher": "함덕주",
       "gameIdx": 0
     },
     {
@@ -6534,34 +6534,45 @@
       "homeScore": 5,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "류진욱",
-      "losePitcher": "오석주",
+      "winPitcher": "오석주",
+      "losePitcher": "류진욱",
       "gameIdx": 0
-    }
-  ],
-  "2025-08-07": [
+    },
     {
-      "away": "KIA",
-      "home": "롯데",
-      "awayScore": 6,
+      "away": "삼성",
+      "home": "SSG",
+      "awayScore": 4,
       "homeScore": 5,
-      "outcome": "W",
+      "outcome": "L",
       "cancelled": false,
-      "winPitcher": "이민석",
-      "losePitcher": "양현종",
+      "winPitcher": "앤더슨",
+      "losePitcher": "이승현",
       "gameIdx": 0
     },
     {
       "away": "KT",
       "home": "한화",
-      "awayScore": 5,
-      "homeScore": 4,
-      "outcome": "W",
+      "awayScore": 4,
+      "homeScore": 5,
+      "outcome": "L",
       "cancelled": false,
-      "winPitcher": "조동욱",
-      "losePitcher": "최동환",
+      "winPitcher": "폰세",
+      "losePitcher": "배제성",
       "gameIdx": 0
     },
+    {
+      "away": "KIA",
+      "home": "롯데",
+      "awayScore": 1,
+      "homeScore": 7,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "데이비슨",
+      "losePitcher": "올러",
+      "gameIdx": 0
+    }
+  ],
+  "2025-08-07": [
     {
       "away": "두산",
       "home": "LG",
@@ -6569,19 +6580,8 @@
       "homeScore": 4,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "박신지",
-      "losePitcher": "김진성",
-      "gameIdx": 0
-    },
-    {
-      "away": "삼성",
-      "home": "SSG",
-      "awayScore": 6,
-      "homeScore": 1,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "김광현",
-      "losePitcher": "후라도",
+      "winPitcher": "김진성",
+      "losePitcher": "박신지",
       "gameIdx": 0
     },
     {
@@ -6591,34 +6591,45 @@
       "homeScore": 12,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "전사민",
-      "losePitcher": "전준표",
+      "winPitcher": "전준표",
+      "losePitcher": "전사민",
       "gameIdx": 0
-    }
-  ],
-  "2025-08-08": [
+    },
     {
-      "away": "한화",
-      "home": "LG",
-      "awayScore": 1,
-      "homeScore": 2,
-      "outcome": "L",
+      "away": "삼성",
+      "home": "SSG",
+      "awayScore": 6,
+      "homeScore": 1,
+      "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김서현",
-      "losePitcher": "함덕주",
+      "winPitcher": "후라도",
+      "losePitcher": "김광현",
+      "gameIdx": 0
+    },
+    {
+      "away": "KT",
+      "home": "한화",
+      "awayScore": 5,
+      "homeScore": 4,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "최동환",
+      "losePitcher": "조동욱",
       "gameIdx": 0
     },
     {
       "away": "KIA",
-      "home": "NC",
-      "awayScore": 4,
+      "home": "롯데",
+      "awayScore": 6,
       "homeScore": 5,
-      "outcome": "L",
+      "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김도현",
-      "losePitcher": "라일리",
+      "winPitcher": "양현종",
+      "losePitcher": "이민석",
       "gameIdx": 0
-    },
+    }
+  ],
+  "2025-08-08": [
     {
       "away": "두산",
       "home": "키움",
@@ -6626,8 +6637,19 @@
       "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김윤하",
-      "losePitcher": "잭로그",
+      "winPitcher": "잭로그",
+      "losePitcher": "김윤하",
+      "gameIdx": 0
+    },
+    {
+      "away": "한화",
+      "home": "LG",
+      "awayScore": 1,
+      "homeScore": 2,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "함덕주",
+      "losePitcher": "김서현",
       "gameIdx": 0
     },
     {
@@ -6637,8 +6659,8 @@
       "homeScore": 0,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "나균안",
-      "losePitcher": "김민",
+      "winPitcher": "김민",
+      "losePitcher": "나균안",
       "gameIdx": 0
     },
     {
@@ -6648,34 +6670,23 @@
       "homeScore": 4,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "소형준",
-      "losePitcher": "원태인",
-      "gameIdx": 0
-    }
-  ],
-  "2025-08-09": [
-    {
-      "away": "한화",
-      "home": "LG",
-      "awayScore": 1,
-      "homeScore": 8,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "엄상백",
-      "losePitcher": "치리노스",
+      "winPitcher": "원태인",
+      "losePitcher": "소형준",
       "gameIdx": 0
     },
     {
       "away": "KIA",
       "home": "NC",
-      "awayScore": 0,
-      "homeScore": 0,
-      "outcome": null,
-      "cancelled": true,
-      "winPitcher": null,
-      "losePitcher": null,
+      "awayScore": 4,
+      "homeScore": 5,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "라일리",
+      "losePitcher": "김도현",
       "gameIdx": 0
-    },
+    }
+  ],
+  "2025-08-09": [
     {
       "away": "두산",
       "home": "키움",
@@ -6683,8 +6694,19 @@
       "homeScore": 4,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "원종현",
-      "losePitcher": "박치국",
+      "winPitcher": "박치국",
+      "losePitcher": "원종현",
+      "gameIdx": 0
+    },
+    {
+      "away": "한화",
+      "home": "LG",
+      "awayScore": 1,
+      "homeScore": 8,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "치리노스",
+      "losePitcher": "엄상백",
       "gameIdx": 0
     },
     {
@@ -6705,12 +6727,34 @@
       "homeScore": 3,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "가라비토",
-      "losePitcher": "헤이수스",
+      "winPitcher": "헤이수스",
+      "losePitcher": "가라비토",
+      "gameIdx": 0
+    },
+    {
+      "away": "KIA",
+      "home": "NC",
+      "awayScore": 0,
+      "homeScore": 0,
+      "outcome": null,
+      "cancelled": true,
+      "winPitcher": null,
+      "losePitcher": null,
       "gameIdx": 0
     }
   ],
   "2025-08-10": [
+    {
+      "away": "두산",
+      "home": "키움",
+      "awayScore": 3,
+      "homeScore": 4,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "윤석원",
+      "losePitcher": "김택연",
+      "gameIdx": 0
+    },
     {
       "away": "한화",
       "home": "LG",
@@ -6718,8 +6762,30 @@
       "homeScore": 4,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "장현식",
-      "losePitcher": "문동주",
+      "winPitcher": "문동주",
+      "losePitcher": "장현식",
+      "gameIdx": 0
+    },
+    {
+      "away": "SSG",
+      "home": "롯데",
+      "awayScore": 10,
+      "homeScore": 1,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "김건우",
+      "losePitcher": "박세웅",
+      "gameIdx": 0
+    },
+    {
+      "away": "삼성",
+      "home": "KT",
+      "awayScore": 2,
+      "homeScore": 9,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "패트릭",
+      "losePitcher": "최원태",
       "gameIdx": 0
     },
     {
@@ -6729,54 +6795,21 @@
       "homeScore": 16,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "이의리",
-      "losePitcher": "로건",
-      "gameIdx": 0
-    },
-    {
-      "away": "두산",
-      "home": "키움",
-      "awayScore": 3,
-      "homeScore": 4,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "김택연",
-      "losePitcher": "윤석원",
-      "gameIdx": 0
-    },
-    {
-      "away": "SSG",
-      "home": "롯데",
-      "awayScore": 10,
-      "homeScore": 1,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "박세웅",
-      "losePitcher": "김건우",
-      "gameIdx": 0
-    },
-    {
-      "away": "삼성",
-      "home": "KT",
-      "awayScore": 2,
-      "homeScore": 9,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "최원태",
-      "losePitcher": "패트릭",
+      "winPitcher": "로건",
+      "losePitcher": "이의리",
       "gameIdx": 0
     }
   ],
   "2025-08-12": [
     {
-      "away": "KIA",
-      "home": "삼성",
-      "awayScore": 5,
-      "homeScore": 1,
+      "away": "NC",
+      "home": "두산",
+      "awayScore": 3,
+      "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "이승현",
-      "losePitcher": "네일",
+      "winPitcher": "전사민",
+      "losePitcher": "콜어빈",
       "gameIdx": 0
     },
     {
@@ -6786,30 +6819,8 @@
       "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "오원석",
-      "losePitcher": "톨허스트",
-      "gameIdx": 0
-    },
-    {
-      "away": "롯데",
-      "home": "한화",
-      "awayScore": 0,
-      "homeScore": 2,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "감보아",
-      "losePitcher": "폰세",
-      "gameIdx": 0
-    },
-    {
-      "away": "NC",
-      "home": "두산",
-      "awayScore": 3,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "콜어빈",
-      "losePitcher": "전사민",
+      "winPitcher": "톨허스트",
+      "losePitcher": "오원석",
       "gameIdx": 0
     },
     {
@@ -6819,26 +6830,37 @@
       "homeScore": 3,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "정현우",
-      "losePitcher": "앤더슨",
+      "winPitcher": "앤더슨",
+      "losePitcher": "정현우",
+      "gameIdx": 0
+    },
+    {
+      "away": "롯데",
+      "home": "한화",
+      "awayScore": 0,
+      "homeScore": 2,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "폰세",
+      "losePitcher": "감보아",
+      "gameIdx": 0
+    },
+    {
+      "away": "KIA",
+      "home": "삼성",
+      "awayScore": 5,
+      "homeScore": 1,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "네일",
+      "losePitcher": "이승현",
       "gameIdx": 0
     }
   ],
   "2025-08-13": [
     {
-      "away": "KIA",
-      "home": "삼성",
-      "awayScore": 9,
-      "homeScore": 1,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "배찬승",
-      "losePitcher": "성영탁",
-      "gameIdx": 0
-    },
-    {
-      "away": "LG",
-      "home": "KT",
+      "away": "NC",
+      "home": "두산",
       "awayScore": 0,
       "homeScore": 0,
       "outcome": null,
@@ -6848,19 +6870,8 @@
       "gameIdx": 0
     },
     {
-      "away": "롯데",
-      "home": "한화",
-      "awayScore": 0,
-      "homeScore": 6,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "벨라스케즈",
-      "losePitcher": "와이스",
-      "gameIdx": 0
-    },
-    {
-      "away": "NC",
-      "home": "두산",
+      "away": "LG",
+      "home": "KT",
       "awayScore": 0,
       "homeScore": 0,
       "outcome": null,
@@ -6879,18 +6890,40 @@
       "winPitcher": null,
       "losePitcher": null,
       "gameIdx": 0
+    },
+    {
+      "away": "롯데",
+      "home": "한화",
+      "awayScore": 0,
+      "homeScore": 6,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "와이스",
+      "losePitcher": "벨라스케즈",
+      "gameIdx": 0
+    },
+    {
+      "away": "KIA",
+      "home": "삼성",
+      "awayScore": 9,
+      "homeScore": 1,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "성영탁",
+      "losePitcher": "배찬승",
+      "gameIdx": 0
     }
   ],
   "2025-08-14": [
     {
-      "away": "KIA",
-      "home": "삼성",
-      "awayScore": 10,
-      "homeScore": 4,
-      "outcome": "W",
+      "away": "NC",
+      "home": "두산",
+      "awayScore": 5,
+      "homeScore": 6,
+      "outcome": "L",
       "cancelled": false,
-      "winPitcher": "원태인",
-      "losePitcher": "양현종",
+      "winPitcher": "홍건희",
+      "losePitcher": "배재환",
       "gameIdx": 0
     },
     {
@@ -6902,6 +6935,17 @@
       "cancelled": true,
       "winPitcher": null,
       "losePitcher": null,
+      "gameIdx": 0
+    },
+    {
+      "away": "키움",
+      "home": "SSG",
+      "awayScore": 2,
+      "homeScore": 0,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "알칸타라",
+      "losePitcher": "문승원",
       "gameIdx": 0
     },
     {
@@ -6911,45 +6955,23 @@
       "homeScore": 5,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "윤성빈",
-      "losePitcher": "주현상",
+      "winPitcher": "주현상",
+      "losePitcher": "윤성빈",
       "gameIdx": 0
     },
     {
-      "away": "NC",
-      "home": "두산",
-      "awayScore": 5,
-      "homeScore": 6,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "배재환",
-      "losePitcher": "홍건희",
-      "gameIdx": 0
-    },
-    {
-      "away": "키움",
-      "home": "SSG",
-      "awayScore": 2,
-      "homeScore": 0,
+      "away": "KIA",
+      "home": "삼성",
+      "awayScore": 10,
+      "homeScore": 4,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "문승원",
-      "losePitcher": "알칸타라",
+      "winPitcher": "양현종",
+      "losePitcher": "원태인",
       "gameIdx": 0
     }
   ],
   "2025-08-15": [
-    {
-      "away": "한화",
-      "home": "NC",
-      "awayScore": 9,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "로건",
-      "losePitcher": "김종수",
-      "gameIdx": 0
-    },
     {
       "away": "KIA",
       "home": "두산",
@@ -6957,8 +6979,19 @@
       "homeScore": 6,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "김건국",
-      "losePitcher": "홍건희",
+      "winPitcher": "홍건희",
+      "losePitcher": "김건국",
+      "gameIdx": 0
+    },
+    {
+      "away": "LG",
+      "home": "SSG",
+      "awayScore": 5,
+      "homeScore": 3,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "김진성",
+      "losePitcher": "이로운",
       "gameIdx": 0
     },
     {
@@ -6968,19 +7001,19 @@
       "homeScore": 7,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "소형준",
-      "losePitcher": "전준표",
+      "winPitcher": "전준표",
+      "losePitcher": "소형준",
       "gameIdx": 0
     },
     {
-      "away": "LG",
-      "home": "SSG",
-      "awayScore": 5,
-      "homeScore": 3,
+      "away": "한화",
+      "home": "NC",
+      "awayScore": 9,
+      "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "이로운",
-      "losePitcher": "김진성",
+      "winPitcher": "김종수",
+      "losePitcher": "로건",
       "gameIdx": 0
     },
     {
@@ -6990,23 +7023,12 @@
       "homeScore": 4,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "이민석",
-      "losePitcher": "가라비토",
+      "winPitcher": "가라비토",
+      "losePitcher": "이민석",
       "gameIdx": 0
     }
   ],
   "2025-08-16": [
-    {
-      "away": "한화",
-      "home": "NC",
-      "awayScore": 6,
-      "homeScore": 9,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "주현상",
-      "losePitcher": "김진호",
-      "gameIdx": 0
-    },
     {
       "away": "KIA",
       "home": "두산",
@@ -7014,19 +7036,8 @@
       "homeScore": 4,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "정해영",
-      "losePitcher": "이교훈",
-      "gameIdx": 0
-    },
-    {
-      "away": "KT",
-      "home": "키움",
-      "awayScore": 3,
-      "homeScore": 4,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "헤이수스",
-      "losePitcher": "하영민",
+      "winPitcher": "이교훈",
+      "losePitcher": "정해영",
       "gameIdx": 0
     },
     {
@@ -7036,8 +7047,30 @@
       "homeScore": 10,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "함덕주",
-      "losePitcher": "박시후",
+      "winPitcher": "박시후",
+      "losePitcher": "함덕주",
+      "gameIdx": 0
+    },
+    {
+      "away": "KT",
+      "home": "키움",
+      "awayScore": 3,
+      "homeScore": 4,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "하영민",
+      "losePitcher": "헤이수스",
+      "gameIdx": 0
+    },
+    {
+      "away": "한화",
+      "home": "NC",
+      "awayScore": 6,
+      "homeScore": 9,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "김진호",
+      "losePitcher": "주현상",
       "gameIdx": 0
     },
     {
@@ -7047,23 +7080,12 @@
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "박세웅",
-      "losePitcher": "최원태",
+      "winPitcher": "최원태",
+      "losePitcher": "박세웅",
       "gameIdx": 0
     }
   ],
   "2025-08-17": [
-    {
-      "away": "한화",
-      "home": "NC",
-      "awayScore": 4,
-      "homeScore": 9,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "황준서",
-      "losePitcher": "김녹원",
-      "gameIdx": 0
-    },
     {
       "away": "KIA",
       "home": "두산",
@@ -7071,19 +7093,8 @@
       "homeScore": 4,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "전상현",
-      "losePitcher": "고효준",
-      "gameIdx": 0
-    },
-    {
-      "away": "KT",
-      "home": "키움",
-      "awayScore": 5,
-      "homeScore": 3,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "윤석원",
-      "losePitcher": "박영현",
+      "winPitcher": "고효준",
+      "losePitcher": "전상현",
       "gameIdx": 0
     },
     {
@@ -7093,8 +7104,30 @@
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "최민준",
-      "losePitcher": "임찬규",
+      "winPitcher": "임찬규",
+      "losePitcher": "최민준",
+      "gameIdx": 0
+    },
+    {
+      "away": "KT",
+      "home": "키움",
+      "awayScore": 5,
+      "homeScore": 3,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "박영현",
+      "losePitcher": "윤석원",
+      "gameIdx": 0
+    },
+    {
+      "away": "한화",
+      "home": "NC",
+      "awayScore": 4,
+      "homeScore": 9,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "김녹원",
+      "losePitcher": "황준서",
       "gameIdx": 0
     },
     {
@@ -7111,47 +7144,25 @@
   ],
   "2025-08-19": [
     {
-      "away": "롯데",
-      "home": "LG",
-      "awayScore": 2,
-      "homeScore": 5,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "벨라스케즈",
-      "losePitcher": "톨허스트",
-      "gameIdx": 0
-    },
-    {
       "away": "두산",
       "home": "한화",
       "awayScore": 6,
       "homeScore": 5,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김서현",
-      "losePitcher": "최원준",
+      "winPitcher": "최원준",
+      "losePitcher": "김서현",
       "gameIdx": 0
     },
     {
-      "away": "SSG",
-      "home": "KT",
-      "awayScore": 4,
+      "away": "롯데",
+      "home": "LG",
+      "awayScore": 2,
       "homeScore": 5,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "조병현",
-      "losePitcher": "박영현",
-      "gameIdx": 0
-    },
-    {
-      "away": "삼성",
-      "home": "NC",
-      "awayScore": 6,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "전사민",
-      "losePitcher": "후라도",
+      "winPitcher": "톨허스트",
+      "losePitcher": "벨라스케즈",
       "gameIdx": 0
     },
     {
@@ -7161,23 +7172,34 @@
       "homeScore": 12,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "박주성",
-      "losePitcher": "올러",
+      "winPitcher": "올러",
+      "losePitcher": "박주성",
+      "gameIdx": 0
+    },
+    {
+      "away": "SSG",
+      "home": "KT",
+      "awayScore": 4,
+      "homeScore": 5,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "박영현",
+      "losePitcher": "조병현",
+      "gameIdx": 0
+    },
+    {
+      "away": "삼성",
+      "home": "NC",
+      "awayScore": 6,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "후라도",
+      "losePitcher": "전사민",
       "gameIdx": 0
     }
   ],
   "2025-08-20": [
-    {
-      "away": "롯데",
-      "home": "LG",
-      "awayScore": 3,
-      "homeScore": 5,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "정철원",
-      "losePitcher": "이정용",
-      "gameIdx": 0
-    },
     {
       "away": "두산",
       "home": "한화",
@@ -7185,30 +7207,19 @@
       "homeScore": 9,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "조동욱",
-      "losePitcher": "곽빈",
+      "winPitcher": "곽빈",
+      "losePitcher": "조동욱",
       "gameIdx": 0
     },
     {
-      "away": "SSG",
-      "home": "KT",
-      "awayScore": 5,
-      "homeScore": 3,
-      "outcome": "W",
+      "away": "롯데",
+      "home": "LG",
+      "awayScore": 3,
+      "homeScore": 5,
+      "outcome": "L",
       "cancelled": false,
-      "winPitcher": "배제성",
-      "losePitcher": "문승원",
-      "gameIdx": 0
-    },
-    {
-      "away": "삼성",
-      "home": "NC",
-      "awayScore": 4,
-      "homeScore": 3,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "임정호",
-      "losePitcher": "원태인",
+      "winPitcher": "이정용",
+      "losePitcher": "정철원",
       "gameIdx": 0
     },
     {
@@ -7218,12 +7229,45 @@
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "양현종",
-      "losePitcher": "알칸타라",
+      "winPitcher": "알칸타라",
+      "losePitcher": "양현종",
+      "gameIdx": 0
+    },
+    {
+      "away": "SSG",
+      "home": "KT",
+      "awayScore": 5,
+      "homeScore": 3,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "문승원",
+      "losePitcher": "배제성",
+      "gameIdx": 0
+    },
+    {
+      "away": "삼성",
+      "home": "NC",
+      "awayScore": 4,
+      "homeScore": 3,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "원태인",
+      "losePitcher": "임정호",
       "gameIdx": 0
     }
   ],
   "2025-08-21": [
+    {
+      "away": "두산",
+      "home": "한화",
+      "awayScore": 6,
+      "homeScore": 3,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "잭로그",
+      "losePitcher": "류현진",
+      "gameIdx": 0
+    },
     {
       "away": "롯데",
       "home": "LG",
@@ -7236,14 +7280,14 @@
       "gameIdx": 0
     },
     {
-      "away": "두산",
-      "home": "한화",
-      "awayScore": 6,
-      "homeScore": 3,
+      "away": "키움",
+      "home": "KIA",
+      "awayScore": 11,
+      "homeScore": 10,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "류현진",
-      "losePitcher": "잭로그",
+      "winPitcher": "메르세데스",
+      "losePitcher": "김도현",
       "gameIdx": 0
     },
     {
@@ -7253,8 +7297,8 @@
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "고영표",
-      "losePitcher": "앤더슨",
+      "winPitcher": "앤더슨",
+      "losePitcher": "고영표",
       "gameIdx": 0
     },
     {
@@ -7264,19 +7308,8 @@
       "homeScore": 7,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "김태훈",
-      "losePitcher": "김진호",
-      "gameIdx": 0
-    },
-    {
-      "away": "키움",
-      "home": "KIA",
-      "awayScore": 11,
-      "homeScore": 10,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "김도현",
-      "losePitcher": "메르세데스",
+      "winPitcher": "김진호",
+      "losePitcher": "김태훈",
       "gameIdx": 0
     }
   ],
@@ -7288,8 +7321,8 @@
       "homeScore": 8,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "박치국",
-      "losePitcher": "손동현",
+      "winPitcher": "손동현",
+      "losePitcher": "박치국",
       "gameIdx": 0
     },
     {
@@ -7299,30 +7332,8 @@
       "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "이의리",
-      "losePitcher": "송승기",
-      "gameIdx": 0
-    },
-    {
-      "away": "롯데",
-      "home": "NC",
-      "awayScore": 6,
-      "homeScore": 7,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "박세웅",
-      "losePitcher": "배재환",
-      "gameIdx": 0
-    },
-    {
-      "away": "SSG",
-      "home": "한화",
-      "awayScore": 1,
-      "homeScore": 0,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "김범수",
-      "losePitcher": "이로운",
+      "winPitcher": "송승기",
+      "losePitcher": "이의리",
       "gameIdx": 0
     },
     {
@@ -7332,8 +7343,30 @@
       "homeScore": 8,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "하영민",
-      "losePitcher": "이승민",
+      "winPitcher": "이승민",
+      "losePitcher": "하영민",
+      "gameIdx": 0
+    },
+    {
+      "away": "SSG",
+      "home": "한화",
+      "awayScore": 1,
+      "homeScore": 0,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "이로운",
+      "losePitcher": "김범수",
+      "gameIdx": 0
+    },
+    {
+      "away": "롯데",
+      "home": "NC",
+      "awayScore": 6,
+      "homeScore": 7,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "배재환",
+      "losePitcher": "박세웅",
       "gameIdx": 0
     }
   ],
@@ -7345,8 +7378,8 @@
       "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "홍건희",
-      "losePitcher": "패트릭",
+      "winPitcher": "패트릭",
+      "losePitcher": "홍건희",
       "gameIdx": 0
     },
     {
@@ -7356,30 +7389,8 @@
       "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "네일",
-      "losePitcher": "임찬규",
-      "gameIdx": 0
-    },
-    {
-      "away": "롯데",
-      "home": "NC",
-      "awayScore": 1,
-      "homeScore": 4,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "감보아",
-      "losePitcher": "김녹원",
-      "gameIdx": 0
-    },
-    {
-      "away": "SSG",
-      "home": "한화",
-      "awayScore": 0,
-      "homeScore": 5,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "화이트",
-      "losePitcher": "황준서",
+      "winPitcher": "임찬규",
+      "losePitcher": "네일",
       "gameIdx": 0
     },
     {
@@ -7389,8 +7400,30 @@
       "homeScore": 12,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "전준표",
-      "losePitcher": "배찬승",
+      "winPitcher": "배찬승",
+      "losePitcher": "전준표",
+      "gameIdx": 0
+    },
+    {
+      "away": "SSG",
+      "home": "한화",
+      "awayScore": 0,
+      "homeScore": 5,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "황준서",
+      "losePitcher": "화이트",
+      "gameIdx": 0
+    },
+    {
+      "away": "롯데",
+      "home": "NC",
+      "awayScore": 1,
+      "homeScore": 4,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "김녹원",
+      "losePitcher": "감보아",
       "gameIdx": 0
     }
   ],
@@ -7402,8 +7435,8 @@
       "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "박치국",
-      "losePitcher": "소형준",
+      "winPitcher": "소형준",
+      "losePitcher": "박치국",
       "gameIdx": 0
     },
     {
@@ -7413,30 +7446,8 @@
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "올러",
-      "losePitcher": "톨허스트",
-      "gameIdx": 0
-    },
-    {
-      "away": "롯데",
-      "home": "NC",
-      "awayScore": 17,
-      "homeScore": 5,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "이준혁",
-      "losePitcher": "벨라스케즈",
-      "gameIdx": 0
-    },
-    {
-      "away": "SSG",
-      "home": "한화",
-      "awayScore": 2,
-      "homeScore": 5,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "전영준",
-      "losePitcher": "와이스",
+      "winPitcher": "톨허스트",
+      "losePitcher": "올러",
       "gameIdx": 0
     },
     {
@@ -7446,12 +7457,56 @@
       "homeScore": 7,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "김연주",
-      "losePitcher": "후라도",
+      "winPitcher": "후라도",
+      "losePitcher": "김연주",
+      "gameIdx": 0
+    },
+    {
+      "away": "SSG",
+      "home": "한화",
+      "awayScore": 2,
+      "homeScore": 5,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "와이스",
+      "losePitcher": "전영준",
+      "gameIdx": 0
+    },
+    {
+      "away": "롯데",
+      "home": "NC",
+      "awayScore": 17,
+      "homeScore": 5,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "벨라스케즈",
+      "losePitcher": "이준혁",
       "gameIdx": 0
     }
   ],
   "2025-08-26": [
+    {
+      "away": "삼성",
+      "home": "두산",
+      "awayScore": 6,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "원태인",
+      "losePitcher": "곽빈",
+      "gameIdx": 0
+    },
+    {
+      "away": "LG",
+      "home": "NC",
+      "awayScore": 7,
+      "homeScore": 9,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "김영규",
+      "losePitcher": "김진성",
+      "gameIdx": 0
+    },
     {
       "away": "한화",
       "home": "키움",
@@ -7459,8 +7514,8 @@
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "조영건",
-      "losePitcher": "한승혁",
+      "winPitcher": "한승혁",
+      "losePitcher": "조영건",
       "gameIdx": 0
     },
     {
@@ -7470,8 +7525,8 @@
       "homeScore": 9,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "김기훈",
-      "losePitcher": "김민",
+      "winPitcher": "김민",
+      "losePitcher": "김기훈",
       "gameIdx": 0
     },
     {
@@ -7481,65 +7536,21 @@
       "homeScore": 4,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "오원석",
-      "losePitcher": "나균안",
-      "gameIdx": 0
-    },
-    {
-      "away": "LG",
-      "home": "NC",
-      "awayScore": 7,
-      "homeScore": 9,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "김진성",
-      "losePitcher": "김영규",
-      "gameIdx": 0
-    },
-    {
-      "away": "삼성",
-      "home": "두산",
-      "awayScore": 6,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "곽빈",
-      "losePitcher": "원태인",
+      "winPitcher": "나균안",
+      "losePitcher": "오원석",
       "gameIdx": 0
     }
   ],
   "2025-08-27": [
     {
-      "away": "한화",
-      "home": "키움",
-      "awayScore": 3,
+      "away": "삼성",
+      "home": "두산",
+      "awayScore": 14,
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "메르세데스",
-      "losePitcher": "문동주",
-      "gameIdx": 0
-    },
-    {
-      "away": "KIA",
-      "home": "SSG",
-      "awayScore": 4,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "전영준",
-      "losePitcher": "전상현",
-      "gameIdx": 0
-    },
-    {
-      "away": "KT",
-      "home": "롯데",
-      "awayScore": 7,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "박세웅",
-      "losePitcher": "고영표",
+      "winPitcher": "가라비토",
+      "losePitcher": "윤태호",
       "gameIdx": 0
     },
     {
@@ -7549,23 +7560,67 @@
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "신영우",
-      "losePitcher": "치리노스",
+      "winPitcher": "치리노스",
+      "losePitcher": "신영우",
       "gameIdx": 0
     },
     {
-      "away": "삼성",
-      "home": "두산",
-      "awayScore": 14,
+      "away": "한화",
+      "home": "키움",
+      "awayScore": 3,
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "윤태호",
-      "losePitcher": "가라비토",
+      "winPitcher": "문동주",
+      "losePitcher": "메르세데스",
+      "gameIdx": 0
+    },
+    {
+      "away": "KIA",
+      "home": "SSG",
+      "awayScore": 4,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "전상현",
+      "losePitcher": "전영준",
+      "gameIdx": 0
+    },
+    {
+      "away": "KT",
+      "home": "롯데",
+      "awayScore": 7,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "고영표",
+      "losePitcher": "박세웅",
       "gameIdx": 0
     }
   ],
   "2025-08-28": [
+    {
+      "away": "삼성",
+      "home": "두산",
+      "awayScore": 6,
+      "homeScore": 7,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "박치국",
+      "losePitcher": "김재윤",
+      "gameIdx": 0
+    },
+    {
+      "away": "LG",
+      "home": "NC",
+      "awayScore": 4,
+      "homeScore": 3,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "김영우",
+      "losePitcher": "김진호",
+      "gameIdx": 0
+    },
     {
       "away": "한화",
       "home": "키움",
@@ -7573,8 +7628,8 @@
       "homeScore": 3,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "하영민",
-      "losePitcher": "폰세",
+      "winPitcher": "폰세",
+      "losePitcher": "하영민",
       "gameIdx": 0
     },
     {
@@ -7584,8 +7639,8 @@
       "homeScore": 6,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "최민준",
-      "losePitcher": "성영탁",
+      "winPitcher": "성영탁",
+      "losePitcher": "최민준",
       "gameIdx": 0
     },
     {
@@ -7595,56 +7650,12 @@
       "homeScore": 3,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "김민수",
-      "losePitcher": "박진",
-      "gameIdx": 0
-    },
-    {
-      "away": "LG",
-      "home": "NC",
-      "awayScore": 4,
-      "homeScore": 3,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "김진호",
-      "losePitcher": "김영우",
-      "gameIdx": 0
-    },
-    {
-      "away": "삼성",
-      "home": "두산",
-      "awayScore": 6,
-      "homeScore": 7,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "김재윤",
-      "losePitcher": "박치국",
+      "winPitcher": "박진",
+      "losePitcher": "김민수",
       "gameIdx": 0
     }
   ],
   "2025-08-29": [
-    {
-      "away": "KIA",
-      "home": "KT",
-      "awayScore": 10,
-      "homeScore": 1,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "패트릭",
-      "losePitcher": "네일",
-      "gameIdx": 0
-    },
-    {
-      "away": "NC",
-      "home": "SSG",
-      "awayScore": 0,
-      "homeScore": 8,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "김녹원",
-      "losePitcher": "화이트",
-      "gameIdx": 0
-    },
     {
       "away": "두산",
       "home": "롯데",
@@ -7652,19 +7663,8 @@
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "벨라스케즈",
-      "losePitcher": "잭로그",
-      "gameIdx": 0
-    },
-    {
-      "away": "삼성",
-      "home": "한화",
-      "awayScore": 5,
-      "homeScore": 3,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "황준서",
-      "losePitcher": "양창섭",
+      "winPitcher": "잭로그",
+      "losePitcher": "벨라스케즈",
       "gameIdx": 0
     },
     {
@@ -7674,34 +7674,45 @@
       "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "임찬규",
-      "losePitcher": "정현우",
-      "gameIdx": 0
-    }
-  ],
-  "2025-08-30": [
-    {
-      "away": "KIA",
-      "home": "KT",
-      "awayScore": 2,
-      "homeScore": 8,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "올러",
-      "losePitcher": "문용익",
+      "winPitcher": "정현우",
+      "losePitcher": "임찬규",
       "gameIdx": 0
     },
     {
       "away": "NC",
       "home": "SSG",
-      "awayScore": 12,
-      "homeScore": 2,
-      "outcome": "W",
+      "awayScore": 0,
+      "homeScore": 8,
+      "outcome": "L",
       "cancelled": false,
-      "winPitcher": "김광현",
-      "losePitcher": "라일리",
+      "winPitcher": "화이트",
+      "losePitcher": "김녹원",
       "gameIdx": 0
     },
+    {
+      "away": "KIA",
+      "home": "KT",
+      "awayScore": 10,
+      "homeScore": 1,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "네일",
+      "losePitcher": "패트릭",
+      "gameIdx": 0
+    },
+    {
+      "away": "삼성",
+      "home": "한화",
+      "awayScore": 5,
+      "homeScore": 3,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "양창섭",
+      "losePitcher": "황준서",
+      "gameIdx": 0
+    }
+  ],
+  "2025-08-30": [
     {
       "away": "두산",
       "home": "롯데",
@@ -7714,38 +7725,71 @@
       "gameIdx": 0
     },
     {
-      "away": "삼성",
-      "home": "한화",
-      "awayScore": 4,
-      "homeScore": 0,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "와이스",
-      "losePitcher": "후라도",
-      "gameIdx": 0
-    },
-    {
       "away": "키움",
       "home": "LG",
       "awayScore": 5,
       "homeScore": 6,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "박정훈",
-      "losePitcher": "톨허스트",
+      "winPitcher": "톨허스트",
+      "losePitcher": "박정훈",
+      "gameIdx": 0
+    },
+    {
+      "away": "NC",
+      "home": "SSG",
+      "awayScore": 12,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "라일리",
+      "losePitcher": "김광현",
+      "gameIdx": 0
+    },
+    {
+      "away": "KIA",
+      "home": "KT",
+      "awayScore": 2,
+      "homeScore": 8,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "문용익",
+      "losePitcher": "올러",
+      "gameIdx": 0
+    },
+    {
+      "away": "삼성",
+      "home": "한화",
+      "awayScore": 4,
+      "homeScore": 0,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "후라도",
+      "losePitcher": "와이스",
       "gameIdx": 0
     }
   ],
   "2025-08-31": [
     {
-      "away": "KIA",
-      "home": "KT",
-      "awayScore": 6,
-      "homeScore": 7,
+      "away": "두산",
+      "home": "롯데",
+      "awayScore": 1,
+      "homeScore": 5,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "정해영",
-      "losePitcher": "김민수",
+      "winPitcher": "박진",
+      "losePitcher": "곽빈",
+      "gameIdx": 0
+    },
+    {
+      "away": "키움",
+      "home": "LG",
+      "awayScore": 6,
+      "homeScore": 5,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "조영건",
+      "losePitcher": "유영찬",
       "gameIdx": 0
     },
     {
@@ -7755,19 +7799,19 @@
       "homeScore": 10,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "김영규",
-      "losePitcher": "김민",
+      "winPitcher": "김민",
+      "losePitcher": "김영규",
       "gameIdx": 0
     },
     {
-      "away": "두산",
-      "home": "롯데",
-      "awayScore": 1,
-      "homeScore": 5,
+      "away": "KIA",
+      "home": "KT",
+      "awayScore": 6,
+      "homeScore": 7,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "곽빈",
-      "losePitcher": "박진",
+      "winPitcher": "김민수",
+      "losePitcher": "정해영",
       "gameIdx": 0
     },
     {
@@ -7777,34 +7821,12 @@
       "homeScore": 3,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김기중",
-      "losePitcher": "원태인",
-      "gameIdx": 0
-    },
-    {
-      "away": "키움",
-      "home": "LG",
-      "awayScore": 6,
-      "homeScore": 5,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "유영찬",
-      "losePitcher": "조영건",
+      "winPitcher": "원태인",
+      "losePitcher": "김기중",
       "gameIdx": 0
     }
   ],
   "2025-09-02": [
-    {
-      "away": "KIA",
-      "home": "한화",
-      "awayScore": 3,
-      "homeScore": 21,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "김도현",
-      "losePitcher": "류현진",
-      "gameIdx": 0
-    },
     {
       "away": "롯데",
       "home": "LG",
@@ -7812,19 +7834,8 @@
       "homeScore": 3,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "박세웅",
-      "losePitcher": "치리노스",
-      "gameIdx": 0
-    },
-    {
-      "away": "NC",
-      "home": "KT",
-      "awayScore": 9,
-      "homeScore": 4,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "고영표",
-      "losePitcher": "손주환",
+      "winPitcher": "치리노스",
+      "losePitcher": "박세웅",
       "gameIdx": 0
     },
     {
@@ -7834,32 +7845,43 @@
       "homeScore": 6,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "메르세데스",
-      "losePitcher": "앤더슨",
+      "winPitcher": "앤더슨",
+      "losePitcher": "메르세데스",
+      "gameIdx": 0
+    },
+    {
+      "away": "NC",
+      "home": "KT",
+      "awayScore": 9,
+      "homeScore": 4,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "손주환",
+      "losePitcher": "고영표",
+      "gameIdx": 0
+    },
+    {
+      "away": "KIA",
+      "home": "한화",
+      "awayScore": 3,
+      "homeScore": 21,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "류현진",
+      "losePitcher": "김도현",
       "gameIdx": 0
     }
   ],
   "2025-09-03": [
     {
-      "away": "롯데",
-      "home": "KT",
-      "awayScore": 8,
-      "homeScore": 9,
-      "outcome": "L",
+      "away": "키움",
+      "home": "삼성",
+      "awayScore": 4,
+      "homeScore": 3,
+      "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김원중",
-      "losePitcher": "박영현",
-      "gameIdx": 0
-    },
-    {
-      "away": "NC",
-      "home": "한화",
-      "awayScore": 5,
-      "homeScore": 6,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "이준혁",
-      "losePitcher": "정우주",
+      "winPitcher": "오석주",
+      "losePitcher": "이승민",
       "gameIdx": 0
     },
     {
@@ -7869,34 +7891,34 @@
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "네일",
-      "losePitcher": "박시후",
+      "winPitcher": "박시후",
+      "losePitcher": "네일",
       "gameIdx": 0
     },
     {
-      "away": "키움",
-      "home": "삼성",
-      "awayScore": 4,
-      "homeScore": 3,
-      "outcome": "W",
+      "away": "롯데",
+      "home": "KT",
+      "awayScore": 8,
+      "homeScore": 9,
+      "outcome": "L",
       "cancelled": false,
-      "winPitcher": "이승민",
-      "losePitcher": "오석주",
+      "winPitcher": "박영현",
+      "losePitcher": "김원중",
+      "gameIdx": 0
+    },
+    {
+      "away": "NC",
+      "home": "한화",
+      "awayScore": 5,
+      "homeScore": 6,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "정우주",
+      "losePitcher": "이준혁",
       "gameIdx": 0
     }
   ],
   "2025-09-04": [
-    {
-      "away": "LG",
-      "home": "KT",
-      "awayScore": 10,
-      "homeScore": 8,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "박영현",
-      "losePitcher": "이정용",
-      "gameIdx": 0
-    },
     {
       "away": "두산",
       "home": "NC",
@@ -7904,13 +7926,24 @@
       "homeScore": 3,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "하준영",
-      "losePitcher": "최원준",
+      "winPitcher": "최원준",
+      "losePitcher": "하준영",
       "gameIdx": 0
     },
     {
-      "away": "SSG",
-      "home": "KIA",
+      "away": "LG",
+      "home": "KT",
+      "awayScore": 10,
+      "homeScore": 8,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "이정용",
+      "losePitcher": "박영현",
+      "gameIdx": 0
+    },
+    {
+      "away": "키움",
+      "home": "삼성",
       "awayScore": 0,
       "homeScore": 0,
       "outcome": null,
@@ -7920,8 +7953,8 @@
       "gameIdx": 0
     },
     {
-      "away": "키움",
-      "home": "삼성",
+      "away": "SSG",
+      "home": "KIA",
       "awayScore": 0,
       "homeScore": 0,
       "outcome": null,
@@ -7933,36 +7966,14 @@
   ],
   "2025-09-05": [
     {
-      "away": "KT",
-      "home": "KIA",
-      "awayScore": 0,
-      "homeScore": 0,
-      "outcome": null,
-      "cancelled": true,
-      "winPitcher": null,
-      "losePitcher": null,
-      "gameIdx": 0
-    },
-    {
-      "away": "롯데",
-      "home": "SSG",
-      "awayScore": 5,
-      "homeScore": 7,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "벨라스케즈",
-      "losePitcher": "화이트",
-      "gameIdx": 0
-    },
-    {
       "away": "두산",
       "home": "NC",
       "awayScore": 9,
       "homeScore": 3,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김영규",
-      "losePitcher": "김택연",
+      "winPitcher": "김택연",
+      "losePitcher": "김영규",
       "gameIdx": 0
     },
     {
@@ -7972,34 +7983,34 @@
       "homeScore": 8,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "정현우",
-      "losePitcher": "이승민",
+      "winPitcher": "이승민",
+      "losePitcher": "정현우",
+      "gameIdx": 0
+    },
+    {
+      "away": "롯데",
+      "home": "SSG",
+      "awayScore": 5,
+      "homeScore": 7,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "화이트",
+      "losePitcher": "벨라스케즈",
+      "gameIdx": 0
+    },
+    {
+      "away": "KT",
+      "home": "KIA",
+      "awayScore": 0,
+      "homeScore": 0,
+      "outcome": null,
+      "cancelled": true,
+      "winPitcher": null,
+      "losePitcher": null,
       "gameIdx": 0
     }
   ],
   "2025-09-06": [
-    {
-      "away": "한화",
-      "home": "삼성",
-      "awayScore": 7,
-      "homeScore": 4,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "이승현",
-      "losePitcher": "문동주",
-      "gameIdx": 0
-    },
-    {
-      "away": "KIA",
-      "home": "NC",
-      "awayScore": 8,
-      "homeScore": 4,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "라일리",
-      "losePitcher": "올러",
-      "gameIdx": 0
-    },
     {
       "away": "LG",
       "home": "두산",
@@ -8021,9 +8032,42 @@
       "winPitcher": null,
       "losePitcher": null,
       "gameIdx": 0
+    },
+    {
+      "away": "한화",
+      "home": "삼성",
+      "awayScore": 7,
+      "homeScore": 4,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "문동주",
+      "losePitcher": "이승현",
+      "gameIdx": 0
+    },
+    {
+      "away": "KIA",
+      "home": "NC",
+      "awayScore": 8,
+      "homeScore": 4,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "올러",
+      "losePitcher": "라일리",
+      "gameIdx": 0
     }
   ],
   "2025-09-07": [
+    {
+      "away": "SSG",
+      "home": "LG",
+      "awayScore": 7,
+      "homeScore": 3,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "김광현",
+      "losePitcher": "임찬규",
+      "gameIdx": 0
+    },
     {
       "away": "한화",
       "home": "삼성",
@@ -8031,8 +8075,8 @@
       "homeScore": 4,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "황준서",
-      "losePitcher": "원태인",
+      "winPitcher": "원태인",
+      "losePitcher": "황준서",
       "gameIdx": 0
     },
     {
@@ -8042,32 +8086,21 @@
       "homeScore": 2,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "양현종",
-      "losePitcher": "전사민",
-      "gameIdx": 0
-    },
-    {
-      "away": "SSG",
-      "home": "LG",
-      "awayScore": 7,
-      "homeScore": 3,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "임찬규",
-      "losePitcher": "김광현",
+      "winPitcher": "전사민",
+      "losePitcher": "양현종",
       "gameIdx": 0
     }
   ],
   "2025-09-09": [
     {
-      "away": "한화",
-      "home": "롯데",
-      "awayScore": 9,
-      "homeScore": 1,
-      "outcome": "W",
+      "away": "두산",
+      "home": "KT",
+      "awayScore": 1,
+      "homeScore": 8,
+      "outcome": "L",
       "cancelled": false,
-      "winPitcher": "박세웅",
-      "losePitcher": "와이스",
+      "winPitcher": "소형준",
+      "losePitcher": "곽빈",
       "gameIdx": 0
     },
     {
@@ -8077,19 +8110,8 @@
       "homeScore": 11,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "톨허스트",
-      "losePitcher": "알칸타라",
-      "gameIdx": 0
-    },
-    {
-      "away": "두산",
-      "home": "KT",
-      "awayScore": 1,
-      "homeScore": 8,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "곽빈",
-      "losePitcher": "소형준",
+      "winPitcher": "알칸타라",
+      "losePitcher": "톨허스트",
       "gameIdx": 0
     },
     {
@@ -8101,6 +8123,17 @@
       "cancelled": true,
       "winPitcher": null,
       "losePitcher": null,
+      "gameIdx": 0
+    },
+    {
+      "away": "한화",
+      "home": "롯데",
+      "awayScore": 9,
+      "homeScore": 1,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "와이스",
+      "losePitcher": "박세웅",
       "gameIdx": 0
     },
     {
@@ -8117,25 +8150,14 @@
   ],
   "2025-09-10": [
     {
-      "away": "한화",
-      "home": "롯데",
-      "awayScore": 13,
-      "homeScore": 0,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "감보아",
-      "losePitcher": "류현진",
-      "gameIdx": 0
-    },
-    {
       "away": "LG",
       "home": "두산",
       "awayScore": 8,
       "homeScore": 4,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "콜어빈",
-      "losePitcher": "손주영",
+      "winPitcher": "손주영",
+      "losePitcher": "콜어빈",
       "gameIdx": 0
     },
     {
@@ -8145,8 +8167,19 @@
       "homeScore": 5,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "노경은",
-      "losePitcher": "하준영",
+      "winPitcher": "하준영",
+      "losePitcher": "노경은",
+      "gameIdx": 0
+    },
+    {
+      "away": "한화",
+      "home": "롯데",
+      "awayScore": 13,
+      "homeScore": 0,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "류현진",
+      "losePitcher": "감보아",
       "gameIdx": 0
     },
     {
@@ -8156,8 +8189,8 @@
       "homeScore": 4,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "가라비토",
-      "losePitcher": "조상우",
+      "winPitcher": "조상우",
+      "losePitcher": "가라비토",
       "gameIdx": 0
     }
   ],
@@ -8169,19 +8202,8 @@
       "homeScore": 4,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김진성",
-      "losePitcher": "손동현",
-      "gameIdx": 0
-    },
-    {
-      "away": "롯데",
-      "home": "KIA",
-      "awayScore": 4,
-      "homeScore": 3,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "최지민",
-      "losePitcher": "정철원",
+      "winPitcher": "손동현",
+      "losePitcher": "김진성",
       "gameIdx": 0
     },
     {
@@ -8191,8 +8213,8 @@
       "homeScore": 4,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "로건",
-      "losePitcher": "메르세데스",
+      "winPitcher": "메르세데스",
+      "losePitcher": "로건",
       "gameIdx": 0
     },
     {
@@ -8202,12 +8224,34 @@
       "homeScore": 4,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "배찬승",
-      "losePitcher": "이로운",
+      "winPitcher": "이로운",
+      "losePitcher": "배찬승",
+      "gameIdx": 0
+    },
+    {
+      "away": "롯데",
+      "home": "KIA",
+      "awayScore": 4,
+      "homeScore": 3,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "정철원",
+      "losePitcher": "최지민",
       "gameIdx": 0
     }
   ],
   "2025-09-12": [
+    {
+      "away": "두산",
+      "home": "KIA",
+      "awayScore": 4,
+      "homeScore": 5,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "김기훈",
+      "losePitcher": "김택연",
+      "gameIdx": 0
+    },
     {
       "away": "NC",
       "home": "LG",
@@ -8217,17 +8261,6 @@
       "cancelled": true,
       "winPitcher": null,
       "losePitcher": null,
-      "gameIdx": 0
-    },
-    {
-      "away": "두산",
-      "home": "KIA",
-      "awayScore": 4,
-      "homeScore": 5,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "김택연",
-      "losePitcher": "김기훈",
       "gameIdx": 0
     },
     {
@@ -8244,36 +8277,36 @@
   ],
   "2025-09-13": [
     {
-      "away": "KIA",
-      "home": "LG",
-      "awayScore": 6,
-      "homeScore": 3,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "임찬규",
-      "losePitcher": "이의리",
-      "gameIdx": 0
-    },
-    {
-      "away": "KT",
-      "home": "삼성",
-      "awayScore": 5,
-      "homeScore": 3,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "김재윤",
-      "losePitcher": "이상동",
-      "gameIdx": 0
-    },
-    {
       "away": "두산",
       "home": "NC",
       "awayScore": 4,
       "homeScore": 6,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "최원준",
-      "losePitcher": "이용찬",
+      "winPitcher": "이용찬",
+      "losePitcher": "최원준",
+      "gameIdx": 0
+    },
+    {
+      "away": "KIA",
+      "home": "LG",
+      "awayScore": 6,
+      "homeScore": 3,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "이의리",
+      "losePitcher": "임찬규",
+      "gameIdx": 0
+    },
+    {
+      "away": "키움",
+      "home": "한화",
+      "awayScore": 5,
+      "homeScore": 10,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "폰세",
+      "losePitcher": "하영민",
       "gameIdx": 0
     },
     {
@@ -8283,45 +8316,23 @@
       "homeScore": 12,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "조병현",
-      "losePitcher": "김원중",
-      "gameIdx": 0
-    },
-    {
-      "away": "키움",
-      "home": "한화",
-      "awayScore": 5,
-      "homeScore": 10,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "하영민",
-      "losePitcher": "폰세",
-      "gameIdx": 0
-    }
-  ],
-  "2025-09-14": [
-    {
-      "away": "KIA",
-      "home": "LG",
-      "awayScore": 0,
-      "homeScore": 14,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "양현종",
-      "losePitcher": "톨허스트",
+      "winPitcher": "김원중",
+      "losePitcher": "조병현",
       "gameIdx": 0
     },
     {
       "away": "KT",
       "home": "삼성",
-      "awayScore": 2,
-      "homeScore": 6,
-      "outcome": "L",
+      "awayScore": 5,
+      "homeScore": 3,
+      "outcome": "W",
       "cancelled": false,
-      "winPitcher": "오원석",
-      "losePitcher": "양창섭",
+      "winPitcher": "이상동",
+      "losePitcher": "김재윤",
       "gameIdx": 0
-    },
+    }
+  ],
+  "2025-09-14": [
     {
       "away": "두산",
       "home": "NC",
@@ -8329,8 +8340,19 @@
       "homeScore": 6,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "김민규",
-      "losePitcher": "라일리",
+      "winPitcher": "라일리",
+      "losePitcher": "김민규",
+      "gameIdx": 0
+    },
+    {
+      "away": "KIA",
+      "home": "LG",
+      "awayScore": 0,
+      "homeScore": 14,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "톨허스트",
+      "losePitcher": "양현종",
       "gameIdx": 0
     },
     {
@@ -8340,8 +8362,19 @@
       "homeScore": 10,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "문동주",
-      "losePitcher": "원종현",
+      "winPitcher": "원종현",
+      "losePitcher": "문동주",
+      "gameIdx": 0
+    },
+    {
+      "away": "KT",
+      "home": "삼성",
+      "awayScore": 2,
+      "homeScore": 6,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "양창섭",
+      "losePitcher": "오원석",
       "gameIdx": 0
     }
   ],
@@ -8353,21 +8386,21 @@
       "homeScore": 7,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "원종현",
-      "losePitcher": "주현상",
+      "winPitcher": "주현상",
+      "losePitcher": "원종현",
       "gameIdx": 0
     }
   ],
   "2025-09-16": [
     {
-      "away": "한화",
-      "home": "KIA",
-      "awayScore": 11,
+      "away": "키움",
+      "home": "두산",
+      "awayScore": 4,
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김태형",
-      "losePitcher": "와이스",
+      "winPitcher": "알칸타라",
+      "losePitcher": "곽빈",
       "gameIdx": 0
     },
     {
@@ -8377,19 +8410,8 @@
       "homeScore": 6,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "헤이수스",
-      "losePitcher": "김영우",
-      "gameIdx": 0
-    },
-    {
-      "away": "롯데",
-      "home": "삼성",
-      "awayScore": 5,
-      "homeScore": 7,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "최준용",
-      "losePitcher": "이호성",
+      "winPitcher": "김영우",
+      "losePitcher": "헤이수스",
       "gameIdx": 0
     },
     {
@@ -8399,32 +8421,43 @@
       "homeScore": 3,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "로건",
-      "losePitcher": "앤더슨",
+      "winPitcher": "앤더슨",
+      "losePitcher": "로건",
       "gameIdx": 0
     },
     {
-      "away": "키움",
-      "home": "두산",
-      "awayScore": 4,
+      "away": "한화",
+      "home": "KIA",
+      "awayScore": 11,
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "곽빈",
-      "losePitcher": "알칸타라",
+      "winPitcher": "와이스",
+      "losePitcher": "김태형",
+      "gameIdx": 0
+    },
+    {
+      "away": "롯데",
+      "home": "삼성",
+      "awayScore": 5,
+      "homeScore": 7,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "이호성",
+      "losePitcher": "최준용",
       "gameIdx": 0
     }
   ],
   "2025-09-17": [
     {
-      "away": "한화",
-      "home": "KIA",
-      "awayScore": 6,
+      "away": "키움",
+      "home": "두산",
+      "awayScore": 4,
       "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김건국",
-      "losePitcher": "류현진",
+      "winPitcher": "메르세데스",
+      "losePitcher": "콜어빈",
       "gameIdx": 0
     },
     {
@@ -8439,8 +8472,8 @@
       "gameIdx": 0
     },
     {
-      "away": "롯데",
-      "home": "삼성",
+      "away": "SSG",
+      "home": "NC",
       "awayScore": 0,
       "homeScore": 0,
       "outcome": null,
@@ -8456,13 +8489,24 @@
       "homeScore": 4,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "문승원",
-      "losePitcher": "신민혁",
+      "winPitcher": "신민혁",
+      "losePitcher": "문승원",
+      "gameIdx": 1
+    },
+    {
+      "away": "한화",
+      "home": "KIA",
+      "awayScore": 6,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "류현진",
+      "losePitcher": "김건국",
       "gameIdx": 0
     },
     {
-      "away": "SSG",
-      "home": "NC",
+      "away": "롯데",
+      "home": "삼성",
       "awayScore": 0,
       "homeScore": 0,
       "outcome": null,
@@ -8470,29 +8514,18 @@
       "winPitcher": null,
       "losePitcher": null,
       "gameIdx": 0
-    },
-    {
-      "away": "키움",
-      "home": "두산",
-      "awayScore": 4,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "콜어빈",
-      "losePitcher": "메르세데스",
-      "gameIdx": 0
     }
   ],
   "2025-09-18": [
     {
-      "away": "한화",
-      "home": "KIA",
-      "awayScore": 4,
+      "away": "키움",
+      "home": "두산",
+      "awayScore": 2,
       "homeScore": 3,
-      "outcome": "W",
+      "outcome": "L",
       "cancelled": false,
-      "winPitcher": "전상현",
-      "losePitcher": "엄상백",
+      "winPitcher": "김택연",
+      "losePitcher": "김성민",
       "gameIdx": 0
     },
     {
@@ -8502,20 +8535,31 @@
       "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "소형준",
-      "losePitcher": "치리노스",
-      "gameIdx": 1
+      "winPitcher": "치리노스",
+      "losePitcher": "소형준",
+      "gameIdx": 0
     },
     {
       "away": "LG",
       "home": "KT",
-      "awayScore": 1,
-      "homeScore": 14,
-      "outcome": "L",
+      "awayScore": 14,
+      "homeScore": 1,
+      "outcome": "W",
       "cancelled": false,
       "winPitcher": "송승기",
       "losePitcher": "패트릭",
-      "gameIdx": 2
+      "gameIdx": 1
+    },
+    {
+      "away": "한화",
+      "home": "KIA",
+      "awayScore": 4,
+      "homeScore": 3,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "엄상백",
+      "losePitcher": "전상현",
+      "gameIdx": 0
     },
     {
       "away": "삼성",
@@ -8524,23 +8568,23 @@
       "homeScore": 5,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김진호",
-      "losePitcher": "최원태",
-      "gameIdx": 0
-    },
-    {
-      "away": "키움",
-      "home": "두산",
-      "awayScore": 2,
-      "homeScore": 3,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "김성민",
-      "losePitcher": "김택연",
+      "winPitcher": "최원태",
+      "losePitcher": "김진호",
       "gameIdx": 0
     }
   ],
   "2025-09-19": [
+    {
+      "away": "두산",
+      "home": "SSG",
+      "awayScore": 0,
+      "homeScore": 0,
+      "outcome": null,
+      "cancelled": true,
+      "winPitcher": null,
+      "losePitcher": null,
+      "gameIdx": 0
+    },
     {
       "away": "한화",
       "home": "KT",
@@ -8559,45 +8603,12 @@
       "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "라일리",
-      "losePitcher": "최준용",
-      "gameIdx": 0
-    },
-    {
-      "away": "두산",
-      "home": "SSG",
-      "awayScore": 0,
-      "homeScore": 0,
-      "outcome": null,
-      "cancelled": true,
-      "winPitcher": null,
-      "losePitcher": null,
+      "winPitcher": "최준용",
+      "losePitcher": "라일리",
       "gameIdx": 0
     }
   ],
   "2025-09-20": [
-    {
-      "away": "한화",
-      "home": "KT",
-      "awayScore": 2,
-      "homeScore": 4,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "폰세",
-      "losePitcher": "고영표",
-      "gameIdx": 0
-    },
-    {
-      "away": "NC",
-      "home": "KIA",
-      "awayScore": 4,
-      "homeScore": 5,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "임지민",
-      "losePitcher": "조상우",
-      "gameIdx": 0
-    },
     {
       "away": "두산",
       "home": "SSG",
@@ -8605,8 +8616,8 @@
       "homeScore": 15,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "최민석",
-      "losePitcher": "화이트",
+      "winPitcher": "화이트",
+      "losePitcher": "최민석",
       "gameIdx": 0
     },
     {
@@ -8616,8 +8627,8 @@
       "homeScore": 4,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "톨허스트",
-      "losePitcher": "원태인",
+      "winPitcher": "원태인",
+      "losePitcher": "톨허스트",
       "gameIdx": 0
     },
     {
@@ -8627,23 +8638,34 @@
       "homeScore": 5,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "감보아",
-      "losePitcher": "박주성",
+      "winPitcher": "박주성",
+      "losePitcher": "감보아",
+      "gameIdx": 0
+    },
+    {
+      "away": "한화",
+      "home": "KT",
+      "awayScore": 2,
+      "homeScore": 4,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "고영표",
+      "losePitcher": "폰세",
+      "gameIdx": 0
+    },
+    {
+      "away": "NC",
+      "home": "KIA",
+      "awayScore": 4,
+      "homeScore": 5,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "조상우",
+      "losePitcher": "임지민",
       "gameIdx": 0
     }
   ],
   "2025-09-21": [
-    {
-      "away": "NC",
-      "home": "KIA",
-      "awayScore": 7,
-      "homeScore": 6,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "전상현",
-      "losePitcher": "신영우",
-      "gameIdx": 0
-    },
     {
       "away": "두산",
       "home": "SSG",
@@ -8651,8 +8673,8 @@
       "homeScore": 7,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "최승용",
-      "losePitcher": "김광현",
+      "winPitcher": "김광현",
+      "losePitcher": "최승용",
       "gameIdx": 0
     },
     {
@@ -8662,8 +8684,19 @@
       "homeScore": 6,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "양창섭",
-      "losePitcher": "헤이수스",
+      "winPitcher": "헤이수스",
+      "losePitcher": "양창섭",
+      "gameIdx": 0
+    },
+    {
+      "away": "NC",
+      "home": "KIA",
+      "awayScore": 7,
+      "homeScore": 6,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "신영우",
+      "losePitcher": "전상현",
       "gameIdx": 0
     }
   ],
@@ -8675,34 +8708,12 @@
       "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "앤더슨",
-      "losePitcher": "곽빈",
+      "winPitcher": "곽빈",
+      "losePitcher": "앤더슨",
       "gameIdx": 0
     }
   ],
   "2025-09-23": [
-    {
-      "away": "KIA",
-      "home": "SSG",
-      "awayScore": 0,
-      "homeScore": 5,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "김태형",
-      "losePitcher": "김건우",
-      "gameIdx": 0
-    },
-    {
-      "away": "NC",
-      "home": "롯데",
-      "awayScore": 4,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "정철원",
-      "losePitcher": "전사민",
-      "gameIdx": 0
-    },
     {
       "away": "두산",
       "home": "삼성",
@@ -8710,8 +8721,8 @@
       "homeScore": 7,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "콜어빈",
-      "losePitcher": "이호성",
+      "winPitcher": "이호성",
+      "losePitcher": "콜어빈",
       "gameIdx": 0
     },
     {
@@ -8721,12 +8732,56 @@
       "homeScore": 7,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "알칸타라",
-      "losePitcher": "오원석",
+      "winPitcher": "오원석",
+      "losePitcher": "알칸타라",
+      "gameIdx": 0
+    },
+    {
+      "away": "KIA",
+      "home": "SSG",
+      "awayScore": 0,
+      "homeScore": 5,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "김건우",
+      "losePitcher": "김태형",
+      "gameIdx": 0
+    },
+    {
+      "away": "NC",
+      "home": "롯데",
+      "awayScore": 4,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "전사민",
+      "losePitcher": "정철원",
       "gameIdx": 0
     }
   ],
   "2025-09-24": [
+    {
+      "away": "LG",
+      "home": "NC",
+      "awayScore": 5,
+      "homeScore": 10,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "김영규",
+      "losePitcher": "함덕주",
+      "gameIdx": 0
+    },
+    {
+      "away": "KIA",
+      "home": "키움",
+      "awayScore": 2,
+      "homeScore": 0,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "올러",
+      "losePitcher": "하영민",
+      "gameIdx": 0
+    },
     {
       "away": "한화",
       "home": "SSG",
@@ -8739,36 +8794,14 @@
       "gameIdx": 0
     },
     {
-      "away": "KIA",
-      "home": "키움",
-      "awayScore": 2,
-      "homeScore": 0,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "하영민",
-      "losePitcher": "올러",
-      "gameIdx": 0
-    },
-    {
-      "away": "LG",
-      "home": "NC",
-      "awayScore": 5,
-      "homeScore": 10,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "함덕주",
-      "losePitcher": "김영규",
-      "gameIdx": 0
-    },
-    {
       "away": "롯데",
       "home": "삼성",
       "awayScore": 4,
       "homeScore": 9,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "박진",
-      "losePitcher": "후라도",
+      "winPitcher": "후라도",
+      "losePitcher": "박진",
       "gameIdx": 0
     }
   ],
@@ -8780,19 +8813,8 @@
       "homeScore": 7,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "와이스",
-      "losePitcher": "잭로그",
-      "gameIdx": 0
-    },
-    {
-      "away": "KT",
-      "home": "SSG",
-      "awayScore": 10,
-      "homeScore": 1,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "문승원",
-      "losePitcher": "패트릭",
+      "winPitcher": "잭로그",
+      "losePitcher": "와이스",
       "gameIdx": 0
     },
     {
@@ -8802,8 +8824,8 @@
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "감보아",
-      "losePitcher": "손주영",
+      "winPitcher": "손주영",
+      "losePitcher": "감보아",
       "gameIdx": 0
     },
     {
@@ -8813,21 +8835,32 @@
       "homeScore": 12,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "메르세데스",
-      "losePitcher": "배찬승",
+      "winPitcher": "배찬승",
+      "losePitcher": "메르세데스",
+      "gameIdx": 0
+    },
+    {
+      "away": "KT",
+      "home": "SSG",
+      "awayScore": 10,
+      "homeScore": 1,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "패트릭",
+      "losePitcher": "문승원",
       "gameIdx": 0
     }
   ],
   "2025-09-26": [
     {
-      "away": "KT",
-      "home": "SSG",
-      "awayScore": 2,
-      "homeScore": 5,
-      "outcome": "L",
+      "away": "NC",
+      "home": "두산",
+      "awayScore": 3,
+      "homeScore": 0,
+      "outcome": "W",
       "cancelled": false,
-      "winPitcher": "고영표",
-      "losePitcher": "화이트",
+      "winPitcher": "라일리",
+      "losePitcher": "제환유",
       "gameIdx": 0
     },
     {
@@ -8837,19 +8870,19 @@
       "homeScore": 4,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "치리노스",
-      "losePitcher": "김범수",
+      "winPitcher": "김범수",
+      "losePitcher": "치리노스",
       "gameIdx": 0
     },
     {
-      "away": "NC",
-      "home": "두산",
-      "awayScore": 3,
-      "homeScore": 0,
-      "outcome": "W",
+      "away": "KT",
+      "home": "SSG",
+      "awayScore": 2,
+      "homeScore": 5,
+      "outcome": "L",
       "cancelled": false,
-      "winPitcher": "제환유",
-      "losePitcher": "라일리",
+      "winPitcher": "화이트",
+      "losePitcher": "고영표",
       "gameIdx": 0
     },
     {
@@ -8859,12 +8892,23 @@
       "homeScore": 10,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "김태훈",
-      "losePitcher": "정철원",
+      "winPitcher": "정철원",
+      "losePitcher": "김태훈",
       "gameIdx": 0
     }
   ],
   "2025-09-27": [
+    {
+      "away": "SSG",
+      "home": "두산",
+      "awayScore": 6,
+      "homeScore": 2,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "김광현",
+      "losePitcher": "최승용",
+      "gameIdx": 0
+    },
     {
       "away": "LG",
       "home": "한화",
@@ -8872,8 +8916,8 @@
       "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "문동주",
-      "losePitcher": "톨허스트",
+      "winPitcher": "톨허스트",
+      "losePitcher": "문동주",
       "gameIdx": 0
     },
     {
@@ -8883,34 +8927,12 @@
       "homeScore": 1,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "양현종",
-      "losePitcher": "김녹원",
-      "gameIdx": 0
-    },
-    {
-      "away": "SSG",
-      "home": "두산",
-      "awayScore": 6,
-      "homeScore": 2,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "최승용",
-      "losePitcher": "김광현",
+      "winPitcher": "김녹원",
+      "losePitcher": "양현종",
       "gameIdx": 0
     }
   ],
   "2025-09-28": [
-    {
-      "away": "LG",
-      "home": "한화",
-      "awayScore": 0,
-      "homeScore": 0,
-      "outcome": null,
-      "cancelled": true,
-      "winPitcher": null,
-      "losePitcher": null,
-      "gameIdx": 0
-    },
     {
       "away": "롯데",
       "home": "두산",
@@ -8918,13 +8940,13 @@
       "homeScore": 7,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "박세웅",
-      "losePitcher": "곽빈",
+      "winPitcher": "곽빈",
+      "losePitcher": "박세웅",
       "gameIdx": 0
     },
     {
-      "away": "NC",
-      "home": "KIA",
+      "away": "LG",
+      "home": "한화",
       "awayScore": 0,
       "homeScore": 0,
       "outcome": null,
@@ -8940,8 +8962,19 @@
       "homeScore": 2,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "김선기",
-      "losePitcher": "이재익",
+      "winPitcher": "이재익",
+      "losePitcher": "김선기",
+      "gameIdx": 0
+    },
+    {
+      "away": "NC",
+      "home": "KIA",
+      "awayScore": 0,
+      "homeScore": 0,
+      "outcome": null,
+      "cancelled": true,
+      "winPitcher": null,
+      "losePitcher": null,
       "gameIdx": 0
     }
   ],
@@ -8953,8 +8986,8 @@
       "homeScore": 7,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "임찬규",
-      "losePitcher": "조동욱",
+      "winPitcher": "조동욱",
+      "losePitcher": "임찬규",
       "gameIdx": 0
     },
     {
@@ -8964,8 +8997,8 @@
       "homeScore": 4,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "박진",
-      "losePitcher": "앤더슨",
+      "winPitcher": "앤더슨",
+      "losePitcher": "박진",
       "gameIdx": 0
     },
     {
@@ -8975,45 +9008,12 @@
       "homeScore": 4,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "이의리",
-      "losePitcher": "로건",
+      "winPitcher": "로건",
+      "losePitcher": "이의리",
       "gameIdx": 0
     }
   ],
   "2025-09-30": [
-    {
-      "away": "KIA",
-      "home": "삼성",
-      "awayScore": 0,
-      "homeScore": 5,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "김태형",
-      "losePitcher": "후라도",
-      "gameIdx": 0
-    },
-    {
-      "away": "KT",
-      "home": "NC",
-      "awayScore": 4,
-      "homeScore": 9,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "고영표",
-      "losePitcher": "구창모",
-      "gameIdx": 0
-    },
-    {
-      "away": "롯데",
-      "home": "한화",
-      "awayScore": 0,
-      "homeScore": 1,
-      "outcome": "L",
-      "cancelled": false,
-      "winPitcher": "김원중",
-      "losePitcher": "김서현",
-      "gameIdx": 0
-    },
     {
       "away": "두산",
       "home": "LG",
@@ -9021,8 +9021,8 @@
       "homeScore": 0,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "송승기",
-      "losePitcher": "콜어빈",
+      "winPitcher": "콜어빈",
+      "losePitcher": "송승기",
       "gameIdx": 0
     },
     {
@@ -9032,12 +9032,56 @@
       "homeScore": 3,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "알칸타라",
-      "losePitcher": "김건우",
+      "winPitcher": "김건우",
+      "losePitcher": "알칸타라",
+      "gameIdx": 0
+    },
+    {
+      "away": "KT",
+      "home": "NC",
+      "awayScore": 4,
+      "homeScore": 9,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "구창모",
+      "losePitcher": "고영표",
+      "gameIdx": 0
+    },
+    {
+      "away": "롯데",
+      "home": "한화",
+      "awayScore": 0,
+      "homeScore": 1,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "김서현",
+      "losePitcher": "김원중",
+      "gameIdx": 0
+    },
+    {
+      "away": "KIA",
+      "home": "삼성",
+      "awayScore": 0,
+      "homeScore": 5,
+      "outcome": "L",
+      "cancelled": false,
+      "winPitcher": "후라도",
+      "losePitcher": "김태형",
       "gameIdx": 0
     }
   ],
   "2025-10-01": [
+    {
+      "away": "NC",
+      "home": "LG",
+      "awayScore": 7,
+      "homeScore": 3,
+      "outcome": "W",
+      "cancelled": false,
+      "winPitcher": "김영규",
+      "losePitcher": "치리노스",
+      "gameIdx": 0
+    },
     {
       "away": "한화",
       "home": "SSG",
@@ -9045,8 +9089,8 @@
       "homeScore": 6,
       "outcome": "L",
       "cancelled": false,
-      "winPitcher": "김서현",
-      "losePitcher": "김성민",
+      "winPitcher": "김성민",
+      "losePitcher": "김서현",
       "gameIdx": 0
     },
     {
@@ -9056,19 +9100,8 @@
       "homeScore": 3,
       "outcome": "W",
       "cancelled": false,
-      "winPitcher": "올러",
-      "losePitcher": "소형준",
-      "gameIdx": 0
-    },
-    {
-      "away": "NC",
-      "home": "LG",
-      "awayScore": 7,
-      "homeScore": 3,
-      "outcome": "W",
-      "cancelled": false,
-      "winPitcher": "치리노스",
-      "losePitcher": "김영규",
+      "winPitcher": "소형준",
+      "losePitcher": "올러",
       "gameIdx": 0
     }
   ],
@@ -9087,23 +9120,23 @@
   ],
   "2025-10-03": [
     {
-      "away": "한화",
-      "home": "KT",
-      "awayScore": 6,
-      "homeScore": 6,
-      "outcome": "T",
-      "cancelled": false,
-      "winPitcher": null,
-      "losePitcher": null,
-      "gameIdx": 0
-    },
-    {
       "away": "SSG",
       "home": "NC",
       "awayScore": 0,
       "homeScore": 0,
       "outcome": null,
       "cancelled": true,
+      "winPitcher": null,
+      "losePitcher": null,
+      "gameIdx": 0
+    },
+    {
+      "away": "한화",
+      "home": "KT",
+      "awayScore": 6,
+      "homeScore": 6,
+      "outcome": "T",
+      "cancelled": false,
       "winPitcher": null,
       "losePitcher": null,
       "gameIdx": 0

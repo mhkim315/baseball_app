@@ -173,29 +173,41 @@ def get_season_dates(year: int) -> list[str]:
 
 
 def backfill_live_results(year: int) -> None:
-    """Build live-results.json for all teams for the given year."""
+    """Build live-results.json for all teams for the given year.
+
+    Fetches Naver schedule in monthly chunks to avoid the API's 500-item limit.
+    """
     print(f"\n{'='*60}")
     print(f"Phase 1: live-results for {year}")
     print(f"{'='*60}")
 
     dates = get_season_dates(year)
-    from_d = f"{dates[0][:4]}-{dates[0][4:6]}-{dates[0][6:8]}"
-    to_d = f"{dates[-1][:4]}-{dates[-1][4:6]}-{dates[-1][6:8]}"
-    print(f"  Fetching Naver schedule {from_d} ~ {to_d}")
-    all_games = schedule_games(from_d, to_d)
-    print(f"  Got {len(all_games)} games from Naver schedule")
+    # Split date range into monthly chunks (Naver API ~500 game limit)
+    months = sorted(set(d[:6] for d in dates))
+    periods = []
+    for ym in months:
+        month_dates = [d for d in dates if d.startswith(ym)]
+        start = f"{month_dates[0][:4]}-{month_dates[0][4:6]}-{month_dates[0][6:8]}"
+        end = f"{month_dates[-1][:4]}-{month_dates[-1][4:6]}-{month_dates[-1][6:8]}"
+        periods.append((start, end))
+
+    print(f"  Fetching in {len(periods)} monthly chunks: {[p[0][:7] for p in periods]}")
+
+    all_games: list[dict] = []
+    for i, (from_d, to_d) in enumerate(periods):
+        chunk = schedule_games(from_d, to_d)
+        print(f"  Chunk {i+1}/{len(periods)} ({from_d}~{to_d}): {len(chunk)} games")
+        all_games.extend(chunk)
+        time.sleep(SLEEP_PER_YEAR)
+
+    print(f"  Got {len(all_games)} total games from Naver schedule")
     if not all_games:
         print("  WARNING: no games returned! Check date format (needs YYYY-MM-DD)")
         return
-    time.sleep(SLEEP_PER_YEAR)
 
     teams = selected_teams(None)
     for team in teams:
         live_path = ROOT / "data" / "teams" / team["id"] / "live-results.json"
-
-        # For live-results, we overwrite (the backfill runs per-year, so only this
-        # year's data is in the Naver schedule response). Existing live-results.json
-        # from the live collector will be regenerated on next collector run.
         build_live_results_for_team(team, all_games, year, live_path)
         time.sleep(0.1)
 

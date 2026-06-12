@@ -92,8 +92,8 @@ def parse_game(g: dict) -> dict | None:
     t_score = g.get("T_SCORE_CN", "").strip()
     b_score = g.get("B_SCORE_CN", "").strip()
 
-    away_score = int(b_score) if b_score.isdigit() else None
-    home_score = int(t_score) if t_score.isdigit() else None
+    away_score = int(t_score) if t_score.isdigit() else None
+    home_score = int(b_score) if b_score.isdigit() else None
 
     cancelled = g.get("CANCEL_SC_NM", "") != "정상경기"
 
@@ -108,8 +108,8 @@ def parse_game(g: dict) -> dict | None:
         "awayScore": away_score,
         "homeScore": home_score,
         "gameId": g.get("G_ID", ""),
-        "awayStarter": (g.get("B_PIT_P_NM", "") or "").strip() or None,
-        "homeStarter": (g.get("T_PIT_P_NM", "") or "").strip() or None,
+        "awayStarter": (g.get("T_PIT_P_NM", "") or "").strip() or None,
+        "homeStarter": (g.get("B_PIT_P_NM", "") or "").strip() or None,
         "winPitcher": (g.get("W_PIT_P_NM", "") or "").strip() or None,
         "losePitcher": (g.get("L_PIT_P_NM", "") or "").strip() or None,
         "savePitcher": (g.get("SV_PIT_P_NM", "") or "").strip() or None,

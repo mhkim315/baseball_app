@@ -101,15 +101,15 @@ def update_score(game):
     if not data:
         return
     try:
-        home_score = data.get("visitTeamScore") or data.get("homeTeamScore")
-        away_score = data.get("homeTeamScore") or data.get("visitTeamScore")
+        away_score = data.get("visitTeamScore") or data.get("homeTeamScore")
+        home_score = data.get("homeTeamScore") or data.get("visitTeamScore")
         status = data.get("gameStatus") or "scheduled"
         db = SessionLocal()
         db.execute(text("UPDATE games SET home_score = :hs, away_score = :as, status = :st WHERE id = :gid"),
                    {"hs": home_score, "as": away_score, "st": status, "gid": game_id})
         db.commit()
         db.close()
-        logger.info(f"score {game_id}: {home_score} - {away_score}")
+        logger.info(f"score {game_id}: {away_score} - {home_score} (away - home)")
     except Exception as e:
         logger.error(f"score update fail ({game_id}): {e}")
 
