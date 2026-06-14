@@ -20,7 +20,7 @@ import { LOCAL_SCHEDULE, LOCAL_SCORES } from "./scheduleData";
 import { EXHIBITION_SCORES } from "./exhibitionData";
 import { POSTSEASON_SCHEDULE, POSTSEASON_SCORES } from "./postseasonData";
 import type { CheerSection, PlayerCheer } from "./api";
-import { fetchWithCache, ttlForDate, safeParse, cacheKey } from "./cacheUtils";
+import { fetchWithCache, ttlForDate, safeParse, cacheKey, withConcurrencyLimit, scheduleRetry } from "./cacheUtils";
 import { normalizeDate } from "./dateUtils";
 
 const now = () => new Date();
@@ -103,6 +103,10 @@ export async function cachedDailyScores(date: string): Promise<{ games: ScoreEnt
     return { games: [] };
   }
 
+  const today = todayStr();
+  const ttl = ttlForDate(date);
+  const key = cacheKey("scores", date);
+
   // Before making an individual API call, check if the bulk aggregate is cached.
   // This prevents 100+ individual requests when cache is cold (e.g. calendar preload).
   const bulkCached = db.getCache(cacheKey("scores", "__all__"));
@@ -110,18 +114,49 @@ export async function cachedDailyScores(date: string): Promise<{ games: ScoreEnt
     const bulkData = safeParse(bulkCached.data) as Record<string, ScoreEntry[]> | null;
     if (bulkData?.[date]) {
       // Write to per-date cache for future fast lookups
-      db.setCache(cacheKey("scores", date), JSON.stringify({ games: bulkData[date] }));
+      db.setCache(key, JSON.stringify({ games: bulkData[date] }));
       return { games: bulkData[date] };
     }
   }
 
-  return fetchWithCache(cacheKey("scores", date), ttlForDate(date), async () => {
-    const { data, status } = await getWithStatus<{ date: string; games: ScoreEntry[] }>(`/daily-scores/${date}`);
+  // Check per-date cache
+  const perDateCached = db.getCache(key);
+  if (perDateCached && Date.now() - perDateCached.updatedAt < ttl) {
+    const parsed = safeParse(perDateCached.data) as { games: ScoreEntry[] } | null;
+    if (parsed?.games) return { games: parsed.games };
+  }
+
+  // For today's date: wait for fresh data when cache is stale (no stale-while-revalidate)
+  // For past/future dates: use fetchWithCache (stale data is acceptable)
+  if (date === today || !perDateCached) {
+    const raw = await getWithStatus<{ date: string; games: ScoreEntry[] }>(`/daily-scores/${date}`);
+    const { data, status } = raw;
     if (status === 404) {
-      // Server confirmed no games on this date — cache empty permanently
+      db.setCache(key, JSON.stringify({ games: [] }));
       return { games: [] };
     }
-    // Return data (null on 5xx/network error → fetchWithCache will skip cache & retry)
+    if (data) {
+      db.setCache(key, JSON.stringify(data));
+      return data;
+    }
+    // API failed → fall back to stale cache
+    if (perDateCached) {
+      const parsed = safeParse(perDateCached.data) as { games: ScoreEntry[] } | null;
+      if (parsed?.games) {
+        scheduleRetry(key, async () => {
+          const { data: retryData, status: retryStatus } = await getWithStatus<{ date: string; games: ScoreEntry[] }>(`/daily-scores/${date}`);
+          return retryStatus === 404 ? { games: [] } : retryData ?? null;
+        }, perDateCached.updatedAt);
+        return { games: parsed.games };
+      }
+    }
+    return null;
+  }
+
+  // Past/future dates: use fetchWithCache with stale fallback
+  return fetchWithCache(key, ttl, async () => {
+    const { data, status } = await getWithStatus<{ date: string; games: ScoreEntry[] }>(`/daily-scores/${date}`);
+    if (status === 404) return { games: [] };
     return data ?? null;
   });
 }
@@ -263,15 +298,37 @@ export async function cachedAllDailyScores(year?: number): Promise<Record<string
 
 // Today's games — date-qualified key to survive midnight
 export async function cachedTodayGames(): Promise<{ games: TodayGame[]; nextGames?: TodayGame[] } | null> {
-  return fetchWithCache(cacheKey("today", todayStr()), 300_000, () =>
-    apiTodayGames()
-  );
+  const key = cacheKey("today", todayStr());
+  const cached = db.getCache(key);
+
+  // Fresh cache → return immediately
+  if (cached && Date.now() - cached.updatedAt < 120_000) {
+    const parsed = safeParse(cached.data);
+    if (parsed) return parsed as { games: TodayGame[]; nextGames?: TodayGame[] };
+  }
+
+  // Cache expired or missing → fetch fresh (no stale-while-revalidate for today's live data)
+  const fresh = await withConcurrencyLimit(() => apiTodayGames());
+  if (fresh) {
+    db.setCache(key, JSON.stringify(fresh));
+    return fresh;
+  }
+
+  // API failed → fall back to stale cache + background retry
+  if (cached) {
+    const parsed = safeParse(cached.data);
+    if (parsed) {
+      scheduleRetry(key, () => apiTodayGames(), cached.updatedAt);
+      return parsed as { games: TodayGame[]; nextGames?: TodayGame[] };
+    }
+  }
+  return null;
 }
 
 // Game detail — TTL based on game date
 export async function cachedGameDetail(gameId: string): Promise<GameDetail | null> {
   const gameDate = gameId.length >= 8 ? normalizeDate(gameId.slice(0, 8)) : "";
-  const ttl = gameDate && gameDate < todayStr() ? Infinity : 300_000;
+  const ttl = gameDate && gameDate < todayStr() ? Infinity : 180_000;
   return fetchWithCache(cacheKey("game", gameId), ttl, () =>
     apiGameDetail(gameId)
   );
@@ -281,7 +338,7 @@ export async function cachedStandings(): Promise<{
   rows: StandingRow[];
   fetchedAt: string;
 } | null> {
-  return fetchWithCache("standings:current", 300_000, () =>
+  return fetchWithCache("standings:current", 180_000, () =>
     apiStandingsJson()
   );
 }

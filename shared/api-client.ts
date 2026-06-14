@@ -27,8 +27,8 @@ export class ApiClient {
 
   constructor(options: ApiClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, "");
-    this.timeout = options.timeout ?? 8000;
-    this.maxRetries = 2;
+    this.timeout = options.timeout ?? 5000;
+    this.maxRetries = 1;
     this.onError = options.onError;
   }
 

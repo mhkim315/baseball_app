@@ -36,7 +36,7 @@ export async function withConcurrencyLimit<T>(fn: () => Promise<T>): Promise<T> 
 const RETRY_DELAYS = [5_000, 15_000, 45_000];
 const retryCounts = new Map<string, number>();
 
-function scheduleRetry<T>(key: string, fetcher: () => Promise<T | null>, cachedAt?: number) {
+export function scheduleRetry<T>(key: string, fetcher: () => Promise<T | null>, cachedAt?: number) {
   const done = retryCounts.get(key) ?? 0;
   if (done >= RETRY_DELAYS.length) {
     retryCounts.delete(key);
@@ -82,7 +82,7 @@ const todayStr = () => new Date().toISOString().slice(0, 10);
 export function ttlForDate(dateStr: string): number {
   const today = todayStr();
   if (dateStr < today) return Infinity;
-  if (dateStr === today) return 300_000;
+  if (dateStr === today) return 120_000;
   return 3600_000;
 }
 

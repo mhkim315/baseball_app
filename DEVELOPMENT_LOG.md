@@ -1,6 +1,6 @@
 # Fullcount.kr Mobile App — 개발 작업 문서
 
-> 마지막 업데이트: 2026-06-12 (Phase 18-4)
+> 마지막 업데이트: 2026-06-12 (Phase 18-6)
 > 
 > 이 문서는 이전 대화 컨텍스트가 만료되어도 작업을 이어갈 수 있도록 상세히 기록합니다.
 
@@ -2543,3 +2543,54 @@ if home_score is None:
 - collector는 3~5분 랜덤 간격으로 정상 동작 중
 - `collector.log` 파일이 멈춘 것은 서버 재시작 후 journald로 로그 출력 방식이 변경된 것 — collector 자체는 문제 없음
 - APScheduler 방식이므로 별도 cron 설정 불필요 (API 서버가 떠 있으면 자동 실행)
+
+---
+
+## Phase 18-6: Standings 컬럼 재배치 + last10 계산 버그 수정 + v1.1.7 빌드 (2026-06-12)
+
+### 순위 화면 개선
+
+**컬럼 순서 변경** (웹 + 모바일):
+- 기존: `# / 팀 / 승 / 무 / 패 / 승률 / 차 / 연속 / 경기수 / 최근10경기`
+- 변경: `# / 팀 / 경기수 / 승 / 무 / 패 / 승률 / 차 / 연속 / 최근10경기`
+- 컬럼 간격 확대 및 폰트 크기 통일 (최근10경기 11→13px, 연속 11→12px)
+
+**신규 필드 표시**:
+- `gamesPlayed`(경기수), `last10`(최근10경기) 필드를 Standings 테이블에 추가
+- StandingRow 타입 optional 확장, API fetchStandingsJson 정규화 추가
+- `formatLast10()` 유틸: `W-L-D` → "7승1무2패" 형식으로 변환
+
+### last10 계산 버그 수정
+
+**버그**: `fetch_kbo_standings.py`의 `compute_last10()`이 해당 팀 경기만 필터링하지 않고 **모든 경기**를 집계하여 W/L 기록이 크게 왜곡됨.
+- ex) 두산(당시 9위)이 참여하지 않은 경기에서 상대팀 승리 = 두산 관점에서 "패"로 기록
+- 결과: 두산 4-6-0 (실제: 6-3-1)
+
+**수정**: `if game.get("away") != team_name and game.get("home") != team_name: continue` 조건 추가
+
+**서버 배포**: 스크립트 SCP 전송 후 실행 → kbo_standings.json 데이터 재생성 완료
+
+### v1.1.7 빌드
+
+- version: 1.1.6 → 1.1.7
+- Android versionCode: 25 → 26
+- iOS buildNumber: 1 → 2 (앱스토어 심사 대기)
+- iOS 먼저 빌드 완료 → Android 1개만 빌드
+
+### 변경 파일
+
+| 파일 | 변경 |
+|------|------|
+| `client/src/pages/Standings.tsx` | 컬럼 재배치, 폰트/간격 통일, formatLast10 추가, overflow-x-auto |
+| `mobile/app/(tabs)/rank.tsx` | 컬럼 재배치, horizontal ScrollView, 폰트/간격 통일, formatLast10 추가 |
+| `scripts/fetch_kbo_standings.py` | compute_last10 팀 필터 추가, last10/gamesPlayed 필드 |
+| `shared/types.ts` | StandingRow에 gamesPlayed?, last10? 추가 |
+| `shared/api.ts` | fetchStandingsJson 정규화에 gamesPlayed/last10 추가 |
+| `mobile/app.json` | version 1.1.7, versionCode 26, buildNumber 2 |
+
+### 커밋
+
+| 해시 | 설명 |
+|------|------|
+| `9578930` | standings column reorder, font, last10 fix |
+| `ee1fcc2` | bump version 1.1.6 → 1.1.7 |

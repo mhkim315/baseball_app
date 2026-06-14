@@ -492,6 +492,16 @@ export default function HomeScreen() {
     return () => sub.remove();
   }, [load]);
 
+  // Auto-refresh: re-check data periodically while screen is focused,
+  // so stale cache is detected and refreshed without user navigation.
+  // useFocusEffect ensures the interval is paused when user switches tabs.
+  useFocusEffect(useCallback(() => {
+    const interval = setInterval(() => {
+      load();
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [load]));
+
   useEffect(() => { showCoachMarkRef.current = showCoachMark; }, [showCoachMark]);
 
   const handleCoachDismiss = useCallback(() => {
