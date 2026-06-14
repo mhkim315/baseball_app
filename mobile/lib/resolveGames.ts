@@ -1,4 +1,5 @@
 import type { ScheduleGame, ScoreEntry, TodayGame } from "@/lib/api";
+import type { RelayState } from "@shared/types";
 import { TEAM_NAME_TO_ID, buildGameId } from "@shared/constants";
 
 export interface ResolvedGame {
@@ -30,6 +31,7 @@ export interface ResolvedGame {
 
   liveInning?: number;
   isTop?: boolean;
+  relay?: RelayState | null;
 
   /** Raw references for consumers that need deep access (e.g. game/[id]) */
   _raw: {

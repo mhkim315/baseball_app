@@ -328,10 +328,23 @@ export async function cachedTodayGames(): Promise<{ games: TodayGame[]; nextGame
 // Game detail — TTL based on game date
 export async function cachedGameDetail(gameId: string): Promise<GameDetail | null> {
   const gameDate = gameId.length >= 8 ? normalizeDate(gameId.slice(0, 8)) : "";
-  const ttl = gameDate && gameDate < todayStr() ? Infinity : 180_000;
+  const today = todayStr();
+  let ttl: number;
+  if (gameDate && gameDate < today) {
+    ttl = Infinity;       // past — never stale
+  } else if (gameDate === today) {
+    ttl = 30_000;         // today — 30s
+  } else {
+    ttl = 180_000;        // future — 3min
+  }
   return fetchWithCache(cacheKey("game", gameId), ttl, () =>
     apiGameDetail(gameId)
   );
+}
+
+/** Bypass cache and fetch fresh GameDetail from server (used for live relay polling). */
+export async function fetchGameDetailFresh(gameId: string): Promise<GameDetail | null> {
+  return withConcurrencyLimit(() => apiGameDetail(gameId));
 }
 
 export async function cachedStandings(): Promise<{

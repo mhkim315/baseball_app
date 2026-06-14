@@ -4,6 +4,7 @@ import { TEAM_COLORS } from "@shared/teamColors";
 import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
+import type { RelayState } from "@shared/types";
 
 interface GameCardProps {
   homeTeam: string;
@@ -24,6 +25,7 @@ interface GameCardProps {
   onClick?: () => void;
   liveInning?: number;
   isTop?: boolean;
+  relay?: RelayState | null;
 }
 
 export default function GameCard({
@@ -44,6 +46,7 @@ export default function GameCard({
   compact = false,
   highlighted,
   dense,
+  relay,
   onClick,
 }: GameCardProps) {
   const { theme, isDark } = useTheme();
@@ -259,6 +262,42 @@ export default function GameCard({
           ) : null}
         </View>
       </View>
+
+      {/* Mini BSO indicator for live games */}
+      {status === "live" && relay && (
+        <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6, marginTop: 8 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+            <Text style={{ fontSize: 8, fontWeight: "700", color: "#999", marginRight: 1 }}>S</Text>
+            {[0, 1].map((i) => (
+              <View key={i} style={{
+                width: 6, height: 6, borderRadius: 3,
+                backgroundColor: i < parseInt(relay.strike) ? "#2196f3" : "transparent",
+                borderWidth: 1, borderColor: i < parseInt(relay.strike) ? "#2196f3" : "#ccc",
+              }} />
+            ))}
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+            <Text style={{ fontSize: 8, fontWeight: "700", color: "#999", marginRight: 1 }}>B</Text>
+            {[0, 1, 2].map((i) => (
+              <View key={i} style={{
+                width: 6, height: 6, borderRadius: 3,
+                backgroundColor: i < parseInt(relay.ball) ? "#4caf50" : "transparent",
+                borderWidth: 1, borderColor: i < parseInt(relay.ball) ? "#4caf50" : "#ccc",
+              }} />
+            ))}
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+            <Text style={{ fontSize: 8, fontWeight: "700", color: "#999", marginRight: 1 }}>O</Text>
+            {[0, 1, 2].map((i) => (
+              <View key={i} style={{
+                width: 6, height: 6, borderRadius: 3,
+                backgroundColor: i < parseInt(relay.out) ? "#f44336" : "transparent",
+                borderWidth: 1, borderColor: i < parseInt(relay.out) ? "#f44336" : "#ccc",
+              }} />
+            ))}
+          </View>
+        </View>
+      )}
     </Pressable>
   );
 }

@@ -32,3 +32,15 @@ def game_preview(game_id: str) -> dict[str, Any]:
 def game_lineup(game_id: str) -> dict[str, Any]:
     data = get_json(f"/schedule/games/{urllib.parse.quote(game_id, safe='')}/lineup")
     return dict(data.get("result") or {}) if data.get("success") else {}
+
+
+def game_relay(naver_game_id: str) -> dict[str, Any] | None:
+    """Fetch live relay data (BSO, baserunners, pitcher/batter) from Naver.
+    Returns the full result dict containing currentGameState and entry arrays."""
+    try:
+        data = get_json(f"/schedule/games/{urllib.parse.quote(naver_game_id, safe='')}/relay")
+        if data.get("success"):
+            return dict(data.get("result") or {})
+    except Exception:
+        pass
+    return None

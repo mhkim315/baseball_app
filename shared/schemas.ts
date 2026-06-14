@@ -86,6 +86,24 @@ export const PitchingResultSchema = z.object({
   ip: z.string().nullish(),
 }).passthrough();
 
+/** RelayPlayerSchema — 현재 투수/타자 */
+export const RelayPlayerSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+}).passthrough();
+
+/** RelayStateSchema — BSO, 주자, 투수/타자 실시간 데이터 */
+export const RelayStateSchema = z.object({
+  strike: z.string(),
+  ball: z.string(),
+  out: z.string(),
+  base1: z.string(),
+  base2: z.string(),
+  base3: z.string(),
+  pitcher: RelayPlayerSchema.nullable().nullish(),
+  batter: RelayPlayerSchema.nullable().nullish(),
+}).passthrough();
+
 /** 경기 기록 하이라이트 */
 export const EtcRecordSchema = z.object({
   how: z.string(),
@@ -173,6 +191,7 @@ export const GameDetailSchema = z.object({
   }).passthrough().nullish(),
   pitchingResult: z.array(PitchingResultSchema).nullish(),
   etcRecords: z.array(EtcRecordSchema).nullish(),
+  relay: RelayStateSchema.nullable().nullish(),
 }).passthrough();
 
 // ── Inferred types (for future Phase 2 migration) ──────────

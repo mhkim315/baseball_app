@@ -1,3 +1,4 @@
+from __future__ import annotations
 import re
 import json
 import os
@@ -89,6 +90,9 @@ def serialize_row(row):
 
 _JSON_CACHE = {}
 _JSON_CACHE_TTL = 300  # seconds (matches collector cycle)
+
+_RELAY_CACHE: dict[str, tuple[float, dict | None]] = {}
+_RELAY_CACHE_TTL = 5  # seconds — prevent Naver IP block
 
 def load_json(filename):
     now = time.time()
@@ -674,6 +678,7 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
     etc_records = []
     lineup_confirmed = False
     game_time_from_records = None
+    naver_game_id = None
 
     for team_id, side in [(away_team, "away"), (home_team, "home")]:
         if dh_game_number >= 1:
@@ -686,6 +691,8 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
             try:
                 with open(record_path, "r", encoding="utf-8") as f:
                     record = json.load(f)
+                if not naver_game_id:
+                    naver_game_id = record.get("meta", {}).get("naverGameId")
                 lineup[side] = record.get("homeLineup" if side == "home" else "awayLineup", [])
                 if not starters[side]:
                     starter = record.get("homeStarter" if side == "home" else "awayStarter")
@@ -835,6 +842,52 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
                     if "score" not in result and s.get("awayScore") is not None:
                         result["score"] = {"away": s["awayScore"], "home": s["homeScore"]}
                 break
+
+    # ── Relay injection (Track 2: live BSO/baserunners/pitcher-batter) ──
+    if result.get("gameInfo", {}).get("status") == "live":
+        nid = naver_game_id
+        if not nid:
+            nid = f"{date_str_raw}{away_code}{home_code}{game_seq}{date_str_raw[:4]}"
+
+        now = time.time()
+        if nid in _RELAY_CACHE:
+            cached_time, cached_data = _RELAY_CACHE[nid]
+            if now - cached_time < _RELAY_CACHE_TTL:
+                if cached_data is not None:
+                    result["relay"] = cached_data
+                return result
+
+        try:
+            from scripts.naver_api import game_relay
+            relay_data = game_relay(nid)
+            if relay_data:
+                home_entry = relay_data.get("homeEntry", []) or []
+                away_entry = relay_data.get("awayEntry", []) or []
+                pcode_to_name = {}
+                for e in home_entry + away_entry:
+                    if isinstance(e, dict) and "pcode" in e and "name" in e:
+                        pcode_to_name[e["pcode"]] = e["name"]
+
+                cs = relay_data.get("currentGameState", {}) or {}
+                pitcher_id = str(cs.get("pitcher") or "0")
+                batter_id = str(cs.get("batter") or "0")
+
+                relay_result = {
+                    "strike": str(cs.get("strike") or "0"),
+                    "ball": str(cs.get("ball") or "0"),
+                    "out": str(cs.get("out") or "0"),
+                    "base1": str(cs.get("base1") or "0"),
+                    "base2": str(cs.get("base2") or "0"),
+                    "base3": str(cs.get("base3") or "0"),
+                    "pitcher": {"id": pitcher_id, "name": pcode_to_name.get(pitcher_id, "")} if pitcher_id != "0" else None,
+                    "batter": {"id": batter_id, "name": pcode_to_name.get(batter_id, "")} if batter_id != "0" else None,
+                }
+                _RELAY_CACHE[nid] = (now, relay_result)
+                result["relay"] = relay_result
+            else:
+                _RELAY_CACHE[nid] = (now, None)
+        except Exception as e:
+            logger.warning("Failed to fetch relay for %s: %s", nid, e)
 
     return result
 

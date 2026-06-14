@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from "react-native";
-import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
+import { useRouter, useLocalSearchParams, useNavigation, useFocusEffect } from "expo-router";
 import { TEAM_COLORS } from "@shared/teamColors";
 import { parseGameTeamIds, formatDateForApi } from "@shared/constants";
 import { getInningInfo } from "@shared/gameStatus";
@@ -8,7 +8,8 @@ import {
   type GameDetail, type ScoreEntry, type LineupPlayer, type StandingRow,
 } from "@/lib/api";
 import { TeamBadge } from "@/components/TeamBadge";
-import { cachedDailyScores, cachedAllDailyScores, cachedScheduleByMonth, cachedGameDetail, cachedStandings } from "@/lib/gameCache";
+import RelayLive from "@/components/RelayLive";
+import { cachedDailyScores, cachedAllDailyScores, cachedScheduleByMonth, cachedGameDetail, cachedStandings, fetchGameDetailFresh } from "@/lib/gameCache";
 import { resolveGames } from "@/lib/resolveGames";
 import SimpleAlert from "@/components/SimpleAlert";
 import DiaryEntryModal, { type GameOption } from "@/components/DiaryEntryModal";
@@ -411,6 +412,16 @@ export default function GameDetailScreen() {
     return unsubscribe;
   }, [navigation]);
 
+  // Live relay polling: 15s interval while game is live, paused when screen not focused
+  useFocusEffect(useCallback(() => {
+    if (!isLive || !gid) return;
+    const interval = setInterval(async () => {
+      const fresh = await fetchGameDetailFresh(gid);
+      if (fresh) setDetail(fresh);
+    }, 12_000);
+    return () => clearInterval(interval);
+  }, [isLive, gid]));
+
   const handleOpenDiary = useCallback(() => {
     if (!detail) return;
     setShowStickerCoach(false);
@@ -795,6 +806,9 @@ export default function GameDetailScreen() {
             </View>
           </View>
         )}
+
+        {/* Live relay (BSO, baserunners, pitcher/batter) */}
+        <RelayLive relay={detail.relay} isLive={isLive} />
 
         {/* Preview card */}
         {!isFinished && previewData && (

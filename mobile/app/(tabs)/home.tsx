@@ -337,6 +337,7 @@ export default function HomeScreen() {
                 ...games[idx],
                 liveInning,
                 isTop,
+                relay: detail.relay,
                 homePitcher: games[idx].homePitcher || (detail.starters?.home?.name || undefined),
                 awayPitcher: games[idx].awayPitcher || (detail.starters?.away?.name || undefined),
               };
@@ -713,6 +714,7 @@ export default function HomeScreen() {
         cancelled={item.status === "cancelled"}
         liveInning={item.liveInning}
         isTop={item.isTop}
+        relay={item.relay}
         highlighted={isMyTeamGame ? teamPrimaryColor(myTeam, isDark) : undefined}
         dense={!isMyTeamGame}
         onClick={() => {

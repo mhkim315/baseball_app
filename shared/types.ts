@@ -135,6 +135,22 @@ export interface LineupPlayer {
   name: string;
 }
 
+export interface RelayPlayer {
+  id: string;
+  name: string;
+}
+
+export interface RelayState {
+  strike: string;
+  ball: string;
+  out: string;
+  base1: string;
+  base2: string;
+  base3: string;
+  pitcher: RelayPlayer | null;
+  batter: RelayPlayer | null;
+}
+
 export interface GameDetail {
   gameId: string;
   date: string;
@@ -151,6 +167,7 @@ export interface GameDetail {
   };
   pitchingResult?: { name: string; wls: string; era?: string; ip?: string }[];
   etcRecords?: { how: string; result: string; desc?: string }[];
+  relay?: RelayState | null;
 }
 
 // Domain-specific types
