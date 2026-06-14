@@ -6,6 +6,8 @@ import { useTheme } from "@/lib/ThemeContext";
 interface RelayLiveProps {
   relay: RelayState | null | undefined;
   isLive: boolean;
+  inline?: boolean;
+  hidePlayers?: boolean;
 }
 
 function Dot({ filled, color }: { filled: boolean; color: string }) {
@@ -23,7 +25,22 @@ function Dot({ filled, color }: { filled: boolean; color: string }) {
   );
 }
 
-export default function RelayLive({ relay, isLive }: RelayLiveProps) {
+function BaseDiamond({ filled }: { filled: boolean }) {
+  return (
+    <View
+      style={{
+        width: 8,
+        height: 8,
+        backgroundColor: filled ? "#ff9800" : "transparent",
+        borderWidth: 1.5,
+        borderColor: filled ? "#ff9800" : "#999",
+        transform: [{ rotate: "45deg" }],
+      }}
+    />
+  );
+}
+
+export default function RelayLive({ relay, isLive, inline, hidePlayers }: RelayLiveProps) {
   const { theme } = useTheme();
 
   const styles = useMemo(() => StyleSheet.create({
@@ -39,10 +56,15 @@ export default function RelayLive({ relay, isLive }: RelayLiveProps) {
       marginTop: 12,
       gap: 14,
     },
-    bsoGroup: {
+    containerInline: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
+      justifyContent: "center",
+      gap: 10,
+    },
+    bsoGroup: {
+      flexDirection: "column",
+      gap: 1,
     },
     bsoCol: {
       flexDirection: "row",
@@ -56,23 +78,13 @@ export default function RelayLive({ relay, isLive }: RelayLiveProps) {
       marginRight: 1,
     },
     diamondArea: {
-      width: 32,
-      height: 32,
+      width: 18,
+      height: 18,
       justifyContent: "center",
       alignItems: "center",
     },
-    diamondRow: {
-      flexDirection: "row",
-      justifyContent: "center",
-      gap: 8,
-    },
-    baseLabel: {
-      fontSize: 8,
-      fontWeight: "600",
-      color: theme.mutedForeground,
-    },
     playerSection: {
-      flex: 1,
+      flexShrink: 1,
       gap: 3,
     },
     playerRow: {
@@ -103,57 +115,53 @@ export default function RelayLive({ relay, isLive }: RelayLiveProps) {
   const base3 = relay.base3 !== "0";
 
   return (
-    <View style={styles.container}>
-      {/* B-S-O */}
+    <View style={inline ? styles.containerInline : styles.container}>
+      {/* B-S-O (세로) */}
       <View style={styles.bsoGroup}>
-        <View style={styles.bsoCol}>
-          <Text style={styles.bsoLabel}>S</Text>
-          {[0, 1].map((i) => <Dot key={i} filled={i < s} color="#2196f3" />)}
-        </View>
         <View style={styles.bsoCol}>
           <Text style={styles.bsoLabel}>B</Text>
           {[0, 1, 2].map((i) => <Dot key={i} filled={i < b} color="#4caf50" />)}
         </View>
         <View style={styles.bsoCol}>
+          <Text style={styles.bsoLabel}>S</Text>
+          {[0, 1].map((i) => <Dot key={i} filled={i < s} color="#2196f3" />)}
+        </View>
+        <View style={styles.bsoCol}>
           <Text style={styles.bsoLabel}>O</Text>
-          {[0, 1, 2].map((i) => <Dot key={i} filled={i < o} color="#f44336" />)}
+          {[0, 1].map((i) => <Dot key={i} filled={i < o} color="#f44336" />)}
         </View>
       </View>
 
-      {/* Base diamond — 3 dots in triangle: 2B top, 1B/3B bottom */}
+      {/* Bases — 3 diamonds in triangle formation */}
       <View style={styles.diamondArea}>
-        {/* 2B */}
-        <View style={{ marginBottom: 2 }}>
-          <Dot filled={base2} color="#ff9800" />
+        <View style={{ position: "absolute", top: 0, left: 5 }}>
+          <BaseDiamond filled={base2} />
         </View>
-        {/* 1B + 3B */}
-        <View style={styles.diamondRow}>
-          <View style={{ alignItems: "center" }}>
-            <Dot filled={base3} color="#ff9800" />
-            <Text style={styles.baseLabel}>3</Text>
-          </View>
-          <View style={{ alignItems: "center" }}>
-            <Dot filled={base1} color="#ff9800" />
-            <Text style={styles.baseLabel}>1</Text>
-          </View>
+        <View style={{ position: "absolute", top: 10, left: 10 }}>
+          <BaseDiamond filled={base1} />
+        </View>
+        <View style={{ position: "absolute", top: 10, left: 0 }}>
+          <BaseDiamond filled={base3} />
         </View>
       </View>
 
       {/* Pitcher / Batter */}
-      <View style={styles.playerSection}>
-        <View style={styles.playerRow}>
-          <Text style={styles.playerRole}>P</Text>
-          <Text style={styles.playerName} numberOfLines={1}>
-            {relay.pitcher?.name || "-"}
-          </Text>
+      {!hidePlayers && (
+        <View style={styles.playerSection}>
+          <View style={styles.playerRow}>
+            <Text style={styles.playerRole}>P</Text>
+            <Text style={styles.playerName} numberOfLines={1}>
+              {relay.pitcher?.name || "-"}
+            </Text>
+          </View>
+          <View style={styles.playerRow}>
+            <Text style={styles.playerRole}>B</Text>
+            <Text style={styles.playerName} numberOfLines={1}>
+              {relay.batter?.name || "-"}
+            </Text>
+          </View>
         </View>
-        <View style={styles.playerRow}>
-          <Text style={styles.playerRole}>B</Text>
-          <Text style={styles.playerName} numberOfLines={1}>
-            {relay.batter?.name || "-"}
-          </Text>
-        </View>
-      </View>
+      )}
     </View>
   );
 }

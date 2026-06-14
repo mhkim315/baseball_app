@@ -8,7 +8,6 @@ import {
   type GameDetail, type ScoreEntry, type LineupPlayer, type StandingRow,
 } from "@/lib/api";
 import { TeamBadge } from "@/components/TeamBadge";
-import RelayLive from "@/components/RelayLive";
 import { cachedDailyScores, cachedAllDailyScores, cachedScheduleByMonth, cachedGameDetail, cachedStandings, fetchGameDetailFresh } from "@/lib/gameCache";
 import { resolveGames } from "@/lib/resolveGames";
 import SimpleAlert from "@/components/SimpleAlert";
@@ -677,11 +676,15 @@ export default function GameDetailScreen() {
     hasPitchingOutcome ||
     (isGameActive && !isToday && gameHasStarted)
   );
-  const isLive = !isCancelled && !isFinished && (
+  let isLive = !isCancelled && !isFinished && (
     detail.gameInfo?.status === "live" && !isFuture ||
     (isToday && gameHasStarted) ||
     (isToday && hasInningData)
   );
+  // TEMP: force live + mock relay for testing (14일 경기)
+  const mockRelay = __DEV__ && isFinished ? { strike: "1", ball: "2", out: "1", base1: "1", base2: "1", base3: "0", pitcher: { id: "p1", name: "헨리" }, batter: { id: "b1", name: "김하성" } } : null;
+  const relayForRender = detail?.relay || mockRelay;
+  if (__DEV__ && isFinished && !detail?.relay) isLive = true;
   const isBeforeGame = !isFinished && !isLive && !isCancelled;
   const hasLineup = !isBeyondTomorrow && homeLineup.length > 0 && awayLineup.length > 0;
   const showLineupStatus = isBeforeGame;
@@ -723,17 +726,75 @@ export default function GameDetailScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Game header card */}
         <View style={styles.card}>
+          {/* Top row: time (좌) / status badge (중) / venue (우) */}
+          {(detail.gameInfo?.time || scheduleTimeRef.current) && (
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <Text style={[styles.gameTime, { flex: 1 }]}>{detail.gameInfo?.time || scheduleTimeRef.current || ""}</Text>
+              <View style={{ flex: 1, alignItems: "center" }}>
+                <View style={[styles.statusBadge, isLive && styles.statusLive]}>
+                  <Text style={[styles.statusText, isLive && styles.statusLiveText]}>
+                    {isLive ? liveLabel : statusLabel}
+                  </Text>
+                </View>
+              </View>
+              <Text style={[styles.gameTime, { flex: 1, textAlign: "right" }]}>{resolveVenue(detail.homeTeam, detail.gameInfo?.venue)}</Text>
+            </View>
+          )}
           <View style={styles.gameHeaderRow}>
             {/* Away team */}
             <View style={styles.teamColumn}>
               <TeamBadge teamId={detail.awayTeam} size="lg" emotion={awayEmotion} />
               <Text style={[styles.teamName, { color: teamPrimaryColor(detail.awayTeam, isDark) }]}>{away?.name}</Text>
-              <Text style={styles.pitcherName}>{awayPitcherName || "-"}</Text>
+              {isFinished && scoreFallback ? (
+                <Text style={styles.pitcherName}>
+                  {isDraw ? `무: ${scoreFallback.winPitcher ?? "-"}` : awayWin ? `승: ${scoreFallback.winPitcher ?? "-"}` : `패: ${scoreFallback.losePitcher ?? "-"}`}
+                </Text>
+              ) : isLive && relayForRender ? (
+                <Text style={styles.pitcherName}>
+                  {inningInfo?.isTop
+                    ? `B: ${relayForRender.batter?.name || "-"}`
+                    : `P: ${relayForRender.pitcher?.name || "-"}`}
+                </Text>
+              ) : (
+                <Text style={styles.pitcherName}>{awayPitcherName || "-"}</Text>
+              )}
             </View>
 
             {/* Score / VS */}
             <View style={styles.scoreColumn}>
-              <Text style={styles.gameTime}>{detail.gameInfo?.time || scheduleTimeRef.current || "18:30"}</Text>
+              {isLive && relayForRender && (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 4 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+                    <Text style={{ fontSize: 9, fontWeight: "700", color: "#999", marginRight: 1 }}>B</Text>
+                    {[0, 1, 2].map(i => (
+                      <View key={i} style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: i < parseInt(relayForRender.ball) ? "#4caf50" : "transparent", borderWidth: 1, borderColor: i < parseInt(relayForRender.ball) ? "#4caf50" : "#ccc" }} />
+                    ))}
+                  </View>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+                    <Text style={{ fontSize: 9, fontWeight: "700", color: "#999", marginRight: 1 }}>S</Text>
+                    {[0, 1].map(i => (
+                      <View key={i} style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: i < parseInt(relayForRender.strike) ? "#f7d44a" : "transparent", borderWidth: 1, borderColor: i < parseInt(relayForRender.strike) ? "#f7d44a" : "#ccc" }} />
+                    ))}
+                  </View>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+                    <Text style={{ fontSize: 9, fontWeight: "700", color: "#999", marginRight: 1 }}>O</Text>
+                    {[0, 1].map(i => (
+                      <View key={i} style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: i < parseInt(relayForRender.out) ? "#f44336" : "transparent", borderWidth: 1, borderColor: i < parseInt(relayForRender.out) ? "#f44336" : "#ccc" }} />
+                    ))}
+                  </View>
+                  <View style={{ width: 22, height: 18, justifyContent: "center", alignItems: "center" }}>
+                    <View style={{ position: "absolute", top: 0, left: 7 }}>
+                      <View style={{ width: 7, height: 7, backgroundColor: relayForRender.base2 === "1" ? "#ff9800" : "transparent", borderWidth: 1, borderColor: relayForRender.base2 === "1" ? "#ff9800" : "#ccc", transform: [{ rotate: "45deg" }] }} />
+                    </View>
+                    <View style={{ position: "absolute", top: 10, left: 14 }}>
+                      <View style={{ width: 7, height: 7, backgroundColor: relayForRender.base1 === "1" ? "#ff9800" : "transparent", borderWidth: 1, borderColor: relayForRender.base1 === "1" ? "#ff9800" : "#ccc", transform: [{ rotate: "45deg" }] }} />
+                    </View>
+                    <View style={{ position: "absolute", top: 10, left: 0 }}>
+                      <View style={{ width: 7, height: 7, backgroundColor: relayForRender.base3 === "1" ? "#ff9800" : "transparent", borderWidth: 1, borderColor: relayForRender.base3 === "1" ? "#ff9800" : "#ccc", transform: [{ rotate: "45deg" }] }} />
+                    </View>
+                  </View>
+                </View>
+              )}
               {isCancelled ? (
                 <Text style={styles.cancelledText}>취소</Text>
               ) : gameScore ? (
@@ -749,23 +810,27 @@ export default function GameDetailScreen() {
               ) : (
                 <Text style={styles.vsText}>VS</Text>
               )}
-              <View style={[styles.statusBadge, isLive && styles.statusLive]}>
-                <Text style={[styles.statusText, isLive && styles.statusLiveText]}>
-                  {isLive ? liveLabel : statusLabel}
-                </Text>
-              </View>
             </View>
 
             {/* Home team */}
             <View style={styles.teamColumn}>
               <TeamBadge teamId={detail.homeTeam} size="lg" emotion={homeEmotion} />
               <Text style={[styles.teamName, { color: teamPrimaryColor(detail.homeTeam, isDark) }]}>{home?.name}</Text>
-              <Text style={styles.pitcherName}>{homePitcherName || "-"}</Text>
+              {isFinished && scoreFallback ? (
+                <Text style={styles.pitcherName}>
+                  {isDraw ? `무: ${scoreFallback.winPitcher ?? "-"}` : homeWin ? `승: ${scoreFallback.winPitcher ?? "-"}` : `패: ${scoreFallback.losePitcher ?? "-"}`}
+                </Text>
+              ) : isLive && relayForRender ? (
+                <Text style={styles.pitcherName}>
+                  {inningInfo?.isTop
+                    ? `P: ${relayForRender.pitcher?.name || "-"}`
+                    : `B: ${relayForRender.batter?.name || "-"}`}
+                </Text>
+              ) : (
+                <Text style={styles.pitcherName}>{homePitcherName || "-"}</Text>
+              )}
             </View>
           </View>
-          {detail.gameInfo?.venue && (
-            <Text style={styles.venue}>{detail.gameInfo.venue}</Text>
-          )}
         </View>
 
         {/* Scoreboard */}
@@ -806,9 +871,6 @@ export default function GameDetailScreen() {
             </View>
           </View>
         )}
-
-        {/* Live relay (BSO, baserunners, pitcher/batter) */}
-        <RelayLive relay={detail.relay} isLive={isLive} />
 
         {/* Preview card */}
         {!isFinished && previewData && (
