@@ -79,6 +79,9 @@ app.add_middleware(RateLimitMiddleware, max_requests=100, window_seconds=60)
 if ENABLE_PUSH:
     app.include_router(push_router)
     logger.info("Push notification router mounted")
+else:
+    app.include_router(push_router)
+    logger.info("Push notification router mounted (disabled mode)")
 
 
 # --- Helpers ---
