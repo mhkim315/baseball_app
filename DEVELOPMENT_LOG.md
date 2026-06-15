@@ -1,6 +1,6 @@
 # Fullcount.kr Mobile App — 개발 작업 문서
 
-> 마지막 업데이트: 2026-06-15 (Phase 19.7)
+> 마지막 업데이트: 2026-06-15 (Phase 20)
 > 
 > 이 문서는 이전 대화 컨텍스트가 만료되어도 작업을 이어갈 수 있도록 상세히 기록합니다.
 
@@ -2779,3 +2779,88 @@ if home_score is None:
 | 항목 | 내용 |
 |------|------|
 | 브랜치 | `feat/gamecard-detail-relay-ui` (Phase 1 개발 진행 예정) |
+
+---
+
+## Phase 20: 서버 푸시 알림 인프라 + 날씨 정보 표시 (2026-06-15)
+
+### 개요
+
+GameCard/경기상세 UI 통일 작업 중 확장된 작업들. 날씨 정보 표시, 서버 측 푸시 알림 전송 인프라(FCM/APNs) 구축 완료.
+
+### Phase 20.1: GameCard + 경기상세 UI 통일
+
+- GameCard와 경기상세 상단 영역을 동일한 컴포넌트로 통일
+- BSO/주루/PB 3-state 디스플레이를 두 화면에서 일관되게 표시
+- 상태 배지(경기 전/경기 중/경기 종료) 위치를 헤더에서 점수 바로 위로 이동
+- large prop에 따른 분기 줄이고 stylesheet 통일
+
+### Phase 20.2: 구장 날씨 정보 표시
+
+- **서버**: `/widget-data` 엔드포인트에 ThreadPoolExecutor로 각 구장 날씨 동시 수집 → `todayWeather` 필드에 포함
+- **클라이언트**: GameCard 헤더 우측에 `26°C 맑음` 형식으로 표시
+- 당일 경기만 날씨 표시, 과거/미래는 우측 필드 비움
+- `VENUE_TO_FULL_NAME` 매핑으로 단축 구장명(잠실→잠실야구장) 변환
+
+### Phase 20.3: Mock 데이터 제거
+
+- `__DEV__` 기반 mock relay/mock weather 데이터 완전 제거
+- 실제 Naver API 연동으로만 동작하도록 정리
+
+### Phase 20.4: 서버 푸시 알림 인프라 (Phase 1)
+
+**신규 파일 (6개)**:
+
+| 파일 | 역할 |
+|------|------|
+| `server/data_api/push_init.sql` | `device_tokens` 테이블 DDL (`target_team_id` + 인덱스) |
+| `server/data_api/init_push_db.py` | One-shot DB 마이그레이션 |
+| `server/data_api/push_router.py` | `POST /push/register`, `/unregister`, `GET /status` |
+| `server/scripts/fcm_sender.py` | Firebase Admin SDK, data-only 메시지 |
+| `server/scripts/apns_sender.py` | httpx HTTP/2 + ES256 JWT, Live Activities |
+| `server/scripts/push_worker.py` | 상태 diff → 구독 타겟팅 쿼리 → FCM/APNs 병렬 dispatch |
+
+**수정 파일 (2개)**:
+
+| 파일 | 변경 |
+|------|------|
+| `server/data_api/main.py` | `ENABLE_PUSH` flag, router 마운트, `_get_widget_data_cached()` 추출, push_worker 5~10초 스케줄러 |
+| `server/fullcount_backend/requirements.txt` | `httpx[http2]`, `firebase-admin` 추가 |
+
+**핵심 설계**:
+- push_worker는 `/widget-data` 메모리 캐시 읽기만 하여 5~10초마다 돌아도 DB/Naver 부하 없음
+- `target_team_id`로 특정 팀 구독자에게만 발송 (전체 발송 방지)
+- FCM Data Message 특성상 모든 값 `str()` 캐스팅
+- `ENABLE_PUSH_NOTIFICATIONS` env var로 전체 기능 ON/OFF (기본 OFF)
+- `DRY_RUN=true` 기본값으로 실제 발송 없이 로그만 출력
+
+**배포 완료 항목**:
+- Firebase 서비스 계정 키 → 서버 `/home/opc/fullcount_backend/fcm-service-account.json`
+- Apple .p8 키 → 서버 `/home/opc/fullcount_backend/apns-key.p8`
+- systemd drop-in: 환경변수 설정 (`push-override.conf`)
+- `pip install firebase-admin`, `httpx[http2]`
+- `init_push_db.py` 실행 → `device_tokens` 테이블 생성
+- 서비스 재시작 및 정상 동작 확인
+
+**남은 전제조건** (Phase 2/3에서 필요):
+- Android 앱에서 FCM 토큰 등록 → `/push/register` 호출
+- iOS WidgetExtension + ActivityAttributes 구현
+
+### 커밋 로그
+
+```
+c31d8dc feat: BSO/주루/PB 3-state 디스플레이 — GameCard + 경기상세 통일
+a09bb1e feat: 실시간 BSO/주자/투타 표시 — Naver relay API 2-Track 아키텍처
+16a1093 feat: GameCard 단일화 + 오래된 사진 흰색 버그 수정
+f581b62 feat: 구장 날씨 scraping + RateLimitMiddleware TTLCache 개선
+21b1485 feat: widget-data V3 SSOT + 사진 경로 일괄 복구
+447590a feat: 폴링 주기 최적화 — 홈탭 60초, 경기상세 12초
+4006b88 feat: 실시간성 대폭 향상 — 서버 7s / 앱 10s / SQLite TTL 3s
+1c6b1a4 @ feat: 직관 예정(D-Day) 캘린더 — is_planned 기반 일정 등록/표시
+33f517c @ fix: CalendarGridPure 날짜 포맷 불일치로 event pill 미표시 버그 수정
+0ef569f fix: GameCard large/non-large 레이아웃 통일 — statusLabel/BSO/이닝 위치 일원화
+949a855 feat: GameCard 날씨 정보 표시 + VENUE_TO_FULL_NAME 매핑
+a3898de feat: 날씨 정보 당일만 표시 + mock 데이터 제거
+b438ab1 feat: Phase 1 — 서버 푸시 알림 인프라 (FCM/APNs/device_tokens/push_worker)
+bd7b2a7 fix: push_router 항상 마운트 (ENABLE_PUSH off 시 push_disabled 응답)
+```
