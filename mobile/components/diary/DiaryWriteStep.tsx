@@ -12,7 +12,7 @@ import DiaryPhotoGrid from "./DiaryPhotoGrid";
 import DiaryExpenseList from "./DiaryExpenseList";
 import DiaryTotemPicker from "./DiaryTotemPicker";
 
-export default function DiaryWriteStep({ selectedGame, editRecord, cheeredTeam, setCheeredTeam, emotion, setEmotion, unlockedEmotions, userTeam, isLive, setIsLive, seat, setSeat, photoUris, setPhotoUris, content, setContent, pendingExpenses, setPendingExpenses, showExpenseInput, setShowExpenseInput, newExpenseCat, setNewExpenseCat, newExpenseAmt, setNewExpenseAmt, newExpenseMemo, setNewExpenseMemo, allTotems, selectedTotemIds, setSelectedTotemIds, handleFullGalleryPick, setSimpleAlert, scrollRef, dateStrShort, styles }: {
+export default function DiaryWriteStep({ selectedGame, editRecord, cheeredTeam, setCheeredTeam, emotion, setEmotion, unlockedEmotions, userTeam, isLive, setIsLive, seat, setSeat, photoUris, setPhotoUris, content, setContent, pendingExpenses, setPendingExpenses, showExpenseInput, setShowExpenseInput, newExpenseCat, setNewExpenseCat, newExpenseAmt, setNewExpenseAmt, newExpenseMemo, setNewExpenseMemo, allTotems, selectedTotemIds, setSelectedTotemIds, handleFullGalleryPick, setSimpleAlert, scrollRef, dateStrShort, isFutureGame, styles }: {
   selectedGame: GameOption | null;
   editRecord?: JikgwanRecord | null;
   cheeredTeam: string | null;
@@ -46,6 +46,7 @@ export default function DiaryWriteStep({ selectedGame, editRecord, cheeredTeam, 
   setSimpleAlert: React.Dispatch<React.SetStateAction<{ visible: boolean; title: string; message: string; onOk?: () => void }>>;
   scrollRef: any;
   dateStrShort: string;
+  isFutureGame: boolean;
   styles: Record<string, any>;
 }) {
   const { theme, isDark } = useTheme();
@@ -100,37 +101,41 @@ export default function DiaryWriteStep({ selectedGame, editRecord, cheeredTeam, 
         );
       })()}
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>오늘의 기분</Text>
-        {(() => {
-          const isMyGame = selectedGame
-            ? (selectedGame.homeTeam === userTeam || selectedGame.awayTeam === userTeam)
-            : false;
-          const emotionTeamId = cheeredTeam || (isMyGame ? userTeam : null);
-          if (!emotionTeamId) {
-            return <Text style={{ color: theme.mutedForeground, fontSize: 13, textAlign: "center", paddingVertical: 8 }}>응원팀을 먼저 선택해주세요</Text>;
-          }
-          return <EmotionPicker value={emotion} onChange={setEmotion} teamId={emotionTeamId} unlockedEmotions={unlockedEmotions} />;
-        })()}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>시청 방식</Text>
-        <View style={styles.liveToggleRow}>
-          <Pressable
-            style={[styles.liveToggleBtn, isLive && { backgroundColor: teamPrimaryColor(userTeam, isDark) || theme.foreground }]}
-            onPress={() => setIsLive(true)}
-          >
-            <Text style={[styles.liveToggleText, isLive && { color: "#fff" }]}>직관</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.liveToggleBtn, !isLive && { backgroundColor: "#888" }]}
-            onPress={() => setIsLive(false)}
-          >
-            <Text style={[styles.liveToggleText, !isLive && { color: "#fff" }]}>집관</Text>
-          </Pressable>
+      {!isFutureGame && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>오늘의 기분</Text>
+          {(() => {
+            const isMyGame = selectedGame
+              ? (selectedGame.homeTeam === userTeam || selectedGame.awayTeam === userTeam)
+              : false;
+            const emotionTeamId = cheeredTeam || (isMyGame ? userTeam : null);
+            if (!emotionTeamId) {
+              return <Text style={{ color: theme.mutedForeground, fontSize: 13, textAlign: "center", paddingVertical: 8 }}>응원팀을 먼저 선택해주세요</Text>;
+            }
+            return <EmotionPicker value={emotion} onChange={setEmotion} teamId={emotionTeamId} unlockedEmotions={unlockedEmotions} />;
+          })()}
         </View>
-      </View>
+      )}
+
+      {!isFutureGame && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>시청 방식</Text>
+          <View style={styles.liveToggleRow}>
+            <Pressable
+              style={[styles.liveToggleBtn, isLive && { backgroundColor: teamPrimaryColor(userTeam, isDark) || theme.foreground }]}
+              onPress={() => setIsLive(true)}
+            >
+              <Text style={[styles.liveToggleText, isLive && { color: "#fff" }]}>직관</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.liveToggleBtn, !isLive && { backgroundColor: "#888" }]}
+              onPress={() => setIsLive(false)}
+            >
+              <Text style={[styles.liveToggleText, !isLive && { color: "#fff" }]}>집관</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
 
       {isLive && (
         <View style={styles.section}>
@@ -155,12 +160,12 @@ export default function DiaryWriteStep({ selectedGame, editRecord, cheeredTeam, 
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>직관일기</Text>
+        <Text style={styles.sectionTitle}>{isFutureGame ? "다짐 / 기대평" : "직관일기"}</Text>
         <TextInput
           style={styles.diaryInput}
           value={content}
           onChangeText={setContent}
-          placeholder={`${dateStrShort}의 직관 이야기를 자유롭게 적어보세요 :)`}
+          placeholder={isFutureGame ? "경기에 대한 기대나 다짐을 적어보세요" : `${dateStrShort}의 직관 이야기를 자유롭게 적어보세요 :)`}
           placeholderTextColor={theme.mutedForeground}
           multiline
           textAlignVertical="top"
@@ -168,8 +173,10 @@ export default function DiaryWriteStep({ selectedGame, editRecord, cheeredTeam, 
         />
       </View>
 
-      <View style={styles.section}>
-        <DiaryExpenseList
+      {!isFutureGame && (
+        <>
+          <View style={styles.section}>
+            <DiaryExpenseList
           pendingExpenses={pendingExpenses}
           setPendingExpenses={setPendingExpenses}
           showExpenseInput={showExpenseInput}
@@ -185,14 +192,16 @@ export default function DiaryWriteStep({ selectedGame, editRecord, cheeredTeam, 
         />
       </View>
 
-      <View style={styles.section}>
-        <DiaryTotemPicker
-          allTotems={allTotems}
-          selectedTotemIds={selectedTotemIds}
-          setSelectedTotemIds={setSelectedTotemIds}
-          theme={theme}
-        />
-      </View>
+          <View style={styles.section}>
+            <DiaryTotemPicker
+              allTotems={allTotems}
+              selectedTotemIds={selectedTotemIds}
+              setSelectedTotemIds={setSelectedTotemIds}
+              theme={theme}
+            />
+          </View>
+        </>
+      )}
     </View>
   );
 }

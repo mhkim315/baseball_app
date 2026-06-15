@@ -114,6 +114,14 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
   const dateStr = formatDate(selectedDate);
   const dateStrShort = `${String(selectedDate.getMonth() + 1)}월 ${selectedDate.getDate()}일`;
 
+  const isFutureGame = useMemo(() => {
+    const p2 = parseDotDate(dateStr);
+    if (!p2) return false;
+    const d = new Date(p2[0], p2[1] - 1, p2[2]);
+    const today2 = new Date(); today2.setHours(0, 0, 0, 0);
+    return d > today2;
+  }, [dateStr]);
+
   const daysInMonth = getDaysInMonth(calYear, calMonth);
   const firstDay = getFirstDayOfMonth(calYear, calMonth);
   const today = new Date();
@@ -379,7 +387,7 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
       setNewExpenseMemo("");
     }
 
-    if (!emotion) {
+    if (!emotion && !isFutureGame) {
       savingRef.current = false;
       setSimpleAlert({ visible: true, title: "알림", message: "감정표현을 선택해주세요" });
       return;
@@ -423,14 +431,6 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
       const isMyGame = !!gameTeams && (gameTeams.h === userTeam || gameTeams.a === userTeam);
       const targetTeam = cheeredTeam || (isMyGame ? userTeam : null);
       let isWin: number | null = null;
-
-      const isFutureGame = (() => {
-        const p2 = parseDotDate(dateStr);
-        if (!p2) return false;
-        const d = new Date(p2[0], p2[1] - 1, p2[2]);
-        const today2 = new Date(); today2.setHours(0, 0, 0, 0);
-        return d > today2;
-      })();
 
       if (targetTeam && !isFutureGame) {
         const hScore = selectedGame?.homeScore ?? editRecord?.score_home ?? null;
@@ -492,6 +492,7 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
             stadium: selectedGame?.venue || editRecord.stadium || null,
             game_type: selectedGame?.isPostseason ? "postseason" : selectedGame?.isExhibition ? "exhibition" : (editRecord.game_type ?? null),
             game_status: selectedGame?.gameStatus || editRecord.game_status || null,
+            is_planned: isFutureGame ? 1 : 0,
           });
         } else {
           recordId = addJikgwanRecord({
@@ -514,6 +515,7 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
             seat: seat.trim() || null,
             game_type: selectedGame?.isPostseason ? "postseason" : selectedGame?.isExhibition ? "exhibition" : null,
             game_status: selectedGame?.gameStatus || null,
+            is_planned: isFutureGame ? 1 : 0,
           });
           for (const exp of expensesToSave) {
             const amt = parseInt(String(exp.amount).replace(/,/g, ""));
@@ -964,5 +966,6 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
     handleSave,
     styles,
     editRecord, presetGame, presetDate, onClose, onSaved,
+    isFutureGame,
   } as const;
 }

@@ -2,8 +2,9 @@ import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, Image, FlatList, Pressable, StyleSheet, RefreshControl, useWindowDimensions } from "react-native";
 import ConfirmModal from "@/components/ConfirmModal";
 import { useTheme } from "@/lib/ThemeContext";
-import type { JikgwanRecord } from "@/lib/db";
 import { deletePhoto, resolvePhotoUri } from "@/lib/camera";
+import { TEAM_COLORS, teamPrimaryColor } from "@shared/teamColors";
+import { parseGameTeamIds, parseDotDate } from "@shared/constants";
 
 interface GridTimelineProps {
   records: JikgwanRecord[];
@@ -41,16 +42,20 @@ export default function GridTimeline({ records, onDelete, onRefresh, refreshing,
   const [deleteTarget, setDeleteTarget] = useState<JikgwanRecord | null>(null);
   const flatListRef = useRef<FlatList<JikgwanRecord[]>>(null);
   const cellSize = screenWidth / NUM_COLUMNS;
-  const rows = useMemo(() => chunkRows(records, NUM_COLUMNS), [records]);
+  const plannedRecords = useMemo(() => records.filter((r) => r.is_planned === 1), [records]);
+  const actualRecords = useMemo(() => records.filter((r) => r.is_planned !== 1), [records]);
+
+  const rows = useMemo(() => chunkRows(actualRecords, NUM_COLUMNS), [actualRecords]);
 
   useEffect(() => {
-    if (!scrollTargetDate || records.length === 0) return;
-    const idx = records.findIndex((r) => r.date === scrollTargetDate);
+    if (!scrollTargetDate || actualRecords.length === 0) return;
+    const idx = actualRecords.findIndex((r) => r.date === scrollTargetDate);
     if (idx >= 0) {
       const rowIndex = Math.floor(idx / NUM_COLUMNS);
-      setTimeout(() => flatListRef.current?.scrollToOffset({ offset: rowIndex * cellSize, animated: true }), 100);
+      const offset = rowIndex * cellSize + (plannedRecords.length > 0 ? 120 : 0);
+      setTimeout(() => flatListRef.current?.scrollToOffset({ offset, animated: true }), 100);
     }
-  }, [scrollTargetDate, cellSize, records]);
+  }, [scrollTargetDate, cellSize, actualRecords, plannedRecords.length]);
 
   const handleDelete = (record: JikgwanRecord) => {
     setDeleteTarget(record);
@@ -107,7 +112,79 @@ export default function GridTimeline({ records, onDelete, onRefresh, refreshing,
     emptyIcon: { fontSize: 48, marginBottom: 16 },
     emptyText: { color: theme.mutedForeground, fontSize: 15 },
     emptySub: { color: theme.mutedForeground, fontSize: 12, marginTop: 6 },
+    headerContainer: {
+      padding: 16,
+      backgroundColor: theme.background,
+    },
+    headerTitle: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: theme.foreground,
+      marginBottom: 12,
+    },
+    ticketCard: {
+      width: 140,
+      padding: 12,
+      borderRadius: 12,
+      backgroundColor: theme.card,
+      borderWidth: 1,
+      borderColor: theme.border,
+      marginRight: 10,
+    },
+    ticketDDay: {
+      fontSize: 18,
+      fontWeight: "800",
+      marginBottom: 4,
+    },
+    ticketTitle: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.foreground,
+    },
+    ticketDate: {
+      fontSize: 12,
+      color: theme.mutedForeground,
+      marginTop: 6,
+    },
   }), [theme, cellSize, screenWidth]);
+
+  const renderPlannedHeader = useCallback(() => {
+    if (plannedRecords.length === 0) return null;
+    return (
+      <View style={styles.headerContainer}>
+        <Text style={styles.headerTitle}>다가오는 직관</Text>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={plannedRecords}
+          keyExtractor={(r) => String(r.id)}
+          renderItem={({ item }) => {
+            let dDay = "";
+            const p = parseDotDate(item.date);
+            if (p) {
+              const dateObj = new Date(p[0], p[1] - 1, p[2]);
+              const today = new Date(); today.setHours(0, 0, 0, 0);
+              const diffTime = dateObj.getTime() - today.getTime();
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              dDay = diffDays === 0 ? "D-Day" : diffDays > 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`;
+            }
+            const gt = parseGameTeamIds(item.game_id || "");
+            const title = gt.awayId && gt.homeId 
+              ? `${TEAM_COLORS[gt.awayId]?.shortName || "?"} vs ${TEAM_COLORS[gt.homeId]?.shortName || "?"}` 
+              : "직관 예정";
+            const badgeColor = item.cheered_team ? (teamPrimaryColor(item.cheered_team, false) || theme.foreground) : theme.foreground;
+            return (
+              <Pressable style={styles.ticketCard} onPress={() => onPressRecord?.(item)}>
+                <Text style={[styles.ticketDDay, { color: badgeColor }]}>{dDay}</Text>
+                <Text style={styles.ticketTitle} numberOfLines={1}>{title}</Text>
+                <Text style={styles.ticketDate}>{item.date}</Text>
+              </Pressable>
+            );
+          }}
+        />
+      </View>
+    );
+  }, [plannedRecords, styles, onPressRecord, theme]);
 
   const renderRow = useCallback(({ item: row }: { item: JikgwanRecord[] }) => (
     <View style={styles.row}>
@@ -158,15 +235,18 @@ export default function GridTimeline({ records, onDelete, onRefresh, refreshing,
         onScrollToIndexFailed={(info) => {
           flatListRef.current?.scrollToOffset({ offset: info.index * cellSize, animated: true });
         }}
+        ListHeaderComponent={renderPlannedHeader}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.mutedForeground} />
         }
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>📸</Text>
-            <Text style={styles.emptyText}>아직 직관 기록이 없어요</Text>
-            <Text style={styles.emptySub}>+ 버튼을 눌러 첫 기록을 남겨보세요</Text>
-          </View>
+          actualRecords.length === 0 && plannedRecords.length === 0 ? (
+            <View style={styles.empty}>
+              <Text style={styles.emptyIcon}>📸</Text>
+              <Text style={styles.emptyText}>아직 직관 기록이 없어요</Text>
+              <Text style={styles.emptySub}>+ 버튼을 눌러 첫 기록을 남겨보세요</Text>
+            </View>
+          ) : null
         }
       />
       <ConfirmModal

@@ -141,6 +141,7 @@ export default function HomeScreen() {
   const showCoachMarkRef = useRef(false);
   const scheduleCache = useRef<{ month: number; year: number; games: ScheduleGame[] } | null>(null);
   const [resultByDate, setResultByDate] = useState<Record<string, number>>({});
+  const [plannedRecords, setPlannedRecords] = useState<any[]>([]);
 
   // Shortcut state
   const [shortcut, setShortcut] = useState<ShortcutType | null>(null);
@@ -382,20 +383,29 @@ export default function HomeScreen() {
     return cleanup;
   }, [load]);
 
-  // Load jikgwan records for DateStrip result indicators
-  useEffect(() => {
+  const loadJikgwanData = useCallback(() => {
     try {
       const records = getJikgwanRecords();
       const map: Record<string, number> = {};
+      const planned: any[] = [];
       for (const r of records) {
+        if (r.is_planned === 1) {
+          planned.push(r);
+        }
         if (r.is_win == null) continue;
         const key = r.date.replace(/\./g, "-"); // YYYY.MM.DD → YYYY-MM-DD
         // Multiple records can exist for same date; keep the last one's result
         map[key] = r.is_win;
       }
       setResultByDate(map);
+      setPlannedRecords(planned);
     } catch (e) { console.warn("home: load jikgwan records", e); }
   }, []);
+
+  // Load jikgwan records for DateStrip result indicators and planned records
+  useFocusEffect(useCallback(() => {
+    loadJikgwanData();
+  }, [loadJikgwanData]));
 
   // Fetch calendar data when opened or month/year changes (cache + preload adjacent)
   useEffect(() => {
@@ -492,13 +502,7 @@ export default function HomeScreen() {
           prefetchOnAppInit();
           runBadgeCheck();
           try {
-            const records = getJikgwanRecords();
-            const map: Record<string, number> = {};
-            for (const r of records) {
-              if (r.is_win == null) continue;
-              map[r.date.replace(/\./g, "-")] = r.is_win;
-            }
-            setResultByDate(map);
+            loadJikgwanData();
           } catch {}
           load();
         });
@@ -796,6 +800,7 @@ export default function HomeScreen() {
           onSelectDate={handleCalSelectDate}
           onMonthChange={handleCalMonthChange}
           onYearChange={handleCalYearChange}
+          plannedRecords={plannedRecords}
         />
       </View>
       </View>

@@ -283,6 +283,22 @@ export default function DiaryCalendar({
       fontSize: 10,
       color: theme.mutedForeground,
     },
+    eventPill: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 4,
+      paddingVertical: 2,
+      borderRadius: 4,
+      marginTop: 2,
+      width: "90%",
+    },
+    eventPillText: {
+      fontSize: 8,
+      fontWeight: "700",
+      color: "#fff",
+      marginLeft: 2,
+    },
   }), [theme]);
 
   return (
@@ -370,10 +386,12 @@ export default function DiaryCalendar({
           let emotionChar: string | undefined;
           let diaryOpponent: string | undefined;
           let diaryResultBadge: { label: string; color: string; textColor?: string } | null = null;
+          let isPlanned = false;
           if (dayRecords && dayRecords.length > 0) {
             const latest = dayRecords[0];
+            isPlanned = latest.is_planned === 1;
             const isTodayUnplayed = isToday && (latest.score_home == null || latest.score_home === 0) && (latest.score_away == null || latest.score_away === 0);
-            const skipResult = isFuture || isTodayUnplayed;
+            const skipResult = isFuture || isTodayUnplayed || isPlanned;
             if (!skipResult) {
               const iw = resolveIsWin(latest);
               if (iw === 1) cellBg = isDark ? "#1a3a5c" : "#e3f2fd";
@@ -450,6 +468,13 @@ export default function DiaryCalendar({
                     ) : null)}
                   </View>
                 ) : null}
+
+                {/* Planned event pill */}
+                {!isExpense && !isAchievement && isPlanned && dayRecords?.[0] && (
+                  <View style={[styles.eventPill, { backgroundColor: dayRecords[0].cheered_team ? (teamPrimaryColor(dayRecords[0].cheered_team, isDark) || theme.primary) : theme.primary }]}>
+                    <Text style={styles.eventPillText} numberOfLines={1}>✓ 예매</Text>
+                  </View>
+                )}
 
                 {/* Jikgwan only: emotion team badge */}
                 {!isExpense && !isAchievement && emotionChar && dayRecords?.[0]?.cheered_team && (

@@ -158,6 +158,7 @@ function migrateJikgwanSchema(): void {
     { name: "seat", type: "TEXT", dflt: "NULL" },
     { name: "game_type", type: "TEXT", dflt: "NULL" },
     { name: "game_status", type: "TEXT", dflt: "NULL" },
+    { name: "is_planned", type: "INTEGER", dflt: "0" },
   ];
   const existing = database.getAllSync<{ name: string }>(
     "PRAGMA table_info(jikgwan_records)"

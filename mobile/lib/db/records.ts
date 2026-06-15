@@ -31,6 +31,7 @@ export interface JikgwanRecord {
   is_cancelled?: number;
   game_type: string | null;
   game_status: string | null;
+  is_planned?: number;
 }
 
 export function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "created_at">): number {
@@ -38,8 +39,8 @@ export function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "created_at"
   const database = getDb();
   const result = database.runSync(
     `INSERT INTO jikgwan_records
-      (game_id, date, photo_path, photos, memo, score_away, score_home, emotion, frame_style, stadium, is_win, cheered_team, is_live, seat, game_type, game_status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (game_id, date, photo_path, photos, memo, score_away, score_home, emotion, frame_style, stadium, is_win, cheered_team, is_live, seat, game_type, game_status, is_planned)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     record.game_id || "",
     record.date || "",
     record.photo_path ?? null,
@@ -56,6 +57,7 @@ export function addJikgwanRecord(record: Omit<JikgwanRecord, "id" | "created_at"
     record.seat ?? null,
     record.game_type ?? null,
     record.game_status ?? null,
+    record.is_planned ?? 0,
   );
   return result.lastInsertRowId ?? 0;
 }
@@ -84,7 +86,7 @@ export function getJikgwanRecordsByMonth(year: number, month: number): JikgwanRe
 const JIKGWAN_ALLOWED_COLUMNS = new Set([
   "memo", "emotion", "three_line_1", "three_line_2", "three_line_3",
   "frame_style", "is_win", "photos", "cheered_team", "is_live", "seat",
-  "score_away", "score_home", "stadium", "game_id", "game_type", "game_status",
+  "score_away", "score_home", "stadium", "game_id", "game_type", "game_status", "is_planned",
 ]);
 
 export function updateJikgwanRecord(

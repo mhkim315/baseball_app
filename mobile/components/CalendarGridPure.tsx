@@ -13,12 +13,14 @@ function CalendarGridPure({
   gamesByDate,
   selectedTeam,
   onSelectDate,
+  plannedRecords = [],
 }: {
   year: number;
   month: number;
   gamesByDate: Map<string, ResolvedGame[]>;
   selectedTeam: string | null;
   onSelectDate: (d: Date) => void;
+  plannedRecords?: any[];
 }) {
   const { theme, isDark } = useTheme();
 
@@ -79,6 +81,21 @@ function CalendarGridPure({
     calScoreSm: { fontSize: 7, fontWeight: "700" },
     calCancelled: { fontSize: 8, color: theme.mutedForeground, fontWeight: "500" },
     calVenue: { fontSize: 9, color: theme.mutedForeground },
+    eventPill: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 4,
+      paddingVertical: 2,
+      borderRadius: 4,
+      marginTop: 2,
+      width: "100%",
+    },
+    eventPillText: {
+      fontSize: 8,
+      fontWeight: "700",
+      color: "#fff",
+      marginLeft: 2,
+    },
   }), [theme]);
 
   return (
@@ -105,6 +122,9 @@ function CalendarGridPure({
           const isFuture = dateStr > todayStr;
           const hasGames = dayGames.length > 0;
           const isDH = hasGames && dayGames.length > 1;
+
+          const dayPlans = plannedRecords.filter((r) => r.date === dateStr);
+          const hasPlan = dayPlans.length > 0;
 
           let winCount = 0, lossCount = 0, drawCount = 0;
           for (const rg of dayGames) {
@@ -230,6 +250,14 @@ function CalendarGridPure({
                   );
                 })
               )}
+              {hasPlan && dayPlans.map((plan, pi) => {
+                const planColor = plan.cheered_team ? (teamPrimaryColor(plan.cheered_team, isDark) || theme.primary) : theme.primary;
+                return (
+                  <View key={`plan-${pi}`} style={[styles.eventPill, { backgroundColor: planColor }]}>
+                    <Text style={styles.eventPillText} numberOfLines={1}>✓ 예매</Text>
+                  </View>
+                );
+              })}
             </Pressable>
           );
         })}

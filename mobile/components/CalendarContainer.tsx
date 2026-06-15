@@ -17,6 +17,7 @@ const CalendarContainer = memo(function CalendarContainer({
   onMonthChange,
   onYearChange,
   onSelectDate,
+  plannedRecords = [],
 }: {
   year: number;
   month: number;
@@ -26,6 +27,7 @@ const CalendarContainer = memo(function CalendarContainer({
   onMonthChange: (year: number, month: number) => void;
   onYearChange?: (year: number) => void;
   onSelectDate: (d: Date) => void;
+  plannedRecords?: any[];
 }) {
   const { theme, isDark } = useTheme();
   const [displayTeam, setDisplayTeam] = useState<string | null>(null);
@@ -206,6 +208,7 @@ const CalendarContainer = memo(function CalendarContainer({
             gamesByDate={gamesByDate}
             selectedTeam={selectedTeam}
             onSelectDate={onSelectDate}
+            plannedRecords={plannedRecords}
           />
         )}
       </Animated.View>

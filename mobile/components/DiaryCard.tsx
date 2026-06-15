@@ -80,7 +80,7 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit, e
         .filter(Boolean)
         .join("\n");
 
-  const upcoming = isUpcoming(record.date, record.score_away, record.score_home);
+  const upcoming = record.is_planned === 1 || isUpcoming(record.date, record.score_away, record.score_home);
 
   const styles = useMemo(() => StyleSheet.create({
     card: {
