@@ -21,7 +21,12 @@ declare module "react-native-android-widget" {
   }
 
   export function registerWidgetTaskHandler(handler: (props: WidgetTaskHandlerProps) => void): void;
-  export function renderWidget(element: ReactElement): Promise<void>;
+
+  export function requestWidgetUpdate(config: {
+    widgetName: string;
+    renderWidget: (widgetInfo: WidgetInfo) => ReactElement | null;
+    widgetNotFound?: () => void;
+  }): Promise<void>;
 
   export interface FlexWidgetProps {
     style?: Record<string, any>;

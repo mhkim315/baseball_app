@@ -47,19 +47,73 @@
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
       ["react-native-android-widget", {
-        "widgets": [{
-          "name": "LiveScoreWidget",
-          "label": "풀카운트 전광판",
-          "description": "실시간 야구 점수를 홈 화면에서 확인하세요",
-          "minWidth": "250dp",
-          "minHeight": "110dp",
-          "maxResizeWidth": "400dp",
-          "maxResizeHeight": "200dp",
-          "resizeMode": "horizontal|vertical",
-          "targetCellWidth": 4,
-          "targetCellHeight": 2,
-          "updatePeriodMillis": 0
-        }]
+        "widgets": [
+          {
+            "name": "MiniScoreWidget",
+            "label": "풀카운트 미니",
+            "description": "간단한 점수 확인용",
+            "minWidth": "110dp",
+            "minHeight": "40dp",
+            "maxResizeWidth": "200dp",
+            "maxResizeHeight": "100dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 2,
+            "targetCellHeight": 1,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "ScoreWidget",
+            "label": "풀카운트 소형",
+            "description": "점수 + 상태 표시",
+            "minWidth": "110dp",
+            "minHeight": "110dp",
+            "maxResizeWidth": "250dp",
+            "maxResizeHeight": "180dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 2,
+            "targetCellHeight": 2,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "LiveScoreWidget",
+            "label": "풀카운트 전광판",
+            "description": "실시간 야구 점수를 홈 화면에서 확인하세요",
+            "minWidth": "250dp",
+            "minHeight": "110dp",
+            "maxResizeWidth": "500dp",
+            "maxResizeHeight": "300dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 4,
+            "targetCellHeight": 2,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "WideScoreWidget",
+            "label": "풀카운트 와이드",
+            "description": "넓은 화면에 풀 정보",
+            "minWidth": "300dp",
+            "minHeight": "110dp",
+            "maxResizeWidth": "600dp",
+            "maxResizeHeight": "300dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 5,
+            "targetCellHeight": 2,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "DetailScoreWidget",
+            "label": "풀카운트 상세",
+            "description": "상세 정보 포함",
+            "minWidth": "250dp",
+            "minHeight": "180dp",
+            "maxResizeWidth": "500dp",
+            "maxResizeHeight": "400dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 4,
+            "targetCellHeight": 3,
+            "updatePeriodMillis": 0
+          }
+        ]
       }],
       "expo-router"
     ],

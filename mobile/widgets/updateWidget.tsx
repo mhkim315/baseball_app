@@ -2,7 +2,14 @@ import { requestWidgetUpdate } from "react-native-android-widget";
 import { getMyTeamForWidget, SHORT_CODE_TO_TEAM_ID, SHORT_CODE_TO_NAME } from "@/lib/teamStorage";
 import { GameStatusWidget } from "./GameStatusWidget";
 
-const WIDGET_NAME = "LiveScoreWidget";
+/** 등록된 모든 위젯 — Android 위젯 피커에 표시되는 이름과 일치 */
+const WIDGET_NAMES = [
+  "MiniScoreWidget",
+  "ScoreWidget",
+  "LiveScoreWidget",
+  "WideScoreWidget",
+  "DetailScoreWidget",
+];
 
 interface WidgetGameData {
   homeTeam: string;
@@ -38,26 +45,37 @@ function buildWidgetProps(data: Record<string, string>): WidgetGameData {
   };
 }
 
-/** FCM payload로 직접 위젯 업데이트 (백그라운드에서 HTTP fetch 금지) */
+/** 모든 위젯 타입에 동일한 데이터로 렌더링 (각 위젯이 자신의 width/height에 맞춰 표시) */
+async function updateAllWidgets(myTeam: string, data: WidgetGameData | null) {
+  for (const widgetName of WIDGET_NAMES) {
+    await requestWidgetUpdate({
+      widgetName,
+      renderWidget: (widgetInfo) => (
+        <GameStatusWidget
+          width={widgetInfo.width}
+          height={widgetInfo.height}
+          data={data}
+          myTeam={myTeam}
+        />
+      ),
+    });
+  }
+}
+
+/** FCM payload로 직접 모든 위젯 업데이트 (백그라운드에서 HTTP fetch 금지) */
 export async function updateWidgetFromFCM(data: Record<string, string>): Promise<void> {
   const myTeam = await getMyTeamForWidget();
   if (!myTeam) return;
 
-  // Convert short codes → team IDs for comparison
   const home = SHORT_CODE_TO_TEAM_ID[data.home_team || ""] || data.home_team || "";
   const away = SHORT_CODE_TO_TEAM_ID[data.away_team || ""] || data.away_team || "";
   if (home !== myTeam && away !== myTeam) return;
 
   const props = buildWidgetProps(data);
-  await requestWidgetUpdate({
-    widgetName: WIDGET_NAME,
-    renderWidget: (widgetInfo) => (
-      <GameStatusWidget width={widgetInfo.width} height={widgetInfo.height} data={props} myTeam={myTeam} />
-    ),
-  });
+  await updateAllWidgets(myTeam, props);
 }
 
-/** widget-data API 응답으로 위젯 업데이트 (주기적 fallback / 위젯 추가 시) */
+/** widget-data API 응답으로 모든 위젯 업데이트 (주기적 fallback / 위젯 추가 시) */
 export async function updateWidgetPeriodic(): Promise<void> {
   const myTeam = await getMyTeamForWidget();
   if (!myTeam) return;
@@ -70,7 +88,6 @@ export async function updateWidgetPeriodic(): Promise<void> {
     const json = await res.json();
 
     const games = json.games || [];
-    // Find the game involving my team
     const myGame = games.find((g: any) => {
       const homeId = SHORT_CODE_TO_TEAM_ID[g.homeTeam] || g.homeTeam;
       const awayId = SHORT_CODE_TO_TEAM_ID[g.awayTeam] || g.awayTeam;
@@ -98,10 +115,5 @@ export async function updateWidgetPeriodic(): Promise<void> {
     console.warn("updateWidgetPeriodic: fetch failed", e);
   }
 
-  await requestWidgetUpdate({
-    widgetName: WIDGET_NAME,
-    renderWidget: (widgetInfo) => (
-      <GameStatusWidget width={widgetInfo.width} height={widgetInfo.height} data={data} myTeam={myTeam} />
-    ),
-  });
+  await updateAllWidgets(myTeam, data);
 }
