@@ -4,6 +4,7 @@ import { TEAM_COLORS, teamPrimaryColor } from "@shared/teamColors";
 import { getDaysInMonth, getFirstDayOfMonth, formatDateForApi } from "@shared/constants";
 import { useTheme } from "@/lib/ThemeContext";
 import { type ResolvedGame, getResultLabel, getResultColor } from "@/lib/resolveGames";
+import type { JikgwanRecord } from "@/lib/db";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -20,7 +21,7 @@ function CalendarGridPure({
   gamesByDate: Map<string, ResolvedGame[]>;
   selectedTeam: string | null;
   onSelectDate: (d: Date) => void;
-  plannedRecords?: any[];
+  plannedRecords?: JikgwanRecord[];
 }) {
   const { theme, isDark } = useTheme();
 
@@ -123,7 +124,10 @@ function CalendarGridPure({
           const hasGames = dayGames.length > 0;
           const isDH = hasGames && dayGames.length > 1;
 
-          const dayPlans = plannedRecords.filter((r) => r.date === dateStr);
+          const dayPlans = plannedRecords.filter((r) => {
+            const normalizedDate = r.date.replace(/\./g, "-");
+            return normalizedDate === dateStr;
+          });
           const hasPlan = dayPlans.length > 0;
 
           let winCount = 0, lossCount = 0, drawCount = 0;

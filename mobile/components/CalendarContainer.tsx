@@ -7,6 +7,7 @@ import YearSelector from "@/components/YearSelector";
 import { useTheme } from "@/lib/ThemeContext";
 import { type ResolvedGame } from "@/lib/resolveGames";
 import CalendarGridPure from "@/components/CalendarGridPure";
+import type { JikgwanRecord } from "@/lib/db";
 
 const CalendarContainer = memo(function CalendarContainer({
   year,
@@ -27,7 +28,7 @@ const CalendarContainer = memo(function CalendarContainer({
   onMonthChange: (year: number, month: number) => void;
   onYearChange?: (year: number) => void;
   onSelectDate: (d: Date) => void;
-  plannedRecords?: any[];
+  plannedRecords?: JikgwanRecord[];
 }) {
   const { theme, isDark } = useTheme();
   const [displayTeam, setDisplayTeam] = useState<string | null>(null);

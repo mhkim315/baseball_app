@@ -141,7 +141,7 @@ export default function HomeScreen() {
   const showCoachMarkRef = useRef(false);
   const scheduleCache = useRef<{ month: number; year: number; games: ScheduleGame[] } | null>(null);
   const [resultByDate, setResultByDate] = useState<Record<string, number>>({});
-  const [plannedRecords, setPlannedRecords] = useState<any[]>([]);
+  const [plannedRecords, setPlannedRecords] = useState<JikgwanRecord[]>([]);
 
   // Shortcut state
   const [shortcut, setShortcut] = useState<ShortcutType | null>(null);
@@ -387,7 +387,7 @@ export default function HomeScreen() {
     try {
       const records = getJikgwanRecords();
       const map: Record<string, number> = {};
-      const planned: any[] = [];
+      const planned: JikgwanRecord[] = [];
       for (const r of records) {
         if (r.is_planned === 1) {
           planned.push(r);
