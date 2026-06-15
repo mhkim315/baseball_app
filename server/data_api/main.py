@@ -95,7 +95,7 @@ _WEATHER_CACHE: dict[str, tuple[float, dict | None]] = {}
 _WEATHER_CACHE_TTL = 1800  # 30 minutes
 
 _WIDGET_CACHE: dict[str, tuple[float, dict]] = {}
-_WIDGET_CACHE_TTL = 15  # seconds — 1 Naver request per window regardless of users
+_WIDGET_CACHE_TTL = 7  # seconds — asymmetric with client 10s polling
 
 def load_json(filename):
     now = time.time()

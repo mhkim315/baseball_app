@@ -443,7 +443,7 @@ export default function GameDetailScreen() {
           gameInfo: prev.gameInfo ? { ...prev.gameInfo, status: wg.status } : prev.gameInfo,
         };
       });
-    }, 12_000);
+    }, 10_000);
     return () => clearInterval(interval);
   }, [isLiveForPolling, gid]));
 

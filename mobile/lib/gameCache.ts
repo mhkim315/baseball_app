@@ -351,7 +351,7 @@ export async function fetchGameDetailFresh(gameId: string): Promise<GameDetail |
 // Widget data — 15s TTL (matches server _WIDGET_CACHE, single source for live data)
 export async function cachedWidgetData(): Promise<import("@shared/types").WidgetData | null> {
   const key = cacheKey("widget", "all");
-  const ttl = 15_000;
+  const ttl = 3_000;
   return fetchWithCache(key, ttl, () => apiWidgetData());
 }
 
