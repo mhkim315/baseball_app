@@ -2,13 +2,13 @@ import { requestWidgetUpdate } from "react-native-android-widget";
 import { getMyTeamForWidget, SHORT_CODE_TO_TEAM_ID, SHORT_CODE_TO_NAME } from "@/lib/teamStorage";
 import { GameStatusWidget } from "./GameStatusWidget";
 
-/** 등록된 모든 위젯 — Android 위젯 피커에 표시되는 이름과 일치 */
+/** 등록된 모든 위젯 (1x1 ~ 5x5) — Android 위젯 피커에 표시되는 이름과 일치 */
 const WIDGET_NAMES = [
-  "MiniScoreWidget",
-  "ScoreWidget",
-  "LiveScoreWidget",
-  "WideScoreWidget",
-  "DetailScoreWidget",
+  "Widget1x1", "Widget1x2", "Widget1x3", "Widget1x4", "Widget1x5",
+  "Widget2x1", "Widget2x2", "Widget2x3", "Widget2x4", "Widget2x5",
+  "Widget3x1", "Widget3x2", "Widget3x3", "Widget3x4", "Widget3x5",
+  "Widget4x1", "Widget4x2", "Widget4x3", "Widget4x4", "Widget4x5",
+  "Widget5x1", "Widget5x2", "Widget5x3", "Widget5x4", "Widget5x5",
 ];
 
 interface WidgetGameData {
