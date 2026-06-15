@@ -147,7 +147,7 @@ export const TodayGameSchema = z.object({
     rank: z.number().int().nullish(),
     record: z.string().nullish(),
   }).passthrough(),
-  score: z.object({ away: z.number(), home: z.number() }).passthrough().nullish(),
+  score: z.object({ away: z.number().nullable(), home: z.number().nullable() }).passthrough().nullish(),
 }).passthrough();
 
 /** POST /today-games 응답 */
