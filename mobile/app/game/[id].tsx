@@ -746,7 +746,7 @@ export default function GameDetailScreen() {
           stadium={resolveVenue(detail.homeTeam, detail.gameInfo?.venue)}
           homePitcher={homePitcherName}
           awayPitcher={awayPitcherName}
-          status={isCancelled ? "finished" : isFinished ? "finished" : isLive ? "live" : "scheduled"}
+          status={isCancelled ? "finished" : mockRelay ? "live" : isFinished ? "finished" : isLive ? "live" : "scheduled"}
           cancelled={isCancelled}
           homeScore={gameScore?.home}
           awayScore={gameScore?.away}
@@ -756,8 +756,6 @@ export default function GameDetailScreen() {
           isTop={inningInfo?.isTop}
           relay={relayForRender}
           large
-          awayDisplayName={away?.name}
-          homeDisplayName={home?.name}
           statusBadgeStyle={{
             badge: styles.statusBadge,
             text: styles.statusText,

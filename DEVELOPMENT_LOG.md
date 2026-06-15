@@ -1,6 +1,6 @@
 # Fullcount.kr Mobile App — 개발 작업 문서
 
-> 마지막 업데이트: 2026-06-15 (Phase 19)
+> 마지막 업데이트: 2026-06-15 (Phase 19.7)
 > 
 > 이 문서는 이전 대화 컨텍스트가 만료되어도 작업을 이어갈 수 있도록 상세히 기록합니다.
 
@@ -2648,3 +2648,134 @@ if home_score is None:
 | `mobile/components/GameCard.tsx` | 3-state 팀 컬럼 + BSO 헤더 row 통합 |
 | `mobile/components/RelayLive.tsx` | inline/hidePlayers prop + BaseDiamond + O 2dot |
 | `mobile/app/(tabs)/home.tsx` | TEMP mock relay for dev testing |
+
+---
+
+## Phase 19.5: 실시간 폴링 주기 최적화 — 서버 7s / 앱 10s / SQLite 3s (2026-06-15)
+
+### 개요
+
+서버↔Naver, 앱↔서버 API 호출 주기를 전면 재설계. widget-data 엔드포인트를 Single Source of Truth로 통합하고 비대칭 폴링 간격으로 공진(resonance) 현상 제거.
+
+### 변경 사항
+
+#### 1. 서버 측 (`server/data_api/main.py`)
+- `_WIDGET_CACHE_TTL = 7` (Naver list 호출 주기와 동일, 가장 최신 데이터 보장)
+- `_RELAY_CACHE_TTL = 5` (초기 game-detail 로드용으로만 사용, 폴링에서는 미사용)
+- widget-data V3 엔드포인트: Naver schedule_games(list, fields=all) + game_relay(BSO) 통합
+
+#### 2. 앱 측 (`mobile/app/(tabs)/home.tsx`)
+- **홈탭 폴링**: 60초 (앱 내부에 사용자가 있을 때만 동작)
+- 홈탭의 실시간 데이터는 `cachedGameDetail()` 개별 호출 → `cachedWidgetData()` 단일 호출로 대체
+
+#### 3. 앱 측 (`mobile/app/game/[id].tsx`)
+- **경기상세 폴링**: 10초
+- Widget data overlay 방식: `fetchGameDetailFresh()` 대신 `cachedWidgetData()`에서 점수/이닝/relay만 추출
+
+#### 4. SQLite 캐시 TTL (`mobile/lib/gameCache.ts`)
+- `cachedWidgetData()`: TTL = 3초 (서버 7s + SQLite 3s = 앱 10s 주기에 정확히 정렬)
+
+#### 5. 아키텍처 원칙
+- **SSOT (Single Source of Truth)**: 모든 실시간 데이터는 `/widget-data` 1개 엔드포인트
+- **비대칭 폴링**: 서버 7s ≠ 앱 10s → 공진 회피
+- **stale-while-revalidate 제거**: 실시간 데이터는 무조건 fresh fetch, 과거 데이터만 stale 허용
+
+### 브랜치
+
+| 항목 | 내용 |
+|------|------|
+| 브랜치 | `feat/gamecard-detail-relay-ui` |
+| 커밋 | `4006b88` — 실시간성 대폭 향상 |
+| 커밋 | `447590a` — 폴링 주기 최적화 |
+| 커밋 | `21b1485` — widget-data V3 SSOT |
+
+---
+
+## Phase 19.6: 직관 예정(D-Day) 캘린더 — is_planned 기반 (2026-06-15)
+
+### 개요
+
+미래 경기 일정을 "직관 예정"으로 등록하고, 캘린더/타임라인/카드 전반에 D-Day 정보와 event pill을 표시. 경기일이 지나면 자동으로 실제 직관 기록으로 전환.
+
+### 변경 사항
+
+#### 1. DB 계층
+| 파일 | 변경 |
+|------|------|
+| `mobile/lib/db/connection.ts` | `migrateJikgwanSchema()`에 `is_planned INTEGER DEFAULT 0` 컬럼 추가 |
+| `mobile/lib/db/records.ts` | `JikgwanRecord` 타입에 `is_planned?: number` 추가. INSERT/VALUES/화이트리스트 바인딩 |
+
+#### 2. 비즈니스 로직
+| 파일 | 변경 |
+|------|------|
+| `mobile/components/diary/useDiaryForm.ts` | `isFutureGame`을 `useMemo`로 추출 (기존 `handleSave` 지역변수). return 객체에 노출. 저장 시 `is_planned: isFutureGame ? 1 : 0`. emotion validation `!isFutureGame` 조건부 우회 |
+
+#### 3. 작성 폼
+| 파일 | 변경 |
+|------|------|
+| `mobile/components/diary/DiaryWriteStep.tsx` | `{!isFutureGame && (...)}`로 emotion/live-toggle/expense/totem 조건부 렌더링. placeholder 텍스트 "다짐 / 기대평" 변경 |
+
+#### 4. 카드/타임라인
+| 파일 | 변경 |
+|------|------|
+| `mobile/components/DiaryCard.tsx` | `upcoming = record.is_planned === 1 \|\| isUpcoming(...)` 명시적 플래그 우선 |
+| `mobile/components/GridTimeline.tsx` | plannedRecords/actualRecords 분리. `ListHeaderComponent`에 수평 D-Day 티켓 카드 섹션 추가. scroll offset 보정 |
+
+#### 5. 캘린더
+| 파일 | 변경 |
+|------|------|
+| `mobile/components/CalendarGridPure.tsx` | `plannedRecords` prop. 날짜 정규화(`r.date.replace(/\./g, "-")`) 후 매칭. 팀 컬러 event pill `✓ 예매` 렌더링 |
+| `mobile/components/CalendarContainer.tsx` | `plannedRecords` prop pass-through |
+| `mobile/components/DiaryCalendar.tsx` | `isPlanned` 플래그. `skipResult`에 `isPlanned` 포함. event pill 렌더링 |
+| `mobile/app/(tabs)/home.tsx` | `plannedRecords` state. `loadJikgwanData()`로 중복 제거 + `useFocusEffect` 적용. AppState listener 통일 |
+
+### 이슈
+
+- **CalendarGridPure 날짜 포맷 불일치**: jikgwan_records는 `YYYY.MM.DD`, games는 `YYYY-MM-DD` → `r.date.replace(/\./g, "-")` 정규화로 수정 (commit 33f517c)
+
+### UX 흐름
+
+1. 미래 날짜 → is_planned=1 저장 → 캘린더 pill + 타임라인 D-Day 카드
+2. 경기일 도과 후 수정 → isFutureGame=false → emotion/score 입력 강제
+3. 저장 시 is_planned=0 → 일반 과거 기록으로 전환
+
+### 브랜치
+
+| 항목 | 내용 |
+|------|------|
+| 브랜치 | `feat/gamecard-detail-relay-ui` |
+| 커밋 | `1c6b1a4` — D-Day 캘린더 feature |
+| 커밋 | `33f517c` — 날짜 포맷 버그 수정 |
+
+---
+
+## Phase 19.7: Android 홈 위젯 Phase 1 — 기획 및 방향 검증 (2026-06-15)
+
+### 개요
+
+`react-native-android-widget` 라이브러리를 활용한 Android 홈 화면 위젯 개발 계획 수립 및 검증.
+
+### 검증 결과 (4가지 리스크 식별)
+
+| 리스크 | 내용 | 해결방안 |
+|--------|------|----------|
+| 1. Entry point | Expo Router에서는 `index.js`가 없음. 위젯 task handler 등록 위치 모호 | `app/_layout.tsx` 최상단 module scope에서 `registerWidgetTaskHandler()` 호출 |
+| 2. SQLite 접근 | Widget background headless JS에서 `expo-sqlite` 초기화 불확실 | 응원팀 ID를 SQLite + AsyncStorage 이중 저장. Widget은 AsyncStorage에서 읽음 |
+| 3. RemoteViews 제약 | `borderRadius`, `position: absolute`, SVG 등 사용 불가 | Material You 기본 스타일 준수. 팀 로고는 Base64 data URI로 처리 |
+| 4. 개발 사이클 | 위젯 UI 변경 시 전체 네이티브 재빌드 필요 | 앱 내 Preview 화면으로 UI 반복 개발, 최종만 빌드 |
+
+### 데이터 흐름
+
+```
+사용자 탭 → WidgetProvider (native)
+  → registerWidgetTaskHandler (headless JS)
+    → AsyncStorage: @fullcount_widget_team 읽기
+    → fetch("https://api.fullcount.kr/widget-data")
+    → RemoteViews 렌더링 (FullcountWidget.tsx)
+```
+
+### 브랜치
+
+| 항목 | 내용 |
+|------|------|
+| 브랜치 | `feat/gamecard-detail-relay-ui` (Phase 1 개발 진행 예정) |

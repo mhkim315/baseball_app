@@ -243,7 +243,7 @@ export default function GameCard({
   }
 
   const bsoElement = status === "live" && relay ? (
-    <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 5, marginBottom: large ? 4 : 0 }}>
+    <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 5 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
         <Text style={{ fontSize: 9, fontWeight: "700", color: "#999", marginRight: 2 }}>B</Text>
         {[0, 1, 2].map(i => (
@@ -281,28 +281,7 @@ export default function GameCard({
                   {/* Top: time / BSO+주루 / venue */}
       <View style={[styles.cardHeader, { alignItems: "center" }, dense && styles.cardHeaderDense]}>
         <Text style={[styles.headerText, { width: large ? undefined : 60 }]}>{time}</Text>
-        {large && (
-          <View style={{ flex: 1, alignItems: "center" }}>
-            {statusBadgeStyle ? (
-              <View style={[statusBadgeStyle.badge, status === "live" && statusBadgeStyle.liveBadge]}>
-                <Text style={[statusBadgeStyle.text, status === "live" && statusBadgeStyle.liveText]}>
-                  {statusLabel}
-                </Text>
-              </View>
-            ) : (
-              <View style={[styles.headerPill, status === "live" && styles.headerPillLive]}>
-                <Text style={[styles.headerPillText, status === "live" && styles.headerPillLiveText]}>
-                  {statusLabel}
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-        {!large && bsoElement && (
-          <View style={{ flex: 1 }}>
-            {bsoElement}
-          </View>
-        )}
+        <View style={{ flex: 1, alignItems: "center" }} />
         <Text style={[styles.headerText, { width: large ? undefined : 60, textAlign: "right" }]}>{stadium}</Text>
       </View>
       {/* Matchup */}
@@ -326,8 +305,7 @@ export default function GameCard({
 
         {/* Score */}
         <View style={styles.scoreColumn}>
-          {!large && <Text style={[styles.statusBadge, { color: statusColor }]}>{statusLabel}</Text>}
-          {large && bsoElement}
+          <Text style={{ fontSize: 10, fontWeight: "600", color: status === "live" ? "#ef4444" : theme.mutedForeground, marginBottom: 2 }}>{statusLabel}</Text>
           {showScore ? (
             <View style={styles.scoreRow}>
               <Text style={[styles.scoreNum, hasResult && !awayWon && !isDraw && styles.scoreDim, large && { fontSize: 26 }]}>{awayScore}</Text>
@@ -337,6 +315,7 @@ export default function GameCard({
           ) : (
             <Text style={[styles.vsText, cancelled && styles.vsCancelled, large && { fontSize: 16 }]}>VS</Text>
           )}
+          {status === "live" && relay && bsoElement}
         </View>
 
         {/* Home */}
