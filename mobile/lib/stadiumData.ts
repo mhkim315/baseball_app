@@ -34,6 +34,20 @@ export function resolveVenue(homeTeamId: string, venue?: string | null): string 
   return TEAM_VENUE[homeTeamId] || "";
 }
 
+// Short venue name → full stadium name (weather API 키 매칭용)
+// 서버(data_api/main.py venue_map)와 동기화 필요
+export const VENUE_TO_FULL_NAME: Record<string, string> = {
+  잠실: "잠실야구장",
+  고척: "고척스카이돔",
+  문학: "인천SSG랜더스필드",
+  수원: "수원KT위즈파크",
+  대전: "대전한화생명이글스파크",
+  대구: "대구삼성라이온즈파크",
+  광주: "광주기아챔피언스필드",
+  사직: "사직야구장",
+  창원: "창원NC파크",
+};
+
 import type { StadiumBrief } from "@shared/types";
 
 export const STADIUM_BRIEFS: Record<string, StadiumBrief> = {

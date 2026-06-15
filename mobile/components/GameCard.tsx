@@ -12,6 +12,7 @@ interface GameCardProps {
   awayTeam: string;
   time: string;
   stadium: string;
+  weather?: { temp: string; condition: string } | null;
   homePitcher?: string;
   awayPitcher?: string;
   status?: "scheduled" | "live" | "finished";
@@ -43,6 +44,7 @@ export default function GameCard({
   awayTeam,
   time,
   stadium,
+  weather,
   homePitcher,
   awayPitcher,
   status = "scheduled",
@@ -280,9 +282,13 @@ export default function GameCard({
     <Pressable onPress={onClick} style={[styles.card, highlighted && { backgroundColor: highlighted + "12", borderColor: highlighted + "30" }, dense && styles.cardDense]}>
                   {/* Top: time / BSO+주루 / venue */}
       <View style={[styles.cardHeader, { alignItems: "center" }, dense && styles.cardHeaderDense]}>
-        <Text style={[styles.headerText, { width: large ? undefined : 60 }]}>{time}</Text>
+        <Text style={[styles.headerText, { width: large ? undefined : 60 }]}>{stadium} {time}</Text>
         <View style={{ flex: 1, alignItems: "center" }} />
-        <Text style={[styles.headerText, { width: large ? undefined : 60, textAlign: "right" }]}>{stadium}</Text>
+        {weather ? (
+          <Text style={[styles.headerText, { width: large ? undefined : 60, textAlign: "right" }]}>{weather.temp}°C {weather.condition}</Text>
+        ) : (
+          <Text style={[styles.headerText, { width: large ? undefined : 60, textAlign: "right" }]}>{stadium}</Text>
+        )}
       </View>
       {/* Matchup */}
       <View style={[styles.matchup, dense && styles.matchupDense]}>

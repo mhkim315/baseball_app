@@ -17,7 +17,7 @@ import StickerModal from "@/components/StickerModal";
 import CoachMark from "@/components/CoachMark";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
-import { resolveVenue } from "@/lib/stadiumData";
+import { resolveVenue, VENUE_TO_FULL_NAME } from "@/lib/stadiumData";
 import { getGameStickerCoachSeen, setGameStickerCoachSeen } from "@/lib/db";
 import { parseDashDate } from "@/lib/dateUtils";
 
@@ -86,6 +86,7 @@ export default function GameDetailScreen() {
 
   const [detail, setDetail] = useState<GameDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const todayWeatherRef = useRef<Record<string, { temp: string; condition: string }>>({});
   const [error, setError] = useState(false);
   const [scoreFallback, setScoreFallback] = useState<ScoreEntry | null>(null);
   const [isExhibition, setIsExhibition] = useState(false);
@@ -427,6 +428,7 @@ export default function GameDetailScreen() {
     const interval = setInterval(async () => {
       const wd = await cachedWidgetData();
       if (!wd?.games) return;
+      if (wd.todayWeather) todayWeatherRef.current = wd.todayWeather;
       const wg = wd.games.find((g) => g.gameId === gid);
       if (!wg) return;
       setDetail((prev) => {
@@ -718,6 +720,7 @@ export default function GameDetailScreen() {
   const innData = scoreBoard?.inn || (isLive ? { away: [0], home: [] } : null);
   const rheb = scoreBoard?.rheb || (isLive ? { away: { r: 0, h: 0, e: 0 }, home: { r: 0, h: 0, e: 0 } } : null);
   const maxInn = innData ? Math.max(innData.away.length, innData.home.length) : 0;
+  const stadiumVenue = resolveVenue(detail.homeTeam, detail.gameInfo?.venue);
 
   return (
     <View style={styles.container}>
@@ -743,7 +746,8 @@ export default function GameDetailScreen() {
           homeTeam={detail.homeTeam}
           awayTeam={detail.awayTeam}
           time={detail.gameInfo?.time || scheduleTimeRef.current || ""}
-          stadium={resolveVenue(detail.homeTeam, detail.gameInfo?.venue)}
+          stadium={stadiumVenue}
+          weather={todayWeatherRef.current[VENUE_TO_FULL_NAME[stadiumVenue] || stadiumVenue]}
           homePitcher={homePitcherName}
           awayPitcher={awayPitcherName}
           status={isCancelled ? "finished" : mockRelay ? "live" : isFinished ? "finished" : isLive ? "live" : "scheduled"}

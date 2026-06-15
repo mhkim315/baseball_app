@@ -19,6 +19,7 @@ import {
   cachedWidgetData,
 } from "@/lib/gameCache";
 import { resolveGames, resolveGamesForSchedule, type ResolvedGame } from "@/lib/resolveGames";
+import { VENUE_TO_FULL_NAME } from "@/lib/stadiumData";
 import { formatDateForApi as formatDateStr } from "@shared/constants";
 import { getInningInfo } from "@shared/gameStatus";
 
@@ -133,6 +134,7 @@ export default function HomeScreen() {
   const [showTodayBackCoach, setShowTodayBackCoach] = useState(false);
   const hasLeftTodayRef = useRef(false);
   const todayBackChecked = useRef(false);
+  const todayWeatherRef = useRef<Record<string, { temp: string; condition: string }>>({});
   const [showHomeStickerCoach, setShowHomeStickerCoach] = useState(false);
   const [showNoStickerAlert, setShowNoStickerAlert] = useState(false);
   const [showNoGameAlert, setShowNoGameAlert] = useState(false);
@@ -300,6 +302,7 @@ export default function HomeScreen() {
         try {
           const widgetData = await cachedWidgetData();
           if (widgetData?.games) {
+            todayWeatherRef.current = widgetData.todayWeather || {};
             for (const wg of widgetData.games) {
               for (let i = 0; i < 3; i++) {
                 const ds = dates[i];
@@ -722,6 +725,7 @@ export default function HomeScreen() {
         awayTeam={item.awayTeam}
         time={item.time}
         stadium={item.venue}
+        weather={todayWeatherRef.current[VENUE_TO_FULL_NAME[item.venue] || item.venue]}
         status={item.status === "cancelled" ? "finished" : item.status}
         homeScore={item.homeScore}
         awayScore={item.awayScore}

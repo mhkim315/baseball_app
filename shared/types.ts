@@ -263,6 +263,7 @@ export interface WidgetGame {
 
 export interface WidgetData {
   games: WidgetGame[];
+  todayWeather?: Record<string, { temp: string; condition: string }>;
 }
 
 export interface ScheduleGame {
