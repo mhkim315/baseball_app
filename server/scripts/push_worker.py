@@ -46,6 +46,8 @@ def _build_payload(game: dict) -> dict:
     return {
         "type": "game_update",
         "game_id": game.get("gameId", ""),
+        "home_team": game.get("homeTeam", ""),
+        "away_team": game.get("awayTeam", ""),
         "home_score": score.get("home", 0),
         "away_score": score.get("away", 0),
         "inning": relay.get("inning", 0),
