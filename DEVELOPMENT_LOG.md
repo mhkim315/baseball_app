@@ -1,6 +1,6 @@
 # Fullcount.kr Mobile App — 개발 작업 문서
 
-> 마지막 업데이트: 2026-06-15 (Phase 20)
+> 마지막 업데이트: 2026-06-16 (Phase 23)
 > 
 > 이 문서는 이전 대화 컨텍스트가 만료되어도 작업을 이어갈 수 있도록 상세히 기록합니다.
 
@@ -2863,4 +2863,181 @@ f581b62 feat: 구장 날씨 scraping + RateLimitMiddleware TTLCache 개선
 a3898de feat: 날씨 정보 당일만 표시 + mock 데이터 제거
 b438ab1 feat: Phase 1 — 서버 푸시 알림 인프라 (FCM/APNs/device_tokens/push_worker)
 bd7b2a7 fix: push_router 항상 마운트 (ENABLE_PUSH off 시 push_disabled 응답)
+1a15576 feat: push_worker payload에 home_team/away_team 추가 (위젯용)
+ed99edb fix: TodayGame score Zod 스키마 nullable 허용 (nextGames null 경고 수정)
 ```
+
+---
+
+## Phase 21: 직관 예정 UI 개선 + OTA 인지 (2026-06-15)
+
+### 개요
+
+v1.1.8 (versionCode 27, buildNumber 3) 스토어 제출 완료. UI 수정은 EAS Build 없이 `eas update`로 즉시 배포 가능하다는 사실을 정리.
+
+### OTA vs Build 기준
+
+| 변경 유형 | OTA (`eas update`) | 필요 |
+|-----------|:------------------:|:----:|
+| JS/TS 코드만 변경 (UI, 로직, API 호출) | ✅ 가능 |
+| `app.json` 설정 변경 (버전, 아이콘, 플러그인) | ❌ EAS Build |
+| 새 네이티브 패키지 추가 | ❌ EAS Build + prebuild |
+| 스토어 제출용 버전업 | ❌ EAS Build |
+
+즉, **네이티브 변경/Firebase/아이콘 등이 아닌 순수 UI/로직 수정은 `eas update --branch production --message "..."` 한 줄로 사용자에게 즉시 배포 가능.** 심사 불필요.
+
+### 수정사항
+
+- **직관 예정 모달 제목**: `isFutureGame`일 때 "기록 작성" → **"직관 예정"**으로 표시
+- **캘린더 탭 동작**: 이미 등록된 직관 예정 날짜 탭 → 타임라인이 아닌 **수정 모달 열림**
+- **서버-backup .gitignore 추가**: `server-backup/` 폴더 332MB가 EAS 업로드에 포함되던 문제 수정 (152MB로 감소)
+
+### 커밋 로그
+
+```
+(직관 예정 UI 수정 — 미커밋, `eas update`로 배포 예정)
+```
+
+---
+
+## Phase 22: FCM/위젯 테스트 앱 분리 (2026-06-15)
+
+### 배경
+
+EAS Preview APK가 기존 Play Store 앱과 서명 키 불일치로 설치 충돌 발생. 기존 앱과 완전히 분리된 테스트 앱(`풀카운트_test`)을 생성하여 사이드바이사이드 설치 가능하도록 구성.
+
+### 테스트 앱 identity
+
+| 항목 | 프로덕션 | 테스트 |
+|------|---------|--------|
+| 앱 이름 | 풀카운트 | 풀카운트_test |
+| slug | fullcount-kr | fullcount-kr (EAS 프로젝트 ID와 연결, 변경 불가) |
+| Android package | `kr.fullcount.app` | `kr.fullcount.app.test` |
+| Android package | `kr.fullcount.app` | `kr.fullcount.app.test` |
+| iOS bundleIdentifier | `kr.fullcount.app` | `kr.fullcount.app.test` |
+
+### google-services.json
+
+Firebase Console에서 `kr.fullcount.app.test` Android 앱을 추가 등록하여, 하나의 `google-services.json`에 두 패키지 client가 모두 포함됨:
+
+```json
+"client": [
+  { "package_name": "kr.fullcount.app" },
+  { "package_name": "kr.fullcount.app.test" }
+]
+```
+
+- 이 파일은 두 빌드 모두에서 동일하게 사용 가능
+- 프로덕션 빌드 시에도 변경 불필요
+
+### 프로덕션 복귀 방법
+
+테스트 완료 후 Play Store 제출용 빌드 시 `app.json` 3개 필드만 원래 값으로 되돌리면 됨:
+
+| 필드 | 프로덕션 값 |
+|------|-----------|
+| `expo.name` | `"풀카운트"` |
+| `expo.slug` | `"fullcount-kr"` (변경 불가, EAS projectId와 연결됨) |
+| `expo.android.package` | `"kr.fullcount.app"` |
+| `expo.ios.bundleIdentifier` | `"kr.fullcount.app"` |
+
+`android/` 디렉토리는 `.gitignore`에 포함되어 추적되지 않으므로, `expo prebuild -p android --clean`으로 재생성 시 새 패키지명 자동 적용됨.
+
+### EAS Build 프로필
+
+`test-apk` 프로필(eas.json에 추가 완료):
+```json
+"test-apk": {
+  "android": { "buildType": "apk" },
+  "distribution": "internal",
+  "channel": "test"
+}
+```
+
+APK로 빌드하여 사이드로딩 설치.
+
+### 관련 신규 파일 (Phase 21에서 작성)
+
+| 파일 | 역할 |
+|------|------|
+| `mobile/lib/fcm.ts` | FCM token lifecycle (권한 요청, 토큰 획득, foreground/background 핸들러) |
+| `mobile/lib/pushRegistration.ts` | 서버 `/push/register`, `/unregister` API 호출 |
+| `mobile/lib/usePushSetup.ts` | React Hook — 앱 부팅 시 FCM 토큰 등록 + myTeam 변경 감지 |
+| `mobile/lib/notification.ts` | Notifee lock screen notification (ongoing, visibility PUBLIC) |
+| `mobile/lib/teamStorage.ts` | 위젯용 AsyncStorage 팀 동기화 (Headless JS에서 SQLite 대체) |
+| `mobile/widgets/GameStatusWidget.tsx` | 위젯 UI (Compact/Normal/Wide 3단계) |
+| `mobile/widgets/updateWidget.tsx` | FCM payload / HTTP fetch → 위젯 렌더링 |
+| `mobile/widgets/taskHandler.tsx` | WIDGET_ADDED / RESIZED / UPDATE handler |
+| `mobile/plugins/withAndroidWidget.js` | Config plugin (Manifest receiver + widget XML) |
+| `mobile/index.js` | Custom entry point (background handler + widget tasks → expo-router) |
+
+### 수정 파일
+
+| 파일 | 변경 |
+|------|------|
+| `mobile/app.json` | name/slug → test identity, package/bundleIdentifier → test, googleServicesFile 추가 |
+| `mobile/google-services.json` | `kr.fullcount.app.test` client entry 추가 |
+| `mobile/lib/TeamContext.tsx` | `setMyTeam` → AsyncStorage 동기화 추가 |
+| `mobile/app/_layout.tsx` | `usePushSetup()` 호출 추가 |
+| `mobile/eas.json` | `test-apk` 프로필 추가 |
+
+### Phase 22 커밋 로그
+
+```
+(테스트 앱 분리 — 미커밋, APK 빌드 전)
+```
+
+---
+
+## Phase 23: Android Widget (4x2) + FCM Push + 잠금화면 알림 (2026-06-16)
+
+### 개요
+
+Android 바탕화면 위젯(react-native-android-widget)과 FCM 푸시 알림을 통합. 테스트 APK(`풀카운트_test`)로 EAS Build하여 검증.
+
+### 아키텍처 결정
+
+| 결정 | 선택 | 이유 |
+|------|------|------|
+| Widget library | `react-native-android-widget` v0.20.3 | Expo managed workflow 지원, app.plugin.js 내장 |
+| FCM | `@react-native-firebase/messaging` v24.1.1 | FCM data-only message (알림창 없이 위젯 갱신) |
+| Lock screen | `expo-notifications` v0.32.17 | @notifee/react-native jitpack.io timeout 문제로 교체 |
+| Widget sizes | 1x1 ~ 5x5 (25개) | EAS Build 한 번으로 전부 APK에 박고 OTA로 UI 관리 |
+| Default alarm | OFF | 처음 설치 시 무음/무알림, 위젯만 갱신 |
+
+### 변경 파일
+
+| 파일 | 변경 |
+|------|------|
+| `mobile/app.json` | plugins: `react-native-android-widget` (25개 위젯) + `expo-notifications` |
+| `mobile/index.js` | **신규** — custom entry: background handler 먼저 등록 → expo-router |
+| `mobile/lib/fcm.ts` | **신규** — FCM token lifecycle, foreground/background handler |
+| `mobile/lib/notification.ts` | **신규** — expo-notifications setup + updateLockScreenScore (AsyncStorage toggle) |
+| `mobile/lib/pushRegistration.ts` | **신규** — 서버 `/push/register`, `/unregister` |
+| `mobile/lib/teamStorage.ts` | **신규** — AsyncStorage 팀 동기화 (SHORT_CODE_TO_TEAM_ID 포함) |
+| `mobile/lib/usePushSetup.ts` | **신규** — React Hook (토큰/팀 변경 감지) |
+| `mobile/widgets/GameStatusWidget.tsx` | **신규** — 3-tier 렌더링 (compact <80dp / small <230dp / full) |
+| `mobile/widgets/updateWidget.tsx` | **신규** — requestWidgetUpdate로 모든 위젯 타입 일괄 갱신 |
+| `mobile/widgets/taskHandler.tsx` | **신규** — WIDGET_ADDED/RESIZED/UPDATE handler |
+| `mobile/widgets/rn-android-widget.d.ts` | **신규** — TypeScript 타입 정의 |
+| `mobile/app/(tabs)/my.tsx` | 잠금화면 전광판 ON/OFF Switch 추가 |
+| `mobile/lib/TeamContext.tsx` | setMyTeam → AsyncStorage 동기화 추가 |
+| `mobile/app/_layout.tsx` | usePushSetup() 호출 추가 |
+| `mobile/plugins/withAndroidWidget.js` | **삭제** — 라이브러리 app.plugin.js로 대체 |
+
+### 커밋 로그
+
+```
+88b342d feat: Android Widget (4x2 LiveScoreWidget) + FCM push + 잠금화면 알림
+474c381 feat: 모든 위젯 크기 선언 (2x1/2x2/4x2/5x2/4x3) + 크기별 렌더링
+3c5e330 feat: 잠금화면 전광판 알림 ON/OFF 스위치 (기본 OFF)
+a0660b8 feat: 1x1~5x5 모든 위젯 크기 선언 (25개)
+```
+
+### 위젯 크기별 렌더링 규칙
+
+| 크기 | 너비 | 높이 | 표시 내용 |
+|------|------|------|---------|
+| 1x1~1x5, 2x1 | <80dp | 제한 없음 | 점수만 (compactScoreView) |
+| 2x2~2x5, 3x2 | <230dp | 제한 없음 | 팀명+점수+상태 (smallView) |
+| 4x1~5x5 | ≥230dp | ≥80dp | 전광판+BSO+주자 (main4x2View) |
