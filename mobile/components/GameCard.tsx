@@ -285,10 +285,8 @@ export default function GameCard({
         <Text style={[styles.headerText, { width: large ? undefined : 60 }]}>{stadium} {time}</Text>
         <View style={{ flex: 1, alignItems: "center" }} />
         {weather ? (
-          <Text style={[styles.headerText, { width: large ? undefined : 60, textAlign: "right" }]}>{weather.temp}°C {weather.condition}</Text>
-        ) : (
-          <Text style={[styles.headerText, { width: large ? undefined : 60, textAlign: "right" }]}>{stadium}</Text>
-        )}
+          <Text style={[styles.headerText, { textAlign: "right" }]}>{Math.round(Number(weather.temp))}°C {weather.condition}</Text>
+        ) : null}
       </View>
       {/* Matchup */}
       <View style={[styles.matchup, dense && styles.matchupDense]}>

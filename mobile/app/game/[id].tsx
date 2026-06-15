@@ -697,10 +697,6 @@ export default function GameDetailScreen() {
     (isToday && gameHasStarted) ||
     (isToday && hasInningData)
   );
-  // TEMP: force live + mock relay for testing (14일 경기)
-  const mockRelay = __DEV__ && isFinished ? { strike: "1", ball: "2", out: "1", base1: "1", base2: "1", base3: "0", pitcher: { id: "p1", name: "헨리" }, batter: { id: "b1", name: "김하성" } } : null;
-  const relayForRender = detail?.relay || mockRelay;
-  if (__DEV__ && isFinished && !detail?.relay) isLive = true;
   const isBeforeGame = !isFinished && !isLive && !isCancelled;
   const hasLineup = !isBeyondTomorrow && homeLineup.length > 0 && awayLineup.length > 0;
   const showLineupStatus = isBeforeGame;
@@ -747,10 +743,10 @@ export default function GameDetailScreen() {
           awayTeam={detail.awayTeam}
           time={detail.gameInfo?.time || scheduleTimeRef.current || ""}
           stadium={stadiumVenue}
-          weather={todayWeatherRef.current[VENUE_TO_FULL_NAME[stadiumVenue] || stadiumVenue]}
+          weather={isToday ? todayWeatherRef.current[VENUE_TO_FULL_NAME[stadiumVenue] || stadiumVenue] : undefined}
           homePitcher={homePitcherName}
           awayPitcher={awayPitcherName}
-          status={isCancelled ? "finished" : mockRelay ? "live" : isFinished ? "finished" : isLive ? "live" : "scheduled"}
+          status={isCancelled ? "finished" : isFinished ? "finished" : isLive ? "live" : "scheduled"}
           cancelled={isCancelled}
           homeScore={gameScore?.home}
           awayScore={gameScore?.away}
@@ -758,7 +754,7 @@ export default function GameDetailScreen() {
           losePitcher={scoreFallback?.losePitcher ?? null}
           liveInning={inningInfo?.inning}
           isTop={inningInfo?.isTop}
-          relay={relayForRender}
+          relay={detail.relay}
           large
           statusBadgeStyle={{
             badge: styles.statusBadge,

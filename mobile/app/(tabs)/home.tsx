@@ -350,24 +350,6 @@ export default function HomeScreen() {
         // Re-check cancelled after async detail enrichment
         if (cancelled) return;
 
-        // TEMP: mock live + relay for finished games in dev
-        if (__DEV__) {
-          for (const ds of Object.keys(result)) {
-            for (let i = 0; i < result[ds].length; i++) {
-              const g = result[ds][i];
-              if (g.status !== "finished" || g.relay) continue;
-              result[ds][i] = {
-                ...g,
-                status: "live",
-                liveInning: 1,
-                isTop: true,
-                relay: { strike: "1", ball: "2", out: "1", base1: "1", base2: "1", base3: "0", pitcher: { id: "p1", name: "헨리" }, batter: { id: "b1", name: "김하성" } },
-              };
-              break;
-            }
-          }
-        }
-
         setGamesByDate(result);
         hasEverLoaded.current = true;
         setLoading(false);
@@ -725,7 +707,7 @@ export default function HomeScreen() {
         awayTeam={item.awayTeam}
         time={item.time}
         stadium={item.venue}
-        weather={todayWeatherRef.current[VENUE_TO_FULL_NAME[item.venue] || item.venue]}
+        weather={item.date === formatDateStr(new Date()) ? (todayWeatherRef.current[VENUE_TO_FULL_NAME[item.venue] || item.venue]) : undefined}
         status={item.status === "cancelled" ? "finished" : item.status}
         homeScore={item.homeScore}
         awayScore={item.awayScore}
