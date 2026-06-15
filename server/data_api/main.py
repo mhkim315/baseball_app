@@ -94,6 +94,9 @@ _RELAY_CACHE_TTL = 5  # seconds — prevent Naver IP block
 _WEATHER_CACHE: dict[str, tuple[float, dict | None]] = {}
 _WEATHER_CACHE_TTL = 1800  # 30 minutes
 
+_WIDGET_CACHE: dict[str, tuple[float, dict]] = {}
+_WIDGET_CACHE_TTL = 15  # seconds — 1 Naver request per window regardless of users
+
 def load_json(filename):
     now = time.time()
     if filename in _JSON_CACHE:
@@ -621,6 +624,224 @@ def get_refresh_data():
         "todayGameDetails": today_game_details,
         "todayWeather": today_weather,
     }
+
+
+# --- Widget data V3 (SSOT: names, starters, ranks, internal IDs) ---
+
+_VENUE_SHORT: dict[str, str] = {
+    "OB": "잠실", "LG": "잠실", "WO": "고척",
+    "SK": "인천", "KT": "수원", "HH": "대전",
+    "SS": "대구", "HT": "광주", "LT": "사직",
+    "NC": "창원",
+}
+
+_NAVER_ID_RE = re.compile(r"^(\d{8})([A-Z]{2})([A-Z]{2})(\d)")
+
+
+def _naver_to_internal_gid(naver_id: str) -> str:
+    """Convert '20260615OBLG02026' → '20260615-OBLG-0'."""
+    m = _NAVER_ID_RE.match(naver_id)
+    if m:
+        return f"{m.group(1)}-{m.group(2)}{m.group(3)}-{m.group(4)}"
+    return naver_id
+
+
+def _naver_status(s: str) -> str:
+    """Map Naver status strings → widget status."""
+    if not s:
+        return "scheduled"
+    su = s.upper()
+    if su in ("STARTED", "PLAYING", "LIVE"):
+        return "live"
+    if su in ("RESULT", "ENDED", "FINISHED"):
+        return "finished"
+    if su in ("CANCEL", "CANCELLED"):
+        return "cancelled"
+    return "scheduled"
+
+
+@app.get("/widget-data")
+def get_widget_data():
+    """V3: SSOT endpoint — names, starters, ranks, IDs + scoreBoard + relay.
+
+    Home tab and game detail both consume this single source for live data.
+    Cached 15 s regardless of concurrent users — one Naver fetch per window.
+    """
+    today_str = date.today().isoformat()
+    now = time.time()
+
+    if today_str in _WIDGET_CACHE:
+        cached_time, cached_data = _WIDGET_CACHE[today_str]
+        if now - cached_time < _WIDGET_CACHE_TTL:
+            return cached_data
+
+    # Memory-cached JSON lookups (no disk I/O inside 15 s window)
+    today_games = load_json("today-games.json") or {}
+    standings_data = load_json("kbo_standings.json") or {}
+
+    rank_map: dict[str, int] = {}
+    for row in standings_data.get("rows", []):
+        rn = row.get("teamName")
+        rk = row.get("rank")
+        if rn and rk is not None:
+            rank_map[rn] = rk
+
+    starter_map: dict[str, dict] = {}
+    for g in today_games.get("games", []):
+        gid = g.get("id")
+        if not gid:
+            continue
+        away = g.get("away", {})
+        home = g.get("home", {})
+        if not isinstance(away, dict):
+            away = {}
+        if not isinstance(home, dict):
+            home = {}
+        away_st = None
+        home_st = None
+        for side, key in ((away, "away"), (home, "home")):
+            s = side.get("starter")
+            if isinstance(s, dict) and s.get("name"):
+                if key == "away":
+                    away_st = s["name"]
+                else:
+                    home_st = s["name"]
+            elif isinstance(s, str) and s:
+                if key == "away":
+                    away_st = s
+                else:
+                    home_st = s
+        starter_map[gid] = {"away": away_st, "home": home_st}
+
+    try:
+        from scripts.naver_api import (
+            schedule_games,
+            game_relay,
+            parse_score_inning,
+            parse_rheb,
+        )
+        raw_games = schedule_games(today_str, today_str)
+    except Exception as e:
+        logger.error("widget-data: schedule_games failed — %s", e)
+        return JSONResponse({"error": "Service unavailable"}, status_code=503)
+
+    kbo_games = [g for g in raw_games if g.get("categoryId") == "kbo"]
+
+    games_data: list[dict] = []
+    live_naver_ids: list[str] = []
+
+    def _code_to_kr(code: str) -> str:
+        tid = TEAM_CODE_MAP.get(code)
+        return TEAM_NAME_MAP.get(tid, code) if tid else code
+
+    for g in kbo_games:
+        naver_id = str(g.get("gameId", ""))
+        internal_id = _naver_to_internal_gid(naver_id)
+        status = _naver_status(g.get("status", ""))
+
+        home_code = str(g.get("homeTeamCode") or "")
+        away_code = str(g.get("awayTeamCode") or "")
+        home_kr = _code_to_kr(home_code)
+        away_kr = _code_to_kr(away_code)
+
+        hs = g.get("homeScore")
+        aws = g.get("awayScore")
+
+        starters = starter_map.get(internal_id, {})
+        home_starter = starters.get("home")
+        away_starter = starters.get("away")
+
+        entry: dict = {
+            "gameId": internal_id,
+            "naverGameId": naver_id,
+            "gameIdx": 0,
+            "time": (g.get("gameDateTime") or g.get("startTime") or "")[11:16]
+            if len(g.get("gameDateTime") or g.get("startTime") or "") >= 16
+            else "",
+            "venue": _VENUE_SHORT.get(home_code, g.get("stadium") or g.get("venue") or ""),
+            "status": status,
+            "homeTeam": home_code,
+            "awayTeam": away_code,
+            "homeName": home_kr,
+            "awayName": away_kr,
+            "homeStarter": home_starter,
+            "awayStarter": away_starter,
+            "homeRank": rank_map.get(home_kr),
+            "awayRank": rank_map.get(away_kr),
+            "score": {"home": hs, "away": aws} if hs is not None and aws is not None else None,
+            "scoreBoard": {
+                "rheb": {
+                    "home": parse_rheb(str(g.get("homeTeamRheb") or "")),
+                    "away": parse_rheb(str(g.get("awayTeamRheb") or "")),
+                },
+                "inn": {
+                    "home": parse_score_inning(str(g.get("homeTeamScoreByInning") or "")),
+                    "away": parse_score_inning(str(g.get("awayTeamScoreByInning") or "")),
+                },
+            },
+            "relay": None,
+        }
+        games_data.append(entry)
+
+        if status == "live":
+            live_naver_ids.append(naver_id)
+
+    # ── Assign gameIdx (1‑based; >1 = DH) ──────────────────
+    seen: dict[str, int] = {}
+    for entry in games_data:
+        key = entry["awayTeam"] + entry["homeTeam"]
+        idx = seen.get(key, 0) + 1
+        seen[key] = idx
+        entry["gameIdx"] = idx
+
+    # ── Parallel relay fetch for live games ─────────────────
+    if live_naver_ids:
+        def _fetch_relay(nid: str) -> dict | None:
+            try:
+                rd = game_relay(nid)
+                if not rd:
+                    return None
+                home_entry = rd.get("homeEntry", []) or []
+                away_entry = rd.get("awayEntry", []) or []
+                p2n: dict[str, str] = {}
+                for e in home_entry + away_entry:
+                    if isinstance(e, dict) and e.get("pcode") and e.get("name"):
+                        p2n[str(e["pcode"])] = str(e["name"])
+
+                cs = rd.get("currentGameState", {}) or {}
+                pid = str(cs.get("pitcher") or "0")
+                bid = str(cs.get("batter") or "0")
+                return {
+                    "strike": str(cs.get("strike") or "0"),
+                    "ball": str(cs.get("ball") or "0"),
+                    "out": str(cs.get("out") or "0"),
+                    "base1": str(cs.get("base1") or "0"),
+                    "base2": str(cs.get("base2") or "0"),
+                    "base3": str(cs.get("base3") or "0"),
+                    "pitcher": {"id": pid, "name": p2n.get(pid, "")} if pid != "0" else None,
+                    "batter": {"id": bid, "name": p2n.get(bid, "")} if bid != "0" else None,
+                }
+            except Exception as e:
+                logger.warning("widget-data: relay failed for %s — %s", nid, e)
+                return None
+
+        with ThreadPoolExecutor(max_workers=5) as ex:
+            futures = {ex.submit(_fetch_relay, nid): nid for nid in live_naver_ids}
+            relay_map: dict[str, dict | None] = {}
+            for f in as_completed(futures, timeout=10):
+                nid = futures[f]
+                try:
+                    relay_map[nid] = f.result()
+                except Exception:
+                    relay_map[nid] = None
+
+        for entry in games_data:
+            if entry["status"] == "live":
+                entry["relay"] = relay_map.get(entry["naverGameId"])
+
+    result: dict = {"games": games_data}
+    _WIDGET_CACHE[today_str] = (time.time(), result)
+    return result
 
 
 @app.get("/postseason-odds")

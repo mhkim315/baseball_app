@@ -36,6 +36,21 @@ def game_lineup(game_id: str) -> dict[str, Any]:
     return dict(data.get("result") or {}) if data.get("success") else {}
 
 
+def parse_score_inning(inn_str: str) -> list[int]:
+    """Parse Naver comma-separated inning scores. "0,0,1,0,4" → [0, 0, 1, 0, 4]."""
+    if not inn_str or not inn_str.strip():
+        return []
+    return [int(x.strip()) for x in inn_str.split(",") if x.strip() != ""]
+
+
+def parse_rheb(rheb_str: str) -> dict[str, int]:
+    """Parse Naver comma-separated RHEB. "5,10,0,2" → {"r":5,"h":10,"e":0}. Drops BB (4th value)."""
+    if not rheb_str or not rheb_str.strip():
+        return {"r": 0, "h": 0, "e": 0}
+    parts = [x.strip() for x in rheb_str.split(",")]
+    return {"r": int(parts[0]), "h": int(parts[1]), "e": int(parts[2])}
+
+
 def game_relay(naver_game_id: str) -> dict[str, Any] | None:
     """Fetch live relay data (BSO, baserunners, pitcher/batter) from Naver.
     Returns the full result dict containing currentGameState and entry arrays."""

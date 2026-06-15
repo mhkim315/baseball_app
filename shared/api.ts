@@ -22,6 +22,7 @@ import type {
   ScheduleGame,
   OnboardingData,
   RefreshData,
+  WidgetData,
 } from "./types";
 
 export function createApi(options: ApiClientOptions) {
@@ -149,6 +150,9 @@ export function createApi(options: ApiClientOptions) {
 
     fetchRefreshData: (): Promise<RefreshData | null> =>
       client.get<RefreshData>("/refresh-data"),
+
+    fetchWidgetData: (): Promise<WidgetData | null> =>
+      client.get<WidgetData>("/widget-data"),
 
     getWithStatus: <T>(path: string) =>
       client.getWithStatus<T>(path),

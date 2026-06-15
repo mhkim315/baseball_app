@@ -1,5 +1,7 @@
 import * as FileSystem from "expo-file-system/legacy";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
+import { getDb } from "./db/connection";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const PHOTO_DIR_NAME = "jikgwan";
 
@@ -93,5 +95,64 @@ export async function deleteAllPhotos(): Promise<void> {
     }
   } catch (e) {
     console.warn("deleteAllPhotos failed", e);
+  }
+}
+
+export async function repairAllPhotoPaths(): Promise<void> {
+  try {
+    const isRepaired = await AsyncStorage.getItem("jikgwan_photo_paths_repaired_v1");
+    if (isRepaired === "true") {
+      return;
+    }
+
+    const db = getDb();
+    const rows = db.getAllSync<{ id: number; photo_path: string | null; photos: string | null }>(
+      "SELECT id, photo_path, photos FROM jikgwan_records WHERE photo_path LIKE 'file://%' OR photos LIKE '%file://%'"
+    );
+
+    if (rows.length === 0) {
+      await AsyncStorage.setItem("jikgwan_photo_paths_repaired_v1", "true");
+      return;
+    }
+
+    let updated = 0;
+    for (const row of rows) {
+      let changed = false;
+      let newPhotoPath = row.photo_path;
+      
+      if (newPhotoPath && newPhotoPath.startsWith("file://")) {
+        newPhotoPath = resolvePhotoUri(newPhotoPath);
+        changed = true;
+      }
+
+      let newPhotos = row.photos;
+      if (newPhotos && newPhotos.includes("file://")) {
+        try {
+          const parsed = JSON.parse(newPhotos) as string[];
+          const repaired = parsed.map(p => p.startsWith("file://") ? resolvePhotoUri(p) : p);
+          newPhotos = JSON.stringify(repaired);
+          changed = true;
+        } catch {
+          // ignore parse error
+        }
+      }
+
+      if (changed) {
+        db.runSync(
+          "UPDATE jikgwan_records SET photo_path = ?, photos = ? WHERE id = ?",
+          [newPhotoPath, newPhotos, row.id]
+        );
+        updated++;
+      }
+    }
+
+    console.log(`[DB] Repaired ${updated} old photo paths.`);
+    
+    // We don't import invalidateRecordsCache here to avoid circular dependency
+    // Just relying on the next load since this runs on app boot
+    
+    await AsyncStorage.setItem("jikgwan_photo_paths_repaired_v1", "true");
+  } catch (e) {
+    console.warn("repairAllPhotoPaths error:", e);
   }
 }

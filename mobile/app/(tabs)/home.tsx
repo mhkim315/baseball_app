@@ -16,7 +16,7 @@ import {
   cachedDailyScores,
   cachedAllDailyScores,
   cachedTodayGames,
-  cachedGameDetail,
+  cachedWidgetData,
 } from "@/lib/gameCache";
 import { resolveGames, resolveGamesForSchedule, type ResolvedGame } from "@/lib/resolveGames";
 import { formatDateForApi as formatDateStr } from "@shared/constants";
@@ -295,56 +295,52 @@ export default function HomeScreen() {
           result[ds] = resolved;
         }
 
-        // Enrich live games with detail data (pitchers, inning info) before state update
-        const allDetailNeeded: { date: string; game: ResolvedGame }[] = [];
-        for (let i = 0; i < 3; i++) {
-          const ds = dates[i];
-          for (const g of result[ds] || []) {
-            const isFuture = ds > todayStr;
-            if (!isFuture && !g.isExhibition && g.status === "live") {
-              allDetailNeeded.push({ date: ds, game: g });
-            }
-          }
-        }
-        if (allDetailNeeded.length > 0) {
-          try {
-            const detailResults = await Promise.all(
-              allDetailNeeded.map(({ game }) => cachedGameDetail(game.gameId))
-            );
-            for (const detail of detailResults) {
-              if (!detail) continue;
-              const need = allDetailNeeded.find((n) => n.game.gameId === detail.gameId);
-              if (!need) continue;
-              const games = result[need.date];
-              if (!games) continue;
-              const idx = games.findIndex((g) => g.gameId === detail.gameId);
-              if (idx === -1) continue;
+        // Enrich live games via widget-data (single call for all games)
+        try {
+          const widgetData = await cachedWidgetData();
+          if (widgetData?.games) {
+            for (const wg of widgetData.games) {
+              for (let i = 0; i < 3; i++) {
+                const ds = dates[i];
+                const games = result[ds];
+                if (!games) continue;
+                const idx = games.findIndex((g) => g.gameId === wg.gameId);
+                if (idx === -1) continue;
 
-              let liveInning = games[idx].liveInning;
-              let isTop = games[idx].isTop;
-              if (games[idx].status === "live" && liveInning == null) {
-                const info = getInningInfo(detail.scoreBoard?.inn);
-                if (info) {
-                  liveInning = info.inning;
-                  isTop = info.isTop;
-                } else {
-                  liveInning = 1;
-                  isTop = true;
+                let liveInning = games[idx].liveInning;
+                let isTop = games[idx].isTop;
+                if (wg.status === "live" && liveInning == null) {
+                  const info = getInningInfo(wg.scoreBoard?.inn);
+                  if (info) {
+                    liveInning = info.inning;
+                    isTop = info.isTop;
+                  } else {
+                    liveInning = 1;
+                    isTop = true;
+                  }
                 }
-              }
 
-              games[idx] = {
-                ...games[idx],
-                liveInning,
-                isTop,
-                relay: detail.relay,
-                homePitcher: games[idx].homePitcher || (detail.starters?.home?.name || undefined),
-                awayPitcher: games[idx].awayPitcher || (detail.starters?.away?.name || undefined),
-              };
+                // Update homeScore/awayScore only when widget has live data
+                // (wg.score is null for scheduled games — keep initial value)
+                const scoreUpdate = wg.score
+                  ? { homeScore: wg.score.home, awayScore: wg.score.away }
+                  : {};
+
+                games[idx] = {
+                  ...games[idx],
+                  ...scoreUpdate,
+                  liveInning,
+                  isTop,
+                  relay: wg.relay,
+                  awayPitcher: games[idx].awayPitcher || wg.awayStarter || undefined,
+                  homePitcher: games[idx].homePitcher || wg.homeStarter || undefined,
+                };
+                break;
+              }
             }
-          } catch {
-            // Ignore — games render without detail enrichment
           }
+        } catch {
+          // Ignore — games render without detail enrichment
         }
 
         // Re-check cancelled after async detail enrichment

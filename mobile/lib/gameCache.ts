@@ -7,6 +7,7 @@ import {
   fetchGameDetail as apiGameDetail,
   fetchStandingsJson as apiStandingsJson,
   fetchScoreSummary as apiScoreSummary,
+  fetchWidgetData as apiWidgetData,
   getWithStatus,
   type ScoreEntry,
   type ScheduleGame,
@@ -345,6 +346,13 @@ export async function cachedGameDetail(gameId: string): Promise<GameDetail | nul
 /** Bypass cache and fetch fresh GameDetail from server (used for live relay polling). */
 export async function fetchGameDetailFresh(gameId: string): Promise<GameDetail | null> {
   return withConcurrencyLimit(() => apiGameDetail(gameId));
+}
+
+// Widget data — 15s TTL (matches server _WIDGET_CACHE, single source for live data)
+export async function cachedWidgetData(): Promise<import("@shared/types").WidgetData | null> {
+  const key = cacheKey("widget", "all");
+  const ttl = 15_000;
+  return fetchWithCache(key, ttl, () => apiWidgetData());
 }
 
 export async function cachedStandings(): Promise<{

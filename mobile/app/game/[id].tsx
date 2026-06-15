@@ -9,7 +9,7 @@ import {
 } from "@/lib/api";
 import { TeamBadge } from "@/components/TeamBadge";
 import GameCard from "@/components/GameCard";
-import { cachedDailyScores, cachedAllDailyScores, cachedScheduleByMonth, cachedGameDetail, cachedStandings, fetchGameDetailFresh } from "@/lib/gameCache";
+import { cachedDailyScores, cachedAllDailyScores, cachedScheduleByMonth, cachedGameDetail, cachedStandings, cachedWidgetData } from "@/lib/gameCache";
 import { resolveGames } from "@/lib/resolveGames";
 import SimpleAlert from "@/components/SimpleAlert";
 import DiaryEntryModal, { type GameOption } from "@/components/DiaryEntryModal";
@@ -421,13 +421,29 @@ export default function GameDetailScreen() {
     return true;
   }, [detail]);
 
-  // Live relay polling: 15s interval while game is live, paused when screen not focused
+  // Live data overlay via widget-data (single SSOT, 15s) — merge score/relay into initial detail
   useFocusEffect(useCallback(() => {
     if (!isLiveForPolling || !gid) return;
     const interval = setInterval(async () => {
-      const fresh = await fetchGameDetailFresh(gid);
-      if (fresh) setDetail(fresh);
-    }, 12_000);
+      const wd = await cachedWidgetData();
+      if (!wd?.games) return;
+      const wg = wd.games.find((g) => g.gameId === gid);
+      if (!wg) return;
+      setDetail((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          score: wg.score ?? prev.score,
+          scoreBoard: {
+            ...prev.scoreBoard,
+            rheb: wg.scoreBoard?.rheb ?? prev.scoreBoard?.rheb,
+            inn: wg.scoreBoard?.inn ?? prev.scoreBoard?.inn,
+          },
+          relay: wg.relay ?? prev.relay,
+          gameInfo: prev.gameInfo ? { ...prev.gameInfo, status: wg.status } : prev.gameInfo,
+        };
+      });
+    }, 15_000);
     return () => clearInterval(interval);
   }, [isLiveForPolling, gid]));
 

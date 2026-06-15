@@ -217,6 +217,54 @@ export interface OnboardingData {
   scoreSummary: { year: number; teams: ScoreSummaryRow[] } | null;
 }
 
+// ─── Widget data types ────────────────────────────────────────
+
+export interface WidgetRelay {
+  strike: string;
+  ball: string;
+  out: string;
+  base1: string;
+  base2: string;
+  base3: string;
+  pitcher: RelayPlayer | null;
+  batter: RelayPlayer | null;
+}
+
+export interface WidgetScoreBoard {
+  rheb: {
+    home: { r: number; h: number; e: number };
+    away: { r: number; h: number; e: number };
+  };
+  inn: {
+    home: number[];
+    away: number[];
+  };
+}
+
+export interface WidgetGame {
+  gameId: string;
+  naverGameId: string;
+  gameIdx: number;
+  time: string;
+  venue: string;
+  status: "live" | "finished" | "scheduled" | "cancelled";
+  homeTeam: string;
+  awayTeam: string;
+  homeName: string;
+  awayName: string;
+  homeStarter: string | null;
+  awayStarter: string | null;
+  homeRank: number | null;
+  awayRank: number | null;
+  score: { home: number; away: number } | null;
+  scoreBoard: WidgetScoreBoard;
+  relay: WidgetRelay | null;
+}
+
+export interface WidgetData {
+  games: WidgetGame[];
+}
+
 export interface ScheduleGame {
   date: string;
   month: number;

@@ -6,6 +6,7 @@ import { TeamProvider } from "@/lib/TeamContext";
 import React, { useEffect, useRef } from "react";
 import { View, Text, Pressable, InteractionManager } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
+import { repairAllPhotoPaths } from "@/lib/camera";
 
 try {
   SplashScreen.preventAutoHideAsync();
@@ -59,6 +60,9 @@ function RootLayoutInner() {
   useEffect(() => {
     if (hideSplashCalled.current) return;
     hideSplashCalled.current = true;
+
+    // Run the one-time photo path DB migration
+    repairAllPhotoPaths().catch(console.warn);
 
     const hide = async () => {
       try {

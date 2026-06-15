@@ -16,6 +16,6 @@ ssh -p "$PORT" -i ~/.ssh/oracle.key "$HOST" "mkdir -p /home/opc/fullcount_backen
 scp -P "$PORT" -i ~/.ssh/oracle.key ../../scripts/naver_api.py "$HOST:/home/opc/fullcount_backend/scripts/naver_api.py" || { echo "SCP naver_api.py failed"; exit 1; }
 
 # Install dependencies and restart service
-ssh -p "$PORT" -i ~/.ssh/oracle.key "$HOST" "sudo pip3 install cachetools && sudo systemctl restart fullcount-api.service && sleep 2 && sudo systemctl status fullcount-api.service --no-pager -l" || { echo "Restart failed"; exit 1; }
+ssh -p "$PORT" -i ~/.ssh/oracle.key "$HOST" "/home/opc/fullcount_backend/venv/bin/pip install cachetools && sudo systemctl restart fullcount-api.service && sleep 2 && sudo systemctl status fullcount-api.service --no-pager -l" || { echo "Restart failed"; exit 1; }
 
 echo "=== Deploy complete ==="

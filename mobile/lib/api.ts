@@ -29,6 +29,7 @@ export const {
   fetchGameDetail,
   fetchOnboardingData,
   fetchRefreshData,
+  fetchWidgetData,
   fetchSeasons,
   fetchScoreSummary,
   getWithStatus,
