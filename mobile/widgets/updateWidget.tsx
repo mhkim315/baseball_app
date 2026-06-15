@@ -1,0 +1,107 @@
+import { requestWidgetUpdate } from "react-native-android-widget";
+import { getMyTeamForWidget, SHORT_CODE_TO_TEAM_ID, SHORT_CODE_TO_NAME } from "@/lib/teamStorage";
+import { GameStatusWidget } from "./GameStatusWidget";
+
+const WIDGET_NAME = "LiveScoreWidget";
+
+interface WidgetGameData {
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: string;
+  awayScore: string;
+  inning: string;
+  isTop: string;
+  status: string;
+  ball?: string;
+  strike?: string;
+  out?: string;
+  base1?: string;
+  base2?: string;
+  base3?: string;
+}
+
+function buildWidgetProps(data: Record<string, string>): WidgetGameData {
+  return {
+    homeTeam: SHORT_CODE_TO_NAME[data.home_team || ""] || data.home_team || "",
+    awayTeam: SHORT_CODE_TO_NAME[data.away_team || ""] || data.away_team || "",
+    homeScore: data.home_score || "0",
+    awayScore: data.away_score || "0",
+    inning: data.inning || "0",
+    isTop: data.is_top || "0",
+    status: data.status || "scheduled",
+    ball: data.ball,
+    strike: data.strike,
+    out: data.out,
+    base1: data.base1,
+    base2: data.base2,
+    base3: data.base3,
+  };
+}
+
+/** FCM payload로 직접 위젯 업데이트 (백그라운드에서 HTTP fetch 금지) */
+export async function updateWidgetFromFCM(data: Record<string, string>): Promise<void> {
+  const myTeam = await getMyTeamForWidget();
+  if (!myTeam) return;
+
+  // Convert short codes → team IDs for comparison
+  const home = SHORT_CODE_TO_TEAM_ID[data.home_team || ""] || data.home_team || "";
+  const away = SHORT_CODE_TO_TEAM_ID[data.away_team || ""] || data.away_team || "";
+  if (home !== myTeam && away !== myTeam) return;
+
+  const props = buildWidgetProps(data);
+  await requestWidgetUpdate({
+    widgetName: WIDGET_NAME,
+    renderWidget: (widgetInfo) => (
+      <GameStatusWidget width={widgetInfo.width} height={widgetInfo.height} data={props} myTeam={myTeam} />
+    ),
+  });
+}
+
+/** widget-data API 응답으로 위젯 업데이트 (주기적 fallback / 위젯 추가 시) */
+export async function updateWidgetPeriodic(): Promise<void> {
+  const myTeam = await getMyTeamForWidget();
+  if (!myTeam) return;
+
+  let data: WidgetGameData | null = null;
+
+  try {
+    const API_BASE = process.env.EXPO_PUBLIC_API_BASE || "https://api.fullcount.kr";
+    const res = await fetch(`${API_BASE}/widget-data`);
+    const json = await res.json();
+
+    const games = json.games || [];
+    // Find the game involving my team
+    const myGame = games.find((g: any) => {
+      const homeId = SHORT_CODE_TO_TEAM_ID[g.homeTeam] || g.homeTeam;
+      const awayId = SHORT_CODE_TO_TEAM_ID[g.awayTeam] || g.awayTeam;
+      return homeId === myTeam || awayId === myTeam;
+    });
+
+    if (myGame) {
+      data = {
+        homeTeam: myGame.homeName || myGame.homeTeam,
+        awayTeam: myGame.awayName || myGame.awayTeam,
+        homeScore: myGame.score?.home?.toString() || "0",
+        awayScore: myGame.score?.away?.toString() || "0",
+        inning: myGame.relay?.inning?.toString() || myGame.time?.slice(0, 5) || "0",
+        isTop: myGame.relay?.isTop?.toString() || "0",
+        status: myGame.status || "scheduled",
+        ball: myGame.relay?.ball?.toString(),
+        strike: myGame.relay?.strike?.toString(),
+        out: myGame.relay?.out?.toString(),
+        base1: myGame.relay?.base1?.toString(),
+        base2: myGame.relay?.base2?.toString(),
+        base3: myGame.relay?.base3?.toString(),
+      };
+    }
+  } catch (e) {
+    console.warn("updateWidgetPeriodic: fetch failed", e);
+  }
+
+  await requestWidgetUpdate({
+    widgetName: WIDGET_NAME,
+    renderWidget: (widgetInfo) => (
+      <GameStatusWidget width={widgetInfo.width} height={widgetInfo.height} data={data} myTeam={myTeam} />
+    ),
+  });
+}
