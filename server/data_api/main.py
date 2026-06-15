@@ -23,6 +23,8 @@ from cachetools import TTLCache
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from shared.scoring_data import _HISTORICAL_SCORING
 
+from data_api.push_router import router as push_router
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("fullcount")
 
@@ -30,6 +32,8 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is required")
 engine = create_engine(DATABASE_URL)
+
+ENABLE_PUSH = os.getenv("ENABLE_PUSH_NOTIFICATIONS", "").lower() in ("1", "true", "yes")
 
 DATA_DIR = Path(os.getenv("DATA_DIR", "/home/opc/fullcount_backend/repo/data"))
 
@@ -71,6 +75,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 app.add_middleware(RateLimitMiddleware, max_requests=100, window_seconds=60)
+
+if ENABLE_PUSH:
+    app.include_router(push_router)
+    logger.info("Push notification router mounted")
 
 
 # --- Helpers ---
@@ -152,6 +160,19 @@ def scheduled_collect():
 
 
 scheduler.add_job(scheduled_collect, "date", run_date=datetime.now() + timedelta(seconds=10))
+
+if ENABLE_PUSH:
+    def scheduled_push_worker():
+        from scripts.push_worker import run_push_worker
+        try:
+            run_push_worker(_get_widget_data_cached, engine)
+        except Exception as e:
+            logger.warning("push_worker error: %s", e)
+        next_interval = random.randint(5, 10)
+        scheduler.add_job(scheduled_push_worker, "date", run_date=datetime.now() + timedelta(seconds=next_interval))
+
+    scheduler.add_job(scheduled_push_worker, "date", run_date=datetime.now() + timedelta(seconds=15))
+
 scheduler.start()
 
 
@@ -660,13 +681,8 @@ def _naver_status(s: str) -> str:
     return "scheduled"
 
 
-@app.get("/widget-data")
-def get_widget_data():
-    """V3: SSOT endpoint — names, starters, ranks, IDs + scoreBoard + relay.
-
-    Home tab and game detail both consume this single source for live data.
-    Cached 15 s regardless of concurrent users — one Naver fetch per window.
-    """
+def _get_widget_data_cached() -> dict | None:
+    """Build widget data dict with in-memory caching. Returns None on failure."""
     today_str = date.today().isoformat()
     now = time.time()
 
@@ -723,7 +739,7 @@ def get_widget_data():
         raw_games = schedule_games(today_str, today_str)
     except Exception as e:
         logger.error("widget-data: schedule_games failed — %s", e)
-        return JSONResponse({"error": "Service unavailable"}, status_code=503)
+        return None
 
     kbo_games = [g for g in raw_games if g.get("categoryId") == "kbo"]
 
@@ -839,9 +855,42 @@ def get_widget_data():
             if entry["status"] == "live":
                 entry["relay"] = relay_map.get(entry["naverGameId"])
 
-    result: dict = {"games": games_data}
+    # ── Weather data ──────────────────────────────────
+    today_weather = {}
+    stadiums = set()
+    for g in kbo_games:
+        home_code = str(g.get("homeTeamCode") or "")
+        venue = {
+            "OB": "잠실야구장", "LG": "잠실야구장", "WO": "고척스카이돔",
+            "SK": "인천SSG랜더스필드", "KT": "수원KT위즈파크", "HH": "대전한화생명이글스파크",
+            "SS": "대구삼성라이온즈파크", "HT": "광주기아챔피언스필드", "LT": "사직야구장",
+            "NC": "창원NC파크",
+        }.get(home_code)
+        if venue:
+            stadiums.add(venue)
+    if stadiums:
+        with ThreadPoolExecutor(max_workers=5) as ex:
+            futures = {ex.submit(_get_weather_cached, s): s for s in stadiums}
+            for f in as_completed(futures, timeout=12):
+                s = futures[f]
+                try:
+                    w = f.result()
+                    if w:
+                        today_weather[s] = w
+                except Exception:
+                    pass
+
+    result: dict = {"games": games_data, "todayWeather": today_weather}
     _WIDGET_CACHE[today_str] = (time.time(), result)
     return result
+
+
+@app.get("/widget-data")
+def get_widget_data():
+    data = _get_widget_data_cached()
+    if data is None:
+        return JSONResponse({"error": "Service unavailable"}, status_code=503)
+    return data
 
 
 @app.get("/postseason-odds")
