@@ -13,7 +13,7 @@ import { getDb, addJikgwanRecord, updateJikgwanRecord, getUnlockedEmotions } fro
 import { addExpense, getExpensesByRecordId, deleteExpensesByRecordId, EXPENSE_CATEGORIES } from "@/lib/db";
 import { getAllTotems, getDiaryTotems, setDiaryTotems } from "@/lib/db";
 import type { ExpenseCategory, Totem, JikgwanRecord } from "@/lib/db";
-import { savePhoto, resizePhoto, generatePhotoName } from "@/lib/camera";
+import { savePhoto, resizePhoto, generatePhotoName, resolvePhotoUri } from "@/lib/camera";
 import { cachedScheduleByMonth, cachedDailyScores } from "@/lib/gameCache";
 import type { ScheduleGame, ScoreEntry } from "@/lib/api";
 import { resolveVenue } from "@/lib/stadiumData";
@@ -39,10 +39,10 @@ export function parseEditPhotos(record: { photos?: string | null; photo_path?: s
   if (record.photos) {
     try {
       const parsed = JSON.parse(record.photos);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed.map(resolvePhotoUri);
     } catch {}
   }
-  if (record.photo_path) return [record.photo_path];
+  if (record.photo_path) return [resolvePhotoUri(record.photo_path)];
   return [];
 }
 
@@ -390,6 +390,11 @@ export function useDiaryForm({ visible, onClose, onSaved, editRecord, presetGame
       if (photoUris.length > 0) {
         let failedCount = 0;
         for (const uri of photoUris) {
+          // 이미 jikgwan/에 저장된 사진은 재처리 없이 URI만 재구성 (API 경로 변경 대응)
+          if (uri.includes("jikgwan/")) {
+            savedPhotoUris.push(resolvePhotoUri(uri));
+            continue;
+          }
           try {
             const resized = await resizePhoto(uri);
             const fileName = generatePhotoName();

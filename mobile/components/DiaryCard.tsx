@@ -11,6 +11,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import type { JikgwanRecord, Expense } from "@/lib/db";
 import { getCategoryIcons, formatAmount, resolveIsWin } from "@/lib/expenseStats";
+import { resolvePhotoUri } from "@/lib/camera";
 
 interface DiaryCardProps {
   record: JikgwanRecord;
@@ -31,10 +32,10 @@ function parsePhotos(record: JikgwanRecord): string[] {
   if (record.photos) {
     try {
       const parsed = JSON.parse(record.photos);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed.map(resolvePhotoUri);
     } catch {}
   }
-  if (record.photo_path) return [record.photo_path];
+  if (record.photo_path) return [resolvePhotoUri(record.photo_path)];
   return [];
 }
 
@@ -59,6 +60,7 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit, e
   const photos = useMemo(() => parsePhotos(record), [record.photos, record.photo_path]);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width);
     setPhotoIndex(idx);
@@ -138,6 +140,15 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit, e
     },
     photo: {
       height: 360,
+    },
+    photoError: {
+      backgroundColor: "#f0f0f0",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    photoErrorText: {
+      fontSize: 14,
+      color: "#999",
     },
     dots: {
       position: "absolute",
@@ -279,7 +290,19 @@ export default function DiaryCard({ record, teamId, onShare, onDelete, onEdit, e
           >
             {photos.map((uri, i) => (
               <View key={i} style={{ position: "relative" }}>
-                <Image source={uri} style={[styles.photo, { width: photoWidth }]} contentFit="cover" cachePolicy="disk" />
+                {imageErrors.has(uri) ? (
+                  <View style={[styles.photo, styles.photoError, { width: photoWidth }]}>
+                    <Text style={styles.photoErrorText}>사진을 불러올 수 없습니다</Text>
+                  </View>
+                ) : (
+                  <Image
+                    source={uri}
+                    style={[styles.photo, { width: photoWidth }]}
+                    contentFit="cover"
+                    cachePolicy="disk"
+                    onError={() => setImageErrors(prev => new Set(prev).add(uri))}
+                  />
+                )}
                 {(gt.awayId || gt.homeId) && !isUpcoming(record.date, record.score_away, record.score_home) && (
                   <View style={stampOverlay.container}>
                     <Text style={stampOverlay.text}>

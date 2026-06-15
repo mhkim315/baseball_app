@@ -8,6 +8,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import type { JikgwanRecord, Expense } from "@/lib/db";
 import { formatAmount, getCategoryIcons, resolveIsWin } from "@/lib/expenseStats";
+import { resolvePhotoUri } from "@/lib/camera";
 import { parseDotDate } from "@/lib/dateUtils";
 
 interface WebzineCardProps {
@@ -22,10 +23,10 @@ function parsePhotos(record: JikgwanRecord): string[] {
   if (record.photos) {
     try {
       const parsed = JSON.parse(record.photos);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed.map(resolvePhotoUri);
     } catch {}
   }
-  if (record.photo_path) return [record.photo_path];
+  if (record.photo_path) return [resolvePhotoUri(record.photo_path)];
   return [];
 }
 

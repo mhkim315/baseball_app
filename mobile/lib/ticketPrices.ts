@@ -15,6 +15,7 @@ export interface TeamTicketPrices {
   /** 등급 이름 (순서대로 prices 배열에 매칭) */
   tierNames: string[];
   seats: SeatPriceEntry[];
+  note?: string;
 }
 
 export const TICKET_PRICES: Record<string, TeamTicketPrices> = {

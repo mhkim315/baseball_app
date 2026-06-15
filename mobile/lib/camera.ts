@@ -3,6 +3,17 @@ import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 
 const PHOTO_DIR_NAME = "jikgwan";
 
+/** 저장된 사진 URI를 현재 documentDirectory 기준으로 재구성 */
+export function resolvePhotoUri(storedUri: string): string {
+  if (storedUri.startsWith("content://") || storedUri.startsWith("ph://")) {
+    return storedUri;
+  }
+  const filename = storedUri.split("/").pop() || storedUri;
+  if (!filename) return storedUri;
+  const dirUri = `${FileSystem.documentDirectory}${PHOTO_DIR_NAME}/`;
+  return `${dirUri}${filename}`;
+}
+
 export async function ensurePhotoDir(): Promise<string> {
   const dirUri = `${FileSystem.documentDirectory}${PHOTO_DIR_NAME}/`;
   const info = await FileSystem.getInfoAsync(dirUri);

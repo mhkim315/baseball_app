@@ -3,7 +3,7 @@ import { View, Text, Image, FlatList, Pressable, StyleSheet, RefreshControl, use
 import ConfirmModal from "@/components/ConfirmModal";
 import { useTheme } from "@/lib/ThemeContext";
 import type { JikgwanRecord } from "@/lib/db";
-import { deletePhoto } from "@/lib/camera";
+import { deletePhoto, resolvePhotoUri } from "@/lib/camera";
 
 interface GridTimelineProps {
   records: JikgwanRecord[];
@@ -18,10 +18,10 @@ function parsePhotos(record: JikgwanRecord): string[] {
   if (record.photos) {
     try {
       const parsed = JSON.parse(record.photos);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed.map(resolvePhotoUri);
     } catch {}
   }
-  if (record.photo_path) return [record.photo_path];
+  if (record.photo_path) return [resolvePhotoUri(record.photo_path)];
   return [];
 }
 

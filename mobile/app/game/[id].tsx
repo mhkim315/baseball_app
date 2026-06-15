@@ -8,6 +8,7 @@ import {
   type GameDetail, type ScoreEntry, type LineupPlayer, type StandingRow,
 } from "@/lib/api";
 import { TeamBadge } from "@/components/TeamBadge";
+import GameCard from "@/components/GameCard";
 import { cachedDailyScores, cachedAllDailyScores, cachedScheduleByMonth, cachedGameDetail, cachedStandings, fetchGameDetailFresh } from "@/lib/gameCache";
 import { resolveGames } from "@/lib/resolveGames";
 import SimpleAlert from "@/components/SimpleAlert";
@@ -411,15 +412,24 @@ export default function GameDetailScreen() {
     return unsubscribe;
   }, [navigation]);
 
+  const isLiveForPolling = useMemo(() => {
+    if (!detail) return false;
+    if (detail.gameInfo?.status === "cancelled") return false;
+    if (detail.gameInfo?.status === "finished") return false;
+    const todayStr = formatDateForApi(new Date());
+    if (detail.date !== todayStr) return false;
+    return true;
+  }, [detail]);
+
   // Live relay polling: 15s interval while game is live, paused when screen not focused
   useFocusEffect(useCallback(() => {
-    if (!isLive || !gid) return;
+    if (!isLiveForPolling || !gid) return;
     const interval = setInterval(async () => {
       const fresh = await fetchGameDetailFresh(gid);
       if (fresh) setDetail(fresh);
     }, 12_000);
     return () => clearInterval(interval);
-  }, [isLive, gid]));
+  }, [isLiveForPolling, gid]));
 
   const handleOpenDiary = useCallback(() => {
     if (!detail) return;
@@ -480,24 +490,12 @@ export default function GameDetailScreen() {
     card: { backgroundColor: theme.card, borderRadius: 16, borderWidth: 1, borderColor: theme.border, padding: 20, marginTop: 12 },
     sectionTitle: { fontSize: 15, fontWeight: "700", color: theme.foreground, marginBottom: 12 },
 
-    // Game header
-    gameHeaderRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
-    teamColumn: { flex: 1, alignItems: "center", gap: 6 },
-    teamName: { fontSize: 14, fontWeight: "600" },
-    pitcherName: { fontSize: 12, color: theme.mutedForeground },
-    scoreColumn: { alignItems: "center", gap: 4, paddingHorizontal: 12 },
-    gameTime: { fontSize: 11, color: theme.mutedForeground },
-    scoreRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-    scoreNum: { fontSize: 26, fontWeight: "bold", color: theme.foreground },
-    scoreDim: { color: theme.mutedForeground, opacity: 0.5 },
-    scoreColon: { fontSize: 14, color: theme.mutedForeground },
-    vsText: { fontSize: 16, fontWeight: "700", color: theme.mutedForeground },
-    cancelledText: { fontSize: 16, fontWeight: "700", color: theme.mutedForeground, textDecorationLine: "line-through" },
+
     statusBadge: { backgroundColor: theme.muted, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
     statusLive: { backgroundColor: theme.destructive + "18" },
     statusText: { fontSize: 10, fontWeight: "600", color: theme.mutedForeground },
     statusLiveText: { color: theme.destructive },
-    venue: { textAlign: "center", fontSize: 11, color: theme.mutedForeground, marginTop: 12 },
+
 
     // Scoreboard table
     scoreboardTable: { gap: 0 },
@@ -725,113 +723,32 @@ export default function GameDetailScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Game header card */}
-        <View style={styles.card}>
-          {/* Top row: time (좌) / status badge (중) / venue (우) */}
-          {(detail.gameInfo?.time || scheduleTimeRef.current) && (
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <Text style={[styles.gameTime, { flex: 1 }]}>{detail.gameInfo?.time || scheduleTimeRef.current || ""}</Text>
-              <View style={{ flex: 1, alignItems: "center" }}>
-                <View style={[styles.statusBadge, isLive && styles.statusLive]}>
-                  <Text style={[styles.statusText, isLive && styles.statusLiveText]}>
-                    {isLive ? liveLabel : statusLabel}
-                  </Text>
-                </View>
-              </View>
-              <Text style={[styles.gameTime, { flex: 1, textAlign: "right" }]}>{resolveVenue(detail.homeTeam, detail.gameInfo?.venue)}</Text>
-            </View>
-          )}
-          <View style={styles.gameHeaderRow}>
-            {/* Away team */}
-            <View style={styles.teamColumn}>
-              <TeamBadge teamId={detail.awayTeam} size="lg" emotion={awayEmotion} />
-              <Text style={[styles.teamName, { color: teamPrimaryColor(detail.awayTeam, isDark) }]}>{away?.name}</Text>
-              {isFinished && scoreFallback ? (
-                <Text style={styles.pitcherName}>
-                  {isDraw ? `무: ${scoreFallback.winPitcher ?? "-"}` : awayWin ? `승: ${scoreFallback.winPitcher ?? "-"}` : `패: ${scoreFallback.losePitcher ?? "-"}`}
-                </Text>
-              ) : isLive && relayForRender ? (
-                <Text style={styles.pitcherName}>
-                  {inningInfo?.isTop
-                    ? `B: ${relayForRender.batter?.name || "-"}`
-                    : `P: ${relayForRender.pitcher?.name || "-"}`}
-                </Text>
-              ) : (
-                <Text style={styles.pitcherName}>{awayPitcherName || "-"}</Text>
-              )}
-            </View>
-
-            {/* Score / VS */}
-            <View style={styles.scoreColumn}>
-              {isLive && relayForRender && (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 4 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
-                    <Text style={{ fontSize: 9, fontWeight: "700", color: "#999", marginRight: 1 }}>B</Text>
-                    {[0, 1, 2].map(i => (
-                      <View key={i} style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: i < parseInt(relayForRender.ball) ? "#4caf50" : "transparent", borderWidth: 1, borderColor: i < parseInt(relayForRender.ball) ? "#4caf50" : "#ccc" }} />
-                    ))}
-                  </View>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
-                    <Text style={{ fontSize: 9, fontWeight: "700", color: "#999", marginRight: 1 }}>S</Text>
-                    {[0, 1].map(i => (
-                      <View key={i} style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: i < parseInt(relayForRender.strike) ? "#f7d44a" : "transparent", borderWidth: 1, borderColor: i < parseInt(relayForRender.strike) ? "#f7d44a" : "#ccc" }} />
-                    ))}
-                  </View>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
-                    <Text style={{ fontSize: 9, fontWeight: "700", color: "#999", marginRight: 1 }}>O</Text>
-                    {[0, 1].map(i => (
-                      <View key={i} style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: i < parseInt(relayForRender.out) ? "#f44336" : "transparent", borderWidth: 1, borderColor: i < parseInt(relayForRender.out) ? "#f44336" : "#ccc" }} />
-                    ))}
-                  </View>
-                  <View style={{ width: 22, height: 18, justifyContent: "center", alignItems: "center" }}>
-                    <View style={{ position: "absolute", top: 0, left: 7 }}>
-                      <View style={{ width: 7, height: 7, backgroundColor: relayForRender.base2 === "1" ? "#ff9800" : "transparent", borderWidth: 1, borderColor: relayForRender.base2 === "1" ? "#ff9800" : "#ccc", transform: [{ rotate: "45deg" }] }} />
-                    </View>
-                    <View style={{ position: "absolute", top: 10, left: 14 }}>
-                      <View style={{ width: 7, height: 7, backgroundColor: relayForRender.base1 === "1" ? "#ff9800" : "transparent", borderWidth: 1, borderColor: relayForRender.base1 === "1" ? "#ff9800" : "#ccc", transform: [{ rotate: "45deg" }] }} />
-                    </View>
-                    <View style={{ position: "absolute", top: 10, left: 0 }}>
-                      <View style={{ width: 7, height: 7, backgroundColor: relayForRender.base3 === "1" ? "#ff9800" : "transparent", borderWidth: 1, borderColor: relayForRender.base3 === "1" ? "#ff9800" : "#ccc", transform: [{ rotate: "45deg" }] }} />
-                    </View>
-                  </View>
-                </View>
-              )}
-              {isCancelled ? (
-                <Text style={styles.cancelledText}>취소</Text>
-              ) : gameScore ? (
-                <View style={styles.scoreRow}>
-                  <Text style={[styles.scoreNum, isFinished && gameScore.away < gameScore.home && styles.scoreDim]}>
-                    {gameScore.away}
-                  </Text>
-                  <Text style={styles.scoreColon}>:</Text>
-                  <Text style={[styles.scoreNum, isFinished && gameScore.home < gameScore.away && styles.scoreDim]}>
-                    {gameScore.home}
-                  </Text>
-                </View>
-              ) : (
-                <Text style={styles.vsText}>VS</Text>
-              )}
-            </View>
-
-            {/* Home team */}
-            <View style={styles.teamColumn}>
-              <TeamBadge teamId={detail.homeTeam} size="lg" emotion={homeEmotion} />
-              <Text style={[styles.teamName, { color: teamPrimaryColor(detail.homeTeam, isDark) }]}>{home?.name}</Text>
-              {isFinished && scoreFallback ? (
-                <Text style={styles.pitcherName}>
-                  {isDraw ? `무: ${scoreFallback.winPitcher ?? "-"}` : homeWin ? `승: ${scoreFallback.winPitcher ?? "-"}` : `패: ${scoreFallback.losePitcher ?? "-"}`}
-                </Text>
-              ) : isLive && relayForRender ? (
-                <Text style={styles.pitcherName}>
-                  {inningInfo?.isTop
-                    ? `P: ${relayForRender.pitcher?.name || "-"}`
-                    : `B: ${relayForRender.batter?.name || "-"}`}
-                </Text>
-              ) : (
-                <Text style={styles.pitcherName}>{homePitcherName || "-"}</Text>
-              )}
-            </View>
-          </View>
-        </View>
+        <GameCard
+          homeTeam={detail.homeTeam}
+          awayTeam={detail.awayTeam}
+          time={detail.gameInfo?.time || scheduleTimeRef.current || ""}
+          stadium={resolveVenue(detail.homeTeam, detail.gameInfo?.venue)}
+          homePitcher={homePitcherName}
+          awayPitcher={awayPitcherName}
+          status={isCancelled ? "finished" : isFinished ? "finished" : isLive ? "live" : "scheduled"}
+          cancelled={isCancelled}
+          homeScore={gameScore?.home}
+          awayScore={gameScore?.away}
+          winPitcher={scoreFallback?.winPitcher ?? null}
+          losePitcher={scoreFallback?.losePitcher ?? null}
+          liveInning={inningInfo?.inning}
+          isTop={inningInfo?.isTop}
+          relay={relayForRender}
+          large
+          awayDisplayName={away?.name}
+          homeDisplayName={home?.name}
+          statusBadgeStyle={{
+            badge: styles.statusBadge,
+            text: styles.statusText,
+            liveBadge: styles.statusLive,
+            liveText: styles.statusLiveText,
+          }}
+        />
 
         {/* Scoreboard */}
         {innData && rheb && (

@@ -1,6 +1,6 @@
 # Fullcount.kr Mobile App — 개발 작업 문서
 
-> 마지막 업데이트: 2026-06-12 (Phase 18-6)
+> 마지막 업데이트: 2026-06-15 (Phase 19)
 > 
 > 이 문서는 이전 대화 컨텍스트가 만료되어도 작업을 이어갈 수 있도록 상세히 기록합니다.
 
@@ -2594,3 +2594,57 @@ if home_score is None:
 |------|------|
 | `9578930` | standings column reorder, font, last10 fix |
 | `ee1fcc2` | bump version 1.1.6 → 1.1.7 |
+
+---
+
+## Phase 19: BSO/주루/PB 3-state 디스플레이 통일 (2026-06-14~15)
+
+### 개요
+
+기존 Naver relay API 2-Track 아키텍처 위에 BSO/주루/PB 표시를 GameCard와 경기상세 화면에 통일.
+
+### 변경 사항
+
+#### 1. GameCard 3-state 팀 컬럼
+
+| 상태 | 표시 |
+|------|------|
+| 경기전 | 선발투수 이름 |
+| 경기중 | `isTop` 기반 P(투수) / B(타자) |
+| 경기종료 | 승/패/무 투수 |
+
+#### 2. 경기상세 헤더 카드 재구성
+
+- **Top row**: time(좌) / status badge(중) / venue(우) — 3-column flex
+- **BSO+주루**: RelayLive 컴포넌트 제거 → GameCard와 동일한 인라인 B-S-O 1열 가로 표시
+- **팀 컬럼**: GameCard와 동일한 3-state 표시 (선발/PB/승패)
+- **색상 통일**: B=초록, S=노랑, O=빨강, 주루=주황
+
+#### 3. RelayLive 컴포넌트 개선
+
+- `inline` prop: 가로 정렬 모드 (경기상세 scoreColumn용, 현재는 미사용)
+- `hidePlayers` prop: P/B 이름 숨김 옵션
+- `BaseDiamond` 컴포넌트 추가 (사각형 주자 표시)
+- 레이아웃을 세로 BSO + 중앙 다이아몬드로 개선
+- O(아웃) dot 3→2개로 변경
+
+### 테스트용 TEMP 목업
+
+- `home.tsx` / `[id].tsx`: `__DEV__`에서 finished 경기를 강제 live + mock relay로 전환
+- 배포 전 제거 필요
+
+### 브랜치
+
+| 항목 | 내용 |
+|------|------|
+| 브랜치 | `feat/gamecard-detail-relay-ui` |
+| 커밋 | `c31d8dc` — BSO/주루/PB 3-state 디스플레이 — GameCard + 경기상세 통일 |
+
+### 변경 파일
+
+| 파일 | 변경 |
+|------|------|
+| `mobile/app/game/[id].tsx` | 헤더 카드 3-state + BSO 인라인 + venue/status top row |
+| `mobile/components/GameCard.tsx` | 3-state 팀 컬럼 + BSO 헤더 row 통합 |
+| `mobile/components/RelayLive.tsx` | inline/hidePlayers prop + BaseDiamond + O 2dot |
+| `mobile/app/(tabs)/home.tsx` | TEMP mock relay for dev testing |
