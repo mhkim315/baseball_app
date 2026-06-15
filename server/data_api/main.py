@@ -17,6 +17,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy import create_engine, text
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from cachetools import TTLCache
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from shared.scoring_data import _HISTORICAL_SCORING
@@ -47,30 +49,25 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, max_requests=100, window_seconds=60):
         super().__init__(app)
         self.max_requests = max_requests
-        self.window = timedelta(seconds=window_seconds)
-        self.requests: dict[str, list[datetime]] = defaultdict(list)
+        self.window = window_seconds
+        self.requests: TTLCache = TTLCache(maxsize=50000, ttl=window_seconds)
 
     async def dispatch(self, request: Request, call_next):
         forwarded = request.headers.get("x-forwarded-for", "")
         client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
-        now = datetime.now()
-        window_start = now - self.window
         
-        # Cleanup to prevent memory leak
-        if len(self.requests) > 10000:
-            for ip in list(self.requests.keys()):
-                self.requests[ip] = [t for t in self.requests[ip] if t > window_start]
-                if not self.requests[ip]:
-                    del self.requests[ip]
-                    
-        ip_requests = self.requests[client_ip]
-        ip_requests[:] = [t for t in ip_requests if t > window_start]
-        if len(ip_requests) >= self.max_requests:
+        timestamps = self.requests.get(client_ip, [])
+        now = time.time()
+        timestamps = [t for t in timestamps if now - t < self.window]
+        
+        if len(timestamps) >= self.max_requests:
             return JSONResponse(
                 {"error": "Rate limit exceeded. Try again later."},
                 status_code=429,
             )
-        ip_requests.append(now)
+            
+        timestamps.append(now)
+        self.requests[client_ip] = timestamps
         return await call_next(request)
 
 app.add_middleware(RateLimitMiddleware, max_requests=100, window_seconds=60)
@@ -93,6 +90,9 @@ _JSON_CACHE_TTL = 300  # seconds (matches collector cycle)
 
 _RELAY_CACHE: dict[str, tuple[float, dict | None]] = {}
 _RELAY_CACHE_TTL = 5  # seconds — prevent Naver IP block
+
+_WEATHER_CACHE: dict[str, tuple[float, dict | None]] = {}
+_WEATHER_CACHE_TTL = 1800  # 30 minutes
 
 def load_json(filename):
     now = time.time()
@@ -213,6 +213,31 @@ def get_games_by_date(game_date: str):
             return [serialize_row(r) for r in rows]
     except Exception:
         return JSONResponse({"error": "Database unavailable"}, status_code=503)
+
+
+def _get_weather_cached(stadium_name: str) -> dict | None:
+    now = time.time()
+    if stadium_name in _WEATHER_CACHE:
+        cached_data, timestamp = _WEATHER_CACHE[stadium_name]
+        if now - timestamp < _WEATHER_CACHE_TTL:
+            return cached_data
+    try:
+        from scripts.naver_api import get_weather
+        weather_data = get_weather(stadium_name)
+        _WEATHER_CACHE[stadium_name] = (weather_data, now)
+        return weather_data
+    except Exception as e:
+        logger.error(f"Error fetching weather for {stadium_name}: {e}")
+        return None
+
+@app.get("/weather/{stadium_name}")
+def get_stadium_weather(stadium_name: str):
+    import urllib.parse
+    decoded_name = urllib.parse.unquote(stadium_name)
+    weather_data = _get_weather_cached(decoded_name)
+    if not weather_data:
+        return JSONResponse({"error": "Weather data unavailable"}, status_code=404)
+    return weather_data
 
 
 @app.get("/stadium-brief")
@@ -554,12 +579,47 @@ def get_refresh_data():
             "etcRecords": etc_records,
         }
 
+    def resolve_venue_name(home_team_id: str) -> str | None:
+        venue_map = {
+            "doosan": "잠실야구장", "lg": "잠실야구장", "kiwoom": "고척스카이돔",
+            "ssg": "인천SSG랜더스필드", "kt": "수원KT위즈파크", "hanwha": "대전한화생명이글스파크",
+            "samsung": "대구삼성라이온즈파크", "kia": "광주기아챔피언스필드", "lotte": "사직야구장",
+            "nc": "창원NC파크"
+        }
+        return venue_map.get(home_team_id)
+
+    today_weather = {}
+    stadiums = set()
+    for g in (today_games or {}).get("games", []):
+        gid = g.get("id")
+        if not gid: continue
+        m = GAME_ID_REGEX.match(gid)
+        if not m: continue
+        home_team = TEAM_CODE_MAP.get(m.group(3))
+        if home_team:
+            venue = resolve_venue_name(home_team)
+            if venue:
+                stadiums.add(venue)
+
+    if stadiums:
+        with ThreadPoolExecutor(max_workers=5) as ex:
+            futures = {ex.submit(_get_weather_cached, s): s for s in stadiums}
+            for f in as_completed(futures, timeout=12):
+                s = futures[f]
+                try:
+                    w = f.result()
+                    if w:
+                        today_weather[s] = w
+                except Exception:
+                    pass
+
     return {
         "todayGames": today_games,
         "standings": standings,
         "todayScores": today_scores,
         "scoreSummary": score_summary,
         "todayGameDetails": today_game_details,
+        "todayWeather": today_weather,
     }
 
 

@@ -4,6 +4,8 @@ import json
 import ssl
 import urllib.parse
 import urllib.request
+import re
+import logging
 from typing import Any
 
 NAVER_BASE = "https://api-gw.sports.naver.com"
@@ -43,4 +45,27 @@ def game_relay(naver_game_id: str) -> dict[str, Any] | None:
             return dict(data.get("result") or {})
     except Exception:
         pass
+    return None
+
+def get_weather(stadium_name: str) -> dict[str, str] | None:
+    """Fetch current weather for a stadium by scraping Naver Search."""
+    try:
+        query = f"{stadium_name} 날씨"
+        req = urllib.request.Request(
+            f"https://search.naver.com/search.naver?query={urllib.parse.quote(query)}",
+            headers={"User-Agent": UA}
+        )
+        with urllib.request.urlopen(req, timeout=10, context=ssl.create_default_context()) as resp:
+            html = resp.read().decode("utf-8", errors="replace")
+        
+        t_match = re.search(r'<div class="temperature_text">.*?<span class="blind">.*?</span>([-0-9.]+)<span class="celsius">', html, re.DOTALL)
+        c_match = re.search(r'<span class="weather before_slash">(.*?)</span>', html)
+        
+        if t_match and c_match:
+            return {
+                "temp": t_match.group(1).strip(),
+                "condition": c_match.group(1).strip()
+            }
+    except Exception as e:
+        logging.getLogger("fullcount").warning(f"Failed to fetch weather for {stadium_name}: {e}")
     return None

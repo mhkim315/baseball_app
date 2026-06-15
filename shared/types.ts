@@ -205,6 +205,7 @@ export interface RefreshData {
   todayScores: ScoreEntry[];
   scoreSummary: { year: number; teams: ScoreSummaryRow[] } | null;
   todayGameDetails: Record<string, GameDetail>;
+  todayWeather?: Record<string, { temp: string; condition: string }>;
 }
 
 export interface OnboardingData {

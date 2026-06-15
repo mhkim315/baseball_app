@@ -65,6 +65,11 @@ async function fetchRefreshDataAndCache(): Promise<boolean> {
       await db.setCache(`game:${gameId}`, JSON.stringify(detail));
     }
 
+    // todayWeather → "weather:today"
+    if (data.todayWeather) {
+      await db.setCache("weather:today", JSON.stringify(data.todayWeather));
+    }
+
     return true;
   } catch {
     return false;
