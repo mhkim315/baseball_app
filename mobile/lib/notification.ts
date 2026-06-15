@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 앱이 포그라운드에 있을 때도 알림을 보여줄지 결정
 Notifications.setNotificationHandler({
@@ -47,6 +48,10 @@ export async function updateLockScreenScore(data: Record<string, string>) {
   const baseStr = bases.length > 0 ? `${bases.join(',')}루 주자 있음` : '주자 없음';
 
   const body = `${bso} (${b}B ${s}S ${o}O) | ${baseStr}`;
+
+  const enabledStr = await AsyncStorage.getItem('lock_screen_notification_enabled');
+  // Default to false if not set
+  if (enabledStr !== 'true') return;
 
   // 동일한 identifier로 호출하면 새 알림이 뜨는게 아니라 기존 알림의 내용이 덮어써짐
   await Notifications.presentNotificationAsync({

@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { useRouter, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import { Linking } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from "expo-constants";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TEAM_COLORS, TEAM_LIST } from "@shared/teamColors";
@@ -343,6 +344,7 @@ export default function MyScreen() {
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [unlockedEmotions, setUnlockedEmotions] = useState<string[]>([]);
+  const [lockScreenEnabled, setLockScreenEnabled] = useState(false);
 
   // Totem state
   const [totems, setTotems] = useState<TotemWithStats[]>([]);
@@ -432,6 +434,9 @@ export default function MyScreen() {
     } catch (e) {
       console.warn("getJikgwanRecords/getAllTotemStats failed", e);
     }
+    AsyncStorage.getItem('lock_screen_notification_enabled').then(val => {
+      setLockScreenEnabled(val === 'true');
+    });
   }, []);
 
   const [shortcut, setShortcut] = useState<ShortcutType | null>(null);
@@ -505,6 +510,11 @@ export default function MyScreen() {
     } catch (e) {
       console.warn("my.tsx handleSelectProfileChar failed", e);
     }
+  };
+
+  const toggleLockScreen = async (value: boolean) => {
+    setLockScreenEnabled(value);
+    await AsyncStorage.setItem('lock_screen_notification_enabled', value ? 'true' : 'false');
   };
 
   const keyboardHeight = useKeyboardHeight();
@@ -591,6 +601,22 @@ export default function MyScreen() {
               onValueChange={toggleTheme}
               trackColor={{ false: "#ddd", true: "#666" }}
               thumbColor={isDark ? theme.foreground : "#f4f3f4"}
+            />
+          </View>
+        </View>
+        <View style={styles.settingRow}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <View>
+              <Text style={styles.settingLabel}>잠금화면 전광판 알림</Text>
+              <Text style={{ fontSize: 11, color: theme.mutedForeground, marginTop: 4 }}>
+                실시간 야구 점수 알림창을 띄웁니다.
+              </Text>
+            </View>
+            <Switch
+              value={lockScreenEnabled}
+              onValueChange={toggleLockScreen}
+              trackColor={{ false: "#ddd", true: "#666" }}
+              thumbColor={lockScreenEnabled ? theme.foreground : "#f4f3f4"}
             />
           </View>
         </View>
