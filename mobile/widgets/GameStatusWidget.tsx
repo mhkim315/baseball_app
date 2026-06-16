@@ -331,17 +331,17 @@ function view2x2(data: WidgetGameData, myTeam: string) {
         {/* 중앙: 캐릭터 + 점수 + 팀명 */}
         <FlexWidget style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
-            <ImageWidget image={awayCharImage} imageWidth={18} imageHeight={18} />
+            <ImageWidget image={awayCharImage} imageWidth={16} imageHeight={16} />
             <FlexWidget style={{ width: 2 }} />
-            <TextWidget text={data.awayTeam} style={{ fontSize: 10, fontWeight: "700", color: alpha(DARK_FG, "77") }} />
-            <FlexWidget style={{ width: 3 }} />
-            <TextWidget text={data.awayScore} style={{ fontSize: 22, fontWeight: "700", color: DARK_FG }} />
-            <TextWidget text=":" style={{ fontSize: 12, color: alpha(DARK_FG, "44") }} />
-            <TextWidget text={data.homeScore} style={{ fontSize: 22, fontWeight: "700", color: DARK_FG }} />
-            <FlexWidget style={{ width: 3 }} />
-            <TextWidget text={data.homeTeam} style={{ fontSize: 10, fontWeight: "700", color: alpha(DARK_FG, "77") }} />
+            <TextWidget text={data.awayTeam} style={{ fontSize: 9, fontWeight: "700", color: alpha(DARK_FG, "77") }} />
             <FlexWidget style={{ width: 2 }} />
-            <ImageWidget image={homeCharImage} imageWidth={18} imageHeight={18} />
+            <TextWidget text={data.awayScore} style={{ fontSize: 20, fontWeight: "700", color: DARK_FG }} />
+            <TextWidget text=":" style={{ fontSize: 11, color: alpha(DARK_FG, "44") }} />
+            <TextWidget text={data.homeScore} style={{ fontSize: 20, fontWeight: "700", color: DARK_FG }} />
+            <FlexWidget style={{ width: 2 }} />
+            <TextWidget text={data.homeTeam} style={{ fontSize: 9, fontWeight: "700", color: alpha(DARK_FG, "77") }} />
+            <FlexWidget style={{ width: 2 }} />
+            <ImageWidget image={homeCharImage} imageWidth={16} imageHeight={16} />
           </FlexWidget>
         </FlexWidget>
 
@@ -431,7 +431,6 @@ function main4x2View(data: WidgetGameData, myTeam: string) {
                   <TextWidget text={data.base1 && data.base1 !== "0" ? "◆" : "◇"} style={{ fontSize: 6, color: data.base1 && data.base1 !== "0" ? "#e07b3c" : alpha(DARK_FG, "33") }} />
                 </FlexWidget>
               </FlexWidget>
-              <TextWidget text=":" style={{ fontSize: 16, fontWeight: "700", color: alpha(DARK_FG, "44") }} />
               <TextWidget text={data.homeScore} style={{ fontSize: 26, fontWeight: "700", color: DARK_FG }} />
             </FlexWidget>
 
