@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -36,14 +37,18 @@ class LiveScoreService : Service() {
         )
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("풀카운트 라이브 모드")
-            .setContentText("실시간으로 점수를 업데이트하는 중입니다...")
+            .setContentTitle("Live Score Mode")
+            .setContentText("Updating scores in real-time...")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .addAction(android.R.drawable.ic_delete, "종료", stopPendingIntent)
+            .addAction(android.R.drawable.ic_delete, "Stop", stopPendingIntent)
             .build()
 
-        startForeground(1001, notification)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(1001, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            startForeground(1001, notification)
+        }
 
         if (!isRunning) {
             isRunning = true
