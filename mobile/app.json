@@ -35,7 +35,7 @@
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VIDEO"
       ],
-      "versionCode": 27
+      "versionCode": 28
     },
     "web": {
       "favicon": "./assets/favicon.png"
