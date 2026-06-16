@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ÌíÄÏπ¥Ïö¥Ìä∏",
+    "name": "?ÄÏπ¥Ïö¥??test",
     "slug": "fullcount-kr",
     "version": "1.2.0",
     "orientation": "portrait",
@@ -16,14 +16,15 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "kr.fullcount.app",
-      "buildNumber": "4",
+      "buildNumber": "3",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "ÏßÅÍ¥ÄÏùºÍ∏∞ ÏûëÏÑ± Ïãú ÏÇ¨ÏßÑÏùÑ Ï≤®Î∂ÄÌïòÍ∏∞ ÏúÑÌï¥ Ïï®Î≤î Ï†ëÍ∑º Í∂åÌïúÏù¥ ÌïÑÏöîÌï©ÎãàÎã§.",
+        "NSPhotoLibraryUsageDescription": "ÏßÅÍ??ºÍ∏∞ ?ëÏÑ± ???¨ÏßÑ??Ï≤®Î??òÍ∏∞ ?ÑÌï¥ ?®Î≤î ?ëÍ∑º Í∂åÌïú???ÑÏöî?©Îãà??",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "allowBackup": false,
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#fde8d6"
@@ -33,14 +34,348 @@
       "package": "kr.fullcount.app",
       "blockedPermissions": [
         "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VIDEO"
       ],
-      "versionCode": 29
+      "versionCode": 30
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      "expo-notifications",
+      ["react-native-android-widget", {
+        "widgets": [
+          {
+            "name": "Widget1x1",
+            "label": "?ÄÏπ¥Ïö¥??1x1",
+            "description": "1x1 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "80dp",
+            "minHeight": "40dp",
+            "maxResizeWidth": "120dp",
+            "maxResizeHeight": "80dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 1,
+            "targetCellHeight": 1,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget1x2",
+            "label": "?ÄÏπ¥Ïö¥??1x2",
+            "description": "1x2 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "80dp",
+            "minHeight": "110dp",
+            "maxResizeWidth": "120dp",
+            "maxResizeHeight": "160dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 1,
+            "targetCellHeight": 2,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget1x3",
+            "label": "?ÄÏπ¥Ïö¥??1x3",
+            "description": "1x3 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "80dp",
+            "minHeight": "180dp",
+            "maxResizeWidth": "120dp",
+            "maxResizeHeight": "240dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 1,
+            "targetCellHeight": 3,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget1x4",
+            "label": "?ÄÏπ¥Ïö¥??1x4",
+            "description": "1x4 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "80dp",
+            "minHeight": "250dp",
+            "maxResizeWidth": "120dp",
+            "maxResizeHeight": "320dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 1,
+            "targetCellHeight": 4,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget1x5",
+            "label": "?ÄÏπ¥Ïö¥??1x5",
+            "description": "1x5 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "80dp",
+            "minHeight": "320dp",
+            "maxResizeWidth": "120dp",
+            "maxResizeHeight": "400dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 1,
+            "targetCellHeight": 5,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget2x1",
+            "label": "?ÄÏπ¥Ïö¥??2x1",
+            "description": "2x1 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "150dp",
+            "minHeight": "40dp",
+            "maxResizeWidth": "200dp",
+            "maxResizeHeight": "80dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 2,
+            "targetCellHeight": 1,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget2x2",
+            "label": "?ÄÏπ¥Ïö¥??2x2",
+            "description": "2x2 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "150dp",
+            "minHeight": "110dp",
+            "maxResizeWidth": "200dp",
+            "maxResizeHeight": "160dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 2,
+            "targetCellHeight": 2,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget2x3",
+            "label": "?ÄÏπ¥Ïö¥??2x3",
+            "description": "2x3 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "150dp",
+            "minHeight": "180dp",
+            "maxResizeWidth": "200dp",
+            "maxResizeHeight": "240dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 2,
+            "targetCellHeight": 3,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget2x4",
+            "label": "?ÄÏπ¥Ïö¥??2x4",
+            "description": "2x4 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "150dp",
+            "minHeight": "250dp",
+            "maxResizeWidth": "200dp",
+            "maxResizeHeight": "320dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 2,
+            "targetCellHeight": 4,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget2x5",
+            "label": "?ÄÏπ¥Ïö¥??2x5",
+            "description": "2x5 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "150dp",
+            "minHeight": "320dp",
+            "maxResizeWidth": "200dp",
+            "maxResizeHeight": "400dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 2,
+            "targetCellHeight": 5,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget3x1",
+            "label": "?ÄÏπ¥Ïö¥??3x1",
+            "description": "3x1 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "230dp",
+            "minHeight": "40dp",
+            "maxResizeWidth": "300dp",
+            "maxResizeHeight": "80dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 3,
+            "targetCellHeight": 1,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget3x2",
+            "label": "?ÄÏπ¥Ïö¥??3x2",
+            "description": "3x2 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "230dp",
+            "minHeight": "110dp",
+            "maxResizeWidth": "300dp",
+            "maxResizeHeight": "160dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 3,
+            "targetCellHeight": 2,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget3x3",
+            "label": "?ÄÏπ¥Ïö¥??3x3",
+            "description": "3x3 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "230dp",
+            "minHeight": "180dp",
+            "maxResizeWidth": "300dp",
+            "maxResizeHeight": "240dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 3,
+            "targetCellHeight": 3,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget3x4",
+            "label": "?ÄÏπ¥Ïö¥??3x4",
+            "description": "3x4 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "230dp",
+            "minHeight": "250dp",
+            "maxResizeWidth": "300dp",
+            "maxResizeHeight": "320dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 3,
+            "targetCellHeight": 4,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget3x5",
+            "label": "?ÄÏπ¥Ïö¥??3x5",
+            "description": "3x5 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "230dp",
+            "minHeight": "320dp",
+            "maxResizeWidth": "300dp",
+            "maxResizeHeight": "400dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 3,
+            "targetCellHeight": 5,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget4x1",
+            "label": "?ÄÏπ¥Ïö¥??4x1",
+            "description": "4x1 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "310dp",
+            "minHeight": "40dp",
+            "maxResizeWidth": "400dp",
+            "maxResizeHeight": "80dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 4,
+            "targetCellHeight": 1,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget4x2",
+            "label": "?ÄÏπ¥Ïö¥??4x2",
+            "description": "4x2 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "310dp",
+            "minHeight": "110dp",
+            "maxResizeWidth": "400dp",
+            "maxResizeHeight": "160dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 4,
+            "targetCellHeight": 2,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget4x3",
+            "label": "?ÄÏπ¥Ïö¥??4x3",
+            "description": "4x3 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "310dp",
+            "minHeight": "180dp",
+            "maxResizeWidth": "400dp",
+            "maxResizeHeight": "240dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 4,
+            "targetCellHeight": 3,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget4x4",
+            "label": "?ÄÏπ¥Ïö¥??4x4",
+            "description": "4x4 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "310dp",
+            "minHeight": "250dp",
+            "maxResizeWidth": "400dp",
+            "maxResizeHeight": "320dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 4,
+            "targetCellHeight": 4,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget4x5",
+            "label": "?ÄÏπ¥Ïö¥??4x5",
+            "description": "4x5 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "310dp",
+            "minHeight": "320dp",
+            "maxResizeWidth": "400dp",
+            "maxResizeHeight": "400dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 4,
+            "targetCellHeight": 5,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget5x1",
+            "label": "?ÄÏπ¥Ïö¥??5x1",
+            "description": "5x1 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "390dp",
+            "minHeight": "40dp",
+            "maxResizeWidth": "500dp",
+            "maxResizeHeight": "80dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 5,
+            "targetCellHeight": 1,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget5x2",
+            "label": "?ÄÏπ¥Ïö¥??5x2",
+            "description": "5x2 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "390dp",
+            "minHeight": "110dp",
+            "maxResizeWidth": "500dp",
+            "maxResizeHeight": "160dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 5,
+            "targetCellHeight": 2,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget5x3",
+            "label": "?ÄÏπ¥Ïö¥??5x3",
+            "description": "5x3 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "390dp",
+            "minHeight": "180dp",
+            "maxResizeWidth": "500dp",
+            "maxResizeHeight": "240dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 5,
+            "targetCellHeight": 3,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget5x4",
+            "label": "?ÄÏπ¥Ïö¥??5x4",
+            "description": "5x4 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "390dp",
+            "minHeight": "250dp",
+            "maxResizeWidth": "500dp",
+            "maxResizeHeight": "320dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 5,
+            "targetCellHeight": 4,
+            "updatePeriodMillis": 0
+          },
+          {
+            "name": "Widget5x5",
+            "label": "?ÄÏπ¥Ïö¥??5x5",
+            "description": "5x5 ?¨Í∏∞ ?ÑÏ†Ø",
+            "minWidth": "390dp",
+            "minHeight": "320dp",
+            "maxResizeWidth": "500dp",
+            "maxResizeHeight": "400dp",
+            "resizeMode": "horizontal|vertical",
+            "targetCellWidth": 5,
+            "targetCellHeight": 5,
+            "updatePeriodMillis": 0
+          }
+        ]
+      }],
       "expo-router"
     ],
     "assetBundlePatterns": [

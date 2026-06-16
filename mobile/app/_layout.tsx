@@ -7,6 +7,7 @@ import React, { useEffect, useRef } from "react";
 import { View, Text, Pressable, InteractionManager } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import { repairAllPhotoPaths } from "@/lib/camera";
+import { usePushSetup } from "@/lib/usePushSetup";
 
 try {
   SplashScreen.preventAutoHideAsync();
@@ -56,6 +57,8 @@ class ErrorBoundary extends React.Component<
 function RootLayoutInner() {
   const { isDark } = useTheme();
   const hideSplashCalled = useRef(false);
+
+  usePushSetup();
 
   useEffect(() => {
     if (hideSplashCalled.current) return;
