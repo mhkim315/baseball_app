@@ -179,8 +179,10 @@ function view3x1Compact(data: WidgetGameData, myTeam: string) {
     return <TextWidget text={filled} style={{ fontSize: 7, color }} />;
   };
 
-  const baseDiamond = (occupied: string) =>
-    <TextWidget text={occupied === "1" ? "◆" : "◇"} style={{ fontSize: 7, color: occupied === "1" ? "#e07b3c" : alpha(DARK_FG, "33") }} />;
+  const baseDiamond = (occupied: string) => {
+    const occ = occupied && occupied !== "0";
+    return <TextWidget text={occ ? "◆" : "◇"} style={{ fontSize: 7, color: occ ? "#e07b3c" : alpha(DARK_FG, "33") }} />;
+  };
 
   return (
     <FlexWidget style={{ width: "match_parent", height: "match_parent", flexDirection: "row", alignItems: "center", backgroundColor: bg, borderRadius: 12, paddingHorizontal: 8 }} clickAction="OPEN_APP">
@@ -438,14 +440,14 @@ function main4x2View(data: WidgetGameData, myTeam: string) {
             {/* Bases triangle: 3B top center, 2B left, 1B right */}
             <FlexWidget style={{ height: 3 }} />
             <FlexWidget style={{ alignItems: "center" }}>
-              <TextWidget text={data.base3 === "1" ? "◆" : "◇"} style={{ fontSize: 9, color: data.base3 === "1" ? "#e07b3c" : alpha(DARK_FG, "33") }} />
+              <TextWidget text={data.base3 && data.base3 !== "0" ? "◆" : "◇"} style={{ fontSize: 9, color: data.base3 && data.base3 !== "0" ? "#e07b3c" : alpha(DARK_FG, "33") }} />
             </FlexWidget>
             <FlexWidget style={{ flexDirection: "row", justifyContent: "center" }}>
               <FlexWidget style={{ width: 16, alignItems: "center" }}>
-                <TextWidget text={data.base2 === "1" ? "◆" : "◇"} style={{ fontSize: 9, color: data.base2 === "1" ? "#e07b3c" : alpha(DARK_FG, "33") }} />
+                <TextWidget text={data.base2 && data.base2 !== "0" ? "◆" : "◇"} style={{ fontSize: 9, color: data.base2 && data.base2 !== "0" ? "#e07b3c" : alpha(DARK_FG, "33") }} />
               </FlexWidget>
               <FlexWidget style={{ width: 16, alignItems: "center" }}>
-                <TextWidget text={data.base1 === "1" ? "◆" : "◇"} style={{ fontSize: 9, color: data.base1 === "1" ? "#e07b3c" : alpha(DARK_FG, "33") }} />
+                <TextWidget text={data.base1 && data.base1 !== "0" ? "◆" : "◇"} style={{ fontSize: 9, color: data.base1 && data.base1 !== "0" ? "#e07b3c" : alpha(DARK_FG, "33") }} />
               </FlexWidget>
             </FlexWidget>
 
