@@ -391,9 +391,7 @@
       }
     },
     "owner": "duboo82",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "3.0.0",
     "updates": {
       "url": "https://u.expo.dev/61b58472-e18f-48c4-8471-fa6fa4294c42"
     }
