@@ -52,6 +52,12 @@
         "projectId": "61b58472-e18f-48c4-8471-fa6fa4294c42"
       }
     },
-    "owner": "duboo82"
+    "owner": "duboo82",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/61b58472-e18f-48c4-8471-fa6fa4294c42"
+    }
   }
 }

@@ -2864,3 +2864,84 @@ a3898de feat: 날씨 정보 당일만 표시 + mock 데이터 제거
 b438ab1 feat: Phase 1 — 서버 푸시 알림 인프라 (FCM/APNs/device_tokens/push_worker)
 bd7b2a7 fix: push_router 항상 마운트 (ENABLE_PUSH off 시 push_disabled 응답)
 ```
+
+---
+
+## Production 1.1.8 장애: gameId 불일치 + OTA 인프라缺失 (2026-06-16)
+
+### 개요
+
+1.1.8 스토어 버전 홈탭에서 4개 경기가 "경기중"만 표시되고 BSO/이닝 정보 미표시.
+추가로 p:/b: 레이블 뒤 선수 이름 미표시. 원인은 2가지 독립적인 문제.
+
+### 문제 1: gameId suffix 불일치 (클라이언트, 수정 후 롤백)
+
+**증상**: 5경기 중 LG KIA만 정상 BSO 표시, 나머지 4경기는 "경기중"만 표시
+
+**원인** (`mobile/lib/resolveGames.ts:111`):
+- `buildGameId()` 호출 시 `String(gi)` 사용 — `gi`는 스케줄 배열 index(0..N)
+- 서버 `/widget-data`는 단일경기 suffix를 항상 `"0"`으로 생성
+- 첫 번째 경기(gi=0)만 매칭 → widget-data가 가진 relay/liveInning/isTop 데이터 주입 실패
+- **DH 경기까지 고려한 설계**: DH는 1, 2차전을 각각 구분해야 하므로 suffix가 필요하지만, 단일경기는 "0"으로 통일 필요
+
+**수정**:
+- `String(gi)` → `String(dhGameNumber)`로 변경 (단일경기=0, DH 1차전=1, DH 2차전=2)
+- 사전 카운트 루프(pairTotal Map)로 같은 상대 조합의 경기 수를 미리 계산하여 DH 판별
+- `dhGameNumber`를 gameId 생성보다 먼저 계산하도록 로직 이동
+
+**배포 시도**:
+- `eas update --branch production-1.1.8`로 OTA 배포
+- OTA 적용 후 오히려 점수 업데이트가 멈추는 현상 발생 → `eas update --branch production-1.1.8 --roll-back-to-embedded`로 원복
+- **원복 확인**: 1.1.8 스토어 버전은 `runtimeVersion`과 `updates.url`이 `app.json`에 없이 빌드되어, OTA 업데이트를 수신할 인프라 자체가 없었음
+- 즉, OTA 배포 성공 여부와 무관하게 1.1.8 앱은 업데이트를 받을 수 없는 구조였음
+
+**현재 상태**: 수정 코드는 master 브랜치에 있으나 1.1.8 스토어 앱에는 미적용. 향후 EAS Build 시 `app.json`에 설정된 `runtimeVersion` + `updates.url`이 포함되므로 그때 자연히 해결됨.
+
+### 문제 2: 선발투수/타자 이름 미표시 (서버, 수정 완료)
+
+**증상**: 위젯 데이터에서 `p:`, `b:` 레이블 뒤 선수 이름이 표시되지 않음
+
+**원인** (`/home/opc/fullcount_backend/main.py`):
+- `_fetch_relay()` (widget-data, ~line 834)에서 pcode→name 매핑(`p2n`)을 `homeEntry`/`awayEntry`의 `batter`/`pitcher` 데이터만으로 구축
+- Naver relay API의 현재 투수/타자 pcodes는 `homeLineup`/`awayLineup` 데이터에 위치
+- Entry 데이터에는 pcodes가 없어 p2n 매핑 누락 → 이름을 찾을 수 없어 빈 값 반환
+
+**수정**:
+```python
+for side in (trd.get("homeLineup", {}) or {}, trd.get("awayLineup", {}) or {}):
+    for key in ("batter", "pitcher"):
+        for e in (side.get(key) or []):
+            if isinstance(e, dict) and e.get("pcode") and e.get("name"):
+                p2n[str(e["pcode"])] = str(e["name"])
+```
+- 동일 수정을 `_build_game_detail` (game-detail, ~line 1205)에도 적용
+- 서버 재시작 후 5개 전 경기 투수/타자 이름 정상 표시 확인
+
+**현재 상태**: 서버에 배포 완료, 정상 동작 중.
+
+### 문제 3: OTA 인프라缺失 (인프라, EAS Build 시 해결 예정)
+
+**원인**: `app.json`에 `runtimeVersion`과 `updates.url` 필드가 없어서 1.1.8 네이티브 바이너리가 `expo-updates`의 OTA 업데이트를 수신할 수 없었음
+
+**변경**: 롤백 명령(`roll-back-to-embedded`) 실행 시 Expo CLI가 자동으로 `app.json`에 아래 필드 추가:
+```json
+"runtimeVersion": { "policy": "appVersion" },
+"updates": {
+  "url": "https://u.expo.dev/61b58472-e18f-48c4-8471-fa6fa4294c42"
+}
+```
+
+**향후**: 다음 EAS Build부터 이 설정이 포함되어 OTA 업데이트 정상 동작 예정.
+
+### 커밋 상태
+
+| 수정 | 브랜치 | 상태 |
+|------|--------|------|
+| 서버 pitcher/batter 이름 | master (직접 수정) | 배포 완료 ✅ |
+| gameId suffix fix (resolveGames.ts) | master | 코드는 있으나 스토어 앱에 미적용 |
+| app.json runtimeVersion+updates.url | master (자동 추가) | 다음 EAS Build부터 적용 |
+
+### 관련 파일
+- `mobile/lib/resolveGames.ts` — gameId suffix 수정 (dhGameNumber 사용)
+- `/home/opc/fullcount_backend/main.py` — p2n lineup 매핑 추가
+- `mobile/app.json` — runtimeVersion + updates.url 설정

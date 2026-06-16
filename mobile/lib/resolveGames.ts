@@ -69,12 +69,19 @@ export function resolveGames(
   const todayGames = options?.todayGames ?? [];
   const nextGames = options?.nextGames ?? [];
 
+  // Pre-count same-pair games to detect double-headers before processing
+  const pairTotal = new Map<string, number>();
+  for (const g of daySchedule) {
+    const pk = `${g.away}|${g.home}`;
+    pairTotal.set(pk, (pairTotal.get(pk) ?? 0) + 1);
+  }
+
   const pairCount = new Map<string, number>();
   const todayStr = new Date().toISOString().slice(0, 10);
   const isFuture = dateFilter > todayStr;
   const isToday = dateFilter === todayStr;
 
-  return daySchedule.map((g, gi) => {
+  return daySchedule.map((g) => {
     const homeId = TEAM_NAME_TO_ID[g.home] || "";
     const awayId = TEAM_NAME_TO_ID[g.away] || "";
     const pairKey = `${g.away}|${g.home}`;
@@ -106,11 +113,13 @@ export function resolveGames(
     // Time from today API or schedule
     const time = today?.time || g.time || "18:30";
 
-    // gameId — always from buildGameId (per Opus: external API ID must not be source of truth)
-    const gameDate = dateFilter.replace(/-/g, "");
-    const gameId = buildGameId(awayId, homeId, gameDate, String(gi));
+    // DH info (using pre-counted pairTotal so first game of a DH pair is correctly identified)
+    const isDHPair = (pairTotal.get(pairKey) ?? 1) > 1;
+    const dhGameNumber = isDHPair ? pairIdx + 1 : 0;
 
-    // Status
+    // gameId — suffix matches widget-data convention: "0" for single games, DH number for DH
+    const gameDate = dateFilter.replace(/-/g, "");
+    const gameId = buildGameId(awayId, homeId, gameDate, String(dhGameNumber));
     const [h, m] = time.split(":").map(Number);
     const startTime = new Date();
     startTime.setHours(h ?? 18, m ?? 30, 0, 0);
@@ -132,11 +141,6 @@ export function resolveGames(
     } else if (status === "scheduled" && !isFuture && g.isExhibition) {
       status = "finished";
     }
-
-    // DH info
-    const finalPairCount = pairCount.get(pairKey) ?? 0;
-    const isDHPair = finalPairCount > 1;
-    const dhGameNumber = isDHPair ? pairIdx + 1 : 0;
 
     return {
       gameId,
