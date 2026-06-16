@@ -333,6 +333,7 @@ export default function HomeScreen() {
                 games[idx] = {
                   ...games[idx],
                   ...scoreUpdate,
+                  status: wg.status,
                   liveInning,
                   isTop,
                   relay: wg.relay,
@@ -502,7 +503,7 @@ export default function HomeScreen() {
   useFocusEffect(useCallback(() => {
     const interval = setInterval(() => {
       load();
-    }, 60_000);
+    }, 16_000);
     return () => clearInterval(interval);
   }, [load]));
 

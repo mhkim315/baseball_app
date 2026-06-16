@@ -14,7 +14,16 @@
       },
       "distribution": "internal"
     },
-    "production": {}
+    "production": {
+      "channel": "production"
+    },
+    "test-apk": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "channel": "production"
+    }
   },
   "submit": {
     "production": {}

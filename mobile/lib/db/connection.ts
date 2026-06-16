@@ -1,7 +1,7 @@
 import * as SQLite from "expo-sqlite";
 
 const CACHE_VERSION = 4;
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 let db: SQLite.SQLiteDatabase | null = null;
 
