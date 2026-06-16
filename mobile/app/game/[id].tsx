@@ -127,13 +127,11 @@ export default function GameDetailScreen() {
 
 
         const { awayId, homeId } = parseGameTeamIds(gid);
-        const parts = gid.split("-");
-        const suffix = parts[parts.length - 1];
-        const gameSeq = parseInt(suffix, 10);
+        const dhNum = parseInt(gid.split("-").pop() ?? "0", 10) || 0;
 
         // Use resolveGames for correct DH matching
         const allResolved = resolveGames(schedule?.games || [], scores?.games || [], dateStr);
-        const myEntry = allResolved[gameSeq];
+        const myEntry = allResolved.find(g => g.awayId === awayId && g.homeId === homeId && g.dhGameNumber === dhNum);
         const scoreEntry = myEntry?._raw.score ?? null;
         const scheduleEntry = myEntry?._raw.schedule ?? null;
 
@@ -224,10 +222,9 @@ export default function GameDetailScreen() {
 
         // resolveGames는 scores가 null이어도 schedule 데이터로 isExhibition 판정 가능
         const resolved = resolveGames(schedule?.games || [], scores?.games || [], dateStr);
-        const parts = gid.split("-");
-        const suffix = parts[parts.length - 1];
-        const gameSeq = parseInt(suffix, 10);
-        const myGame = !isNaN(gameSeq) ? resolved[gameSeq] : undefined;
+        const { awayId: gAway, homeId: gHome } = parseGameTeamIds(gid);
+        const gDhNum = parseInt(gid.split("-").pop() ?? "0", 10) || 0;
+        const myGame = resolved.find(g => g.awayId === gAway && g.homeId === gHome && g.dhGameNumber === gDhNum);
         if (myGame?.isExhibition) setIsExhibition(true);
         if (myGame?.time) scheduleTimeRef.current = myGame.time;
         resolvedStatusRef.current = myGame?.status;
@@ -238,7 +235,7 @@ export default function GameDetailScreen() {
             setScoreFallback(score);
             // For DH2+ games, override API detail with correct scores/pitchers
             // starters는 서버가 _dh2.json을 올바르게 반환하므로 유지
-            if (gameSeq > 0) {
+            if (myGame.dhGameNumber > 0) {
               setDetail({
                 ...data,
                 score: { away: score.awayScore, home: score.homeScore },
@@ -277,8 +274,9 @@ export default function GameDetailScreen() {
           ]);
           if (cancelled) return;
           const resolved = resolveGames(schedule?.games || [], scores?.games || [], dateStr);
-          const gameSeq = parseInt(gid.split("-").pop() ?? "0", 10);
-          const myGame = !isNaN(gameSeq) ? resolved[gameSeq] : undefined;
+          const { awayId: rAway, homeId: rHome } = parseGameTeamIds(gid);
+          const rDhNum = parseInt(gid.split("-").pop() ?? "0", 10) || 0;
+          const myGame = resolved.find(g => g.awayId === rAway && g.homeId === rHome && g.dhGameNumber === rDhNum);
           if (myGame?.isExhibition) setIsExhibition(true);
           if (myGame?.time) scheduleTimeRef.current = myGame.time;
           resolvedStatusRef.current = myGame?.status;
