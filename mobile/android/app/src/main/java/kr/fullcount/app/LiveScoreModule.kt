@@ -1,4 +1,4 @@
-package kr.fullcount.app.test
+package kr.fullcount.app
 
 import android.content.Intent
 import android.os.Build

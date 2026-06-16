@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
   <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
@@ -9,8 +11,6 @@
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
@@ -24,6 +24,9 @@
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="https://u.expo.dev/61b58472-e18f-48c4-8471-fa6fa4294c42"/>
+    <service android:name=".LiveScoreService" android:foregroundServiceType="dataSync" android:exported="false"/>
+    <service android:name=".LiveScoreTaskService"/>
+    <service android:name="com.reactnativeandroidwidget.RNWidgetCollectionService" android:permission="android.permission.BIND_REMOTEVIEWS"/>
     <activity android:name=".MainActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode" android:launchMode="singleTask" android:windowSoftInputMode="adjustResize" android:theme="@style/Theme.App.SplashScreen" android:exported="true" android:screenOrientation="portrait">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
@@ -42,7 +45,180 @@
       </intent-filter>
       <meta-data android:name="android.appwidget.provider" android:resource="@xml/game_status_widget_info"/>
     </receiver>
-    <service android:name=".LiveScoreService" android:foregroundServiceType="dataSync" android:exported="false" />
-    <service android:name=".LiveScoreTaskService" />
+    <receiver android:name=".widget.Widget1x1" android:exported="false" android:label="?카운??1x1">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget1x1"/>
+    </receiver>
+    <receiver android:name=".widget.Widget1x2" android:exported="false" android:label="?카운??1x2">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget1x2"/>
+    </receiver>
+    <receiver android:name=".widget.Widget1x3" android:exported="false" android:label="?카운??1x3">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget1x3"/>
+    </receiver>
+    <receiver android:name=".widget.Widget1x4" android:exported="false" android:label="?카운??1x4">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget1x4"/>
+    </receiver>
+    <receiver android:name=".widget.Widget1x5" android:exported="false" android:label="?카운??1x5">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget1x5"/>
+    </receiver>
+    <receiver android:name=".widget.Widget2x1" android:exported="false" android:label="?카운??2x1">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget2x1"/>
+    </receiver>
+    <receiver android:name=".widget.Widget2x2" android:exported="false" android:label="?카운??2x2">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget2x2"/>
+    </receiver>
+    <receiver android:name=".widget.Widget2x3" android:exported="false" android:label="?카운??2x3">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget2x3"/>
+    </receiver>
+    <receiver android:name=".widget.Widget2x4" android:exported="false" android:label="?카운??2x4">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget2x4"/>
+    </receiver>
+    <receiver android:name=".widget.Widget2x5" android:exported="false" android:label="?카운??2x5">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget2x5"/>
+    </receiver>
+    <receiver android:name=".widget.Widget3x1" android:exported="false" android:label="?카운??3x1">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget3x1"/>
+    </receiver>
+    <receiver android:name=".widget.Widget3x2" android:exported="false" android:label="?카운??3x2">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget3x2"/>
+    </receiver>
+    <receiver android:name=".widget.Widget3x3" android:exported="false" android:label="?카운??3x3">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget3x3"/>
+    </receiver>
+    <receiver android:name=".widget.Widget3x4" android:exported="false" android:label="?카운??3x4">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget3x4"/>
+    </receiver>
+    <receiver android:name=".widget.Widget3x5" android:exported="false" android:label="?카운??3x5">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget3x5"/>
+    </receiver>
+    <receiver android:name=".widget.Widget4x1" android:exported="false" android:label="?카운??4x1">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget4x1"/>
+    </receiver>
+    <receiver android:name=".widget.Widget4x2" android:exported="false" android:label="?카운??4x2">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget4x2"/>
+    </receiver>
+    <receiver android:name=".widget.Widget4x3" android:exported="false" android:label="?카운??4x3">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget4x3"/>
+    </receiver>
+    <receiver android:name=".widget.Widget4x4" android:exported="false" android:label="?카운??4x4">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget4x4"/>
+    </receiver>
+    <receiver android:name=".widget.Widget4x5" android:exported="false" android:label="?카운??4x5">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget4x5"/>
+    </receiver>
+    <receiver android:name=".widget.Widget5x1" android:exported="false" android:label="?카운??5x1">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget5x1"/>
+    </receiver>
+    <receiver android:name=".widget.Widget5x2" android:exported="false" android:label="?카운??5x2">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget5x2"/>
+    </receiver>
+    <receiver android:name=".widget.Widget5x3" android:exported="false" android:label="?카운??5x3">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget5x3"/>
+    </receiver>
+    <receiver android:name=".widget.Widget5x4" android:exported="false" android:label="?카운??5x4">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget5x4"/>
+    </receiver>
+    <receiver android:name=".widget.Widget5x5" android:exported="false" android:label="?카운??5x5">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="kr.fullcount.app.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget5x5"/>
+    </receiver>
   </application>
 </manifest>

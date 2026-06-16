@@ -1,4 +1,4 @@
-package kr.fullcount.app.test
+package kr.fullcount.app
 
 import android.view.View
 import com.facebook.react.ReactPackage

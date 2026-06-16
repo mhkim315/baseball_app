@@ -1,4 +1,4 @@
-package kr.fullcount.app.test
+package kr.fullcount.app
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
