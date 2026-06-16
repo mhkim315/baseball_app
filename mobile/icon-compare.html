@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>adaptive-icon 비교</title>
+<style>
+  body { font-family: -apple-system, sans-serif; background: #333; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: #fff; }
+  h1 { font-size: 18px; }
+  .row { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+  .card { background: #222; border-radius: 12px; padding: 20px; text-align: center; width: 260px; }
+  .label { font-size: 12px; color: #aaa; margin-top: 8px; }
+  .badge { font-size: 11px; background: #fde8d6; color: #333; padding: 2px 8px; border-radius: 4px; }
+  .preview-wrap { position: relative; display: inline-block; }
+  .safe-zone-overlay { position: absolute; border: 2px dashed rgba(255,0,0,0.5); border-radius: 22%; pointer-events: none; }
+  img { max-width: 100%; border-radius: 22%; }
+  .icon-box { background: #fde8d6; border-radius: 22%; overflow: hidden; width: 192px; height: 192px; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+  .icon-box img { width: 100%; height: 100%; object-fit: contain; border-radius: 0; }
+  .phone-frame { background: #000; border-radius: 44px; padding: 12px; margin-top: 12px; }
+  .phone-screen { background: #1a1a2e; border-radius: 36px; width: 280px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .launcher-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .launcher-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .launcher-icon { width: 48px; height: 48px; border-radius: 12px; overflow: hidden; background: #fde8d6; }
+  .launcher-icon img { width: 100%; height: 100%; object-fit: contain; }
+  .launcher-label { font-size: 10px; color: #fff; }
+</style>
+</head>
+<body>
+  <h1>adaptive-icon 비교: 현재 vs 패딩 적용</h1>
+
+  <div class="row">
+    <div class="card">
+      <div class="badge">현재 (빌드中)</div>
+      <div class="icon-box" style="margin-top:12px">
+        <img src="../adaptive-icon-preview.png" alt="현재">
+      </div>
+      <div class="label">로고가 1024×1024 꽉 참<br>→ Android 마스크로 가장자리 잘림</div>
+    </div>
+
+    <div class="card">
+      <div class="badge">수정 (패딩 추가)</div>
+      <div class="icon-box" style="margin-top:12px">
+        <img src="../mobile/assets/adaptive-icon-padded.png" alt="패딩">
+      </div>
+      <div class="label">로고를 중앙 66% 영역에 배치<br>→ 여백 확보, 잘림 없음</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card" style="width:320px">
+      <div class="badge">런처 미리보기 (수정 후)</div>
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="launcher-grid">
+            <div class="launcher-item">
+              <div class="launcher-icon"><img src="../mobile/assets/adaptive-icon-padded.png"></div>
+              <span class="launcher-label">풀카운트</span>
+            </div>
+            <div class="launcher-item">
+              <div class="launcher-icon"><img src="../mobile/assets/adaptive-icon-padded.png"></div>
+              <span class="launcher-label">지도</span>
+            </div>
+            <div class="launcher-item">
+              <div class="launcher-icon"><img src="../mobile/assets/adaptive-icon-padded.png"></div>
+              <span class="launcher-label">설정</span>
+            </div>
+            <div class="launcher-item">
+              <div class="launcher-icon"><img src="../mobile/assets/adaptive-icon-padded.png"></div>
+              <span class="launcher-label">메시지</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="label" style="margin-top:12px">배경 #fde8d6 · 마스크 적용 후 안전하게 표시</div>
+    </div>
+  </div>
+</body>
+</html>

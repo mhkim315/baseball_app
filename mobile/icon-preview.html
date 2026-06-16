@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>풀카운트 앱 아이콘 미리보기</title>
+<style>
+  body { font-family: -apple-system, sans-serif; background: #f5f5f5; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; gap: 40px; }
+  h1 { font-size: 20px; margin: 0; }
+  h2 { font-size: 14px; color: #666; margin: 0 0 12px 0; }
+  .section { display: flex; flex-direction: column; align-items: center; }
+  .row { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; }
+  .card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); text-align: center; }
+  .label { font-size: 12px; color: #888; margin-top: 12px; }
+  .icon-round { border-radius: 22%; width: 192px; height: 192px; object-fit: contain; }
+  .icon-square { width: 192px; height: 192px; object-fit: contain; }
+  .phone-frame { background: #000; border-radius: 44px; padding: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.2); }
+  .phone-screen { background: #fff; border-radius: 36px; width: 280px; height: 80px; display: flex; align-items: center; padding: 0 20px; gap: 12px; }
+  .home-bar { width: 120px; height: 4px; background: #ddd; border-radius: 2px; margin: 8px auto 0; }
+  .launcher-preview { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+  /* Simulated Android launcher */
+  .launcher-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 16px; background: #fde8d6; border-radius: 24px; }
+  .launcher-icon { width: 48px; height: 48px; border-radius: 12px; }
+</style>
+</head>
+<body>
+  <h1>풀카운트 v1.0.7 앱 아이콘</h1>
+
+  <div class="row">
+    <div class="section">
+      <h2>단일 아이콘 (icon.png)</h2>
+      <div class="card">
+        <img src="../icon-preview.png" class="icon-round" alt="icon">
+        <div class="label">1024×1024 · iOS/Android 단일 아이콘</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Adaptive Icon (adaptive-icon.png)</h2>
+      <div class="card">
+        <div style="background: #fde8d6; border-radius: 22%; width: 192px; height: 192px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+          <img src="../adaptive-icon-preview.png" style="width: 100%; height: 100%; object-fit: contain;" alt="adaptive-icon">
+        </div>
+        <div class="label">배경 #fde8d6 · Android 런처</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Android 런처 미리보기</h2>
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div style="display: flex; align-items: center; gap: 16px; width: 100%;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1;">
+            <div style="background: #fde8d6; border-radius: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              <img src="../adaptive-icon-preview.png" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <span style="font-size: 10px; color: #fff;">풀카운트</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1;">
+            <div style="background: #fde8d6; border-radius: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              <img src="../adaptive-icon-preview.png" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <span style="font-size: 10px; color: #fff;">풀카운트</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1;">
+            <div style="background: #fde8d6; border-radius: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              <img src="../adaptive-icon-preview.png" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <span style="font-size: 10px; color: #fff;">풀카운트</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1;">
+            <div style="background: #fde8d6; border-radius: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              <img src="../adaptive-icon-preview.png" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <span style="font-size: 10px; color: #fff;">풀카운트</span>
+          </div>
+        </div>
+      </div>
+      <div class="home-bar"></div>
+    </div>
+    <div class="label">런처에서 실제로 보이는 모습 (배경 #fde8d6 적용)</div>
+  </div>
+</body>
+</html>

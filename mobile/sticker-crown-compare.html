@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👑 스티커 왕관 비교 — Before / After</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #f0f0f0; font-family: 'Noto Sans KR', -apple-system, sans-serif; padding: 40px 20px; }
+  h1 { text-align: center; font-size: 24px; margin-bottom: 8px; }
+  .sub { text-align: center; color: #888; font-size: 14px; margin-bottom: 32px; }
+  .container { max-width: 900px; margin: 0 auto; }
+
+  .compare-row { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+  .card { flex: 1; min-width: 300px; max-width: 360px; }
+  .card-label { text-align: center; font-weight: 900; font-size: 18px; margin-bottom: 16px; padding: 8px 16px; border-radius: 10px; }
+  .card-label.before { background: #fee2e2; color: #b91c1c; }
+  .card-label.after { background: #dcfce7; color: #16a34a; }
+
+  .phone { background: #0f0f23; border-radius: 32px; padding: 10px; box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+  .screen { background: #fff; border-radius: 22px; overflow: hidden; min-height: 480px; }
+
+  .sticker { width: 300px; margin: 20px auto; border-radius: 16px; overflow: hidden; }
+  .sticker.with-bg {
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  }
+  .sticker.transparent .sticker-inner { padding: 16px; }
+
+  .sticker-inner { padding: 16px; }
+
+  .s-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .s-date { font-size: 11px; font-weight: 700; color: #555; }
+  .s-watermark { font-size: 10px; color: #bbb; font-weight: 700; }
+
+  .s-scoreboard { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .s-team { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .s-team .name { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; }
+  .s-team .name.crown-before::before { content: ""; }
+  .s-team .name.crown-after::before { content: ""; }
+  .s-team .rank { font-size: 10px; font-weight: 700; color: #999; }
+  .s-score-wrap { display: flex; align-items: center; gap: 8px; }
+  .s-score { font-size: 40px; font-weight: 900; line-height: 1; }
+  .s-colon { font-size: 24px; color: #ccc; font-weight: 300; }
+
+  .s-user-badge {
+    margin-top: 10px; padding: 10px; border-radius: 10px;
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    display: flex; align-items: flex-start; gap: 6px;
+  }
+  .s-user-badge .emoji { font-size: 16px; margin-top: 2px; }
+  .s-user-badge .label { font-size: 11px; color: #666; font-weight: 700; }
+  .s-user-badge .value { font-size: 14px; font-weight: 900; color: #111; }
+  .s-user-badge .record { font-size: 11px; color: #999; font-weight: 700; }
+  .s-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+  .s-tags .tag { font-size: 11px; font-weight: 700; }
+  .s-tags .tag.team-tag { color: #dc2626; }
+  .s-tags .tag.my-tag { color: #2563eb; }
+
+  .highlight-box { margin-top: 16px; padding: 12px; border-radius: 10px; background: #fffbe6; border: 1.5px solid #fcd34d; }
+  .highlight-box .title { font-weight: 900; font-size: 13px; margin-bottom: 4px; }
+  .highlight-box .desc { font-size: 12px; color: #666; line-height: 1.5; }
+
+  .scenario-section { margin-bottom: 48px; }
+  .scenario-title { font-size: 16px; font-weight: 900; color: #333; text-align: center; margin-bottom: 16px; padding: 4px 12px; display: inline-block; background: #e5e7eb; border-radius: 8px; display: block; width: fit-content; margin-left: auto; margin-right: auto; }
+
+  .label-kt { color: #EB1F25; }
+  .label-ds { color: #131230; }
+  .color-win { color: #111; }
+  .color-lose { color: #999; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>👑 스티커 왕관 표시 비교</h1>
+  <p class="sub">Before (기존) vs After (왕관 추가) — 승리팀 팀명 앞에 👑 표시</p>
+
+  <!-- 시나리오 1: 승리 -->
+  <div class="scenario-section">
+    <div class="scenario-title">✅ 승리 — 두산 7 : 3 KT</div>
+    <div class="compare-row">
+      <!-- Before -->
+      <div class="card">
+        <div class="card-label before">BEFORE</div>
+        <div class="phone">
+          <div class="screen" style="padding: 12px 0;">
+            <div class="sticker with-bg">
+              <div class="sticker-inner">
+                <div class="s-header">
+                  <span class="s-date">2026.05.28(목)</span>
+                  <span class="s-watermark">@fullcount.kr</span>
+                </div>
+                <div class="s-scoreboard">
+                  <div class="s-team">
+                    <span class="name label-kt">KT</span>
+                    <span class="rank">5위</span>
+                  </div>
+                  <div class="s-score-wrap">
+                    <span class="s-score color-lose">3</span>
+                    <span class="s-colon">:</span>
+                    <span class="s-score color-win">7</span>
+                  </div>
+                  <div class="s-team">
+                    <span class="name label-ds">두산</span>
+                    <span class="rank">3위</span>
+                  </div>
+                </div>
+                <div class="s-user-badge">
+                  <span class="emoji">🏆</span>
+                  <div style="flex:1;">
+                    <div>
+                      <span class="label">직관 승률</span>
+                      <span class="value">67%</span>
+                      <span class="record">(6승 3패)</span>
+                    </div>
+                    <div class="s-tags">
+                      <span class="tag team-tag">#5연승</span>
+                      <span class="tag my-tag">#직관3연승</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="highlight-box" style="margin: 0 12px;">
+              <div class="title">차이점</div>
+              <div class="desc">승리팀(두산)에 아무 표시 없음.<br>점수 색상(진함/회색)으로만 구분</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- After -->
+      <div class="card">
+        <div class="card-label after">AFTER</div>
+        <div class="phone">
+          <div class="screen" style="padding: 12px 0;">
+            <div class="sticker with-bg">
+              <div class="sticker-inner">
+                <div class="s-header">
+                  <span class="s-date">2026.05.28(목)</span>
+                  <span class="s-watermark">@fullcount.kr</span>
+                </div>
+                <div class="s-scoreboard">
+                  <div class="s-team">
+                    <span class="name label-kt">KT</span>
+                    <span class="rank">5위</span>
+                  </div>
+                  <div class="s-score-wrap">
+                    <span class="s-score color-lose">3</span>
+                    <span class="s-colon">:</span>
+                    <span class="s-score color-win">7</span>
+                  </div>
+                  <div class="s-team">
+                    <span class="name label-ds">👑 두산</span>
+                    <span class="rank">3위</span>
+                  </div>
+                </div>
+                <div class="s-user-badge">
+                  <span class="emoji">🏆</span>
+                  <div style="flex:1;">
+                    <div>
+                      <span class="label">직관 승률</span>
+                      <span class="value">67%</span>
+                      <span class="record">(6승 3패)</span>
+                    </div>
+                    <div class="s-tags">
+                      <span class="tag team-tag">#5연승</span>
+                      <span class="tag my-tag">#직관3연승</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="highlight-box" style="margin: 0 12px; background: #dcfce7; border-color: #86efac;">
+              <div class="title">✅ 변경</div>
+              <div class="desc"><strong>승리팀(두산)</strong> 팀명 앞에 👑 표시!<br>점수 색상 + 왕관으로 직관적인 승리 구분</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 시나리오 2: 라이브 경기 -->
+  <div class="scenario-section">
+    <div class="scenario-title">🔄 라이브 경기 — 왕관 없음</div>
+    <div class="compare-row">
+      <div class="card">
+        <div class="card-label before">BEFORE</div>
+        <div class="phone">
+          <div class="screen" style="padding: 12px 0;">
+            <div class="sticker with-bg">
+              <div class="sticker-inner">
+                <div class="s-header">
+                  <span class="s-date">2026.06.02(화)</span>
+                  <span class="s-watermark">@fullcount.kr</span>
+                </div>
+                <div class="s-scoreboard">
+                  <div class="s-team">
+                    <span class="name label-kt">KT</span>
+                    <span class="rank">5위</span>
+                  </div>
+                  <div class="s-score-wrap">
+                    <span class="s-score color-win">3</span>
+                    <span class="s-colon">:</span>
+                    <span class="s-score color-win">2</span>
+                  </div>
+                  <div class="s-team">
+                    <span class="name label-ds">두산</span>
+                    <span class="rank">3위</span>
+                  </div>
+                </div>
+                <div class="s-user-badge" style="border-color: #fecaca;">
+                  <span class="emoji">📍</span>
+                  <div style="flex:1;">
+                    <span class="label" style="font-size: 12px;">잠실 야구장</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="highlight-box" style="margin: 0 12px;">
+              <div class="title">동일</div>
+              <div class="desc">라이브 경기는 gameResult가 null.<br>왕관 없음, 점수도 모두 진하게</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label after">AFTER</div>
+        <div class="phone">
+          <div class="screen" style="padding: 12px 0;">
+            <div class="sticker with-bg">
+              <div class="sticker-inner">
+                <div class="s-header">
+                  <span class="s-date">2026.06.02(화)</span>
+                  <span class="s-watermark">@fullcount.kr</span>
+                </div>
+                <div class="s-scoreboard">
+                  <div class="s-team">
+                    <span class="name label-kt">KT</span>
+                    <span class="rank">5위</span>
+                  </div>
+                  <div class="s-score-wrap">
+                    <span class="s-score color-win">3</span>
+                    <span class="s-colon">:</span>
+                    <span class="s-score color-win">2</span>
+                  </div>
+                  <div class="s-team">
+                    <span class="name label-ds">두산</span>
+                    <span class="rank">3위</span>
+                  </div>
+                </div>
+                <div class="s-user-badge" style="border-color: #fecaca;">
+                  <span class="emoji">📍</span>
+                  <div style="flex:1;">
+                    <span class="label" style="font-size: 12px;">잠실 야구장</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="highlight-box" style="margin: 0 12px; background: #dcfce7; border-color: #86efac;">
+              <div class="title">✅ 동일</div>
+              <div class="desc">라이브 경기, gameResult=null →<br>왕관 없음. Before/After 차이 없음</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 시나리오 3: 무승부 -->
+  <div class="scenario-section">
+    <div class="scenario-title">🤝 무승부 — 왕관 없음</div>
+    <div class="compare-row">
+      <div class="card">
+        <div class="card-label before">BEFORE</div>
+        <div class="phone">
+          <div class="screen" style="padding: 12px 0;">
+            <div class="sticker with-bg">
+              <div class="sticker-inner">
+                <div class="s-header">
+                  <span class="s-date">2026.05.01(금)</span>
+                  <span class="s-watermark">@fullcount.kr</span>
+                </div>
+                <div class="s-scoreboard">
+                  <div class="s-team">
+                    <span class="name label-kt">KT</span>
+                    <span class="rank">5위</span>
+                  </div>
+                  <div class="s-score-wrap">
+                    <span class="s-score color-win">5</span>
+                    <span class="s-colon">:</span>
+                    <span class="s-score color-win">5</span>
+                  </div>
+                  <div class="s-team">
+                    <span class="name label-ds">두산</span>
+                    <span class="rank">3위</span>
+                  </div>
+                </div>
+                <div class="s-user-badge">
+                  <span class="emoji">🏆</span>
+                  <div style="flex:1;">
+                    <div>
+                      <span class="label">직관 승률</span>
+                      <span class="value">60%</span>
+                      <span class="record">(3승 1무 2패)</span>
+                    </div>
+                    <div class="s-tags">
+                      <span class="tag team-tag">#무승부</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="highlight-box" style="margin: 0 12px;">
+              <div class="title">동일</div>
+              <div class="desc">무승부는 승리팀이 없음.<br>왕관 없음, 점수도 모두 진하게</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label after">AFTER</div>
+        <div class="phone">
+          <div class="screen" style="padding: 12px 0;">
+            <div class="sticker with-bg">
+              <div class="sticker-inner">
+                <div class="s-header">
+                  <span class="s-date">2026.05.01(금)</span>
+                  <span class="s-watermark">@fullcount.kr</span>
+                </div>
+                <div class="s-scoreboard">
+                  <div class="s-team">
+                    <span class="name label-kt">KT</span>
+                    <span class="rank">5위</span>
+                  </div>
+                  <div class="s-score-wrap">
+                    <span class="s-score color-win">5</span>
+                    <span class="s-colon">:</span>
+                    <span class="s-score color-win">5</span>
+                  </div>
+                  <div class="s-team">
+                    <span class="name label-ds">두산</span>
+                    <span class="rank">3위</span>
+                  </div>
+                </div>
+                <div class="s-user-badge">
+                  <span class="emoji">🏆</span>
+                  <div style="flex:1;">
+                    <div>
+                      <span class="label">직관 승률</span>
+                      <span class="value">60%</span>
+                      <span class="record">(3승 1무 2패)</span>
+                    </div>
+                    <div class="s-tags">
+                      <span class="tag team-tag">#무승부</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="highlight-box" style="margin: 0 12px; background: #dcfce7; border-color: #86efac;">
+              <div class="title">✅ 동일</div>
+              <div class="desc">무승부, gameResult=draw →<br>왕관 없음. Before/After 차이 없음</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

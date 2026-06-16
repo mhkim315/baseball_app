@@ -1,0 +1,25 @@
+v1.1.1 Android 릴리즈 노트 (v1.0.15 대비 변경사항)
+
+[신규 기능]
+• 증빙사진 첨부 — TicketReportModal에서 WebView Canvas 이미지 이어붙이기 (최대 4장) + 갤러리 저장
+• 암표 신고 모달 — 구단별 좌석 가격 조회 후 신고 URL 이동
+• KBO 10개 구단 좌석 가격 데이터 수집 (ticketPrices.ts)
+
+[개선]
+• TicketReportModal 등급 탭 추가 + fillHeight 92% + 여백 수정
+• 암표 신고하기를 home.tsx → my.tsx 모아보기 섹션으로 이동
+• 초기 진입 버벅임 완화 — 스키마 버전 체크로 warm start 최적화 + SplashScreen 제어
+• DiaryStats 승률 원형 그래프 SVG 기반 % 진행률로 변경
+• CheerContent 두산 응원탭 "초반 분위기 올릴 때" 서울의 베어스 YouTube 링크 추가
+• CoachMark 재발 방지 — seen 플래그 모든 dismiss 경로에 저장
+
+[버그 수정]
+• 경기 시간 18:30 폴백 처리 개선
+• 직관 최소조건 감정표현으로 변경
+• 2025-05-11 및 2025-05-17 경기 점수 홈/원정 반대 오류 수정
+• DiaryStats 토템/구장 수평 스크롤 nestedScrollEnabled 추가
+• TicketReportModal 가격 접근 안전장치 추가
+• 스티커 바로가기 — isStarted 시간 기반 fallback + gameIdx suffix 처리
+
+[데이터]
+• 잠실 구장 외야 좌석 가격 9,000원 → 10,000원 업데이트

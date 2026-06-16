@@ -1,0 +1,198 @@
+1	# Code Review: 스티커(Sticker) 시스템 구현 검증
+2	
+3	> **구현 현황**: Phase 1~3 완료 (데이터 레이어 + UI + 클립보드 복사)
+4	> **커밋**: 보려면 `git log --oneline -5` (master: 2개 커밋)
+5	>
+6	> - `f594436` — Phase 1: 팀 연승 계산 + 해시태그 규칙 엔진
+7	> - `3f1ab4e` — Phase 2: StickerContent + StickerModal + game/[id] 진입
+8	
+9	## 배경
+10	
+11	모바일 앱(fullcount.kr)의 경기 상세 화면에서 사용자가 직관한 경기 결과를 인스타그램 스토리에 공유할 수 있는 동적 PNG 스티커 생성 기능.
+12	사용자가 경기장에서 찍은 사진 없이도 앱 데이터(점수, 직관 통계, 연승)로 즉석 스티커를 만들어 클립보드에 복사해준다.
+13	
+14	## 데이터 흐름
+15	
+16	```
+17	game/[id].tsx [스티커 만들기] 버튼 (isFinished && gs)
+18	  → StickerModal (BottomSheet)
+19	    → getTeamDiaryStats(homeTeam)     ← jikgwan_records
+20	    → computeTeamStreak(year, teamId) ← cachedAllDailyScores (시범경기 제외)
+21	    → getJikgwanRecords() → computeStreakStats() → 내 연승
+22	    → resolveHashtags(teamStreak, myStreak, gameResult, context)
+23	    → StickerContent 렌더링 (ViewShot ref)
+24	    → captureRef() → Clipboard.setImageAsync() → Sharing.shareAsync() fallback
+25	```
+26	
+27	## 구현 파일 상세
+28	
+29	### 1. `lib/sticker.ts` (~160L) — 데이터 레이어
+30	
+31	**`computeTeamStreak(year, teamId)`** — 비동기, 팀 연승 계산
+32	- `cachedAllDailyScores(year)` → 특정 팀 경기만 필터링 (TEAM_NAME_TO_ID)
+33	- 시범경기 제외: `EXHIBITION_SCORES[date]` + `LOCAL_SCHEDULE[date].isExhibition`
+34	- 무승부 제외 (streak 중단 X, 연장 X)
+35	- 취소 경기 제외
+36	- 최신 경기부터 역순 탐색, streak 끊기면 즉시 break
+37	- 반환: `{ type, count, prevType, prevCount }` (prev는 연패탈출 감지용)
+38	
+39	**`resolveHashtags(teamStreak, myStreak, gameResult, context)`** — 동기, 해시태그 규칙 엔진
+40	
+41	우선순위:
+42	| 구분 | 조건 | 태그 |
+43	|------|------|------|
+44	| lose | 모든 자동 태그 숨김 | 사용자 입력만 |
+45	| draw | `#무승부` (myTag는 연승 시 유지) |
+46	| team | 2연패+ → 1승 | `#연패탈출` |
+47	| team | 2연승+ | `#N연승` |
+48	| my | 첫직관 | `#첫직관` |
+49	| my | 해당팀 첫 승 | `#직관첫승` |
+50	| my | 2연승+ | `#직관N연승` |
+51	| my | 1승 (홈) | `#홈승리` |
+52	| my | 1승 (원정) | `#원정승리` |
+53	
+54	### 2. `components/StickerContent.tsx` (~270L) — 스티커 뷰
+55	
+56	Props:
+57	```
+58	awayTeam/homeTeam, awayTeamColor/homeTeamColor, awayScore/homeScore,
+59	awayRank/homeRank, date, scoreBoard?, rheb?, gameResult,
+60	background, stroke, showBadge, teamTag, myTag, customTag, stats
+61	```
+62	
+63	렌더링 구조:
+64	```
+65	View (300px, collapsable=false)
+66	  ├── [background=masking] MaskingOverlay (사선 패턴)
+67	  ├── [background=receipt] ReceiptOverlay (점선 테두리)
+68	  ├── Header: 날짜 + @fullcount.kr
+69	  ├── Scoreboard: 팀명(팀컬러) 점수(승=#111 / 패=#999) 순위
+70	  ├── Innings Table: 1-9 R H E (X 없이 빈칸)
+71	  └── [showBadge] Stats Badge: 승률 + 해시태그 3개
+72	```
+73	
+74	특이사항:
+75	- stroke: textShadow 기반 (흰색 외곽선), scores/teamNames는 thick(radius 2)
+76	- `::before` pseudo-element 불가 → overlay View로 대체
+77	- Android ViewShot 방어: `collapsable={false}`
+78	
+79	### 3. `components/StickerModal.tsx` (~380L) — 스티커 에디터
+80	
+81	BottomSheet 내부:
+82	```
+83	[헤더] "스티커 만들기" + 닫기 버튼
+84	[미리보기] 회색 배경 위 ViewShot ref로 감싼 StickerContent
+85	[컨트롤]
+86	  ├── 배경: 투명 / 마스킹 테이프 / 찢어진 영수증 (chip 버튼)
+87	  ├── 외곽선: ON/OFF 토글
+88	  ├── 승률·해시태그: ON/OFF 토글
+89	  ├── 해시태그 입력: 3개 TextInput (#팀태그, #내태그, #사용자태그), 각 15자 제한
+90	  └── [📋 인스타 스티커 복사] 버튼 (primary, full width)
+91	```
+92	
+93	데이터 로딩 (mount 시):
+94	```
+95	getTeamDiaryStats(homeTeam)  → stats (승률/승/무/패)
+96	computeTeamStreak(year, homeTeam) → teamStreak
+97	getJikgwanRecords() → computeStreakStats() → myStreak
+98	→ resolveHashtags() → teamTag, myTag 자동 설정
+99	```
+100	
+101	**handleCopy()**:
+102	```typescript
+103	try {
+104	  const base64 = await captureRef(viewRef, { format: "png", result: "base64" });
+105	  try {
+106	    await Clipboard.setImageAsync(`data:image/png;base64,${base64}`);
+107	    Alert.alert("완료", ...);
+108	  } catch {
+109	    // fallback
+110	    const uri = await captureRef(viewRef, { format: "png", result: "tmpfile" });
+111	    await Sharing.shareAsync(uri, { mimeType: "image/png" });
+112	  }
+113	} catch {
+114	  Alert.alert("오류", "스티커 생성에 실패했습니다.");
+115	}
+116	```
+117	
+118	### 4. `app/game/[id].tsx` (+15L) — 진입점
+119	
+120	추가된 것:
+121	```tsx
+122	// state
+123	const [showStickerModal, setShowStickerModal] = useState(false);
+124	
+125	// callback
+126	const handleOpenSticker = useCallback(() => {
+127	  if (!detail) return;
+128	  setShowStickerModal(true);
+129	}, [detail]);
+130	
+131	// button (isFinished && gs일 때만 표시)
+132	{isFinished && gs && (
+133	  <Pressable style={styles.stickerBtn} onPress={handleOpenSticker}>
+134	    <Text style={styles.stickerBtnText}>스티커 만들기</Text>
+135	  </Pressable>
+136	)}
+137	
+138	// modal
+139	<StickerModal
+140	  visible={showStickerModal}
+141	  onClose={() => setShowStickerModal(false)}
+142	  awayTeam={detail.awayTeam}
+143	  homeTeam={detail.homeTeam}
+144	  awayScore={gs.away}
+145	  homeScore={gs.home}
+146	  awayRank={previewData ? String(previewData.awayRank) : undefined}
+147	  homeRank={previewData ? String(previewData.homeRank) : undefined}
+148	  date={detail.date}
+149	  scoreBoard={detail.scoreBoard?.inn ? { away: ..., home: ... } : null}
+150	  rheb={detail.scoreBoard?.rheb ?? null}
+151	/>
+152	```
+153	
+154	## 검증이 필요한 사항
+155	
+156	### 기능 검증
+157	- [ ] computeTeamStreak: 시범경기 정상 제외되는가 (EXHIBITION_SCORES cross-ref)
+158	- [ ] computeTeamStreak: 포스트시즌 포함되는가
+159	- [ ] computeTeamStreak: 시즌 넘어가면 초기화되는가
+160	- [ ] resolveHashtags: 무승부 + 내 연승 동시 표시 (e.g. `#무승부` + `#직관3연승`)
+161	- [ ] resolveHashtags: 첫직관 → #첫직관 (stats.total === 0)
+162	- [ ] resolveHashtags: 직관첫승 → #직관첫승 (wins === 0 & gameResult === win)
+163	- [ ] resolveHashtags: 패배 시 모든 태그 숨김
+164	- [ ] StickerContent: 9회말 미진행 시 빈칸 처리 (X 대신)
+165	- [ ] StickerContent: stroke on/off — textShadow로 인한 글자 번짐 없음
+166	- [ ] StickerModal: background 3종 전환 정상 동작
+167	- [ ] StickerModal: 해시태그 입력 → 스티커 실시간 반영
+168	- [ ] handleCopy: ViewShot 캡처 정상 동작 (captureRef)
+169	- [ ] handleCopy: Clipboard.setImageAsync 정상 동작
+170	- [ ] handleCopy: 실패 시 Sharing.shareAsync fallback
+171	
+172	### 엣지 케이스
+173	- [ ] 더블헤더 2차전: scoreBoard.inn 데이터 정상인가
+174	- [ ] 취소 경기: isFinished=false → 버튼 미표시
+175	- [ ] 점수 데이터 없음: gs가 null → 버튼 미표시
+176	- [ ] 직관 기록 0건: stats는 0/0/0, isFirstGame=true, streak count=0
+177	- [ ] ViewShot Android: `collapsable={false}` 방어, opacity/zIndex 미사용 (pointerEvents="none" 미사용)
+178	- [ ] 시즌 시작 전: computeTeamStreak → scores 없음 → null 반환
+179	
+180	### 코드 품질
+181	- [ ] 사용하지 않는 코드/import 없음
+182	- [ ] TypeScript `npx tsc --noEmit` 통과
+183	- [ ] StickerContent: `createStroke()` 함수 제거됨 (unused)
+184	- [ ] HandleCopy: base64 변수 스코핑 (try 밖 선언, 실패 시 early return)
+185	- [ ] 컴포넌트 언마운트 시 cancelled 플래그로 상태 업데이트 방지
+186	
+187	## 기술 스택
+188	- `react-native-view-shot` ^5.1.0 — `captureRef()`
+189	- `expo-clipboard` ~8.0.8 — `setImageAsync()`
+190	- `expo-sharing` ~14.0.8 — `shareAsync()` fallback
+191	- BottomSheet: 커스텀 컴포넌트 (Animated + PanResponder)
+192	- ViewShot 방어: `collapsable={false}`, `opacity: 1` (opacity 0.01 미사용)
+193	
+194	## 질문
+195	1. `captureRef` + `result: "base64"`가 모든 Android 기종에서 안정적인가? (PhotoCropper는 `result` 미지정 = tmpfile 사용)
+196	2. StickerContent의 textShadow 기반 stroke가 저사양 기기에서 렌더링 성능에 영향을 주는가?
+197	3. `Sharing.shareAsync()` fallback은 인스타그램 스토리 공유까지 유도할 수 있는가, 아니면 단순 이미지 저장에 그치는가?
+198	
