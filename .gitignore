@@ -113,6 +113,7 @@ client/public/__manus__/version.json
 
 # Old server backup (contains credentials — do not restore)
 server_backup/
+server-backup/
 
 # Server data API config & scripts (internal — do not push)
 server/data_api/
