@@ -86,6 +86,9 @@ export async function updateWidgetFromFCM(data: Record<string, string>): Promise
   await updateAllWidgets(myTeam, props);
 }
 
+/** App-side safety net: keep last known game so finished games don't disappear */
+let _lastWidgetGame: WidgetGameData | null = null;
+
 /** widget-data API 응답으로 모든 위젯 업데이트 (주기적 fallback / 위젯 추가 시) */
 export async function updateWidgetPeriodic(): Promise<void> {
   const myTeam = await getMyTeamForWidget();
@@ -106,13 +109,17 @@ export async function updateWidgetPeriodic(): Promise<void> {
     });
 
     if (myGame) {
+      // Preserve for app-side fallback in case server cache goes empty
+      _lastWidgetGame = data;
+
       // Prefer relay data for live inning/isTop (more reliable than scoreBoard.inn array length)
       let inning = "0";
       let isTop = "0";
       if (myGame.status === "live") {
         if (myGame.relay?.inning) {
           inning = myGame.relay.inning.toString();
-          isTop = myGame.relay.isTop === "1" ? "1" : "0";
+          // relay.isTop can be boolean (from HTTP API) or string
+          isTop = (myGame.relay.isTop === true || String(myGame.relay.isTop) === "1") ? "1" : "0";
         } else {
           const info = getInningInfo(myGame.scoreBoard?.inn);
           if (info) {
@@ -148,6 +155,11 @@ export async function updateWidgetPeriodic(): Promise<void> {
         base2: myGame.relay?.base2?.toString(),
         base3: myGame.relay?.base3?.toString(),
       };
+    }
+
+    // App-side fallback: if API returned no games but we had data before, keep showing it
+    if (!data && _lastWidgetGame) {
+      data = { ..._lastWidgetGame, status: "finished" };
     }
   } catch (e) {
     console.warn("updateWidgetPeriodic: fetch failed", e);
