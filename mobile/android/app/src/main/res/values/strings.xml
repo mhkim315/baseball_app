@@ -2,7 +2,7 @@
   <string name="app_name">풀카운트_test</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
-  <string name="expo_runtime_version">1.2.0</string>
+  <string name="expo_runtime_version">3.0.0</string>
   <string name="widget_widget1x1_description" translatable="false">1x1 ?기 ?젯</string>
   <string name="widget_widget1x2_description" translatable="false">1x2 ?기 ?젯</string>
   <string name="widget_widget1x3_description" translatable="false">1x3 ?기 ?젯</string>
