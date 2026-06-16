@@ -32,6 +32,8 @@ interface WidgetGameData {
   base1?: string;
   base2?: string;
   base3?: string;
+  currentPitcher?: string;
+  currentBatter?: string;
 }
 
 function buildWidgetProps(data: Record<string, string>): WidgetGameData {
@@ -49,6 +51,8 @@ function buildWidgetProps(data: Record<string, string>): WidgetGameData {
     base1: data.base1,
     base2: data.base2,
     base3: data.base3,
+    currentPitcher: data.current_pitcher,
+    currentBatter: data.current_batter,
   };
 }
 
@@ -102,16 +106,22 @@ export async function updateWidgetPeriodic(): Promise<void> {
     });
 
     if (myGame) {
+      // Prefer relay data for live inning/isTop (more reliable than scoreBoard.inn array length)
       let inning = "0";
       let isTop = "0";
       if (myGame.status === "live") {
-        const info = getInningInfo(myGame.scoreBoard?.inn);
-        if (info) {
-          inning = info.inning.toString();
-          isTop = info.isTop ? "1" : "0";
+        if (myGame.relay?.inning) {
+          inning = myGame.relay.inning.toString();
+          isTop = myGame.relay.isTop === "1" ? "1" : "0";
         } else {
-          inning = "1";
-          isTop = "1";
+          const info = getInningInfo(myGame.scoreBoard?.inn);
+          if (info) {
+            inning = info.inning.toString();
+            isTop = info.isTop ? "1" : "0";
+          } else {
+            inning = "1";
+            isTop = "1";
+          }
         }
       }
 
@@ -128,6 +138,8 @@ export async function updateWidgetPeriodic(): Promise<void> {
         stadium: myGame.venue || "",
         awayPitcher: myGame.awayStarter || undefined,
         homePitcher: myGame.homeStarter || undefined,
+        currentPitcher: myGame.relay?.pitcher?.name || undefined,
+        currentBatter: myGame.relay?.batter?.name || undefined,
         weather: json.todayWeather?.[myGame.venue || ""] ? `${json.todayWeather[myGame.venue].temp}° ${json.todayWeather[myGame.venue].condition}` : undefined,
         ball: myGame.relay?.ball?.toString(),
         strike: myGame.relay?.strike?.toString(),
