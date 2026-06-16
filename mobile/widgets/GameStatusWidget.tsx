@@ -331,17 +331,17 @@ function view2x2(data: WidgetGameData, myTeam: string) {
         {/* 중앙: 캐릭터 + 점수 + 팀명 */}
         <FlexWidget style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
-            <ImageWidget image={awayCharImage} imageWidth={24} imageHeight={24} />
-            <FlexWidget style={{ width: 4 }} />
-            <TextWidget text={data.awayTeam} style={{ fontSize: 11, fontWeight: "700", color: alpha(DARK_FG, "77") }} />
-            <FlexWidget style={{ width: 6 }} />
-            <TextWidget text={data.awayScore} style={{ fontSize: 24, fontWeight: "700", color: DARK_FG }} />
-            <TextWidget text=":" style={{ fontSize: 14, color: alpha(DARK_FG, "44") }} />
-            <TextWidget text={data.homeScore} style={{ fontSize: 24, fontWeight: "700", color: DARK_FG }} />
-            <FlexWidget style={{ width: 6 }} />
-            <TextWidget text={data.homeTeam} style={{ fontSize: 11, fontWeight: "700", color: alpha(DARK_FG, "77") }} />
-            <FlexWidget style={{ width: 4 }} />
-            <ImageWidget image={homeCharImage} imageWidth={24} imageHeight={24} />
+            <ImageWidget image={awayCharImage} imageWidth={18} imageHeight={18} />
+            <FlexWidget style={{ width: 2 }} />
+            <TextWidget text={data.awayTeam} style={{ fontSize: 10, fontWeight: "700", color: alpha(DARK_FG, "77") }} />
+            <FlexWidget style={{ width: 3 }} />
+            <TextWidget text={data.awayScore} style={{ fontSize: 22, fontWeight: "700", color: DARK_FG }} />
+            <TextWidget text=":" style={{ fontSize: 12, color: alpha(DARK_FG, "44") }} />
+            <TextWidget text={data.homeScore} style={{ fontSize: 22, fontWeight: "700", color: DARK_FG }} />
+            <FlexWidget style={{ width: 3 }} />
+            <TextWidget text={data.homeTeam} style={{ fontSize: 10, fontWeight: "700", color: alpha(DARK_FG, "77") }} />
+            <FlexWidget style={{ width: 2 }} />
+            <ImageWidget image={homeCharImage} imageWidth={18} imageHeight={18} />
           </FlexWidget>
         </FlexWidget>
 
@@ -419,10 +419,18 @@ function main4x2View(data: WidgetGameData, myTeam: string) {
 
           <FlexWidget style={{ width: 16 }} />
 
-          {/* Center: score | BSO | bases | status */}
-          <FlexWidget style={{ width: 88, alignItems: "center" }}>
+          {/* Center: score+bases | BSO | status */}
+          <FlexWidget style={{ width: 96, alignItems: "center" }}>
             <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
               <TextWidget text={data.awayScore} style={{ fontSize: 26, fontWeight: "700", color: DARK_FG }} />
+              {/* Bases compact triangle between scores */}
+              <FlexWidget style={{ width: 20, alignItems: "center", justifyContent: "center" }}>
+                <TextWidget text={data.base3 && data.base3 !== "0" ? "◆" : "◇"} style={{ fontSize: 6, color: data.base3 && data.base3 !== "0" ? "#e07b3c" : alpha(DARK_FG, "33") }} />
+                <FlexWidget style={{ flexDirection: "row", justifyContent: "center" }}>
+                  <TextWidget text={data.base2 && data.base2 !== "0" ? "◆" : "◇"} style={{ fontSize: 6, color: data.base2 && data.base2 !== "0" ? "#e07b3c" : alpha(DARK_FG, "33") }} />
+                  <TextWidget text={data.base1 && data.base1 !== "0" ? "◆" : "◇"} style={{ fontSize: 6, color: data.base1 && data.base1 !== "0" ? "#e07b3c" : alpha(DARK_FG, "33") }} />
+                </FlexWidget>
+              </FlexWidget>
               <TextWidget text=":" style={{ fontSize: 16, fontWeight: "700", color: alpha(DARK_FG, "44") }} />
               <TextWidget text={data.homeScore} style={{ fontSize: 26, fontWeight: "700", color: DARK_FG }} />
             </FlexWidget>
@@ -435,20 +443,6 @@ function main4x2View(data: WidgetGameData, myTeam: string) {
               <TextWidget text={"●".repeat(sCnt) + "○".repeat(2 - sCnt)} style={{ fontSize: 9, color: "#f9a825" }} />
               <TextWidget text=" " style={{ fontSize: 9 }} />
               <TextWidget text={"●".repeat(oCnt) + "○".repeat(2 - oCnt)} style={{ fontSize: 9, color: "#e53935" }} />
-            </FlexWidget>
-
-            {/* Bases triangle: 3B top center, 2B left, 1B right */}
-            <FlexWidget style={{ height: 3 }} />
-            <FlexWidget style={{ alignItems: "center" }}>
-              <TextWidget text={data.base3 && data.base3 !== "0" ? "◆" : "◇"} style={{ fontSize: 9, color: data.base3 && data.base3 !== "0" ? "#e07b3c" : alpha(DARK_FG, "33") }} />
-            </FlexWidget>
-            <FlexWidget style={{ flexDirection: "row", justifyContent: "center" }}>
-              <FlexWidget style={{ width: 16, alignItems: "center" }}>
-                <TextWidget text={data.base2 && data.base2 !== "0" ? "◆" : "◇"} style={{ fontSize: 9, color: data.base2 && data.base2 !== "0" ? "#e07b3c" : alpha(DARK_FG, "33") }} />
-              </FlexWidget>
-              <FlexWidget style={{ width: 16, alignItems: "center" }}>
-                <TextWidget text={data.base1 && data.base1 !== "0" ? "◆" : "◇"} style={{ fontSize: 9, color: data.base1 && data.base1 !== "0" ? "#e07b3c" : alpha(DARK_FG, "33") }} />
-              </FlexWidget>
             </FlexWidget>
 
             {/* Status */}
