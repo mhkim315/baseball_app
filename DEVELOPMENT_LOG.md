@@ -3041,3 +3041,20 @@ a0660b8 feat: 1x1~5x5 모든 위젯 크기 선언 (25개)
 | 1x1~1x5, 2x1 | <80dp | 제한 없음 | 점수만 (compactScoreView) |
 | 2x2~2x5, 3x2 | <230dp | 제한 없음 | 팀명+점수+상태 (smallView) |
 | 4x1~5x5 | ≥230dp | ≥80dp | 전광판+BSO+주자 (main4x2View) |
+
+
+## 2026-06-16: 안드로이드 포그라운드 서비스 및 스코어보드 전광판 통합 완료
+
+### 주요 변경 사항
+
+1. **포그라운드 서비스(Live Mode) 적용**
+   - 위젯 백그라운드 태스크 생존율 문제를 해결하기 위해 LiveScoreService (Foreground Service) 네이티브 모듈 구축
+   - 잠금화면 위젯에서 사용자가 REFRESH 탭 시 네이티브 브릿지(LiveScoreModule)를 통해 포그라운드 서비스 구동
+   - 5초마다 React Native Headless Task를 트리거하여 스코어 업데이트 후 상단바 고정 알림 렌더링 유지
+
+2. **대형 전광판 위젯(ScoreboardWidget) 통합**
+   - 기존 eat/widget-livescore-4x2 브랜치의 스코어보드 구현부를 eat/widget-views-decoupled 로 병합 완료
+   - 크기(width 230 이상, height 160 이상) 감지를 통해 자동으로 9이닝 득점판 레이아웃 전환
+
+3. **네이티브 파일 트래킹 강제화**
+   - Expo .gitignore에 의해 제외되던 ndroid/ 네이티브 수정본을 유실 방지차 git add -f 로 리포지토리에 강제 포함
