@@ -1,6 +1,7 @@
 import { requestWidgetUpdate } from "react-native-android-widget";
 import { getMyTeamForWidget, SHORT_CODE_TO_TEAM_ID, SHORT_CODE_TO_NAME } from "@/lib/teamStorage";
 import { GameStatusWidget } from "./GameStatusWidget";
+import { getInningInfo } from "@shared/gameStatus";
 
 /** 등록된 모든 위젯 (1x1 ~ 5x5) — Android 위젯 피커에 표시되는 이름과 일치 */
 const WIDGET_NAMES = [
@@ -19,6 +20,12 @@ interface WidgetGameData {
   inning: string;
   isTop: string;
   status: string;
+  homeIsMyTeam?: boolean;
+  time?: string;
+  stadium?: string;
+  weather?: string;
+  awayPitcher?: string;
+  homePitcher?: string;
   ball?: string;
   strike?: string;
   out?: string;
@@ -95,14 +102,33 @@ export async function updateWidgetPeriodic(): Promise<void> {
     });
 
     if (myGame) {
+      let inning = "0";
+      let isTop = "0";
+      if (myGame.status === "live") {
+        const info = getInningInfo(myGame.scoreBoard?.inn);
+        if (info) {
+          inning = info.inning.toString();
+          isTop = info.isTop ? "1" : "0";
+        } else {
+          inning = "1";
+          isTop = "1";
+        }
+      }
+
       data = {
         homeTeam: myGame.homeName || myGame.homeTeam,
         awayTeam: myGame.awayName || myGame.awayTeam,
         homeScore: myGame.score?.home?.toString() || "0",
         awayScore: myGame.score?.away?.toString() || "0",
-        inning: myGame.relay?.inning?.toString() || myGame.time?.slice(0, 5) || "0",
-        isTop: myGame.relay?.isTop?.toString() || "0",
+        inning,
+        isTop,
+        homeIsMyTeam: (SHORT_CODE_TO_TEAM_ID[myGame.homeTeam] || myGame.homeTeam) === myTeam,
         status: myGame.status || "scheduled",
+        time: myGame.time || "",
+        stadium: myGame.venue || "",
+        awayPitcher: myGame.awayStarter || undefined,
+        homePitcher: myGame.homeStarter || undefined,
+        weather: json.todayWeather?.[myGame.venue || ""] ? `${json.todayWeather[myGame.venue].temp}° ${json.todayWeather[myGame.venue].condition}` : undefined,
         ball: myGame.relay?.ball?.toString(),
         strike: myGame.relay?.strike?.toString(),
         out: myGame.relay?.out?.toString(),
