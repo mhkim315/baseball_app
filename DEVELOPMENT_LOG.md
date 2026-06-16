@@ -1,6 +1,6 @@
 # Fullcount.kr Mobile App — 개발 작업 문서
 
-> 마지막 업데이트: 2026-06-16 (Phase 23)
+> 마지막 업데이트: 2026-06-17 (Hotfix 1.2.0 + Test 3.0.0)
 > 
 > 이 문서는 이전 대화 컨텍스트가 만료되어도 작업을 이어갈 수 있도록 상세히 기록합니다.
 
@@ -3058,3 +3058,39 @@ a0660b8 feat: 1x1~5x5 모든 위젯 크기 선언 (25개)
 
 3. **네이티브 파일 트래킹 강제화**
    - Expo .gitignore에 의해 제외되던 ndroid/ 네이티브 수정본을 유실 방지차 git add -f 로 리포지토리에 강제 포함
+
+---
+
+## Hotfix 1.2.0 + Test 3.0.0 분리 (2026-06-17)
+
+### 개요
+DB is_planned 컬럼 누락 에러 수정 및 프로덕션 AAB 빌드. 위젯 테스트용 브랜치(feat/widget-views-decoupled)의 버전을 3.0.0으로 분리.
+
+### 작업 내역
+
+#### 1. DB is_planned 컬럼 누락 에러 수정
+- **원인**: `1c6b1a4` 커밋에서 `jikgwan_records`에 `is_planned` 컬럼을 추가했으나 `SCHEMA_VERSION`을 1→2로 올리지 않음
+- **메커니즘**: `initSchema()`가 `schema_version=1 === SCHEMA_VERSION(1)` 조건으로 migration을 skip → `is_planned` 컬럼이 물리적으로 존재하지 않음 → `addJikgwanRecord()`의 INSERT가 `"table jikgwan_records has no column named is_planned"` 에러 발생
+- **수정**: `connection.ts`의 `SCHEMA_VERSION`을 1→2로 변경
+- **영향 범위**: 1.1.9 버전 이상에서 첫 INSERT 시도 시 전 사용자에게 발생. 스토어 버전(1.1.8)은 해당 코드 없어 영향 없음
+
+#### 2. 프로덕션 1.2.0 AAB 빌드
+- **버전**: app.json version 1.2.0, buildNumber 4, versionCode 29
+- **OTA 활성화**: eas.json production/test-apk 프로필에 `channel: "production"` 추가
+- **홈탭 개선**: polling 60s→16s, widget-data status 동기화 추가
+- **커밋**: `6e87ee0` (master), EAS AAB 빌드 완료 (versionCode 29)
+
+#### 3. 위젯 테스트 3.0.0 분리 (feat/widget-views-decoupled)
+- 프로덕션 1.2.0과 혼동 방지를 위해 테스트 버전을 3.0.0으로 독립
+- **android package**: `kr.fullcount.app` → `kr.fullcount.app.test` (사이드바이사이드 설치 가능)
+- **앱 이름**: `풀카운트_test` (기존 유지)
+- **runtimeVersion**: bare workflow 대응을 위해 `{"policy":"appVersion"}` → `"3.0.0"` 하드코딩
+- **네이티브 폴더 동기화**: 패키지명 변경에 따라 android/ 내 build.gradle, Kotlin/Java 소스, AndroidManifest.xml 전부 `kr.fullcount.app.test`로 일괄 변경
+- **커밋**: `9a19053`, `66c2e72` (feat/widget-views-decoupled)
+
+### 커밋 로그
+```
+6e87ee0 master: bump version 1.2.0 (SCHEMA_VERSION 2, OTA channel, 홈탭 16s)
+9a19053 feat/widget-views-decoupled: bump test version 3.0.0 (versionCode 31)
+66c2e72 feat/widget-views-decoupled: fix bare workflow runtimeVersion hardcode
+```
