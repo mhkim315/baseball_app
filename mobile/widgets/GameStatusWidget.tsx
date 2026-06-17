@@ -467,7 +467,7 @@ function view2x2Scheduled(data: WidgetGameData, away: ReturnType<typeof getTeamI
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "match_parent" }}>
           <TextWidget text={headerText} style={{ fontSize: 11, fontWeight: "700", color: alpha(DARK_FG, "aa") }} />
           <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-            <TextWidget text={data.time || ""} style={{ fontSize: 11, fontWeight: "700", color: DARK_FG }} />
+            <TextWidget text={data.time || " "} style={{ fontSize: 11, fontWeight: "700", color: DARK_FG }} />
             <FlexWidget clickAction="REFRESH" style={{ padding: 2 }}>
               <TextWidget text="↻" style={{ fontSize: 14, color: "#e07b3c", fontWeight: "700" }} />
             </FlexWidget>
@@ -482,7 +482,7 @@ function view2x2Scheduled(data: WidgetGameData, away: ReturnType<typeof getTeamI
             <FlexWidget style={{ height: 6 }} />
             <TextWidget text={away.teamName} style={{ fontSize: 13, fontWeight: "700", color: away.nameColor }} />
             <FlexWidget style={{ height: 4 }} />
-            <TextWidget text={away.pbText || ""} style={{ fontSize: 10, color: DARK_FG }} />
+            <TextWidget text={away.pbText || " "} style={{ fontSize: 10, color: DARK_FG }} />
           </FlexWidget>
 
           <FlexWidget style={{ alignItems: "center", justifyContent: "center", width: 28 }}>
@@ -494,7 +494,7 @@ function view2x2Scheduled(data: WidgetGameData, away: ReturnType<typeof getTeamI
             <FlexWidget style={{ height: 6 }} />
             <TextWidget text={home.teamName} style={{ fontSize: 13, fontWeight: "700", color: home.nameColor }} />
             <FlexWidget style={{ height: 4 }} />
-            <TextWidget text={home.pbText || ""} style={{ fontSize: 10, color: DARK_FG }} />
+            <TextWidget text={home.pbText || " "} style={{ fontSize: 10, color: DARK_FG }} />
           </FlexWidget>
         </FlexWidget>
 
@@ -644,8 +644,8 @@ function view2x2Live(data: WidgetGameData, away: ReturnType<typeof getTeamInfo>,
 
         {hasPb && (
           <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: "match_parent", marginTop: 6, paddingHorizontal: 4 }}>
-            <TextWidget text={away.pbText || ""} style={{ fontSize: 9, color: DARK_FG }} />
-            <TextWidget text={home.pbText || ""} style={{ fontSize: 9, color: DARK_FG }} />
+            <TextWidget text={away.pbText || " "} style={{ fontSize: 9, color: DARK_FG }} />
+            <TextWidget text={home.pbText || " "} style={{ fontSize: 9, color: DARK_FG }} />
           </FlexWidget>
         )}
 
