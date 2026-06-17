@@ -30,17 +30,54 @@
       },
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize",
+      "googleServicesFile": "./google-services.json",
       "package": "kr.fullcount.app",
       "blockedPermissions": [
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VIDEO"
       ],
-      "versionCode": 29
+      "versionCode": 30
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      "expo-notifications",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "Widget2x2",
+              "label": "FullCount 2x2",
+              "description": "2x2 Widget",
+              "minWidth": "150dp",
+              "minHeight": "110dp",
+              "maxResizeWidth": "200dp",
+              "maxResizeHeight": "160dp",
+              "resizeMode": "horizontal|vertical",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "updatePeriodMillis": 900000
+            },
+            {
+              "name": "Widget4x2",
+              "label": "FullCount 4x2",
+              "description": "4x2 Widget",
+              "minWidth": "310dp",
+              "minHeight": "110dp",
+              "maxResizeWidth": "400dp",
+              "maxResizeHeight": "160dp",
+              "resizeMode": "horizontal|vertical",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "updatePeriodMillis": 900000
+            }
+          ]
+        }
+      ],
       "expo-router"
     ],
     "assetBundlePatterns": [
