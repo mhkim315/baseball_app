@@ -116,7 +116,7 @@ export function getLastWidgetGame(): WidgetGameData | null {
 }
 
 // 🔴 MOCK LIVE GAME — set to true for testing widget layouts
-const WIDGET_MOCK_LIVE = true;
+const WIDGET_MOCK_LIVE = false;
 
 export async function updateWidgetPeriodic(): Promise<void> {
   const myTeam = await getMyTeamForWidget();
