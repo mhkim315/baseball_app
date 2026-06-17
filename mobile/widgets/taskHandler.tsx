@@ -40,10 +40,6 @@ async function taskHandler(props: any) {
 AppRegistry.registerHeadlessTask("LiveScoreTask", () => async () => {
   try {
     await updateWidgetPeriodic();
-    const data = getLastWidgetGame();
-    if (LiveScoreModule && data && data.status !== "live") {
-      LiveScoreModule.stopService();
-    }
   } catch (e) {
     console.warn("LiveScoreTask failed", e);
   }
