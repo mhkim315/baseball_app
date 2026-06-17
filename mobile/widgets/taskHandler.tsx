@@ -1,5 +1,5 @@
 import { registerWidgetTaskHandler, type WidgetTaskHandlerProps } from "react-native-android-widget";
-import { updateWidgetPeriodic } from "./updateWidget";
+import { updateWidgetPeriodic, getLastWidgetGame } from "./updateWidget";
 import { NativeModules, AppRegistry } from "react-native";
 
 const { LiveScoreModule } = NativeModules;
@@ -20,9 +20,18 @@ async function taskHandler(props: any) {
         if (LiveScoreModule) {
           LiveScoreModule.stopService();
         }
+      } else if (props.clickAction === "REFRESH") {
+        await updateWidgetPeriodic();
+        const data = getLastWidgetGame();
+        if (LiveScoreModule) {
+          if (data?.status === "live") {
+            LiveScoreModule.startService();
+          } else {
+            LiveScoreModule.stopService();
+          }
+        }
+        return; // already updated
       }
-      // REFRESH and other actions will just trigger updateWidgetPeriodic()
-      // updateWidgetPeriodic() will automatically start/stop the service if it's live
       await updateWidgetPeriodic();
       break;
   }

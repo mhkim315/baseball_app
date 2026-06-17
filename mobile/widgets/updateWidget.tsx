@@ -101,6 +101,10 @@ export async function updateWidgetFromFCM(data: Record<string, string>): Promise
 
 let _lastWidgetGame: WidgetGameData | null = null;
 
+export function getLastWidgetGame(): WidgetGameData | null {
+  return _lastWidgetGame;
+}
+
 export async function updateWidgetPeriodic(): Promise<void> {
   const myTeam = await getMyTeamForWidget();
   if (!myTeam) return;
@@ -178,17 +182,6 @@ export async function updateWidgetPeriodic(): Promise<void> {
     }
   } catch (e) {
     console.warn("updateWidgetPeriodic: fetch failed", e);
-  }
-
-  // Handle foreground service lifecycle
-  const { NativeModules } = require("react-native");
-  const { LiveScoreModule } = NativeModules;
-  if (LiveScoreModule) {
-    if (data?.status === "live") {
-      LiveScoreModule.startService();
-    } else {
-      LiveScoreModule.stopService();
-    }
   }
 
   await updateAllWidgets(myTeam, data);

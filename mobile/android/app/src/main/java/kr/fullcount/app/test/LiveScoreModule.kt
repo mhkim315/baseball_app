@@ -26,11 +26,6 @@ class LiveScoreModule(private val reactContext: ReactApplicationContext) : React
     @ReactMethod
     fun stopService() {
         val intent = Intent(reactContext, LiveScoreService::class.java)
-        intent.action = "STOP_SERVICE"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            reactContext.startForegroundService(intent)
-        } else {
-            reactContext.startService(intent)
-        }
+        reactContext.stopService(intent)
     }
 }
