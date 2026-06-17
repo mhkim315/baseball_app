@@ -126,8 +126,8 @@ function getTeamInfo(data: WidgetGameData, isHome: boolean) {
   let pbText = "";
   if (isLive) {
     pbText = isAttacking 
-      ? `B:${data.currentBatter || ""}` 
-      : `P:${data.currentPitcher || (isHome ? data.homePitcher : data.awayPitcher) || ""}`;
+      ? `B:${data.currentBatter || " "}` 
+      : `P:${data.currentPitcher || (isHome ? data.homePitcher : data.awayPitcher) || " "}`;
   } else if (isScheduled) {
     pbText = `${isHome ? data.homePitcher || "?" : data.awayPitcher || "?"}`;
   }
