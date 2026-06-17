@@ -620,12 +620,12 @@ function view2x2Live(data: WidgetGameData, away: ReturnType<typeof getTeamInfo>,
         <FlexWidget style={{ height: 4 }} />
 
         <FlexWidget style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", width: "match_parent" }}>
-          <TextWidget text={"●".repeat(head.bCnt) + "○".repeat(3 - head.bCnt)} style={{ fontSize: 9, color: "#43a047" }} />
-          <FlexWidget style={{ width: 6 }} />
-          <TextWidget text={"●".repeat(head.sCnt) + "○".repeat(2 - head.sCnt)} style={{ fontSize: 9, color: "#f9a825" }} />
-          <FlexWidget style={{ width: 6 }} />
-          <TextWidget text={"●".repeat(head.oCnt) + "○".repeat(2 - head.oCnt)} style={{ fontSize: 9, color: "#e53935" }} />
-          <FlexWidget style={{ width: 10 }} />
+          <TextWidget text={"B:" + "●".repeat(head.bCnt) + "○".repeat(3 - head.bCnt)} style={{ fontSize: 9, color: "#43a047" }} />
+          <FlexWidget style={{ width: 4 }} />
+          <TextWidget text={"S:" + "●".repeat(head.sCnt) + "○".repeat(2 - head.sCnt)} style={{ fontSize: 9, color: "#f9a825" }} />
+          <FlexWidget style={{ width: 4 }} />
+          <TextWidget text={"O:" + "●".repeat(head.oCnt) + "○".repeat(2 - head.oCnt)} style={{ fontSize: 9, color: "#e53935" }} />
+          <FlexWidget style={{ width: 8 }} />
           <BaseSituation b1={data.base1} b2={data.base2} b3={data.base3} size={8} />
         </FlexWidget>
 
@@ -635,32 +635,25 @@ function view2x2Live(data: WidgetGameData, away: ReturnType<typeof getTeamInfo>,
           <FlexWidget style={{ alignItems: "center", flex: 1 }}>
             <ImageWidget image={away.charImage} imageWidth={40} imageHeight={40} />
             <FlexWidget style={{ height: 2 }} />
-            <TextWidget text={away.teamName} style={{ fontSize: 13, fontWeight: "700", color: away.nameColor }} />
+            <TextWidget text={data.awayScore} style={{ fontSize: 26, fontWeight: "700", color: away.scoreColor }} />
+            <FlexWidget style={{ height: 2 }} />
+            <TextWidget text={away.teamName} style={{ fontSize: 12, fontWeight: "700", color: away.nameColor }} />
+            {away.pbText ? <FlexWidget style={{ height: 2 }} /> : null}
+            {away.pbText ? <TextWidget text={away.pbText} style={{ fontSize: 9, color: DARK_FG }} /> : null}
           </FlexWidget>
 
-          <FlexWidget style={{ alignItems: "center", width: 40 }}>
-            <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-              <TextWidget text={data.awayScore} style={{ fontSize: 26, fontWeight: "700", color: away.scoreColor }} />
-              <FlexWidget style={{ width: 4 }} />
-              <TextWidget text=":" style={{ fontSize: 16, fontWeight: "700", color: alpha(DARK_FG, "99") }} />
-              <FlexWidget style={{ width: 4 }} />
-              <TextWidget text={data.homeScore} style={{ fontSize: 26, fontWeight: "700", color: home.scoreColor }} />
-            </FlexWidget>
-          </FlexWidget>
+          <FlexWidget style={{ width: 16 }} />
 
           <FlexWidget style={{ alignItems: "center", flex: 1 }}>
             <ImageWidget image={home.charImage} imageWidth={40} imageHeight={40} />
             <FlexWidget style={{ height: 2 }} />
-            <TextWidget text={home.teamName} style={{ fontSize: 13, fontWeight: "700", color: home.nameColor }} />
+            <TextWidget text={data.homeScore} style={{ fontSize: 26, fontWeight: "700", color: home.scoreColor }} />
+            <FlexWidget style={{ height: 2 }} />
+            <TextWidget text={home.teamName} style={{ fontSize: 12, fontWeight: "700", color: home.nameColor }} />
+            {home.pbText ? <FlexWidget style={{ height: 2 }} /> : null}
+            {home.pbText ? <TextWidget text={home.pbText} style={{ fontSize: 9, color: DARK_FG }} /> : null}
           </FlexWidget>
         </FlexWidget>
-
-        {hasPb && (
-          <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: "match_parent", marginTop: 4, paddingHorizontal: 4 }}>
-            <TextWidget text={away.pbText || " "} style={{ fontSize: 10, color: DARK_FG }} />
-            <TextWidget text={home.pbText || " "} style={{ fontSize: 10, color: DARK_FG }} />
-          </FlexWidget>
-        )}
 
         <FlexWidget style={{ flex: 1 }} />
       </FlexWidget>
