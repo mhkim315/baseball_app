@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.IBinder
 import android.os.Looper
 import androidx.core.app.NotificationCompat
@@ -15,6 +16,7 @@ import com.facebook.react.HeadlessJsTaskService
 class LiveScoreService : Service() {
     private val CHANNEL_ID = "LiveScoreChannel"
     private val AUTO_STOP_MS = 60 * 60_000L // 60 min safety net (JS stops on game end)
+    private var bgThread: HandlerThread? = null
     private var handler: Handler? = null
     private var runnable: Runnable? = null
     private var stopHandler: Handler? = null
@@ -73,7 +75,8 @@ class LiveScoreService : Service() {
     }
 
     private fun startPolling() {
-        handler = Handler(Looper.getMainLooper())
+        bgThread = HandlerThread("LiveScorePolling").apply { start() }
+        handler = Handler(bgThread!!.looper)
         runnable = object : Runnable {
             override fun run() {
                 if (!isRunning) return
@@ -94,6 +97,7 @@ class LiveScoreService : Service() {
         isRunning = false
         handler?.removeCallbacksAndMessages(null)
         stopHandler?.removeCallbacksAndMessages(null)
+        bgThread?.quitSafely()
     }
 
     override fun onBind(intent: Intent?): IBinder? {

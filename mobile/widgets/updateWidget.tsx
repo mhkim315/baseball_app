@@ -20,7 +20,7 @@ export interface WidgetGameData {
   inning: string;
   isTop: string;
   status: string;
-  homeIsMyTeam: boolean;
+  homeIsMyTeam?: boolean;
   time?: string;
   stadium?: string;
   weather?: string;
@@ -61,7 +61,6 @@ function buildWidgetProps(data: Record<string, string>): WidgetGameData {
     base3: data.base3,
     currentPitcher: data.current_pitcher,
     currentBatter: data.current_batter,
-    homeIsMyTeam: false,
     homeRank: data.home_rank,
     awayRank: data.away_rank,
     homeStreak: data.home_streak,
@@ -244,7 +243,7 @@ export async function updateWidgetPeriodic(): Promise<void> {
         stadium: myGame.venue || "",
         awayPitcher: myGame.awayStarter || undefined,
         homePitcher: myGame.homeStarter || undefined,
-        currentPitcher: myGame.relay?.pitcher?.name || undefined,
+        currentPitcher: myGame.relay?.isTop === "1" ? (myGame.homeCurrentPitcher || undefined) : (myGame.awayCurrentPitcher || myGame.homeCurrentPitcher || undefined),
         currentBatter: myGame.relay?.batter?.name || undefined,
         weather: weatherData ? `${weatherData.temp}° ${weatherData.condition}` : undefined,
         ball: myGame.relay?.ball?.toString(),
@@ -277,4 +276,7 @@ export async function updateWidgetPeriodic(): Promise<void> {
 
   // If there is still absolutely no data, we will render noGameView.
   await updateAllWidgets(myTeam, data);
+
+  // Auto-stop handled by taskHandler.tsx after refresh completes
+  // (avoids require() in headless context that may fail in Hermes)
 }
