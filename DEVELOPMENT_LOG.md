@@ -3229,3 +3229,35 @@ e84a78c fix(widget): 2x2 live - add BSO labels, move score below image
 a593d18 feat(widget): redesign 2x2 and 4x2 live layouts
 b2278dc test: add WIDGET_MOCK_LIVE flag for widget layout testing
 ```
+
+### 투수/타자 표시 + 감정표현 반전 수정 (2026-06-17)
+
+#### 현재 투수명 미표시 문제
+- **증상**: 위젯에서 `P:` 옆에 투수명이 빈 값으로 표시됨
+- **원인**: relay의 `pitcher.name`이 항상 빈 문자열 — Naver API 구조 변경(entry list→dict)으로 인해 pcode→name 매핑이 실패. 특히 불펜 투수의 경우 entry 리스트에 pcode가 없어서 lookup 불가
+- **서버 해결**: Naver 스케줄 API에 `awayCurrentPitcherName`/`homeCurrentPitcherName`이 직접 제공됨 → widget-data 응답에 `awayCurrentPitcher`/`homeCurrentPitcher` 필드 추가
+- **클라이언트 해결**: `updateWidgetPeriodic()`에서 `relay.isTop`을 기준으로 현재 투수 결정. `isTop === "1"` (원정팀 공격=초) → `homeCurrentPitcher` 사용, `isTop === "0"` (홈팀 공격=말) → `awayCurrentPitcher` 사용. 폴백: `awayCurrentPitcher || homeCurrentPitcher`
+
+#### 현재 타자명 미표시 문제
+- **증상**: 위젯에서 `B:` 옆에 타자명이 빈 값으로 표시됨
+- **원인**: relay의 `batter.name`도 pitcher와 동일하게 entry lookup 실패
+- **서버 해결**: Naver relay API의 `textRelays` 배열에서 타자명 추출. 각 textRelay 항목의 `title` 필드가 `"8번타자 최재훈"` 형식 → 정규식 `^\d+번타자\s+(.+)` 로 이름 파싱 → relay 응답의 `batter.name`에 포함
+
+#### 감정표현 반전 문제
+- **증상**: OTA 이후 이기고 있는 팀이 우는(crying) 감정표현으로 표시됨 (반대로 찍힘)
+- **원인**: `buildWidgetProps()`에 하드코딩된 `homeIsMyTeam: false`가 FCM 경로를 통해 `_lastWidgetGame` 캐시로 유입. `_lastWidgetGame`이 없을 때 이 false 값이 그대로 사용되어 `isMyHome`이 항상 false로 평가 → 원정팀 기준으로 감정 계산 → 실제 홈팀 응원 시 감정 반전
+- **해결**: `buildWidgetProps()`에서 `homeIsMyTeam` 제거 (FCM 경로에선 `_lastWidgetGame` fallback으로만 설정). `WidgetGameData.homeIsMyTeam`을 optional로 변경
+
+#### 2x2 1/3루 색칠 안 됨 문제
+- **증상**: 2x2 위젯에서 1루/3루 다이아몬드(◆)가 보이지 않고, 보이더라도 inactive 색상(검정)으로만 표시. 4x2는 정상
+- **원인**: `BaseSituation` 감싸는 `FlexWidget`에 `height: 22` 제한이 걸려 있어 2단 다이아몬드 구조(2루 1줄 + 1,3루 1줄 ≈ 30px)가 잘려나감. 2루만 보이고 1,3루는 clipping
+- **해결**: `height: 22` 제거 → 컨테이너가 내용물 높이에 맞게 자동 확장
+
+### 커밋 로그 (추가)
+```
+6284299 fix(widget): remove hardcoded homeIsMyTeam=false causing reversed emotions
+41cbe39 fix(widget): improve currentPitcher fallback when relay.isTop missing
+fd33c07 fix(widget): use schedule API current pitcher names for P/B display
+17e4fca fix(widget): remove height constraint clipping 1st/3rd base in 2x2
+```
+```
