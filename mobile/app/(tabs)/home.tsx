@@ -333,6 +333,13 @@ export default function HomeScreen() {
                   ? { homeScore: wg.score.home, awayScore: wg.score.away }
                   : {};
 
+                // Inject current pitcher name into relay (server p2n lookup broken)
+                if (wg.relay?.pitcher) {
+                  const currentIsTop = wg.relay.isTop === "1";
+                  const cpName = currentIsTop ? (wg as any).homeCurrentPitcher : (wg as any).awayCurrentPitcher;
+                  if (cpName) wg.relay.pitcher.name = cpName;
+                }
+
                 games[idx] = {
                   ...games[idx],
                   ...scoreUpdate,
