@@ -763,11 +763,13 @@ function view4x2(data: WidgetGameData) {
               <ImageWidget image={away.charImage} imageWidth={52} imageHeight={52} />
               <FlexWidget style={{ height: 6 }} />
               <TextWidget text={away.teamName} style={{ fontSize: 15, fontWeight: "700", color: away.nameColor }} />
+              <FlexWidget style={{ height: 4 }} />
+              <TextWidget text={`${awayWon ? "승" : "패"}: ${data.awayPitcher || "-"}`} style={{ fontSize: 11, color: DARK_FG }} />
             </FlexWidget>
 
             <FlexWidget style={{ flex: 1, alignItems: "center", justifyContent: "flex-end", flexDirection: "column" }}>
               <FlexWidget style={{ flex: 1 }} />
-              <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
+              <FlexWidget style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
                 <TextWidget text={away.scoreText} style={{ fontSize: 40, fontWeight: "700", color: awayWon ? away.scoreColor : alpha(away.scoreColor, "99") }} />
                 <FlexWidget style={{marginHorizontal: 12}}><TextWidget text=" : " style={{ fontSize: 24, fontWeight: "700", color: FG_73 }} /></FlexWidget>
                 <TextWidget text={home.scoreText} style={{ fontSize: 40, fontWeight: "700", color: homeWon ? home.scoreColor : alpha(home.scoreColor, "99") }} />
@@ -779,15 +781,7 @@ function view4x2(data: WidgetGameData) {
               <ImageWidget image={home.charImage} imageWidth={52} imageHeight={52} />
               <FlexWidget style={{ height: 6 }} />
               <TextWidget text={home.teamName} style={{ fontSize: 15, fontWeight: "700", color: home.nameColor }} />
-            </FlexWidget>
-          </FlexWidget>
-
-          <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: "match_parent", marginTop: 8 }}>
-            <FlexWidget style={{ alignItems: "center", width: 100 }}>
-              <TextWidget text={`${awayWon ? "승" : "패"}: ${data.awayPitcher || "-"}`} style={{ fontSize: 11, color: DARK_FG }} />
-            </FlexWidget>
-            <FlexWidget style={{ flex: 1 }} />
-            <FlexWidget style={{ alignItems: "center", width: 100 }}>
+              <FlexWidget style={{ height: 4 }} />
               <TextWidget text={`${homeWon ? "승" : "패"}: ${data.homePitcher || "-"}`} style={{ fontSize: 11, color: DARK_FG }} />
             </FlexWidget>
           </FlexWidget>
