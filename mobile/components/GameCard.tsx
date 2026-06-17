@@ -300,7 +300,7 @@ export default function GameCard({
             </Text>
           ) : status === "live" && relay ? (
             <Text style={styles.pitcherText}>
-              {isTop ? `B: ${relay.batter?.name ?? "-"}` : `P: ${relay.pitcher?.name ?? "-"}`}
+              {isTop ? `B: ${relay.batter?.name ?? "-"}` : `P: ${relay.pitcher?.name || awayPitcher || "-"}`}
             </Text>
           ) : awayPitcher ? (
             <Text style={styles.pitcherText}>{awayPitcher}</Text>
@@ -332,7 +332,7 @@ export default function GameCard({
             </Text>
           ) : status === "live" && relay ? (
             <Text style={styles.pitcherText}>
-              {isTop ? `P: ${relay.pitcher?.name ?? "-"}` : `B: ${relay.batter?.name ?? "-"}`}
+              {isTop ? `P: ${relay.pitcher?.name || homePitcher || "-"}` : `B: ${relay.batter?.name ?? "-"}`}
             </Text>
           ) : homePitcher ? (
             <Text style={styles.pitcherText}>{homePitcher}</Text>
