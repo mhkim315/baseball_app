@@ -180,5 +180,16 @@ export async function updateWidgetPeriodic(): Promise<void> {
     console.warn("updateWidgetPeriodic: fetch failed", e);
   }
 
+  // Handle foreground service lifecycle
+  const { NativeModules } = require("react-native");
+  const { LiveScoreModule } = NativeModules;
+  if (LiveScoreModule) {
+    if (data?.status === "live") {
+      LiveScoreModule.startService();
+    } else {
+      LiveScoreModule.stopService();
+    }
+  }
+
   await updateAllWidgets(myTeam, data);
 }

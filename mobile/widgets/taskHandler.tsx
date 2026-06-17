@@ -12,7 +12,7 @@ async function taskHandler(props: any) {
       await updateWidgetPeriodic();
       break;
     case "WIDGET_CLICK":
-      if (props.clickAction === "REFRESH" || props.clickAction === "TOGGLE_LIVE") {
+      if (props.clickAction === "TOGGLE_LIVE") {
         if (LiveScoreModule) {
           LiveScoreModule.startService();
         }
@@ -21,6 +21,8 @@ async function taskHandler(props: any) {
           LiveScoreModule.stopService();
         }
       }
+      // REFRESH and other actions will just trigger updateWidgetPeriodic()
+      // updateWidgetPeriodic() will automatically start/stop the service if it's live
       await updateWidgetPeriodic();
       break;
   }
