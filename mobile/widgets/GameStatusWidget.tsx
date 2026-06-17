@@ -39,6 +39,7 @@ const TEAM_NAME_COLOR: Record<string, string> = {
   lotte: "#1E467C", nc: "#1D467C",
 };
 
+const MONDAY_IMAGE = require("../assets/monday.png");
 const DARK_FG = "#2a2a32";
 const FG_93 = "#303038";
 const FG_87 = "#3c3c44";
@@ -213,8 +214,10 @@ function noGameView() {
           <TextWidget text="↻" style={{ fontSize: 16, color: "#e07b3c", fontWeight: "700" }} />
         </FlexWidget>
       </FlexWidget>
-      <FlexWidget style={{ flex: 1, justifyContent: "center", alignItems: "center", marginTop: -30 }}>
-        <TextWidget text="오늘 경기 없음" style={{ fontSize: 13, color: DARK_FG }} />
+      <FlexWidget style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ImageWidget image={MONDAY_IMAGE} imageWidth={60} imageHeight={60} />
+        <FlexWidget style={{ height: 8 }} />
+        <TextWidget text="오늘은 경기가 없어요" style={{ fontSize: 12, color: DARK_FG }} />
       </FlexWidget>
     </ColorBg>
   );
@@ -777,9 +780,14 @@ function view4x2(data: WidgetGameData) {
             </FlexWidget>
           </FlexWidget>
 
-          <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: "match_parent", marginTop: 8, paddingHorizontal: 4 }}>
-            <TextWidget text={`${awayWon ? "승" : "패"}: ${data.awayPitcher || "-"}`} style={{ fontSize: 11, color: DARK_FG }} />
-            <TextWidget text={`${homeWon ? "승" : "패"}: ${data.homePitcher || "-"}`} style={{ fontSize: 11, color: DARK_FG }} />
+          <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: "match_parent", marginTop: 8 }}>
+            <FlexWidget style={{ alignItems: "center", width: 100 }}>
+              <TextWidget text={`${awayWon ? "승" : "패"}: ${data.awayPitcher || "-"}`} style={{ fontSize: 11, color: DARK_FG }} />
+            </FlexWidget>
+            <FlexWidget style={{ flex: 1, alignItems: "center", justifyContent: "center", flexDirection: "row" }} />
+            <FlexWidget style={{ alignItems: "center", width: 100 }}>
+              <TextWidget text={`${homeWon ? "승" : "패"}: ${data.homePitcher || "-"}`} style={{ fontSize: 11, color: DARK_FG }} />
+            </FlexWidget>
           </FlexWidget>
 
           <FlexWidget style={{ flex: 1 }} />
