@@ -3184,3 +3184,48 @@ f0ff35d fix(widget): align VS with images, darken muted text, sync team on refre
 - **채널**: test (preview는 동일 runtimeVersion으로 자동 적용)
 - **Update Group**: 865ff834 (1차), 600347f (3차)
 - **기기 적용**: 앱 재실행(또는 위젯 제거 후 재추가) 후 반영 확인
+
+### Naver API 전면 변경 대응 (2026-06-17)
+
+경기 시작 후(18:30) 서버 `/widget-data`가 500 에러를 반환하고, 복구 후에도 모든 경기가 `scheduled`로 표시되는 장애 발생.
+원인은 Naver가 API 응답 구조를 전면 개편한 것.
+
+#### 서버 수정 내역
+
+| # | 변경 전 | 변경 후 | 영향 |
+|---|---------|---------|------|
+| 1 | `status` 필드 | `statusCode` | 모든 경기 scheduled로 오판 |
+| 2 | `homeScore`/`awayScore` | `homeTeamScore`/`awayTeamScore` | 점수 null |
+| 3 | relay 최상위 `currentGameState` | `textRelayData.currentGameState` | BSO/주자 null |
+| 4 | `homeEntry`/`awayEntry` list | dict (`pitcher`/`batter` 키) | 투수/타자명 깨짐 |
+| 5 | base 값 `"0"`/`"1"` | 선수 번호 (예: `"7"`) | 주루 오탐지 |
+| 6 | `inn`/`homeOrAway` 없었음 | `textRelayData.inn` / `textRelayData.homeOrAway` | 이닝 정보 추가 |
+| 7 | `homeOrAway` == int `0` | `homeOrAway` == str `"0"` | `isTop` 비교 실패 (Python `"0" == 0` → False) |
+
+#### 클라이언트 수정
+
+- **home.tsx**: `scoreBoard.inn`이 빈 배열일 때 `relay.inning`/`relay.isTop`을 fallback으로 사용
+- **프로덕션(master)에도 동일 패치 적용** → OTA `production` 채널 배포 (`7173b196`)
+
+#### Foreground Service Doze 동작 확인
+
+- **AOD ON**: 화면 꺼진 상태에서도 Handler.postDelayed 5초 주기 유지, 정상 갱신
+- **AOD OFF**: Deep Doze 진입 → Handler 큐에 콜백 쌓임 → 화면 켜면 순차 실행으로 몰아서 업데이트
+- **JS 컨텍스트**: Doze에서도 살아있음 (kill되지 않음)
+- **개선 과제**: AlarmManager로 전환 시 Doze에서도 5초 주기 보장 가능
+
+### 커밋 로그 (추가)
+```
+master:
+d3faec4 fix(home): use relay inning/isTop as fallback when scoreBoard.inn is empty
+
+feat/widget-views-decoupled:
+5a79edf fix(home): use relay inning/isTop as fallback when scoreBoard.inn is empty
+5b660e1 chore: disable WIDGET_MOCK_LIVE, use real API data
+d5e5342 fix(widget): solid colors for RemoteViews, larger scores, tighter base
+798618d fix(widget): larger BSO/base, darker muted text, add colon between 2x2 scores
+61d7a3e fix(widget): BSO labels + wider diamond + larger base situation
+e84a78c fix(widget): 2x2 live - add BSO labels, move score below image
+a593d18 feat(widget): redesign 2x2 and 4x2 live layouts
+b2278dc test: add WIDGET_MOCK_LIVE flag for widget layout testing
+```
