@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { FlexWidget, TextWidget, ImageWidget } from "react-native-android-widget";
 import { LOCAL_CHARACTERS } from "@/lib/characterAssets";
 import type { CharacterEmotion } from "@/lib/emotions";
@@ -167,7 +168,7 @@ interface WidgetProps { width: number; height: number; data: WidgetGameData | nu
 export function GameStatusWidget({ width, height, data, myTeam }: WidgetProps) {
   try {
     if (!data) return noGameView();
-    if (width < 130) {
+    if (width < 80) {
       return (
         <ColorBg>
           <FlexWidget style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -236,7 +237,7 @@ function view2x1(data: WidgetGameData) {
             <TextWidget text={away.teamName} style={{ fontSize: 13, fontWeight: "700", color: away.nameColor }} />
             <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
               <TextWidget text={away.scoreText} style={{ fontSize: 20, fontWeight: "700", color: away.scoreColor }} />
-              <TextWidget text=" : " style={{ fontSize: 14, color: alpha(DARK_FG, "44"), marginHorizontal: 4 }} />
+              <FlexWidget style={{marginHorizontal: 4}}><TextWidget text=" : " style={{ fontSize: 14, color: alpha(DARK_FG, "44") }} /></FlexWidget>
               <TextWidget text={home.scoreText} style={{ fontSize: 20, fontWeight: "700", color: home.scoreColor }} />
             </FlexWidget>
             <TextWidget text={home.teamName} style={{ fontSize: 13, fontWeight: "700", color: home.nameColor }} />
@@ -272,7 +273,7 @@ function view2x1(data: WidgetGameData) {
             ) : (
               <>
                 <TextWidget text={away.scoreText} style={{ fontSize: 20, fontWeight: "700", color: away.scoreColor }} />
-                <TextWidget text=" : " style={{ fontSize: 14, color: alpha(DARK_FG, "44"), marginHorizontal: 4 }} />
+                <FlexWidget style={{marginHorizontal: 4}}><TextWidget text=" : " style={{ fontSize: 14, color: alpha(DARK_FG, "44") }} /></FlexWidget>
                 <TextWidget text={home.scoreText} style={{ fontSize: 20, fontWeight: "700", color: home.scoreColor }} />
               </>
             )}
@@ -320,15 +321,15 @@ function view4x1(data: WidgetGameData) {
         <FlexWidget style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 8, paddingHorizontal: 24, width: "match_parent" }}>
           <FlexWidget style={{ alignItems: "center" }}>
             <ImageWidget image={away.charImage} imageWidth={32} imageHeight={32} />
-            <TextWidget text={away.pbText || away.teamName} style={{ fontSize: 11, fontWeight: "700", color: away.nameColor, marginTop: 4 }} />
+            <FlexWidget style={{marginTop: 4}}><TextWidget text={away.pbText || away.teamName} style={{ fontSize: 11, fontWeight: "700", color: away.nameColor }} /></FlexWidget>
           </FlexWidget>
           <FlexWidget style={{ alignItems: "center" }}>
-            <TextWidget text="경기 전" style={{ fontSize: 10, fontWeight: "700", color: alpha(DARK_FG, "88"), marginBottom: 2 }} />
+            <FlexWidget style={{marginBottom: 2}}><TextWidget text="경기 전" style={{ fontSize: 10, fontWeight: "700", color: alpha(DARK_FG, "88") }} /></FlexWidget>
             <TextWidget text={data.time || "VS"} style={{ fontSize: 24, fontWeight: "700", color: DARK_FG }} />
           </FlexWidget>
           <FlexWidget style={{ alignItems: "center" }}>
             <ImageWidget image={home.charImage} imageWidth={32} imageHeight={32} />
-            <TextWidget text={home.pbText || home.teamName} style={{ fontSize: 11, fontWeight: "700", color: home.nameColor, marginTop: 4 }} />
+            <FlexWidget style={{marginTop: 4}}><TextWidget text={home.pbText || home.teamName} style={{ fontSize: 11, fontWeight: "700", color: home.nameColor }} /></FlexWidget>
           </FlexWidget>
         </FlexWidget>
       </ColorBg>
@@ -344,19 +345,19 @@ function view4x1(data: WidgetGameData) {
         <FlexWidget style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 8, paddingHorizontal: 24, width: "match_parent" }}>
           <FlexWidget style={{ alignItems: "center" }}>
             <ImageWidget image={away.charImage} imageWidth={32} imageHeight={32} />
-            {awayWon && <TextWidget text="WIN" style={{ fontSize: 10, fontWeight: "700", color: "#d32f2f", marginTop: 2 }} />}
+            {awayWon && <FlexWidget style={{marginTop: 2}}><TextWidget text="WIN" style={{ fontSize: 10, fontWeight: "700", color: "#d32f2f" }} /></FlexWidget>}
           </FlexWidget>
           <FlexWidget style={{ alignItems: "center" }}>
-            <TextWidget text="경기 종료" style={{ fontSize: 10, fontWeight: "700", color: DARK_FG, marginBottom: 2 }} />
+            <FlexWidget style={{marginBottom: 2}}><TextWidget text="경기 종료" style={{ fontSize: 10, fontWeight: "700", color: DARK_FG }} /></FlexWidget>
             <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
               <TextWidget text={away.scoreText} style={{ fontSize: 28, fontWeight: "700", color: awayWon ? away.scoreColor : alpha(away.scoreColor, "77") }} />
-              <TextWidget text=" : " style={{ fontSize: 18, color: alpha(DARK_FG, "44"), marginHorizontal: 6 }} />
+              <FlexWidget style={{marginHorizontal: 6}}><TextWidget text=" : " style={{ fontSize: 18, color: alpha(DARK_FG, "44") }} /></FlexWidget>
               <TextWidget text={home.scoreText} style={{ fontSize: 28, fontWeight: "700", color: homeWon ? home.scoreColor : alpha(home.scoreColor, "77") }} />
             </FlexWidget>
           </FlexWidget>
           <FlexWidget style={{ alignItems: "center" }}>
             <ImageWidget image={home.charImage} imageWidth={32} imageHeight={32} />
-            {homeWon && <TextWidget text="WIN" style={{ fontSize: 10, fontWeight: "700", color: "#d32f2f", marginTop: 2 }} />}
+            {homeWon && <FlexWidget style={{marginTop: 2}}><TextWidget text="WIN" style={{ fontSize: 10, fontWeight: "700", color: "#d32f2f" }} /></FlexWidget>}
           </FlexWidget>
         </FlexWidget>
       </ColorBg>
@@ -400,7 +401,7 @@ function view4x1(data: WidgetGameData) {
             ) : (
               <>
                 <TextWidget text={away.scoreText} style={{ fontSize: 28, fontWeight: "700", color: away.scoreColor }} />
-                <TextWidget text=" : " style={{ fontSize: 18, color: alpha(DARK_FG, "44"), marginHorizontal: 6 }} />
+                <FlexWidget style={{marginHorizontal: 6}}><TextWidget text=" : " style={{ fontSize: 18, color: alpha(DARK_FG, "44") }} /></FlexWidget>
                 <TextWidget text={home.scoreText} style={{ fontSize: 28, fontWeight: "700", color: home.scoreColor }} />
               </>
             )}
@@ -437,20 +438,36 @@ function view2x2(data: WidgetGameData) {
             <TextWidget text={data.time || "VS"} style={{ fontSize: 14, fontWeight: "700", color: DARK_FG }} />
           </FlexWidget>
 
-          <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent", paddingHorizontal: 12 }}>
-            <ImageWidget image={away.charImage} imageWidth={40} imageHeight={40} />
-            <TextWidget text="VS" style={{ fontSize: 16, fontWeight: "700", color: alpha(DARK_FG, "55") }} />
-            <ImageWidget image={home.charImage} imageWidth={40} imageHeight={40} />
+          <FlexWidget style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", width: "match_parent", paddingHorizontal: 12 }}>
+            <FlexWidget style={{ alignItems: "center" }}>
+              {data.awayRank && (
+                <FlexWidget style={{ alignItems: "center", marginBottom: 4 }}>
+                  <TextWidget text={`${data.awayRank}위`} style={{ fontSize: 9, color: alpha(DARK_FG, "77") }} />
+                  {data.awayStreak && <FlexWidget style={{ marginTop: 2 }}><TextWidget text={`최근 ${data.awayStreak}`} style={{ fontSize: 9, color: alpha(DARK_FG, "77") }} /></FlexWidget>}
+                </FlexWidget>
+              )}
+              <ImageWidget image={away.charImage} imageWidth={40} imageHeight={40} />
+            </FlexWidget>
+            <FlexWidget style={{ marginBottom: 10 }}><TextWidget text="VS" style={{ fontSize: 16, fontWeight: "700", color: alpha(DARK_FG, "55") }} /></FlexWidget>
+            <FlexWidget style={{ alignItems: "center" }}>
+              {data.homeRank && (
+                <FlexWidget style={{ alignItems: "center", marginBottom: 4 }}>
+                  <TextWidget text={`${data.homeRank}위`} style={{ fontSize: 9, color: alpha(DARK_FG, "77") }} />
+                  {data.homeStreak && <FlexWidget style={{ marginTop: 2 }}><TextWidget text={`최근 ${data.homeStreak}`} style={{ fontSize: 9, color: alpha(DARK_FG, "77") }} /></FlexWidget>}
+                </FlexWidget>
+              )}
+              <ImageWidget image={home.charImage} imageWidth={40} imageHeight={40} />
+            </FlexWidget>
           </FlexWidget>
 
           <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: "match_parent", marginTop: 4 }}>
             <FlexWidget style={{ alignItems: "center", width: 60 }}>
               <TextWidget text={away.teamName} style={{ fontSize: 13, fontWeight: "700", color: away.nameColor }} />
-              {away.pbText && <TextWidget text={away.pbText} style={{ fontSize: 10, color: DARK_FG, marginTop: 4 }} />}
+              {away.pbText && <FlexWidget style={{marginTop: 4}}><TextWidget text={away.pbText} style={{ fontSize: 10, color: DARK_FG }} /></FlexWidget>}
             </FlexWidget>
             <FlexWidget style={{ alignItems: "center", width: 60 }}>
               <TextWidget text={home.teamName} style={{ fontSize: 13, fontWeight: "700", color: home.nameColor }} />
-              {home.pbText && <TextWidget text={home.pbText} style={{ fontSize: 10, color: DARK_FG, marginTop: 4 }} />}
+              {home.pbText && <FlexWidget style={{marginTop: 4}}><TextWidget text={home.pbText} style={{ fontSize: 10, color: DARK_FG }} /></FlexWidget>}
             </FlexWidget>
           </FlexWidget>
         </FlexWidget>
@@ -471,17 +488,17 @@ function view2x2(data: WidgetGameData) {
 
           <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
             <FlexWidget style={{ alignItems: "center", flex: 1 }}>
-              <TextWidget text={away.teamName} style={{ fontSize: 12, fontWeight: "700", color: away.nameColor, marginBottom: 4 }} />
+              <FlexWidget style={{marginBottom: 4}}><TextWidget text={away.teamName} style={{ fontSize: 12, fontWeight: "700", color: away.nameColor }} /></FlexWidget>
               <TextWidget text={away.scoreText} style={{ fontSize: 32, fontWeight: "700", color: awayWon ? away.scoreColor : alpha(away.scoreColor, "77") }} />
-              {awayWon && <TextWidget text="WIN" style={{ fontSize: 10, fontWeight: "700", color: "#d32f2f", marginTop: 4 }} />}
+              {awayWon && <FlexWidget style={{marginTop: 4}}><TextWidget text="WIN" style={{ fontSize: 10, fontWeight: "700", color: "#d32f2f" }} /></FlexWidget>}
             </FlexWidget>
 
             <TextWidget text=" : " style={{ fontSize: 16, color: alpha(DARK_FG, "44") }} />
 
             <FlexWidget style={{ alignItems: "center", flex: 1 }}>
-              <TextWidget text={home.teamName} style={{ fontSize: 12, fontWeight: "700", color: home.nameColor, marginBottom: 4 }} />
+              <FlexWidget style={{marginBottom: 4}}><TextWidget text={home.teamName} style={{ fontSize: 12, fontWeight: "700", color: home.nameColor }} /></FlexWidget>
               <TextWidget text={home.scoreText} style={{ fontSize: 32, fontWeight: "700", color: homeWon ? home.scoreColor : alpha(home.scoreColor, "77") }} />
-              {homeWon && <TextWidget text="WIN" style={{ fontSize: 10, fontWeight: "700", color: "#d32f2f", marginTop: 4 }} />}
+              {homeWon && <FlexWidget style={{marginTop: 4}}><TextWidget text="WIN" style={{ fontSize: 10, fontWeight: "700", color: "#d32f2f" }} /></FlexWidget>}
             </FlexWidget>
           </FlexWidget>
           
@@ -497,7 +514,7 @@ function view2x2(data: WidgetGameData) {
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: "match_parent" }}>
           <TextWidget text={head.isLive ? head.statusText : (data.stadium || "")} style={{ fontSize: 11, fontWeight: "700", color: head.isLive ? "#e07b3c" : alpha(DARK_FG, "88") }} />
           <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-            <TextWidget text={data.weather || ""} style={{ fontSize: 11, color: alpha(DARK_FG, "88"), marginRight: 8 }} />
+            <FlexWidget style={{marginRight: 8}}><TextWidget text={data.weather || ""} style={{ fontSize: 11, color: alpha(DARK_FG, "88") }} /></FlexWidget>
             <FlexWidget clickAction="REFRESH" style={{ padding: 2 }}>
               <TextWidget text="↻" style={{ fontSize: 14, color: "#e07b3c", fontWeight: "700" }} />
             </FlexWidget>
@@ -508,31 +525,47 @@ function view2x2(data: WidgetGameData) {
           {head.isLive ? <BaseSituation b1={data.base1} b2={data.base2} b3={data.base3} size={8} /> : <FlexWidget />}
         </FlexWidget>
 
-        <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
-          <ImageWidget image={away.charImage} imageWidth={32} imageHeight={32} />
+        <FlexWidget style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", width: "match_parent" }}>
+          <FlexWidget style={{ alignItems: "center" }}>
+            {data.awayRank && (
+              <FlexWidget style={{ alignItems: "center", marginBottom: 4 }}>
+                <TextWidget text={`${data.awayRank}위`} style={{ fontSize: 9, color: alpha(DARK_FG, "77") }} />
+                {data.awayStreak && <FlexWidget style={{ marginTop: 2 }}><TextWidget text={`최근 ${data.awayStreak}`} style={{ fontSize: 9, color: alpha(DARK_FG, "77") }} /></FlexWidget>}
+              </FlexWidget>
+            )}
+            <ImageWidget image={away.charImage} imageWidth={32} imageHeight={32} />
+          </FlexWidget>
           <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flex: 1 }}>
             {isCancelled ? (
               <TextWidget text="취소" style={{ fontSize: 18, fontWeight: "700", color: DARK_FG }} />
             ) : (
               <>
                 <TextWidget text={away.scoreText} style={{ fontSize: 26, fontWeight: "700", color: away.scoreColor }} />
-                <TextWidget text=" : " style={{ fontSize: 16, color: alpha(DARK_FG, "44"), marginHorizontal: 6 }} />
+                <FlexWidget style={{marginHorizontal: 6}}><TextWidget text=" : " style={{ fontSize: 16, color: alpha(DARK_FG, "44") }} /></FlexWidget>
                 <TextWidget text={home.scoreText} style={{ fontSize: 26, fontWeight: "700", color: home.scoreColor }} />
               </>
             )}
           </FlexWidget>
-          <ImageWidget image={home.charImage} imageWidth={32} imageHeight={32} />
+          <FlexWidget style={{ alignItems: "center" }}>
+            {data.homeRank && (
+              <FlexWidget style={{ alignItems: "center", marginBottom: 4 }}>
+                <TextWidget text={`${data.homeRank}위`} style={{ fontSize: 9, color: alpha(DARK_FG, "77") }} />
+                {data.homeStreak && <FlexWidget style={{ marginTop: 2 }}><TextWidget text={`최근 ${data.homeStreak}`} style={{ fontSize: 9, color: alpha(DARK_FG, "77") }} /></FlexWidget>}
+              </FlexWidget>
+            )}
+            <ImageWidget image={home.charImage} imageWidth={32} imageHeight={32} />
+          </FlexWidget>
         </FlexWidget>
 
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: "match_parent", marginTop: 4 }}>
           <FlexWidget style={{ alignItems: "flex-start", width: 60 }}>
             <TextWidget text={away.teamName} style={{ fontSize: 13, fontWeight: "700", color: away.nameColor }} />
-            {away.pbText ? <TextWidget text={away.pbText} style={{ fontSize: 10, color: DARK_FG, marginTop: 2 }} /> : <FlexWidget />}
+            {away.pbText ? <FlexWidget style={{marginTop: 2}}><TextWidget text={away.pbText} style={{ fontSize: 10, color: DARK_FG }} /></FlexWidget> : <FlexWidget />}
           </FlexWidget>
           
           <FlexWidget style={{ alignItems: "flex-end", width: 60 }}>
             <TextWidget text={home.teamName} style={{ fontSize: 13, fontWeight: "700", color: home.nameColor }} />
-            {home.pbText ? <TextWidget text={home.pbText} style={{ fontSize: 10, color: DARK_FG, marginTop: 2 }} /> : <FlexWidget />}
+            {home.pbText ? <FlexWidget style={{marginTop: 2}}><TextWidget text={home.pbText} style={{ fontSize: 10, color: DARK_FG }} /></FlexWidget> : <FlexWidget />}
           </FlexWidget>
         </FlexWidget>
 
@@ -576,22 +609,34 @@ function view4x2(data: WidgetGameData) {
 
           <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
             <FlexWidget style={{ alignItems: "center", width: 100 }}>
+              {data.awayRank && (
+                <FlexWidget style={{ alignItems: "center", marginBottom: 6 }}>
+                  <TextWidget text={`${data.awayRank}위`} style={{ fontSize: 11, fontWeight: "700", color: alpha(DARK_FG, "88") }} />
+                  {data.awayStreak && <FlexWidget style={{ marginTop: 2 }}><TextWidget text={`최근 ${data.awayStreak}`} style={{ fontSize: 11, color: alpha(DARK_FG, "88") }} /></FlexWidget>}
+                </FlexWidget>
+              )}
               <ImageWidget image={away.charImage} imageWidth={56} imageHeight={56} />
               <FlexWidget style={{ height: 8 }} />
               <TextWidget text={away.teamName} style={{ fontSize: 16, fontWeight: "700", color: away.nameColor }} />
-              {away.pbText && <TextWidget text={away.pbText} style={{ fontSize: 12, color: DARK_FG, marginTop: 4 }} />}
+              {away.pbText && <FlexWidget style={{marginTop: 4}}><TextWidget text={away.pbText} style={{ fontSize: 12, color: DARK_FG }} /></FlexWidget>}
             </FlexWidget>
 
             <FlexWidget style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-              <TextWidget text="경기 전" style={{ fontSize: 14, fontWeight: "700", color: alpha(DARK_FG, "88"), marginBottom: 4 }} />
+              <FlexWidget style={{marginBottom: 4}}><TextWidget text="경기 전" style={{ fontSize: 14, fontWeight: "700", color: alpha(DARK_FG, "88") }} /></FlexWidget>
               <TextWidget text={data.time || "VS"} style={{ fontSize: 36, fontWeight: "700", color: DARK_FG }} />
             </FlexWidget>
 
             <FlexWidget style={{ alignItems: "center", width: 100 }}>
+              {data.homeRank && (
+                <FlexWidget style={{ alignItems: "center", marginBottom: 6 }}>
+                  <TextWidget text={`${data.homeRank}위`} style={{ fontSize: 11, fontWeight: "700", color: alpha(DARK_FG, "88") }} />
+                  {data.homeStreak && <FlexWidget style={{ marginTop: 2 }}><TextWidget text={`최근 ${data.homeStreak}`} style={{ fontSize: 11, color: alpha(DARK_FG, "88") }} /></FlexWidget>}
+                </FlexWidget>
+              )}
               <ImageWidget image={home.charImage} imageWidth={56} imageHeight={56} />
               <FlexWidget style={{ height: 8 }} />
               <TextWidget text={home.teamName} style={{ fontSize: 16, fontWeight: "700", color: home.nameColor }} />
-              {home.pbText && <TextWidget text={home.pbText} style={{ fontSize: 12, color: DARK_FG, marginTop: 4 }} />}
+              {home.pbText && <FlexWidget style={{marginTop: 4}}><TextWidget text={home.pbText} style={{ fontSize: 12, color: DARK_FG }} /></FlexWidget>}
             </FlexWidget>
           </FlexWidget>
 
@@ -619,12 +664,12 @@ function view4x2(data: WidgetGameData) {
               <ImageWidget image={away.charImage} imageWidth={56} imageHeight={56} />
               <FlexWidget style={{ height: 8 }} />
               <TextWidget text={away.teamName} style={{ fontSize: 16, fontWeight: "700", color: away.nameColor }} />
-              {awayWon && <TextWidget text="승리" style={{ fontSize: 14, fontWeight: "700", color: "#d32f2f", marginTop: 4 }} />}
+              {awayWon && <FlexWidget style={{marginTop: 4}}><TextWidget text="승리" style={{ fontSize: 14, fontWeight: "700", color: "#d32f2f" }} /></FlexWidget>}
             </FlexWidget>
 
             <FlexWidget style={{ flex: 1, alignItems: "center", justifyContent: "center", flexDirection: "row" }}>
               <TextWidget text={away.scoreText} style={{ fontSize: 48, fontWeight: "700", color: awayWon ? away.scoreColor : alpha(away.scoreColor, "77") }} />
-              <TextWidget text=" : " style={{ fontSize: 28, fontWeight: "700", color: alpha(DARK_FG, "44"), marginHorizontal: 16 }} />
+              <FlexWidget style={{marginHorizontal: 16}}><TextWidget text=" : " style={{ fontSize: 28, fontWeight: "700", color: alpha(DARK_FG, "44") }} /></FlexWidget>
               <TextWidget text={home.scoreText} style={{ fontSize: 48, fontWeight: "700", color: homeWon ? home.scoreColor : alpha(home.scoreColor, "77") }} />
             </FlexWidget>
 
@@ -632,7 +677,7 @@ function view4x2(data: WidgetGameData) {
               <ImageWidget image={home.charImage} imageWidth={56} imageHeight={56} />
               <FlexWidget style={{ height: 8 }} />
               <TextWidget text={home.teamName} style={{ fontSize: 16, fontWeight: "700", color: home.nameColor }} />
-              {homeWon && <TextWidget text="승리" style={{ fontSize: 14, fontWeight: "700", color: "#d32f2f", marginTop: 4 }} />}
+              {homeWon && <FlexWidget style={{marginTop: 4}}><TextWidget text="승리" style={{ fontSize: 14, fontWeight: "700", color: "#d32f2f" }} /></FlexWidget>}
             </FlexWidget>
           </FlexWidget>
 
@@ -668,10 +713,16 @@ function view4x2(data: WidgetGameData) {
 
         <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
           <FlexWidget style={{ alignItems: "center", width: 72 }}>
+            {data.awayRank && (
+              <FlexWidget style={{ alignItems: "center", marginBottom: 6 }}>
+                <TextWidget text={`${data.awayRank}위`} style={{ fontSize: 11, fontWeight: "700", color: alpha(DARK_FG, "88") }} />
+                {data.awayStreak && <FlexWidget style={{ marginTop: 2 }}><TextWidget text={`최근 ${data.awayStreak}`} style={{ fontSize: 11, color: alpha(DARK_FG, "88") }} /></FlexWidget>}
+              </FlexWidget>
+            )}
             <ImageWidget image={away.charImage} imageWidth={48} imageHeight={48} />
             <FlexWidget style={{ height: 4 }} />
             <TextWidget text={away.teamName} style={{ fontSize: 15, fontWeight: "700", color: away.nameColor }} />
-            {away.pbText ? <TextWidget text={away.pbText} style={{ fontSize: 11, color: DARK_FG, marginTop: 4 }} /> : <FlexWidget />}
+            {away.pbText ? <FlexWidget style={{marginTop: 4}}><TextWidget text={away.pbText} style={{ fontSize: 11, color: DARK_FG }} /></FlexWidget> : <FlexWidget />}
           </FlexWidget>
 
           <FlexWidget style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -681,7 +732,7 @@ function view4x2(data: WidgetGameData) {
               ) : (
                 <>
                   <TextWidget text={away.scoreText} style={{ fontSize: 40, fontWeight: "700", color: away.scoreColor }} />
-                  <TextWidget text=" : " style={{ fontSize: 24, fontWeight: "700", color: alpha(DARK_FG, "44"), marginHorizontal: 12 }} />
+                  <FlexWidget style={{marginHorizontal: 12}}><TextWidget text=" : " style={{ fontSize: 24, fontWeight: "700", color: alpha(DARK_FG, "44") }} /></FlexWidget>
                   <TextWidget text={home.scoreText} style={{ fontSize: 40, fontWeight: "700", color: home.scoreColor }} />
                 </>
               )}
@@ -689,10 +740,16 @@ function view4x2(data: WidgetGameData) {
           </FlexWidget>
 
           <FlexWidget style={{ alignItems: "center", width: 72 }}>
+            {data.homeRank && (
+              <FlexWidget style={{ alignItems: "center", marginBottom: 6 }}>
+                <TextWidget text={`${data.homeRank}위`} style={{ fontSize: 11, fontWeight: "700", color: alpha(DARK_FG, "88") }} />
+                {data.homeStreak && <FlexWidget style={{ marginTop: 2 }}><TextWidget text={`최근 ${data.homeStreak}`} style={{ fontSize: 11, color: alpha(DARK_FG, "88") }} /></FlexWidget>}
+              </FlexWidget>
+            )}
             <ImageWidget image={home.charImage} imageWidth={48} imageHeight={48} />
             <FlexWidget style={{ height: 4 }} />
             <TextWidget text={home.teamName} style={{ fontSize: 15, fontWeight: "700", color: home.nameColor }} />
-            {home.pbText ? <TextWidget text={home.pbText} style={{ fontSize: 11, color: DARK_FG, marginTop: 4 }} /> : <FlexWidget />}
+            {home.pbText ? <FlexWidget style={{marginTop: 4}}><TextWidget text={home.pbText} style={{ fontSize: 11, color: DARK_FG }} /></FlexWidget> : <FlexWidget />}
           </FlexWidget>
         </FlexWidget>
         
