@@ -115,11 +115,60 @@ export function getLastWidgetGame(): WidgetGameData | null {
   return _lastWidgetGame;
 }
 
+// 🔴 MOCK LIVE GAME — set to true for testing widget layouts
+const WIDGET_MOCK_LIVE = true;
+
 export async function updateWidgetPeriodic(): Promise<void> {
   const myTeam = await getMyTeamForWidget();
   if (!myTeam) return;
 
   let data: WidgetGameData | null = null;
+
+  // 🔴 MOCK: simulate live game for widget testing
+  if (WIDGET_MOCK_LIVE) {
+    const mockMyTeam = myTeam || "lg";
+    const mockIsHome = mockMyTeam === "lg";
+    data = {
+      homeTeam: mockIsHome ? "LG" : "KIA",
+      awayTeam: mockIsHome ? "KIA" : "LG",
+      homeScore: mockIsHome ? "4" : "2",
+      awayScore: mockIsHome ? "2" : "4",
+      inning: "5",
+      isTop: "1",
+      status: "live",
+      homeIsMyTeam: mockIsHome,
+      time: "18:30",
+      stadium: "잠실",
+      weather: "27° 맑음",
+      awayPitcher: "올러",
+      homePitcher: "장현식",
+      ball: "2",
+      strike: "1",
+      out: "1",
+      base1: "1",
+      base2: "0",
+      base3: "1",
+      currentPitcher: "장현식",
+      currentBatter: "김현수",
+      scoreBoard: {
+        rheb: { home: { r: 4, h: 7, e: 0 }, away: { r: 2, h: 5, e: 1 } },
+        inn: {
+          home: ["0", "1", "0", "2", "1"],
+          away: ["1", "0", "0", "1", "0"],
+        },
+      },
+      relay: { inning: 5, isTop: true, ball: 2, strike: 1, out: 1, base1: 1, base2: 0, base3: 1 },
+      rank: mockIsHome ? "1" : "4",
+      streak: mockIsHome ? "3승" : "2패",
+      homeRank: mockIsHome ? "1" : "4",
+      awayRank: mockIsHome ? "4" : "1",
+      homeStreak: mockIsHome ? "3승" : "2패",
+      awayStreak: mockIsHome ? "2패" : "3승",
+    };
+    _lastWidgetGame = data;
+    await updateAllWidgets(myTeam, data);
+    return;
+  }
 
   try {
     const API_BASE = process.env.EXPO_PUBLIC_API_BASE || "https://api.fullcount.kr";
