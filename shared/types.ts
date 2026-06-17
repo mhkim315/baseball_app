@@ -226,6 +226,8 @@ export interface WidgetRelay {
   base1: string;
   base2: string;
   base3: string;
+  inning?: string;
+  isTop?: string;
   pitcher: RelayPlayer | null;
   batter: RelayPlayer | null;
 }

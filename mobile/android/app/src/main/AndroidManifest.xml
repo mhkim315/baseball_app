@@ -25,6 +25,8 @@
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="https://u.expo.dev/61b58472-e18f-48c4-8471-fa6fa4294c42"/>
     <service android:name="com.reactnativeandroidwidget.RNWidgetCollectionService" android:permission="android.permission.BIND_REMOTEVIEWS"/>
+    <service android:name=".LiveScoreService" android:foregroundServiceType="dataSync" android:exported="false"/>
+    <service android:name=".LiveScoreTaskService" android:exported="false"/>
     <activity android:name=".MainActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode" android:launchMode="singleTask" android:windowSoftInputMode="adjustResize" android:theme="@style/Theme.App.SplashScreen" android:exported="true" android:screenOrientation="portrait">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
@@ -51,7 +53,5 @@
       </intent-filter>
       <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget4x2"/>
     </receiver>
-    <service android:name=".LiveScoreService" android:foregroundServiceType="dataSync" android:exported="false"/>
-    <service android:name=".LiveScoreTaskService" android:exported="false"/>
   </application>
 </manifest>
