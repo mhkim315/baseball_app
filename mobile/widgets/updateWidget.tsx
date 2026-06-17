@@ -61,6 +61,11 @@ function buildWidgetProps(data: Record<string, string>): WidgetGameData {
     base3: data.base3,
     currentPitcher: data.current_pitcher,
     currentBatter: data.current_batter,
+    homeIsMyTeam: false,
+    homeRank: data.home_rank,
+    awayRank: data.away_rank,
+    homeStreak: data.home_streak,
+    awayStreak: data.away_streak,
   };
 }
 
@@ -91,10 +96,15 @@ export async function updateWidgetFromFCM(data: Record<string, string>): Promise
   if (home !== myTeam && away !== myTeam) return;
 
   const props = buildWidgetProps(data);
-  // We keep the old scoreBoard and relay if available from previous periodic fetch
+  // Preserve rich data from previous periodic fetch (not available in FCM flat keys)
   if (_lastWidgetGame) {
     props.scoreBoard = _lastWidgetGame.scoreBoard;
     props.relay = _lastWidgetGame.relay;
+    props.homeIsMyTeam = _lastWidgetGame.homeIsMyTeam;
+    props.homeRank = _lastWidgetGame.homeRank;
+    props.awayRank = _lastWidgetGame.awayRank;
+    props.homeStreak = _lastWidgetGame.homeStreak;
+    props.awayStreak = _lastWidgetGame.awayStreak;
   }
   await updateAllWidgets(myTeam, props);
 }
@@ -130,7 +140,10 @@ export async function updateWidgetPeriodic(): Promise<void> {
     });
 
     if (!myGame) {
-      throw new Error("Game not found in today's games");
+      // No game today for my team → show last game as finished
+      if (_lastWidgetGame) {
+        data = { ..._lastWidgetGame, status: "finished" };
+      }
     }
 
     if (myGame) {
@@ -197,8 +210,8 @@ export async function updateWidgetPeriodic(): Promise<void> {
         streak: (SHORT_CODE_TO_TEAM_ID[myGame.homeTeam] || myGame.homeTeam) === myTeam ? myGame.homeStreak : myGame.awayStreak,
         homeRank: myGame.homeRank?.toString(),
         awayRank: myGame.awayRank?.toString(),
-        homeStreak: myGame.homeStreak,
-        awayStreak: myGame.awayStreak,
+        homeStreak: String(myGame.homeStreak ?? ""),
+        awayStreak: String(myGame.awayStreak ?? ""),
       };
       
       _lastWidgetGame = data;
