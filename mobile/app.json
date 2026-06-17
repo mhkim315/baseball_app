@@ -42,9 +42,6 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "@react-native-firebase/app",
-      "@react-native-firebase/messaging",
-      "expo-notifications",
       [
         "react-native-android-widget",
         {
