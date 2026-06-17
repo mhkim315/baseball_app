@@ -542,30 +542,34 @@ function view2x2Finished(data: WidgetGameData, away: ReturnType<typeof getTeamIn
 
         <FlexWidget style={{ flex: 1 }} />
 
-        <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "match_parent", paddingHorizontal: 4 }}>
+        <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", width: "match_parent", paddingHorizontal: 4 }}>
           <FlexWidget style={{ alignItems: "center", flex: 1 }}>
-            <ImageWidget image={away.charImage} imageWidth={44} imageHeight={44} />
-            <FlexWidget style={{ height: 4 }} />
-            <TextWidget text={away.teamName} style={{ fontSize: 13, fontWeight: "700", color: away.nameColor }} />
-            <FlexWidget style={{ height: 4 }} />
-            <TextWidget text={data.awayScore} style={{ fontSize: 32, fontWeight: "700", color: awayWon ? away.scoreColor : alpha(away.scoreColor, "77") }} />
-            {awayWon ? <FlexWidget style={{ height: 2 }} /> : null}
-            {awayWon ? <TextWidget text="WIN" style={{ fontSize: 10, fontWeight: "700", color: "#d32f2f" }} /> : null}
+            {awayWon ? <TextWidget text="WIN" style={{ fontSize: 10, fontWeight: "700", color: "#d32f2f" }} /> : <FlexWidget style={{ height: 14 }} />}
+            <ImageWidget image={away.charImage} imageWidth={40} imageHeight={40} />
+            <FlexWidget style={{ height: 2 }} />
+            <TextWidget text={away.teamName} style={{ fontSize: 12, fontWeight: "700", color: away.nameColor }} />
+            <FlexWidget style={{ height: 2 }} />
+            <TextWidget text={data.awayScore} style={{ fontSize: 28, fontWeight: "700", color: awayWon ? away.scoreColor : alpha(away.scoreColor, "77") }} />
           </FlexWidget>
 
           <FlexWidget style={{ width: 20, alignItems: "center", justifyContent: "center" }}>
+            <FlexWidget style={{ height: 14 }} />
             <TextWidget text=":" style={{ fontSize: 20, fontWeight: "700", color: FG_73 }} />
           </FlexWidget>
 
           <FlexWidget style={{ alignItems: "center", flex: 1 }}>
-            <ImageWidget image={home.charImage} imageWidth={44} imageHeight={44} />
-            <FlexWidget style={{ height: 4 }} />
-            <TextWidget text={home.teamName} style={{ fontSize: 13, fontWeight: "700", color: home.nameColor }} />
-            <FlexWidget style={{ height: 4 }} />
-            <TextWidget text={data.homeScore} style={{ fontSize: 32, fontWeight: "700", color: homeWon ? home.scoreColor : alpha(home.scoreColor, "77") }} />
-            {homeWon ? <FlexWidget style={{ height: 2 }} /> : null}
-            {homeWon ? <TextWidget text="WIN" style={{ fontSize: 10, fontWeight: "700", color: "#d32f2f" }} /> : null}
+            {homeWon ? <TextWidget text="WIN" style={{ fontSize: 10, fontWeight: "700", color: "#d32f2f" }} /> : <FlexWidget style={{ height: 14 }} />}
+            <ImageWidget image={home.charImage} imageWidth={40} imageHeight={40} />
+            <FlexWidget style={{ height: 2 }} />
+            <TextWidget text={home.teamName} style={{ fontSize: 12, fontWeight: "700", color: home.nameColor }} />
+            <FlexWidget style={{ height: 2 }} />
+            <TextWidget text={data.homeScore} style={{ fontSize: 28, fontWeight: "700", color: homeWon ? home.scoreColor : alpha(home.scoreColor, "77") }} />
           </FlexWidget>
+        </FlexWidget>
+
+        <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: "match_parent", marginTop: 6, paddingHorizontal: 4 }}>
+          <TextWidget text={away.pbText || `P: ${data.awayPitcher || "-"}`} style={{ fontSize: 9, color: DARK_FG }} />
+          <TextWidget text={home.pbText || `P: ${data.homePitcher || "-"}`} style={{ fontSize: 9, color: DARK_FG }} />
         </FlexWidget>
 
         <FlexWidget style={{ flex: 1 }} />
