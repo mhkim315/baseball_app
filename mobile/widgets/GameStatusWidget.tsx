@@ -568,8 +568,8 @@ function view2x2Finished(data: WidgetGameData, away: ReturnType<typeof getTeamIn
         </FlexWidget>
 
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: "match_parent", marginTop: 6, paddingHorizontal: 4 }}>
-          <TextWidget text={away.pbText || `P: ${data.awayPitcher || "-"}`} style={{ fontSize: 9, color: DARK_FG }} />
-          <TextWidget text={home.pbText || `P: ${data.homePitcher || "-"}`} style={{ fontSize: 9, color: DARK_FG }} />
+          <TextWidget text={`${awayWon ? "승" : "패"}: ${data.awayPitcher || "-"}`} style={{ fontSize: 9, color: DARK_FG }} />
+          <TextWidget text={`${homeWon ? "승" : "패"}: ${data.homePitcher || "-"}`} style={{ fontSize: 9, color: DARK_FG }} />
         </FlexWidget>
 
         <FlexWidget style={{ flex: 1 }} />
@@ -778,8 +778,8 @@ function view4x2(data: WidgetGameData) {
           </FlexWidget>
 
           <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: "match_parent", marginTop: 8, paddingHorizontal: 4 }}>
-            <TextWidget text={`P: ${data.awayPitcher || "-"}`} style={{ fontSize: 11, color: DARK_FG }} />
-            <TextWidget text={`P: ${data.homePitcher || "-"}`} style={{ fontSize: 11, color: DARK_FG }} />
+            <TextWidget text={`${awayWon ? "승" : "패"}: ${data.awayPitcher || "-"}`} style={{ fontSize: 11, color: DARK_FG }} />
+            <TextWidget text={`${homeWon ? "승" : "패"}: ${data.homePitcher || "-"}`} style={{ fontSize: 11, color: DARK_FG }} />
           </FlexWidget>
 
           <FlexWidget style={{ flex: 1 }} />
