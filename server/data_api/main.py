@@ -763,6 +763,20 @@ def _get_widget_data_cached() -> dict | None:
         internal_id = _naver_to_internal_gid(naver_id)
         status = _naver_status(g.get("status", ""))
 
+        time_str = (g.get("gameDateTime") or g.get("startTime") or "")[11:16] if len(g.get("gameDateTime") or g.get("startTime") or "") >= 16 else ""
+
+        if time_str and status in ("live", "finished"):
+            try:
+                now_kst = datetime.now()
+                h, m = map(int, time_str.split(":"))
+                game_dt = now_kst.replace(hour=h, minute=m, second=0, microsecond=0)
+                if status == "finished" and now_kst < game_dt:
+                    status = "scheduled"
+                elif status == "live" and now_kst < game_dt - timedelta(minutes=30):
+                    status = "scheduled"
+            except Exception:
+                pass
+
         home_code = str(g.get("homeTeamCode") or "")
         away_code = str(g.get("awayTeamCode") or "")
         home_kr = _code_to_kr(home_code)
@@ -779,9 +793,7 @@ def _get_widget_data_cached() -> dict | None:
             "gameId": internal_id,
             "naverGameId": naver_id,
             "gameIdx": 0,
-            "time": (g.get("gameDateTime") or g.get("startTime") or "")[11:16]
-            if len(g.get("gameDateTime") or g.get("startTime") or "") >= 16
-            else "",
+            "time": time_str,
             "venue": _VENUE_SHORT.get(home_code, g.get("stadium") or g.get("venue") or ""),
             "status": status,
             "homeTeam": home_code,

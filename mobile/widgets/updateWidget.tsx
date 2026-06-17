@@ -20,7 +20,7 @@ export interface WidgetGameData {
   inning: string;
   isTop: string;
   status: string;
-  homeIsMyTeam?: boolean;
+  homeIsMyTeam: boolean;
   time?: string;
   stadium?: string;
   weather?: string;
@@ -114,7 +114,13 @@ export async function updateWidgetPeriodic(): Promise<void> {
   try {
     const API_BASE = process.env.EXPO_PUBLIC_API_BASE || "https://api.fullcount.kr";
     const res = await fetch(`${API_BASE}/widget-data`);
+    if (!res.ok) {
+      throw new Error(`API returned ${res.status}`);
+    }
     const json = await res.json();
+    if (json.error) {
+      throw new Error(`API Error: ${json.error}`);
+    }
 
     const games = json.games || [];
     const myGame = games.find((g: any) => {
@@ -123,7 +129,25 @@ export async function updateWidgetPeriodic(): Promise<void> {
       return homeId === myTeam || awayId === myTeam;
     });
 
+    if (!myGame) {
+      throw new Error("Game not found in today's games");
+    }
+
     if (myGame) {
+      // 시간 기반 방어 로직 (현재 시간이 경기 시간보다 한참 전이면 무조건 scheduled)
+      const now = new Date();
+      const timeStr = myGame.time || "18:30";
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      const gameTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+      
+      if (now.getTime() < gameTime.getTime() - 1000 * 60 * 30) {
+        // 경기 시작 30분 전까지는 무조건 scheduled (live나 finished 오판 방지)
+        myGame.status = "scheduled";
+      } else if (now.getTime() < gameTime.getTime()) {
+        // 경기 시작 전인데 finished가 떨어지는 경우 방지
+        if (myGame.status === "finished") myGame.status = "scheduled";
+      }
+
       let inning = "0";
       let isTop = "0";
       if (myGame.status === "live") {
@@ -142,6 +166,9 @@ export async function updateWidgetPeriodic(): Promise<void> {
         }
       }
 
+      const weatherKey = myGame.venue ? Object.keys(json.todayWeather || {}).find((k) => k.includes(myGame.venue)) : undefined;
+      const weatherData = weatherKey && json.todayWeather ? json.todayWeather[weatherKey] : null;
+
       data = {
         homeTeam: myGame.homeName || myGame.homeTeam,
         awayTeam: myGame.awayName || myGame.awayTeam,
@@ -157,7 +184,7 @@ export async function updateWidgetPeriodic(): Promise<void> {
         homePitcher: myGame.homeStarter || undefined,
         currentPitcher: myGame.relay?.pitcher?.name || undefined,
         currentBatter: myGame.relay?.batter?.name || undefined,
-        weather: json.todayWeather?.[myGame.venue || ""] ? `${json.todayWeather[myGame.venue].temp}° ${json.todayWeather[myGame.venue].condition}` : undefined,
+        weather: weatherData ? `${weatherData.temp}° ${weatherData.condition}` : undefined,
         ball: myGame.relay?.ball?.toString(),
         strike: myGame.relay?.strike?.toString(),
         out: myGame.relay?.out?.toString(),
@@ -177,12 +204,15 @@ export async function updateWidgetPeriodic(): Promise<void> {
       _lastWidgetGame = data;
     }
 
-    if (!data && _lastWidgetGame) {
-      data = { ..._lastWidgetGame, status: "finished" };
-    }
+
   } catch (e) {
     console.warn("updateWidgetPeriodic: fetch failed", e);
+    // Network error -> retain last data
+    if (_lastWidgetGame) {
+      data = _lastWidgetGame;
+    }
   }
 
+  // If there is still absolutely no data, we will render noGameView.
   await updateAllWidgets(myTeam, data);
 }
