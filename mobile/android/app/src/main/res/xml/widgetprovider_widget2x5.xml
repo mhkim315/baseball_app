@@ -16,6 +16,6 @@
 
 
 
-    android:updatePeriodMillis="0"
+    android:updatePeriodMillis="900000"
     android:widgetCategory="home_screen">
 </appwidget-provider>

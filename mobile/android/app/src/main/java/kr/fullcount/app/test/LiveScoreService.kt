@@ -14,8 +14,11 @@ import com.facebook.react.HeadlessJsTaskService
 
 class LiveScoreService : Service() {
     private val CHANNEL_ID = "LiveScoreChannel"
+    private val AUTO_STOP_MS = 60_000L // 1 minute for testing, change to 30 * 60_000L after verified
     private var handler: Handler? = null
     private var runnable: Runnable? = null
+    private var stopHandler: Handler? = null
+    private var stopRunnable: Runnable? = null
     private var isRunning = false
 
     override fun onCreate() {
@@ -54,8 +57,19 @@ class LiveScoreService : Service() {
             isRunning = true
             startPolling()
         }
+        // Reset auto-stop timer on every start command
+        scheduleAutoStop()
 
         return START_STICKY
+    }
+
+    private fun scheduleAutoStop() {
+        stopHandler?.removeCallbacksAndMessages(null)
+        stopHandler = Handler(Looper.getMainLooper())
+        stopRunnable = Runnable {
+            stopSelf()
+        }
+        stopHandler?.postDelayed(stopRunnable!!, AUTO_STOP_MS)
     }
 
     private fun startPolling() {
@@ -79,6 +93,7 @@ class LiveScoreService : Service() {
         super.onDestroy()
         isRunning = false
         handler?.removeCallbacksAndMessages(null)
+        stopHandler?.removeCallbacksAndMessages(null)
     }
 
     override fun onBind(intent: Intent?): IBinder? {
