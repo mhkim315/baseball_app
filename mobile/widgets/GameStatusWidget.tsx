@@ -153,13 +153,11 @@ function BaseSituation({ b1, b2, b3, size }: { b1?: string, b2?: string, b3?: st
   const inactiveColor = "#000000";
   const getBase = (occ?: string) => occ && occ !== "0" ? "◆" : "◇";
   const getColor = (occ?: string) => occ && occ !== "0" ? activeColor : inactiveColor;
-  const bottomWidth = Math.round(size * 2.1);
+  const diamondW = Math.round(size * 3.2);
   return (
-    <FlexWidget style={{ alignItems: "center", justifyContent: "center" }}>
-      <FlexWidget style={{ alignItems: "center" }}>
-        <TextWidget text={getBase(b2)} style={{ fontSize: size, color: getColor(b2), fontWeight: "700" }} />
-      </FlexWidget>
-      <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: bottomWidth }}>
+    <FlexWidget style={{ alignItems: "center" }}>
+      <TextWidget text={getBase(b2)} style={{ fontSize: size, color: getColor(b2), fontWeight: "700" }} />
+      <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: diamondW }}>
         <TextWidget text={getBase(b3)} style={{ fontSize: size, color: getColor(b3), fontWeight: "700" }} />
         <TextWidget text={getBase(b1)} style={{ fontSize: size, color: getColor(b1), fontWeight: "700" }} />
       </FlexWidget>
@@ -600,7 +598,6 @@ function view2x2Cancelled(data: WidgetGameData, away: ReturnType<typeof getTeamI
 }
 
 function view2x2Live(data: WidgetGameData, away: ReturnType<typeof getTeamInfo>, home: ReturnType<typeof getTeamInfo>, head: ReturnType<typeof getHeaderInfo>) {
-  const hasPb = away.pbText || home.pbText;
   const weatherText = data.weather ? data.weather.replace(/^[0-9.-]+°\s*/, "") : "";
   const locationText = data.stadium ? (weatherText ? `${data.stadium} ${weatherText}` : data.stadium) : "오늘 경기";
 
@@ -625,8 +622,9 @@ function view2x2Live(data: WidgetGameData, away: ReturnType<typeof getTeamInfo>,
           <TextWidget text={"S:" + "●".repeat(head.sCnt) + "○".repeat(2 - head.sCnt)} style={{ fontSize: 9, color: "#f9a825" }} />
           <FlexWidget style={{ width: 4 }} />
           <TextWidget text={"O:" + "●".repeat(head.oCnt) + "○".repeat(2 - head.oCnt)} style={{ fontSize: 9, color: "#e53935" }} />
-          <FlexWidget style={{ width: 8 }} />
-          <BaseSituation b1={data.base1} b2={data.base2} b3={data.base3} size={8} />
+        </FlexWidget>
+        <FlexWidget style={{ alignItems: "center", justifyContent: "center", width: "match_parent", height: 18 }}>
+          <BaseSituation b1={data.base1} b2={data.base2} b3={data.base3} size={10} />
         </FlexWidget>
 
         <FlexWidget style={{ flex: 1 }} />
@@ -799,18 +797,12 @@ function view4x2(data: WidgetGameData) {
           {/* Center: BSO vertical + Base */}
           <FlexWidget style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
             <FlexWidget style={{ alignItems: "flex-start" }}>
-              <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-                <TextWidget text={"●".repeat(head.bCnt) + "○".repeat(3 - head.bCnt)} style={{ fontSize: 8, color: "#43a047" }} />
-              </FlexWidget>
-              <FlexWidget style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
-                <TextWidget text={"●".repeat(head.sCnt) + "○".repeat(2 - head.sCnt)} style={{ fontSize: 8, color: "#f9a825" }} />
-              </FlexWidget>
-              <FlexWidget style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
-                <TextWidget text={"●".repeat(head.oCnt) + "○".repeat(2 - head.oCnt)} style={{ fontSize: 8, color: "#e53935" }} />
-              </FlexWidget>
+              <TextWidget text={"B:" + "●".repeat(head.bCnt) + "○".repeat(3 - head.bCnt)} style={{ fontSize: 10, color: "#43a047" }} />
+              <TextWidget text={"S:" + "●".repeat(head.sCnt) + "○".repeat(2 - head.sCnt)} style={{ fontSize: 10, color: "#f9a825" }} />
+              <TextWidget text={"O:" + "●".repeat(head.oCnt) + "○".repeat(2 - head.oCnt)} style={{ fontSize: 10, color: "#e53935" }} />
             </FlexWidget>
-            <FlexWidget style={{ width: 12 }} />
-            <BaseSituation b1={data.base1} b2={data.base2} b3={data.base3} size={9} />
+            <FlexWidget style={{ width: 16 }} />
+            <BaseSituation b1={data.base1} b2={data.base2} b3={data.base3} size={12} />
           </FlexWidget>
 
           {/* Home rank/streak */}
