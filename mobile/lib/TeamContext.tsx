@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import { getMyTeam, setMyTeam as setMyTeamInDb } from "@/lib/db";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { updateWidgetPeriodic } from "@/widgets/updateWidget";
 
 const WIDGET_TEAM_KEY = "@fullcount_widget_team";
 
@@ -30,9 +31,13 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     setMyTeamState(team);
     if (team) {
       setMyTeamInDb(team);
-      AsyncStorage.setItem(WIDGET_TEAM_KEY, team).catch(() => {});
+      AsyncStorage.setItem(WIDGET_TEAM_KEY, team).then(() => {
+        updateWidgetPeriodic().catch(() => {});
+      });
     } else {
-      AsyncStorage.removeItem(WIDGET_TEAM_KEY).catch(() => {});
+      AsyncStorage.removeItem(WIDGET_TEAM_KEY).then(() => {
+        updateWidgetPeriodic().catch(() => {});
+      });
     }
   }, []);
 
