@@ -3260,4 +3260,53 @@ b2278dc test: add WIDGET_MOCK_LIVE flag for widget layout testing
 fd33c07 fix(widget): use schedule API current pitcher names for P/B display
 17e4fca fix(widget): remove height constraint clipping 1st/3rd base in 2x2
 ```
+
+#### 타자명 고정 버그 + 앱 GameCard 투수 미표시
+
+**타자명 고정 (항상 "한승택")**:
+- **원인**: textRelays 배열에서 가장 최근 `X번타자 NAME` 항목을 사용 → textRelays가 실시간 갱신되지 않아 이전 타자 이름이 계속 반환됨
+- **서버 해결**: textRelays 전체를 스캔해 `pcode→name` 맵을 구축하고, `currentGameState.batter` pcode로 현재 타자명 조회. 12명 매핑 성공 → 실시간 추적 가능
+
+**앱 GameCard 투수 미표시 (P: 대신 "-" 표시)**:
+- **원인**: GameCard가 `relay.pitcher?.name`을 직접 사용 → 서버 p2n lookup 실패로 항상 빈 값
+- **해결 (2단계)**:
+  1. `GameCard.tsx`: `relay.pitcher?.name`이 빈 값일 때 선발투수(`awayPitcher`/`homePitcher`)로 폴백
+  2. `home.tsx`: widget data enrichment 시 `isTop` 기준으로 `homeCurrentPitcher`/`awayCurrentPitcher`를 `relay.pitcher.name`에 주입 → 현재 투수 실시간 반영 (Naver API에서 불펜 교체도 업데이트됨)
+
+#### FCM Push 비활성화
+
+- **배경**: 서버 `push_worker.py`가 1:1 개별 FCM 전송 방식 → 수백 명만 돼도 병목 발생, 수십 초~수 분 지연
+- **판단**: 앱 폴링(16s) + 위젯 포그라운드 서비스(5s) + 수동 REFRESH로도 실시간성 충분히 확보 가능
+- **결정**: FCM을 끄고 폴링/포그라운드 기반으로만 운영
+- **서버 설정**: `/etc/systemd/system/fullcount-api.service.d/push-override.conf` → `ENABLE_PUSH_NOTIFICATIONS=false` + `systemctl restart`
+
+**FCM OFF 상태에서 실시간 갱신 흐름**:
+| 상태 | 갱신 방식 | 주기 |
+|------|-----------|------|
+| 앱 활성 + 홈탭 focused | `useFocusEffect` 폴링 | 16초 |
+| 포그라운드 서비스 ON | `LiveScoreService` → HeadlessTask | 5초 |
+| 백그라운드 (앱 OFF, 서비스 OFF) | Android WorkManager | 15~30분 |
+| 사용자 수동 | 위젯 REFRESH 버튼 | 즉시 + 포그라운드 시작 |
+
+#### 서버 동시접속자 용량 분석
+
+- **스펙**: Oracle Ampere 2 OCPU, 12GB RAM
+- **병목 제거 후**: `/widget-data` 인메모리 캐시 (TTL 7s), FCM OFF
+- **추정**: 싱글 uvicorn → ~10,000명, workers=4 → ~30,000~40,000명
+- **주요 개선 포인트**: 이미 인메모리 캐싱 + Rate Limit(100/min) 적용 완료
+
+### 커밋 로그 (추가)
+```
+feat/widget-views-decoupled:
+d4dab66 fix(home): inject current pitcher name into relay for GameCard display
+acebe62 fix(GameCard): fall back to starter name when relay pitcher name is empty
+a711952 docs: record pitcher/batter name fix + emotion reversal + 2x2 base clipping
+6284299 fix(widget): remove hardcoded homeIsMyTeam=false causing reversed emotions
+41cbe39 fix(widget): improve currentPitcher fallback when relay.isTop missing
+fd33c07 fix(widget): use schedule API current pitcher names for P/B display
+
+master:
+23942a7 fix(home): inject current pitcher name into relay for GameCard display
+0c0563a fix(GameCard): fall back to starter name when relay pitcher name is empty
+```
 ```
