@@ -1,7 +1,7 @@
 import { requestWidgetUpdate } from "react-native-android-widget";
 import { getMyTeamForWidget, SHORT_CODE_TO_TEAM_ID, SHORT_CODE_TO_NAME } from "@/lib/teamStorage";
 import { GameStatusWidget } from "./GameStatusWidget";
-import { ScoreboardWidget } from "./ScoreboardWidget";
+
 import { getInningInfo } from "@shared/gameStatus";
 
 const WIDGET_NAMES = [
@@ -36,6 +36,12 @@ export interface WidgetGameData {
   currentBatter?: string;
   scoreBoard?: any;
   relay?: any;
+  rank?: string;
+  streak?: string;
+  homeRank?: string;
+  awayRank?: string;
+  homeStreak?: string;
+  awayStreak?: string;
 }
 
 function buildWidgetProps(data: Record<string, string>): WidgetGameData {
@@ -63,10 +69,6 @@ async function updateAllWidgets(myTeam: string, data: WidgetGameData | null) {
     await requestWidgetUpdate({
       widgetName,
       renderWidget: (widgetInfo) => {
-        // If width and height are large enough, render ScoreboardWidget instead
-        if (widgetInfo.width >= 230 && widgetInfo.height >= 160 && data) {
-          return <ScoreboardWidget width={widgetInfo.width} data={data} myTeam={myTeam} />;
-        }
         return (
           <GameStatusWidget
             width={widgetInfo.width}
@@ -160,6 +162,12 @@ export async function updateWidgetPeriodic(): Promise<void> {
         base3: myGame.relay?.base3?.toString(),
         scoreBoard: myGame.scoreBoard,
         relay: myGame.relay,
+        rank: (SHORT_CODE_TO_TEAM_ID[myGame.homeTeam] || myGame.homeTeam) === myTeam ? myGame.homeRank?.toString() : myGame.awayRank?.toString(),
+        streak: (SHORT_CODE_TO_TEAM_ID[myGame.homeTeam] || myGame.homeTeam) === myTeam ? myGame.homeStreak : myGame.awayStreak,
+        homeRank: myGame.homeRank?.toString(),
+        awayRank: myGame.awayRank?.toString(),
+        homeStreak: myGame.homeStreak,
+        awayStreak: myGame.awayStreak,
       };
       
       _lastWidgetGame = data;

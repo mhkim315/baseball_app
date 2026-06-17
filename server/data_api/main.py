@@ -23,7 +23,7 @@ from cachetools import TTLCache
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from shared.scoring_data import _HISTORICAL_SCORING
 
-from data_api.push_router import router as push_router
+from push_router import router as push_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("fullcount")
@@ -699,11 +699,16 @@ def _get_widget_data_cached() -> dict | None:
     standings_data = load_json("kbo_standings.json") or {}
 
     rank_map: dict[str, int] = {}
+    streak_map: dict[str, str] = {}
     for row in standings_data.get("rows", []):
         rn = row.get("teamName")
         rk = row.get("rank")
-        if rn and rk is not None:
-            rank_map[rn] = rk
+        st = row.get("streak")
+        if rn:
+            if rk is not None:
+                rank_map[rn] = rk
+            if st is not None:
+                streak_map[rn] = st
 
     starter_map: dict[str, dict] = {}
     for g in today_games.get("games", []):
@@ -787,6 +792,8 @@ def _get_widget_data_cached() -> dict | None:
             "awayStarter": away_starter,
             "homeRank": rank_map.get(home_kr),
             "awayRank": rank_map.get(away_kr),
+            "homeStreak": streak_map.get(home_kr),
+            "awayStreak": streak_map.get(away_kr),
             "score": {"home": hs, "away": aws} if hs is not None and aws is not None else None,
             "scoreBoard": {
                 "rheb": {

@@ -3,7 +3,7 @@ import { updateWidgetPeriodic } from "./updateWidget";
 import { NativeModules, AppRegistry } from "react-native";
 
 const { LiveScoreModule } = NativeModules;
-async function taskHandler(props: WidgetTaskHandlerProps) {
+async function taskHandler(props: any) {
   switch (props.widgetAction) {
     case "WIDGET_ADDED":
     case "WIDGET_RESIZED":

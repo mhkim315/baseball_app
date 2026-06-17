@@ -256,6 +256,8 @@ export interface WidgetGame {
   awayStarter: string | null;
   homeRank: number | null;
   awayRank: number | null;
+  homeStreak?: string | null;
+  awayStreak?: string | null;
   score: { home: number; away: number } | null;
   scoreBoard: WidgetScoreBoard;
   relay: WidgetRelay | null;
