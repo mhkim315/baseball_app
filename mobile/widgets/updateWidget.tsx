@@ -20,7 +20,7 @@ export interface WidgetGameData {
   inning: string;
   isTop: string;
   status: string;
-  homeIsMyTeam: boolean;
+  homeIsMyTeam?: boolean;
   time?: string;
   stadium?: string;
   weather?: string;
@@ -61,7 +61,6 @@ function buildWidgetProps(data: Record<string, string>): WidgetGameData {
     base3: data.base3,
     currentPitcher: data.current_pitcher,
     currentBatter: data.current_batter,
-    homeIsMyTeam: false,
     homeRank: data.home_rank,
     awayRank: data.away_rank,
     homeStreak: data.home_streak,
