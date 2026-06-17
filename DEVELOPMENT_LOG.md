@@ -2945,3 +2945,50 @@ for side in (trd.get("homeLineup", {}) or {}, trd.get("awayLineup", {}) or {}):
 - `mobile/lib/resolveGames.ts` — gameId suffix 수정 (dhGameNumber 사용)
 - `/home/opc/fullcount_backend/main.py` — p2n lineup 매핑 추가
 - `mobile/app.json` — runtimeVersion + updates.url 설정
+
+### Master 머지 및 프로덕션 AAB 빌드 (2026-06-18)
+
+#### 머지 준비
+- test 브랜치(feat/widget-views-decoupled) → master 브랜치 JS cherry-pick
+- 위젯 25개 → 2개(2x2, 4x2)로 축소
+- WIDGET_NAMES 배열: `["Widget2x2", "Widget4x2"]`
+- app.json widget plugin: 2개만 설정, updatePeriodMillis=900000(15분)
+- `npx expo prebuild -p android`로 native 코드 자동 생성
+- Kotlin LiveScore* 4개 파일 수동 복사 + 패키지명 수정
+- MainApplication.kt에 LiveScorePackage 등록
+- AndroidManifest.xml에 FOREGROUND_SERVICE 권한 + 서비스 등록
+- `.gitignore`에서 `/android` 제거 → android 폴더 전체 Git 추적
+
+#### 빌드 실패 및 수정
+1. `runtimeVersion` policy → "1.2.1" 하드코딩
+2. `pnpm-lock.yaml` 삭제 (lock 파일 충돌)
+3. `react-native-view-shot` 5.1.0 → 4.0.3 (SDK 54)
+4. `@react-native-firebase/app` + `expo-notifications` + `react-native-android-widget` 패키지 설치 (master에 누락)
+5. `babel-preset-expo` 설치 (JS 번들링 실패)
+6. `shared/types.ts` WidgetRelay에 `inning`, `isTop` 필드 추가
+
+#### 최종 AAB 빌드 성공
+- **버전**: v1.2.1 (versionCode 30)
+- **빌드 ID**: `f86d1f90-a5b8-4718-ba4e-582906e927a9`
+- **AAB**: https://expo.dev/artifacts/eas/7pT4rl5D-Hjl9FrH5BH3wvUns1iGEt5-GarHs2MUtWg.aab
+- **OTA**: JS 변경 시 `eas update --branch production --message "설명"` 사용
+
+#### Play Store 등록
+- FOREGROUND_SERVICE_DATA_SYNC 권한 선언 필요
+- "다른 작업 → 기타"로 선택, 실시간 점수 동기화 용도 설명
+
+### 커밋 로그 (master)
+```
+5666c29 docs: add OTA update command documentation
+22ea92f fix: install babel-preset-expo for JS bundling
+cb42d02 fix: add inning/isTop to WidgetRelay type
+c3a0edd fix: install react-native-android-widget package
+58feced fix: install @react-native-firebase + expo-notifications
+9da8a20 fix: remove firebase and expo-notifications plugins
+0206cac fix: remove pnpm-lock.yaml + fix react-native-view-shot to 4.0.3
+cee7d62 fix: restore android folder with prebuild + manual additions
+ffa9e6b fix: remove android from .gitignore and force-add native files
+253bf79 chore: bump version 1.2.1
+c73f6ef fix: hardcode runtimeVersion 1.2.1, add AAB to production profile
+12537bc feat: merge widget 2x2/4x2 + foreground service to master
+```
