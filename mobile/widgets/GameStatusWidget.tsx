@@ -215,9 +215,9 @@ function noGameView() {
         </FlexWidget>
       </FlexWidget>
       <FlexWidget style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ImageWidget image={MONDAY_IMAGE} imageWidth={60} imageHeight={60} />
-        <FlexWidget style={{ height: 8 }} />
-        <TextWidget text="오늘은 경기가 없어요" style={{ fontSize: 12, color: DARK_FG }} />
+        <ImageWidget image={MONDAY_IMAGE} imageWidth={44} imageHeight={44} />
+        <FlexWidget style={{ height: 6 }} />
+        <TextWidget text="오늘은 경기가 없어요" style={{ fontSize: 11, color: DARK_FG }} />
       </FlexWidget>
     </ColorBg>
   );
