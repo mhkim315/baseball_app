@@ -634,7 +634,7 @@ function view2x2Live(data: WidgetGameData, away: ReturnType<typeof getTeamInfo>,
           <FlexWidget style={{ width: 6 }} />
           <TextWidget text={"O:" + "●".repeat(head.oCnt) + "○".repeat(2 - head.oCnt)} style={{ fontSize: 11, color: "#e53935" }} />
         </FlexWidget>
-        <FlexWidget style={{ alignItems: "center", justifyContent: "center", width: "match_parent", height: 22 }}>
+        <FlexWidget style={{ alignItems: "center", justifyContent: "center", width: "match_parent" }}>
           <BaseSituation b1={data.base1} b2={data.base2} b3={data.base3} size={13} />
         </FlexWidget>
 
