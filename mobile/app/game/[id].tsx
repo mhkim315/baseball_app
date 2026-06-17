@@ -9,6 +9,7 @@ import {
 } from "@/lib/api";
 import { TeamBadge } from "@/components/TeamBadge";
 import GameCard from "@/components/GameCard";
+import { computeGameEmotion } from "@/lib/gameEmotion";
 import { cachedDailyScores, cachedAllDailyScores, cachedScheduleByMonth, cachedGameDetail, cachedStandings, cachedWidgetData } from "@/lib/gameCache";
 import { resolveGames } from "@/lib/resolveGames";
 import SimpleAlert from "@/components/SimpleAlert";
@@ -707,8 +708,16 @@ export default function GameDetailScreen() {
   const homeWin = isFinished && gs ? gs.home > gs.away : null;
   const isDraw = isFinished && gs ? gs.away === gs.home : false;
   const canMakeSticker = canMakeStickerForGame(detail, now);
-  const awayEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : awayWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";
-  const homeEmotion: "default" | "determined" | "sad" | "joyful" | "neutral" = isCancelled ? "neutral" : isBeforeGame ? "determined" : homeWin ? "joyful" : isDraw ? "neutral" : isFinished ? "sad" : "default";
+  const gameStatus = isCancelled ? "cancelled" as const : isBeforeGame ? "scheduled" as const : isLive ? "live" as const : "finished" as const;
+  const relayBase = detail.relay ? { base1: detail.relay.base1, base2: detail.relay.base2, base3: detail.relay.base3 } : {};
+  const emotionInput = {
+    status: gameStatus,
+    inning: inningInfo?.inning ?? 0,
+    isTop: inningInfo?.isTop ?? true,
+    ...relayBase,
+  };
+  const awayEmotion = computeGameEmotion({ ...emotionInput, myScore: gameScore?.away ?? 0, oppScore: gameScore?.home ?? 0, isMyHome: false });
+  const homeEmotion = computeGameEmotion({ ...emotionInput, myScore: gameScore?.home ?? 0, oppScore: gameScore?.away ?? 0, isMyHome: true });
 
   const scoreBoard = detail.scoreBoard;
   const innData = scoreBoard?.inn || (isLive ? { away: [0], home: [] } : null);
