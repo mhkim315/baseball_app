@@ -6,6 +6,17 @@
 - 빌드 시 `mobile/app.json`의 `version`과 `versionCode`(Android 전용)를 1씩 증가시킨 후 빌드할 것.
 - 앱 내 버전 표시(`my.tsx` 설정 화면 하단)는 `Constants.expoConfig.version`을 읽으므로, `app.json`의 `version`만 수정하면 자동 반영됨.
 
+# OTA update (eas update)
+- **JS/TS 코드만 변경한 경우** (UI, 로직, API 호출 등) EAS Build 대신 OTA 사용.
+- 새 네이티브 패키지 추가, `app.json` 플러그인 변경, Kotlin/Java 수정 시에만 EAS Build 필요.
+- **프로덕션 배포 명령어**:
+  ```bash
+  cd mobile
+  eas update --branch production --message "변경 내용 요약"
+  ```
+- 스토어 심사 불필요. 사용자 앱 재실행 시 자동 적용 (runtimeVersion 일치 필요).
+- test 채널 배포 시 `--branch test` 사용.
+
 # Server
 - 서버 설정 상세: `mobile/server-setup.md` 참고
 
