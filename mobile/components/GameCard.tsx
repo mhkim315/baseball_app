@@ -6,6 +6,7 @@ import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import type { RelayState } from "@shared/types";
+import { computeGameEmotion } from "@/lib/gameEmotion";
 
 interface GameCardProps {
   homeTeam: string;
@@ -85,8 +86,25 @@ export default function GameCard({
         : "경기 전";
   const statusColor = cancelled ? "#888" : status === "live" ? "#ef4444" : "#888";
 
-  const awayEmotion = status === "scheduled" ? "determined" : awayWon === true ? "joyful" : isDraw || cancelled ? "neutral" : awayWon === false ? "sad" : "default" as const;
-  const homeEmotion = status === "scheduled" ? "determined" : homeWon === true ? "joyful" : isDraw || cancelled ? "neutral" : homeWon === false ? "sad" : "default" as const;
+  const gameStatus = cancelled ? "cancelled" as const : status;
+  const awayEmotion = computeGameEmotion({
+    status: gameStatus,
+    myScore: awayScore ?? 0,
+    oppScore: homeScore ?? 0,
+    inning: liveInning ?? 0,
+    isTop: isTop ?? true,
+    isMyHome: false,
+    ...(relay ? { base1: relay.base1, base2: relay.base2, base3: relay.base3 } : {}),
+  });
+  const homeEmotion = computeGameEmotion({
+    status: gameStatus,
+    myScore: homeScore ?? 0,
+    oppScore: awayScore ?? 0,
+    inning: liveInning ?? 0,
+    isTop: isTop ?? true,
+    isMyHome: true,
+    ...(relay ? { base1: relay.base1, base2: relay.base2, base3: relay.base3 } : {}),
+  });
 
   const styles = useMemo(() => StyleSheet.create({
     // Main card
