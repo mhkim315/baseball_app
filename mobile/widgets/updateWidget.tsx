@@ -276,4 +276,7 @@ export async function updateWidgetPeriodic(): Promise<void> {
 
   // If there is still absolutely no data, we will render noGameView.
   await updateAllWidgets(myTeam, data);
+
+  // Auto-stop handled by taskHandler.tsx after refresh completes
+  // (avoids require() in headless context that may fail in Hermes)
 }
