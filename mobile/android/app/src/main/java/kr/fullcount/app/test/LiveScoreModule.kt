@@ -14,12 +14,18 @@ class LiveScoreModule(private val reactContext: ReactApplicationContext) : React
 
     @ReactMethod
     fun startService() {
-        val intent = Intent(reactContext, LiveScoreService::class.java)
-        intent.action = "START_SERVICE"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            reactContext.startForegroundService(intent)
-        } else {
-            reactContext.startService(intent)
+        try {
+            val intent = Intent(reactContext, LiveScoreService::class.java)
+            intent.action = "START_SERVICE"
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                reactContext.startForegroundService(intent)
+            } else {
+                reactContext.startService(intent)
+            }
+        } catch (e: Exception) {
+            // Android 12+ blocks startForegroundService from background (after force-stop)
+            // User must open the app once before widget REFRESH will work
+            android.util.Log.w("LiveScoreModule", "Cannot start service from background", e)
         }
     }
 
