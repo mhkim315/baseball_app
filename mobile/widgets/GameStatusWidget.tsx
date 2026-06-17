@@ -552,9 +552,9 @@ function view2x2Finished(data: WidgetGameData, away: ReturnType<typeof getTeamIn
             <TextWidget text={data.awayScore} style={{ fontSize: 28, fontWeight: "700", color: awayWon ? away.scoreColor : alpha(away.scoreColor, "77") }} />
           </FlexWidget>
 
-          <FlexWidget style={{ width: 20, alignItems: "center", justifyContent: "center" }}>
-            <FlexWidget style={{ height: 14 }} />
-            <TextWidget text=":" style={{ fontSize: 20, fontWeight: "700", color: FG_73 }} />
+          <FlexWidget style={{ width: 24, alignItems: "center", justifyContent: "flex-start" }}>
+            <FlexWidget style={{ height: 78 }} />
+            <TextWidget text=":" style={{ fontSize: 22, fontWeight: "700", color: FG_73 }} />
           </FlexWidget>
 
           <FlexWidget style={{ alignItems: "center", flex: 1 }}>
@@ -763,7 +763,7 @@ function view4x2(data: WidgetGameData) {
             </FlexWidget>
 
             <FlexWidget style={{ flex: 1, alignItems: "center", justifyContent: "center", flexDirection: "row" }}>
-              <FlexWidget style={{ height: 18 }} />
+              <FlexWidget style={{ height: 24 }} />
               <TextWidget text={away.scoreText} style={{ fontSize: 40, fontWeight: "700", color: awayWon ? away.scoreColor : alpha(away.scoreColor, "99") }} />
               <FlexWidget style={{marginHorizontal: 12}}><TextWidget text=" : " style={{ fontSize: 24, fontWeight: "700", color: FG_73 }} /></FlexWidget>
               <TextWidget text={home.scoreText} style={{ fontSize: 40, fontWeight: "700", color: homeWon ? home.scoreColor : alpha(home.scoreColor, "99") }} />
