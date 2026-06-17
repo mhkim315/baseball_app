@@ -68,8 +68,8 @@ class LiveScoreService : Service() {
                 applicationContext.startService(serviceIntent)
                 HeadlessJsTaskService.acquireWakeLockNow(applicationContext)
                 
-                // Poll every 5 seconds (5000 ms)
-                handler?.postDelayed(this, 5000)
+                // Poll every 6 seconds (6000 ms) — aligns with server 7s cache TTL
+                handler?.postDelayed(this, 6000)
             }
         }
         handler?.post(runnable!!)
