@@ -280,3 +280,57 @@ npx eas update --branch test --message "설명"
 - `mobile/widgets/taskHandler.tsx` — 위젯 이벤트 핸들러
 - `mobile/lib/TeamContext.tsx` — 팀 상태 관리
 - `server/data_api/main.py` — `/widget-data` API (rank/streak 포함)
+
+---
+
+## 7. 2026-06-17 추가 버그 픽스
+
+### 🔴 Category E: Naver API 전면 변경 대응
+
+서버 `/widget-data`가 500 에러 후 모든 경기 `scheduled` 표시. Naver가 API 응답 구조 전면 개편.
+
+| # | 변경 전 | 변경 후 | 영향 |
+|---|---------|---------|------|
+| E1 | `status` | `statusCode` | 모든 경기 scheduled 오판 |
+| E2 | `homeScore`/`awayScore` | `homeTeamScore`/`awayTeamScore` | 점수 null |
+| E3 | relay 최상위 `currentGameState` | `textRelayData.currentGameState` | BSO/주자 null |
+| E4 | `homeEntry`/`awayEntry` list | dict (`pitcher`/`batter` 키) | p2n 매핑 실패 |
+| E5 | base 값 `"0"`/`"1"` | 선수 번호 (예: `"7"`) | 주루 오탐지 |
+| E6 | `homeOrAway` int | `homeOrAway` str (`"0"`) | `isTop` 비교 실패 (`"0" == 0` → False) |
+
+### 🔴 Category F: Hermes require() 함수 내 호출 → 포그라운드 먹통
+
+| 항목 | 내용 |
+|------|------|
+| **증상** | OTA 이후 포그라운드 서비스가 완전히 먹통. REFRESH 무응답, 데이터 갱신 안 됨 |
+| **발생일** | 2026-06-17 |
+| **근본 원인** | `updateWidget.tsx`에서 `require("react-native")`를 async 함수 내부에서 호출. Hermes 엔진은 `require()`를 모듈 최상위에서만 허용. 함수 내 `require()` → crash → try-catch로 삼켜짐 → `updateWidgetPeriodic` 전체 중단 |
+| **해결** | 자동종료 로직을 `taskHandler.tsx`로 이동 (최상위에서 `NativeModules` import). `updateWidget.tsx`에서 `require()` 제거 |
+| **커밋** | `4e0eff5` |
+| **재발 방지** | **절대 함수 내에서 `require()` 호출하지 말 것.** 필요한 모듈은 파일 최상단에서 import |
+
+### 🟡 Category G: 투수/타자명 미표시
+
+| 항목 | 내용 |
+|------|------|
+| **증상** | 위젯/앱에서 `P:` `B:` 옆에 이름이 "-" 또는 빈 값으로 표시 |
+| **근본 원인** | Naver API 변경(E4)으로 `homeEntry`/`awayEntry`가 list→dict로 바뀌며 pcode→name lookup 실패 |
+| **타자 해결** | `textRelays` 전체 스캔 → `pcode→name` 맵 구축 → `currentGameState.batter` pcode로 현재 타자명 조회 |
+| **투수 해결 (2단계)** | 1) 스케줄 API의 `awayCurrentPitcherName`/`homeCurrentPitcherName`을 widget-data 응답에 `awayCurrentPitcher`/`homeCurrentPitcher`로 추가 (경기 중 불펜 교체도 실시간 반영). 2) `isTop` 기준으로 수비 중인 팀의 현재 투수를 `relay.pitcher.name`에 주입 |
+
+### 🟢 Category H: FCM Push 비활성화
+
+- **배경**: `push_worker.py`가 1:1 개별 FCM 전송 → 수백 명만 돼도 병목
+- **판단**: 앱 폴링(16s) + 위젯 포그라운드(6s) + 수동 REFRESH로 실시간성 충분
+- **설정**: `ENABLE_PUSH_NOTIFICATIONS=false` (systemd override)
+- **영향**: 백그라운드 완전 종료 시 15~30분 OS 주기로만 갱신 (위젯 provider `updatePeriodMillis=900000` 으로 개선)
+
+### 🟢 Category I: 포그라운드 자동종료 + Doze 대응
+
+| 항목 | 내용 |
+|------|------|
+| **자동종료** | `LiveScoreTask`에서 매 주기 `data.status !== "live"` 체크 → 경기 종료 시 `stopService()` |
+| **안전장치** | Kotlin `LiveScoreService`에 60분 타임아웃 (APK 빌드 필요) |
+| **15분 주기 wake** | 모든 위젯 provider `updatePeriodMillis`: 0 → 900000 (APK 빌드 필요) |
+| **Doze 동작** | AOD ON → Handler 정상, AOD OFF → 콜백 큐에 쌓임 → 화면 ON 시 순차 실행 |
+| **개선 과제** | AlarmManager 전환 (다음 APK) |
