@@ -318,6 +318,9 @@ export default function HomeScreen() {
                   if (info) {
                     liveInning = info.inning;
                     isTop = info.isTop;
+                  } else if (wg.relay?.inning && wg.relay.inning !== "0") {
+                    liveInning = parseInt(wg.relay.inning, 10);
+                    isTop = wg.relay.isTop === "1";
                   } else {
                     liveInning = 1;
                     isTop = true;
