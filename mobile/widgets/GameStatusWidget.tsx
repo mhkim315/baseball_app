@@ -553,8 +553,8 @@ function view2x2Finished(data: WidgetGameData, away: ReturnType<typeof getTeamIn
             {awayWon ? <TextWidget text="WIN" style={{ fontSize: 10, fontWeight: "700", color: "#d32f2f" }} /> : null}
           </FlexWidget>
 
-          <FlexWidget style={{ width: 28, alignItems: "center" }}>
-            {data.time ? <TextWidget text={data.time} style={{ fontSize: 11, fontWeight: "700", color: DARK_FG }} /> : null}
+          <FlexWidget style={{ width: 20, alignItems: "center", justifyContent: "center" }}>
+            <TextWidget text=":" style={{ fontSize: 20, fontWeight: "700", color: FG_73 }} />
           </FlexWidget>
 
           <FlexWidget style={{ alignItems: "center", flex: 1 }}>
