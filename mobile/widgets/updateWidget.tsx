@@ -244,7 +244,7 @@ export async function updateWidgetPeriodic(): Promise<void> {
         stadium: myGame.venue || "",
         awayPitcher: myGame.awayStarter || undefined,
         homePitcher: myGame.homeStarter || undefined,
-        currentPitcher: myGame.relay?.pitcher?.name || undefined,
+        currentPitcher: myGame.relay?.isTop === "1" ? (myGame.homeCurrentPitcher || undefined) : (myGame.awayCurrentPitcher || undefined),
         currentBatter: myGame.relay?.batter?.name || undefined,
         weather: weatherData ? `${weatherData.temp}° ${weatherData.condition}` : undefined,
         ball: myGame.relay?.ball?.toString(),
