@@ -129,7 +129,7 @@ function getTeamInfo(data: WidgetGameData, isHome: boolean) {
       : `P:${data.currentPitcher || (isHome ? data.homePitcher : data.awayPitcher) || ""}`;
   } else if (isScheduled) {
     const p = isHome ? data.homePitcher : data.awayPitcher;
-    pbText = p || "";
+    pbText = p || " ";
   }
 
   const scoreText = (isScheduled || data.status === "cancelled") ? "" : (isHome ? data.homeScore : data.awayScore);
