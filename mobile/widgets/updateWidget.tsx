@@ -1,6 +1,9 @@
-import { requestWidgetUpdate } from "react-native-android-widget";
+import { requestWidgetUpdate, FlexWidget, TextWidget } from "react-native-android-widget";
 import { getMyTeamForWidget, SHORT_CODE_TO_TEAM_ID, SHORT_CODE_TO_NAME } from "@/lib/teamStorage";
 import { GameStatusWidget } from "./GameStatusWidget";
+
+// 🔴 RAW TEST — bypass GameStatusWidget entirely for pipeline diagnosis
+const WIDGET_RAW_TEST = true;
 
 import { getInningInfo } from "@shared/gameStatus";
 
@@ -65,19 +68,30 @@ function buildWidgetProps(data: Record<string, string>): WidgetGameData {
 async function updateAllWidgets(myTeam: string, data: WidgetGameData | null) {
   for (const widgetName of WIDGET_NAMES) {
     try {
-      await requestWidgetUpdate({
-        widgetName,
-        renderWidget: (widgetInfo) => {
-          return (
-            <GameStatusWidget
-              width={widgetInfo.width}
-              height={widgetInfo.height}
-              data={data}
-              myTeam={myTeam}
-            />
-          );
-        },
-      });
+      if (WIDGET_RAW_TEST) {
+        await requestWidgetUpdate({
+          widgetName,
+          renderWidget: () => (
+            <FlexWidget style={{ width: "match_parent", height: "match_parent", backgroundColor: "#ff4444", justifyContent: "center", alignItems: "center", borderRadius: 16 }}>
+              <TextWidget text="TEST OK" style={{ fontSize: 24, color: "#ffffff", fontWeight: "700" }} />
+            </FlexWidget>
+          ),
+        });
+      } else {
+        await requestWidgetUpdate({
+          widgetName,
+          renderWidget: (widgetInfo) => {
+            return (
+              <GameStatusWidget
+                width={widgetInfo.width}
+                height={widgetInfo.height}
+                data={data}
+                myTeam={myTeam}
+              />
+            );
+          },
+        });
+      }
     } catch (e) {
       console.warn(`updateAllWidgets: requestWidgetUpdate failed for ${widgetName}`, e);
     }
