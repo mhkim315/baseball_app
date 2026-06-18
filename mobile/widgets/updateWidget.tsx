@@ -34,7 +34,6 @@ export interface WidgetGameData {
   base3?: string;
   currentPitcher?: string;
   currentBatter?: string;
-  fetchedAt?: number;
   scoreBoard?: any;
   relay?: any;
   rank?: string;
@@ -114,16 +113,11 @@ let _lastWidgetGame: WidgetGameData | null = null;
 // 🔴 MOCK LIVE GAME — set to true for testing widget layouts
 const WIDGET_MOCK_LIVE = false;
 
-export async function updateWidgetPeriodic(revalidate = true): Promise<void> {
+export async function updateWidgetPeriodic(): Promise<void> {
   const myTeam = await getMyTeamForWidget();
   if (!myTeam) return;
 
   let data: WidgetGameData | null = null;
-
-  if (!revalidate) {
-    await updateAllWidgets(_lastWidgetGame, myTeam);
-    return;
-  }
 
   // 🔴 MOCK: simulate live game for widget testing
   if (WIDGET_MOCK_LIVE) {
@@ -137,7 +131,6 @@ export async function updateWidgetPeriodic(revalidate = true): Promise<void> {
       inning: "5",
       isTop: "1",
       status: "live",
-      fetchedAt: Date.now(),
       homeIsMyTeam: mockIsHome,
       time: "18:30",
       stadium: "잠실",
@@ -240,8 +233,7 @@ export async function updateWidgetPeriodic(revalidate = true): Promise<void> {
         awayScore: myGame.score?.away?.toString() || "0",
         inning,
         isTop,
-        fetchedAt: Date.now(),
-        homeIsMyTeam: (SHORT_CODE_TO_TEAM_ID[myGame.homeTeam] || myGame.homeTeam) === myTeam,
+          homeIsMyTeam: (SHORT_CODE_TO_TEAM_ID[myGame.homeTeam] || myGame.homeTeam) === myTeam,
         status: myGame.status || "scheduled",
         time: myGame.time || "",
         stadium: myGame.venue || "",
