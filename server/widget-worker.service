@@ -1,0 +1,15 @@
+[Unit]
+Description=Widget Data Worker
+After=network.target
+
+[Service]
+Type=simple
+User=opc
+WorkingDirectory=/home/opc/fullcount_backend
+ExecStart=/home/opc/fullcount_backend/venv/bin/uvicorn widget_worker:app --host 127.0.0.1 --port 8001
+Restart=always
+RestartSec=3
+Environment=DATA_DIR=/home/opc/fullcount_backend/repo/data
+
+[Install]
+WantedBy=multi-user.target
