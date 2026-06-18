@@ -34,6 +34,7 @@ export interface WidgetGameData {
   base3?: string;
   currentPitcher?: string;
   currentBatter?: string;
+  fetchedAt?: number;
   scoreBoard?: any;
   relay?: any;
   rank?: string;
@@ -131,6 +132,7 @@ export async function updateWidgetPeriodic(): Promise<void> {
       inning: "5",
       isTop: "1",
       status: "live",
+      fetchedAt: Date.now(),
       homeIsMyTeam: mockIsHome,
       time: "18:30",
       stadium: "잠실",
@@ -233,6 +235,7 @@ export async function updateWidgetPeriodic(): Promise<void> {
         awayScore: myGame.score?.away?.toString() || "0",
         inning,
         isTop,
+        fetchedAt: Date.now(),
         homeIsMyTeam: (SHORT_CODE_TO_TEAM_ID[myGame.homeTeam] || myGame.homeTeam) === myTeam,
         status: myGame.status || "scheduled",
         time: myGame.time || "",
