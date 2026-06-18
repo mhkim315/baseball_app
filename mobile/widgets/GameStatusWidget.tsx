@@ -151,9 +151,18 @@ function getHeaderInfo(data: WidgetGameData) {
   return { isLive, statusText, bCnt, sCnt, oCnt };
 }
 
-function ColorBg({ children }: { children: any }) {
+function widgetAction(status: string): string {
+  switch (status) {
+    case "scheduled": return "fullcount://stadium";
+    case "live":      return "fullcount://sticker";
+    case "finished":  return "fullcount://diary";
+    default:          return "OPEN_APP";
+  }
+}
+
+function ColorBg({ children, status }: { children: any; status?: string }) {
   return (
-    <FlexWidget style={{ width: "match_parent", height: "match_parent", backgroundColor: "#f5f0eb", borderRadius: 16 }} clickAction="OPEN_APP">
+    <FlexWidget style={{ width: "match_parent", height: "match_parent", backgroundColor: "#f5f0eb", borderRadius: 16 }} clickAction={widgetAction(status || "")}>
       {children}
     </FlexWidget>
   );
@@ -234,7 +243,7 @@ function view2x1(data: WidgetGameData) {
 
   if (isScheduled) {
     return (
-      <ColorBg>
+      <ColorBg status={data.status}>
         <FlexWidget style={{ flex: 1, flexDirection: "column", justifyContent: "center", padding: 8, paddingHorizontal: 12 }}>
           <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "match_parent" }}>
             <TextWidget text={away.teamName} style={{ fontSize: 13, fontWeight: "700", color: away.nameColor }} />
@@ -252,7 +261,7 @@ function view2x1(data: WidgetGameData) {
 
   if (isFinished) {
     return (
-      <ColorBg>
+      <ColorBg status={data.status}>
         <FlexWidget style={{ flex: 1, flexDirection: "column", justifyContent: "center", padding: 8, paddingHorizontal: 12 }}>
           <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "match_parent" }}>
             <TextWidget text={away.teamName} style={{ fontSize: 13, fontWeight: "700", color: away.nameColor }} />
@@ -273,7 +282,7 @@ function view2x1(data: WidgetGameData) {
   }
 
   return (
-    <ColorBg>
+    <ColorBg status={data.status}>
       <FlexWidget style={{ flex: 1, flexDirection: "column", justifyContent: "space-between", padding: 8, paddingHorizontal: 12 }}>
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: "match_parent" }}>
           <TextWidget text={head.statusText} style={{ fontSize: 10, fontWeight: "700", color: head.isLive ? "#e07b3c" : FG_93 }} />
@@ -339,7 +348,7 @@ function view4x1(data: WidgetGameData) {
 
   if (isScheduled) {
     return (
-      <ColorBg>
+      <ColorBg status={data.status}>
         <FlexWidget style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 8, paddingHorizontal: 24, width: "match_parent" }}>
           <FlexWidget style={{ alignItems: "center" }}>
             <ImageWidget image={away.charImage} imageWidth={32} imageHeight={32} />
@@ -366,7 +375,7 @@ function view4x1(data: WidgetGameData) {
     const homeWon = parseInt(data.homeScore) > parseInt(data.awayScore);
 
     return (
-      <ColorBg>
+      <ColorBg status={data.status}>
         <FlexWidget style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 8, paddingHorizontal: 24, width: "match_parent" }}>
           <FlexWidget style={{ alignItems: "center" }}>
             <ImageWidget image={away.charImage} imageWidth={32} imageHeight={32} />
@@ -393,7 +402,7 @@ function view4x1(data: WidgetGameData) {
   }
 
   return (
-    <ColorBg>
+    <ColorBg status={data.status}>
       <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 8, paddingHorizontal: 12, width: "match_parent" }}>
         <FlexWidget style={{ flexDirection: "row", alignItems: "center", width: "match_parent" }}>
           <TextWidget text={head.isLive ? head.statusText : (`${data.stadium || "오늘 경기"} ${data.weather || ""}`.trim() || " ")} style={{ fontSize: 10, fontWeight: "700", color: head.isLive ? "#e07b3c" : FG_93 }} />
@@ -473,7 +482,7 @@ function view2x2Scheduled(data: WidgetGameData, away: ReturnType<typeof getTeamI
   const hasExtraInfo = hasRank || hasStreak;
 
   return (
-    <ColorBg>
+    <ColorBg status={data.status}>
       <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 10, width: "match_parent" }}>
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "match_parent" }}>
           <TextWidget text={headerText} style={{ fontSize: 11, fontWeight: "700", color: FG_87 }} />
@@ -534,7 +543,7 @@ function view2x2Finished(data: WidgetGameData, away: ReturnType<typeof getTeamIn
   const homeWon = parseInt(data.homeScore) > parseInt(data.awayScore);
 
   return (
-    <ColorBg>
+    <ColorBg status={data.status}>
       <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 10, width: "match_parent" }}>
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "match_parent" }}>
           <TextWidget text="경기 종료" style={{ fontSize: 11, fontWeight: "700", color: FG_87 }} />
@@ -583,7 +592,7 @@ function view2x2Finished(data: WidgetGameData, away: ReturnType<typeof getTeamIn
 
 function view2x2Cancelled(data: WidgetGameData, away: ReturnType<typeof getTeamInfo>, home: ReturnType<typeof getTeamInfo>) {
   return (
-    <ColorBg>
+    <ColorBg status={data.status}>
       <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 10, width: "match_parent" }}>
         <FlexWidget style={{ flexDirection: "row", justifyContent: "flex-end", width: "match_parent" }}>
           <FlexWidget clickAction="REFRESH" style={{ padding: 2 }}>
@@ -619,7 +628,7 @@ function view2x2Live(data: WidgetGameData, away: ReturnType<typeof getTeamInfo>,
   const locationText = data.stadium ? (weatherText ? `${data.stadium} ${weatherText}` : data.stadium) : "오늘 경기";
 
   return (
-    <ColorBg>
+    <ColorBg status={data.status}>
       <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 10, width: "match_parent" }}>
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "match_parent" }}>
           <TextWidget text={locationText} style={{ fontSize: 11, fontWeight: "700", color: FG_93 }} />
@@ -689,7 +698,7 @@ function view4x2(data: WidgetGameData) {
 
   if (isScheduled) {
     return (
-      <ColorBg>
+      <ColorBg status={data.status}>
         <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 16, paddingHorizontal: 24, width: "match_parent" }}>
           <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
             <TextWidget text={`${data.stadium || "오늘 경기"} ${data.weather || ""}`.trim() || " "} style={{ fontSize: 13, fontWeight: "700", color: FG_93 }} />
@@ -745,7 +754,7 @@ function view4x2(data: WidgetGameData) {
     const homeWon = parseInt(data.homeScore) > parseInt(data.awayScore);
 
     return (
-      <ColorBg>
+      <ColorBg status={data.status}>
         <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 16, paddingHorizontal: 24, width: "match_parent" }}>
           <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
             <TextWidget text={`${data.stadium || "오늘 경기"} ${data.weather || ""}`.trim() || " "} style={{ fontSize: 13, fontWeight: "700", color: FG_87 }} />
@@ -793,7 +802,7 @@ function view4x2(data: WidgetGameData) {
   const locationText = data.stadium ? (data.weather ? `${data.stadium} ${data.weather}` : data.stadium) : "오늘 경기";
 
   return (
-    <ColorBg>
+    <ColorBg status={data.status}>
       <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 12, paddingHorizontal: 20, width: "match_parent" }}>
         <FlexWidget style={{ flexDirection: "row", alignItems: "center", width: "match_parent", justifyContent: "space-between" }}>
           <TextWidget text={locationText} style={{ fontSize: 13, fontWeight: "700", color: FG_93 }} />
