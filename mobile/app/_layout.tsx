@@ -1,5 +1,4 @@
-import { Stack, useRouter } from "expo-router";
-import { useURL } from "expo-linking";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemeProvider, useTheme } from "@/lib/ThemeContext";
@@ -60,17 +59,6 @@ function RootLayoutInner() {
   const hideSplashCalled = useRef(false);
 
   usePushSetup();
-
-  // Handle widget deep links
-  const router = useRouter();
-  const url = useURL();
-  useEffect(() => {
-    if (!url) return;
-    const { hostname } = new URL(url);
-    if (hostname === "stadium") router.replace("/(tabs)/stadium");
-    else if (hostname === "sticker") router.replace("/(tabs)/home");
-    else if (hostname === "diary") router.replace("/(tabs)/home");
-  }, [url]);
 
   useEffect(() => {
     if (hideSplashCalled.current) return;
