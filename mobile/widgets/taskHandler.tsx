@@ -1,8 +1,6 @@
-import { registerWidgetTaskHandler, type WidgetTaskHandlerProps } from "react-native-android-widget";
-import { updateWidgetPeriodic, getLastWidgetGame } from "./updateWidget";
-import { NativeModules, AppRegistry } from "react-native";
+import { registerWidgetTaskHandler } from "react-native-android-widget";
+import { updateWidgetPeriodic } from "./updateWidget";
 
-const { LiveScoreModule } = NativeModules;
 async function taskHandler(props: any) {
   switch (props.widgetAction) {
     case "WIDGET_ADDED":
@@ -12,42 +10,14 @@ async function taskHandler(props: any) {
       await updateWidgetPeriodic();
       break;
     case "WIDGET_CLICK":
-      if (props.clickAction === "TOGGLE_LIVE") {
-        if (LiveScoreModule) {
-          LiveScoreModule.startService();
-        }
-      } else if (props.clickAction === "STOP_LIVE") {
-        if (LiveScoreModule) {
-          LiveScoreModule.stopService();
-        }
-      } else if (props.clickAction === "REFRESH") {
+      if (props.clickAction === "REFRESH") {
         await updateWidgetPeriodic();
-        const data = getLastWidgetGame();
-        if (LiveScoreModule) {
-          if (data?.status === "live") {
-            LiveScoreModule.startService();
-          } else {
-            LiveScoreModule.stopService();
-          }
-        }
-        return; // already updated
+        return;
       }
       await updateWidgetPeriodic();
       break;
   }
 }
-
-AppRegistry.registerHeadlessTask("LiveScoreTask", () => async () => {
-  try {
-    await updateWidgetPeriodic();
-    const data = getLastWidgetGame();
-    if (LiveScoreModule && data && data.status !== "live") {
-      LiveScoreModule.stopService();
-    }
-  } catch (e) {
-    console.warn("LiveScoreTask failed", e);
-  }
-});
 
 export function registerWidgetTasks() {
   registerWidgetTaskHandler(taskHandler);

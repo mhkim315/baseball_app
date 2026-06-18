@@ -110,10 +110,6 @@ export async function updateWidgetFromFCM(data: Record<string, string>): Promise
 
 let _lastWidgetGame: WidgetGameData | null = null;
 
-export function getLastWidgetGame(): WidgetGameData | null {
-  return _lastWidgetGame;
-}
-
 // 🔴 MOCK LIVE GAME — set to true for testing widget layouts
 const WIDGET_MOCK_LIVE = false;
 
