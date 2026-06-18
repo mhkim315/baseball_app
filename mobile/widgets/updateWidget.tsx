@@ -3,7 +3,7 @@ import { getMyTeamForWidget, SHORT_CODE_TO_TEAM_ID, SHORT_CODE_TO_NAME } from "@
 import { GameStatusWidget } from "./GameStatusWidget";
 
 // 🔴 RAW TEST — bypass GameStatusWidget entirely for pipeline diagnosis
-const WIDGET_RAW_TEST = true;
+const WIDGET_RAW_TEST = false;
 
 import { getInningInfo } from "@shared/gameStatus";
 
@@ -127,7 +127,7 @@ export function getLastWidgetGame(): WidgetGameData | null {
 }
 
 // 🔴 MOCK LIVE GAME — set to true for testing widget layouts
-const WIDGET_MOCK_LIVE = true;
+const WIDGET_MOCK_LIVE = false;
 
 export async function updateWidgetPeriodic(): Promise<void> {
   let myTeam: string | null = null;

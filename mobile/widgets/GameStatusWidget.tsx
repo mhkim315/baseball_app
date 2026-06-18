@@ -6,7 +6,7 @@ import type { CharacterEmotion } from "@/lib/emotions";
 const WIDGET_BUILD = "OTA-v41-master-layouts";
 
 // 🔴 NO IMAGE TEST — set to true to test rendering without images
-const WIDGET_NO_IMAGE = true;
+const WIDGET_NO_IMAGE = false;
 
 export interface WidgetGameData {
   homeTeam: string;
