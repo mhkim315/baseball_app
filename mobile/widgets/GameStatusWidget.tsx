@@ -757,7 +757,7 @@ function view4x2(data: WidgetGameData) {
 
           <FlexWidget style={{ flex: 1 }} />
 
-          <FlexWidget style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", width: "match_parent" }}>
+          <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
             <FlexWidget style={{ alignItems: "center", width: 100 }}>
               {awayWon ? <TextWidget text="WIN" style={{ fontSize: 13, fontWeight: "700", color: "#d32f2f" }} /> : <FlexWidget style={{ height: 18 }} />}
               <ImageWidget image={away.charImage} imageWidth={52} imageHeight={52} />
