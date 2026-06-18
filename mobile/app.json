@@ -88,13 +88,13 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "61b58472-e18f-48c4-8471-fa6fa4294c42"
+        "projectId": "86749cb8-778f-4eba-a5ad-afd1409c8138"
       }
     },
-    "owner": "duboo82",
+    "owner": "nanimi",
     "runtimeVersion": "3.0.0",
     "updates": {
-      "url": "https://u.expo.dev/61b58472-e18f-48c4-8471-fa6fa4294c42"
+      "url": "https://u.expo.dev/86749cb8-778f-4eba-a5ad-afd1409c8138"
     }
   }
 }

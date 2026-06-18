@@ -22,14 +22,15 @@
       },
       "distribution": "internal",
       "channel": "test"
-    }
-  },
-  "submit": {
+    },
     "production": {
       "android": {
         "buildType": "app-bundle"
       },
       "channel": "production"
     }
+  },
+  "submit": {
+    "production": {}
   }
 }
