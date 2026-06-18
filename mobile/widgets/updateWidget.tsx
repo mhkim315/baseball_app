@@ -113,7 +113,10 @@ const WIDGET_MOCK_LIVE = false;
 
 export async function updateWidgetPeriodic(): Promise<void> {
   const myTeam = await getMyTeamForWidget();
-  if (!myTeam) return;
+  if (!myTeam) {
+    await updateAllWidgets("", null);
+    return;
+  }
 
   let data: WidgetGameData | null = null;
 
