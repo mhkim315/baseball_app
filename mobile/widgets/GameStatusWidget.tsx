@@ -114,8 +114,7 @@ function getTeamInfo(data: WidgetGameData, isHome: boolean) {
   const teamId = NAME_TO_TEAM_ID[teamName] || teamName.toLowerCase();
   
   const isMyHome = data.homeIsMyTeam;
-  const isMyTeam = isHome ? isMyHome : !isMyHome;
-  const emotion = computeWidgetEmotion(data, isMyTeam);
+  const emotion = computeWidgetEmotion(data, isHome);
   const charImage = LOCAL_CHARACTERS[`${teamId}_${emotion}`] || LOCAL_CHARACTERS[`${teamId}_default`] || LOCAL_CHARACTERS["doosan_default"];
   const nameColor = TEAM_NAME_COLOR[teamId] || DARK_FG;
   
