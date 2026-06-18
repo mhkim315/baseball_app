@@ -785,7 +785,7 @@ function view4x2(data: WidgetGameData) {
           </FlexWidget>
 
           <FlexWidget style={{ flexDirection: "row", justifyContent: "flex-end", width: "match_parent", marginTop: 6 }}>
-            <TextWidget text="오늘 경기 기록하기 👆" style={{ fontSize: 10, color: "#e07b3c", fontWeight: "600" }} />
+            <TextWidget text="오늘 경기 기록하기 ↵" style={{ fontSize: 10, color: "#e07b3c", fontWeight: "600" }} />
           </FlexWidget>
 
           <FlexWidget style={{ flex: 1 }} />
