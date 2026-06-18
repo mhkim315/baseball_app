@@ -432,15 +432,18 @@ export default function GameDetailScreen() {
       if (!wg) return;
       setDetail((prev) => {
         if (!prev) return prev;
+        const newLen = (wg.scoreBoard?.inn?.away?.length ?? 0) + (wg.scoreBoard?.inn?.home?.length ?? 0);
+        const prevLen = (prev.scoreBoard?.inn?.away?.length ?? 0) + (prev.scoreBoard?.inn?.home?.length ?? 0);
+        const ok = wg.status === "live" && newLen >= prevLen;
         return {
           ...prev,
           score: wg.score ?? prev.score,
           scoreBoard: {
             ...prev.scoreBoard,
-            rheb: wg.status === "live" ? (wg.scoreBoard?.rheb ?? prev.scoreBoard?.rheb) : prev.scoreBoard?.rheb,
-            inn: wg.status === "live" ? (wg.scoreBoard?.inn ?? prev.scoreBoard?.inn) : prev.scoreBoard?.inn,
+            rheb: ok ? (wg.scoreBoard?.rheb ?? prev.scoreBoard?.rheb) : prev.scoreBoard?.rheb,
+            inn: ok ? (wg.scoreBoard?.inn ?? prev.scoreBoard?.inn) : prev.scoreBoard?.inn,
           },
-          relay: wg.status === "live" ? (wg.relay ?? prev.relay) : prev.relay,
+          relay: ok ? (wg.relay ?? prev.relay) : prev.relay,
           gameInfo: prev.gameInfo ? { ...prev.gameInfo, status: wg.status } : prev.gameInfo,
         };
       });
