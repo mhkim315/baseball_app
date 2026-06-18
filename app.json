@@ -1,3 +1,100 @@
 {
-  "expo": {}
+  "expo": {
+    "name": "풀카운트_test",
+    "slug": "fullcount-kr",
+    "version": "3.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "scheme": "fullcount",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fde8d6"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "kr.fullcount.app",
+      "buildNumber": "3",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "직관일기 작성 시 사진을 첨부하기 위해 앨범 접근 권한이 필요합니다.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "allowBackup": false,
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#fde8d6"
+      },
+      "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "resize",
+      "package": "kr.fullcount.app.test",
+      "blockedPermissions": [
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO"
+      ],
+      "versionCode": 33
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      "expo-notifications",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "Widget2x2",
+              "label": "FullCount 2x2",
+              "description": "2x2 Widget",
+              "minWidth": "150dp",
+              "minHeight": "110dp",
+              "maxResizeWidth": "200dp",
+              "maxResizeHeight": "160dp",
+              "resizeMode": "horizontal|vertical",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "updatePeriodMillis": 900000
+            },
+            {
+              "name": "Widget4x2",
+              "label": "FullCount 4x2",
+              "description": "4x2 Widget",
+              "minWidth": "310dp",
+              "minHeight": "110dp",
+              "maxResizeWidth": "400dp",
+              "maxResizeHeight": "160dp",
+              "resizeMode": "horizontal|vertical",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "updatePeriodMillis": 900000
+            }
+          ]
+        }
+      ],
+      "expo-router"
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "86749cb8-778f-4eba-a5ad-afd1409c8138"
+      }
+    },
+    "owner": "nanimi",
+    "runtimeVersion": "3.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/86749cb8-778f-4eba-a5ad-afd1409c8138"
+    }
+  }
 }
