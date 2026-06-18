@@ -17,7 +17,10 @@ async function taskHandler(props: any) {
         const now = Date.now();
         if (now - _lastRefresh < COOLDOWN_MS) return;
         _lastRefresh = now;
-        await updateWidgetPeriodic();
+        for (let i = 0; i < 5; i++) {
+          await updateWidgetPeriodic();
+          if (i < 4) await new Promise<void>(r => setTimeout(r, 5_000));
+        }
         return;
       }
       await updateWidgetPeriodic();
