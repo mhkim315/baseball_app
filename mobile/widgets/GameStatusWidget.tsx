@@ -573,10 +573,10 @@ function view2x2Finished(data: WidgetGameData, away: ReturnType<typeof getTeamIn
 
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: "match_parent", marginTop: 4 }}>
           <TextWidget text={`${awayWon ? "승" : "패"}: ${data.awayPitcher || "-"}`} style={{ fontSize: 9, color: DARK_FG }} />
-          <TextWidget text="기록하기 ↵" style={{ fontSize: 9, color: "#e07b3c", fontWeight: "600" }} />
-        </FlexWidget>
-        <FlexWidget style={{ flexDirection: "row", justifyContent: "flex-end", width: "match_parent" }}>
           <TextWidget text={`${homeWon ? "승" : "패"}: ${data.homePitcher || "-"}`} style={{ fontSize: 9, color: DARK_FG }} />
+        </FlexWidget>
+        <FlexWidget style={{ flexDirection: "row", justifyContent: "flex-end", width: "match_parent", marginTop: 6 }}>
+          <TextWidget text="경기 기록하기 ↵" style={{ fontSize: 9, color: "#e07b3c", fontWeight: "600" }} />
         </FlexWidget>
 
         <FlexWidget style={{ flex: 1 }} />
