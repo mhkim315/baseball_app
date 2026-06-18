@@ -132,7 +132,7 @@ function getTeamInfo(data: WidgetGameData, isHome: boolean) {
     pbText = p || " ";
   }
 
-  const scoreText = (isScheduled || data.status === "cancelled") ? "" : (isHome ? data.homeScore : data.awayScore);
+  const scoreText = (isScheduled || data.status === "cancelled") ? " " : (isHome ? data.homeScore : data.awayScore);
 
   return { teamName, charImage, nameColor, scoreColor, pbText, scoreText };
 }
