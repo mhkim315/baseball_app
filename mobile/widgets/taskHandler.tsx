@@ -11,9 +11,13 @@ async function taskHandler(props: any) {
       break;
     case "WIDGET_CLICK":
       if (props.clickAction === "REFRESH") {
-        await updateWidgetPeriodic(true);                          // fetch + BSO visible
-        await new Promise<void>(r => setTimeout(r, 15_000));
-        await updateWidgetPeriodic(false);                        // re-render cached → BSO hidden
+        // 20s mini-polling: 5s interval x 4 updates, then hide BSO before context dies
+        for (let i = 0; i < 4; i++) {
+          await updateWidgetPeriodic(true);
+          if (i < 3) await new Promise<void>(r => setTimeout(r, 5_000));
+        }
+        await new Promise<void>(r => setTimeout(r, 5_000));
+        await updateWidgetPeriodic(false);
         return;
       }
       await updateWidgetPeriodic();
