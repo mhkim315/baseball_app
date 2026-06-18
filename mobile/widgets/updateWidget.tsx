@@ -113,7 +113,7 @@ export function getLastWidgetGame(): WidgetGameData | null {
 }
 
 // 🔴 MOCK LIVE GAME — set to true for testing widget layouts
-const WIDGET_MOCK_LIVE = false;
+const WIDGET_MOCK_LIVE = true;
 
 export async function updateWidgetPeriodic(): Promise<void> {
   let myTeam: string | null = null;
