@@ -145,9 +145,10 @@ export default function OnboardingScreen() {
       justifyContent: "center",
       gap: 12,
       marginBottom: 32,
+      paddingHorizontal: 4,
     },
     teamItem: {
-      width: 80,
+      width: Math.min(80, (screenWidth - 64 - 8 - 24) / 3),
       height: 94,
       justifyContent: "center",
       alignItems: "center",
