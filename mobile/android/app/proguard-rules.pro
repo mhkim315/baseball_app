@@ -11,4 +11,8 @@
 -keep class com.swmansion.reanimated.** { *; }
 -keep class com.facebook.react.turbomodule.** { *; }
 
+# react-native-android-widget
+-keep class com.reactnativeandroidwidget.** { *; }
+-keep class kr.fullcount.app.widget.** { *; }
+
 # Add any project specific keep options here:
