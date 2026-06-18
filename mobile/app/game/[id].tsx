@@ -437,10 +437,10 @@ export default function GameDetailScreen() {
           score: wg.score ?? prev.score,
           scoreBoard: {
             ...prev.scoreBoard,
-            rheb: wg.scoreBoard?.rheb ?? prev.scoreBoard?.rheb,
-            inn: wg.scoreBoard?.inn ?? prev.scoreBoard?.inn,
+            rheb: wg.status === "live" ? (wg.scoreBoard?.rheb ?? prev.scoreBoard?.rheb) : prev.scoreBoard?.rheb,
+            inn: wg.status === "live" ? (wg.scoreBoard?.inn ?? prev.scoreBoard?.inn) : prev.scoreBoard?.inn,
           },
-          relay: wg.relay ?? prev.relay,
+          relay: wg.status === "live" ? (wg.relay ?? prev.relay) : prev.relay,
           gameInfo: prev.gameInfo ? { ...prev.gameInfo, status: wg.status } : prev.gameInfo,
         };
       });
