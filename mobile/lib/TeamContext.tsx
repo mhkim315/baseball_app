@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import { getMyTeam, setMyTeam as setMyTeamInDb } from "@/lib/db";
+import { setWidgetTeam } from "@/lib/teamStorage";
 
 interface TeamContextValue {
   myTeam: string | null;
@@ -25,7 +26,12 @@ export function TeamProvider({ children }: { children: ReactNode }) {
 
   const setMyTeam = useCallback((team: string | null) => {
     setMyTeamState(team);
-    if (team) setMyTeamInDb(team);
+    if (team) {
+      setMyTeamInDb(team);
+      setWidgetTeam(team).catch(() => {});
+    } else {
+      setWidgetTeam(null).catch(() => {});
+    }
   }, []);
 
   return (
