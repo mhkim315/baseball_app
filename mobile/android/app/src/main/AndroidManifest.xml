@@ -39,12 +39,6 @@
         <data android:scheme="fullcount"/>
       </intent-filter>
     </activity>
-    <receiver android:name="com.reactnativeandroidwidget.RNWidgetProvider" android:exported="true">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/game_status_widget_info"/>
-    </receiver>
     <receiver android:name=".widget.Widget2x2" android:exported="false" android:label="FullCount 2x2">
       <intent-filter>
         <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
