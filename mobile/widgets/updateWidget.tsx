@@ -64,19 +64,23 @@ function buildWidgetProps(data: Record<string, string>): WidgetGameData {
 
 async function updateAllWidgets(myTeam: string, data: WidgetGameData | null) {
   for (const widgetName of WIDGET_NAMES) {
-    await requestWidgetUpdate({
-      widgetName,
-      renderWidget: (widgetInfo) => {
-        return (
-          <GameStatusWidget
-            width={widgetInfo.width}
-            height={widgetInfo.height}
-            data={data}
-            myTeam={myTeam}
-          />
-        );
-      },
-    });
+    try {
+      await requestWidgetUpdate({
+        widgetName,
+        renderWidget: (widgetInfo) => {
+          return (
+            <GameStatusWidget
+              width={widgetInfo.width}
+              height={widgetInfo.height}
+              data={data}
+              myTeam={myTeam}
+            />
+          );
+        },
+      });
+    } catch (e) {
+      console.warn(`updateAllWidgets: requestWidgetUpdate failed for ${widgetName}`, e);
+    }
   }
 }
 
