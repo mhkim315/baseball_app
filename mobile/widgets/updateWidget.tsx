@@ -114,8 +114,16 @@ let _lastWidgetGame: WidgetGameData | null = null;
 const WIDGET_MOCK_LIVE = false;
 
 export async function updateWidgetPeriodic(): Promise<void> {
-  const myTeam = await getMyTeamForWidget();
-  if (!myTeam) return;
+  let myTeam: string | null = null;
+  try {
+    myTeam = await getMyTeamForWidget();
+  } catch (e) {
+    console.warn("updateWidget: team lookup failed", e);
+  }
+  if (!myTeam) {
+    await updateAllWidgets("", null);
+    return;
+  }
 
   let data: WidgetGameData | null = null;
 
