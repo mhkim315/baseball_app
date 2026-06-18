@@ -1,0 +1,31 @@
+<resources>
+  <string name="app_name">풀카운트_test</string>
+  <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
+  <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
+  <string name="expo_runtime_version">3.0.0</string>
+  <string name="widget_widget1x1_description" translatable="false">1x1 Widget</string>
+  <string name="widget_widget1x2_description" translatable="false">1x2 Widget</string>
+  <string name="widget_widget1x3_description" translatable="false">1x3 Widget</string>
+  <string name="widget_widget1x4_description" translatable="false">1x4 Widget</string>
+  <string name="widget_widget1x5_description" translatable="false">1x5 Widget</string>
+  <string name="widget_widget2x1_description" translatable="false">2x1 Widget</string>
+  <string name="widget_widget2x2_description" translatable="false">2x2 Widget</string>
+  <string name="widget_widget2x3_description" translatable="false">2x3 Widget</string>
+  <string name="widget_widget2x4_description" translatable="false">2x4 Widget</string>
+  <string name="widget_widget2x5_description" translatable="false">2x5 Widget</string>
+  <string name="widget_widget3x1_description" translatable="false">3x1 Widget</string>
+  <string name="widget_widget3x2_description" translatable="false">3x2 Widget</string>
+  <string name="widget_widget3x3_description" translatable="false">3x3 Widget</string>
+  <string name="widget_widget3x4_description" translatable="false">3x4 Widget</string>
+  <string name="widget_widget3x5_description" translatable="false">3x5 Widget</string>
+  <string name="widget_widget4x1_description" translatable="false">4x1 Widget</string>
+  <string name="widget_widget4x2_description" translatable="false">4x2 Widget</string>
+  <string name="widget_widget4x3_description" translatable="false">4x3 Widget</string>
+  <string name="widget_widget4x4_description" translatable="false">4x4 Widget</string>
+  <string name="widget_widget4x5_description" translatable="false">4x5 Widget</string>
+  <string name="widget_widget5x1_description" translatable="false">5x1 Widget</string>
+  <string name="widget_widget5x2_description" translatable="false">5x2 Widget</string>
+  <string name="widget_widget5x3_description" translatable="false">5x3 Widget</string>
+  <string name="widget_widget5x4_description" translatable="false">5x4 Widget</string>
+  <string name="widget_widget5x5_description" translatable="false">5x5 Widget</string>
+</resources>
