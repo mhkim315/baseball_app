@@ -45,48 +45,6 @@
       </intent-filter>
       <meta-data android:name="android.appwidget.provider" android:resource="@xml/game_status_widget_info"/>
     </receiver>
-    <receiver android:name=".widget.Widget1x1" android:exported="false" android:label="FullCount 1x1">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget1x1"/>
-    </receiver>
-    <receiver android:name=".widget.Widget1x2" android:exported="false" android:label="FullCount 1x2">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget1x2"/>
-    </receiver>
-    <receiver android:name=".widget.Widget1x3" android:exported="false" android:label="FullCount 1x3">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget1x3"/>
-    </receiver>
-    <receiver android:name=".widget.Widget1x4" android:exported="false" android:label="FullCount 1x4">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget1x4"/>
-    </receiver>
-    <receiver android:name=".widget.Widget1x5" android:exported="false" android:label="FullCount 1x5">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget1x5"/>
-    </receiver>
-    <receiver android:name=".widget.Widget2x1" android:exported="false" android:label="FullCount 2x1">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget2x1"/>
-    </receiver>
     <receiver android:name=".widget.Widget2x2" android:exported="false" android:label="FullCount 2x2">
       <intent-filter>
         <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
@@ -94,131 +52,12 @@
       </intent-filter>
       <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget2x2"/>
     </receiver>
-    <receiver android:name=".widget.Widget2x3" android:exported="false" android:label="FullCount 2x3">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget2x3"/>
-    </receiver>
-    <receiver android:name=".widget.Widget2x4" android:exported="false" android:label="FullCount 2x4">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget2x4"/>
-    </receiver>
-    <receiver android:name=".widget.Widget2x5" android:exported="false" android:label="FullCount 2x5">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget2x5"/>
-    </receiver>
-    <receiver android:name=".widget.Widget3x1" android:exported="false" android:label="FullCount 3x1">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget3x1"/>
-    </receiver>
-    <receiver android:name=".widget.Widget3x2" android:exported="false" android:label="FullCount 3x2">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget3x2"/>
-    </receiver>
-    <receiver android:name=".widget.Widget3x3" android:exported="false" android:label="FullCount 3x3">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget3x3"/>
-    </receiver>
-    <receiver android:name=".widget.Widget3x4" android:exported="false" android:label="FullCount 3x4">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget3x4"/>
-    </receiver>
-    <receiver android:name=".widget.Widget3x5" android:exported="false" android:label="FullCount 3x5">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget3x5"/>
-    </receiver>
-    <receiver android:name=".widget.Widget4x1" android:exported="false" android:label="FullCount 4x1">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget4x1"/>
-    </receiver>
     <receiver android:name=".widget.Widget4x2" android:exported="false" android:label="FullCount 4x2">
       <intent-filter>
         <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
         <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
       </intent-filter>
       <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget4x2"/>
-    </receiver>
-    <receiver android:name=".widget.Widget4x3" android:exported="false" android:label="FullCount 4x3">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget4x3"/>
-    </receiver>
-    <receiver android:name=".widget.Widget4x4" android:exported="false" android:label="FullCount 4x4">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget4x4"/>
-    </receiver>
-    <receiver android:name=".widget.Widget4x5" android:exported="false" android:label="FullCount 4x5">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget4x5"/>
-    </receiver>
-    <receiver android:name=".widget.Widget5x1" android:exported="false" android:label="FullCount 5x1">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget5x1"/>
-    </receiver>
-    <receiver android:name=".widget.Widget5x2" android:exported="false" android:label="FullCount 5x2">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget5x2"/>
-    </receiver>
-    <receiver android:name=".widget.Widget5x3" android:exported="false" android:label="FullCount 5x3">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget5x3"/>
-    </receiver>
-    <receiver android:name=".widget.Widget5x4" android:exported="false" android:label="FullCount 5x4">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget5x4"/>
-    </receiver>
-    <receiver android:name=".widget.Widget5x5" android:exported="false" android:label="FullCount 5x5">
-      <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-        <action android:name="kr.fullcount.app.test.WIDGET_CLICK"/>
-      </intent-filter>
-      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_widget5x5"/>
     </receiver>
   </application>
 </manifest>
