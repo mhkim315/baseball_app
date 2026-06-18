@@ -15,7 +15,6 @@ import com.facebook.react.HeadlessJsTaskService
 
 class LiveScoreService : Service() {
     private val CHANNEL_ID = "LiveScoreChannel"
-    private val AUTO_STOP_MS = 60 * 60_000L // 60 min safety net (JS stops on game end)
     private var bgThread: HandlerThread? = null
     private var handler: Handler? = null
     private var runnable: Runnable? = null
@@ -83,7 +82,6 @@ class LiveScoreService : Service() {
         super.onDestroy()
         isRunning = false
         handler?.removeCallbacksAndMessages(null)
-        stopHandler?.removeCallbacksAndMessages(null)
         bgThread?.quitSafely()
     }
 
