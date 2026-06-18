@@ -2,8 +2,14 @@
 
 # Build rule
 - EAS build (`eas build`)은 사용자가 명시적으로 요청할 때만 실행할 것. 절대 자동으로 빌드하지 않음.
-- iOS와 Android는 동일한 `app.json`의 `version`을 사용함.
-- 빌드 시 `mobile/app.json`의 `version`과 `versionCode`(Android 전용)를 1씩 증가시킨 후 빌드할 것.
+- **빌드 전에 반드시 버전을 올릴 것.** 사용자에게 "버전 올리고 빌드할까요?"라고 먼저 확인.
+- **빌드 전에 반드시 빌드 실행 의사를 확인할 것.** "진행할까요?"라고 묻고 승인 후 실행.
+- iOS와 Android는 동일한 `mobile/app.json`의 `version`을 사용함.
+- 버전 업데이트 시 다음 4곳을 모두 동기화할 것:
+  1. `mobile/app.json` → `version` (예: 1.2.3), `buildNumber` (iOS), `versionCode` (Android)
+  2. `mobile/app.json` → `runtimeVersion` (policy 대신 하드코딩된 문자열)
+  3. `mobile/android/app/build.gradle` → `versionCode`, `versionName`
+  4. `mobile/android/app/src/main/res/values/strings.xml` → `expo_runtime_version`
 - 앱 내 버전 표시(`my.tsx` 설정 화면 하단)는 `Constants.expoConfig.version`을 읽으므로, `app.json`의 `version`만 수정하면 자동 반영됨.
 
 # OTA update (eas update)
