@@ -220,6 +220,8 @@ export interface OnboardingData {
 // ─── Widget data types ────────────────────────────────────────
 
 export interface WidgetRelay {
+  inning?: string;
+  isTop?: string;
   strike: string;
   ball: string;
   out: string;

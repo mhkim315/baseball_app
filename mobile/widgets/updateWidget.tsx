@@ -20,7 +20,7 @@ export interface WidgetGameData {
   inning: string;
   isTop: string;
   status: string;
-  homeIsMyTeam?: boolean;
+  homeIsMyTeam: boolean;
   time?: string;
   stadium?: string;
   weather?: string;
@@ -53,6 +53,7 @@ function buildWidgetProps(data: Record<string, string>): WidgetGameData {
     inning: data.inning || "0",
     isTop: data.is_top || "0",
     status: data.status || "scheduled",
+    homeIsMyTeam: false,
     ball: data.ball,
     strike: data.strike,
     out: data.out,

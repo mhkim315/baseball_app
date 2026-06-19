@@ -8,6 +8,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: false,
     shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -54,12 +56,13 @@ export async function updateLockScreenScore(data: Record<string, string>) {
   if (enabledStr !== 'true') return;
 
   // 동일한 identifier로 호출하면 새 알림이 뜨는게 아니라 기존 알림의 내용이 덮어써짐
-  await Notifications.presentNotificationAsync({
-    identifier: data.game_id, 
+  await Notifications.scheduleNotificationAsync({
+    identifier: data.game_id,
     content: {
       title,
       body,
       autoDismiss: false,
     },
+    trigger: null, // present immediately (replaces deprecated presentNotificationAsync)
   });
 }
