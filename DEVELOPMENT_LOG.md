@@ -3282,6 +3282,8 @@ fd33c07 fix(widget): use schedule API current pitcher names for P/B display
 
 ### Phase 24: 위젯 1.3.1 안정화 + 서버 최적화 (2026-06-19)
 
+> **상세 서버 작업 로그**: `SERVER_LOG.md` 참고 (Naver API 변경 대응, Daum 폴백, 어댑터)
+
 **브랜치**: `test/stable-build` → 1.3.1 (35), master → iOS OTA 1.2.0
 
 #### 서버: widget_worker 경량 프록시로 전환 (243MB → 28MB)
