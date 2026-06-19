@@ -761,8 +761,8 @@ def _get_widget_data_cached() -> dict | None:
             gid = g.get("id", "")
             away = g.get("away", {}) or {}
             home = g.get("home", {}) or {}
-            aws = g.get("awayScore")  # from daily-scores style
-            hs = g.get("homeScore")
+            aws = g.get("score", {}).get("away") if isinstance(g.get("score"), dict) else None
+            hs = g.get("score", {}).get("home") if isinstance(g.get("score"), dict) else None
             away_st = None
             home_st = None
             for side, key in ((away, "away"), (home, "home")):
@@ -782,7 +782,7 @@ def _get_widget_data_cached() -> dict | None:
                 "gameIdx": 0,
                 "time": g.get("time", ""),
                 "venue": g.get("venue", ""),
-                "status": g.get("status", "scheduled"),
+                "status": _naver_status(g.get("status", "scheduled")),
                 "homeTeam": id_to_code.get(home.get("id", ""), home.get("id", "")),
                 "awayTeam": id_to_code.get(away.get("id", ""), away.get("id", "")),
                 "homeName": home.get("name", ""),
