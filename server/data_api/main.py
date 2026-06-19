@@ -838,8 +838,8 @@ def _get_widget_data_cached() -> dict | None:
         home_kr = _code_to_kr(home_code)
         away_kr = _code_to_kr(away_code)
 
-        hs = g.get("homeScore")
-        aws = g.get("awayScore")
+        hs = g.get("homeTeamScore")
+        aws = g.get("awayTeamScore")
 
         starters = starter_map.get(internal_id, {})
         home_starter = starters.get("home")
