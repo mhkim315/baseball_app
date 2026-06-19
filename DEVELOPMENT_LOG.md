@@ -3280,6 +3280,77 @@ fd33c07 fix(widget): use schedule API current pitcher names for P/B display
 - **결정**: FCM을 끄고 폴링/포그라운드 기반으로만 운영
 - **서버 설정**: `/etc/systemd/system/fullcount-api.service.d/push-override.conf` → `ENABLE_PUSH_NOTIFICATIONS=false` + `systemctl restart`
 
+### Phase 24: 위젯 1.3.1 안정화 + 서버 최적화 (2026-06-19)
+
+**브랜치**: `test/stable-build` → 1.3.1 (35), master → iOS OTA 1.2.0
+
+#### 서버: widget_worker 경량 프록시로 전환 (243MB → 28MB)
+- Naver API 호출을 main:8000으로 통합 (중복 호출 제거)
+- widget_worker:8001 → 1초 타이머로 main 폴링, in-memory 캐시 서빙만
+- `/widget-data` 요청 절대 블로킹 없음 (항상 2ms 응답)
+- systemd `fullcount-widget.service` 등록 (재부팅 생존)
+
+#### 서버: KBO fallback 추가
+- Naver API 실패 시 `today-games.json`(KBO API)로 폴백
+- `_naver_status()`: 텍스트/숫자 상태코드 모두 지원
+- `statusCode` 필드명 수정 (Naver API 변경 대응)
+- gameId에서 팀코드 파싱 fallback
+
+#### 서버: relay 캐시 백오프
+- 실패 시 `[1, 1, 3, 5, 5, 10]`초 간격으로 재시도
+- 성공 시 카운터 초기화
+- rate limiter localhost 예외 처리
+
+#### 앱: widget-data SSOT로 데이터 소스 통일
+- `home.tsx`: 오늘 경기 정보 `/widget-data` 단일 소스로
+- `nextGames`만 `/today-games` 유지
+- `SHORT_CODE_TO_TEAM_ID` 매핑으로 Naver코드↔내부ID 변환
+- widget-data → TodayGame 컨버터 추가
+
+#### 앱: TypeScript 오류 27→0
+- `WidgetRelay`: `inning`/`isTop` 필드 추가
+- `JikgwanRecord` import 누락 수정
+- `GridTimeline`: `parseDotDate` import 경로 수정
+- `StickerModal`: ref null guard + `setCapturing` 상태 수정
+- `DiaryEntryModal`: `isFutureGame` prop 전달
+- `records.ts`: `is_planned` Pick 타입 추가
+- `notification.ts`: Expo 54 `presentNotificationAsync`→`scheduleNotificationAsync`
+- `WidgetGameData`: `homeIsMyTeam` optional→required 통일
+
+#### 푸시 최적화
+- `push_worker`: BSO/주루 변경 감지 제거, 이닝 변경 감지 추가
+- 경기전 30분 간격 weather refresh push 추가
+- 경기당 푸시: ~24~29회 (득점 5-10 + 이닝 17 + 상태 2)
+
+#### 위젯 UI
+- 4x2 취소 레이아웃 추가 (구장+날씨 헤더)
+- 2x2 취소 레이아웃 헤더 추가
+- `getMyTeamForWidget()`: DB fallback 추가 (기존 사용자 마이팀 인식)
+
+#### 커밋
+```
+test/stable-build:
+91b6d91 fix(server): Naver API SSOT - widget_worker to proxy, statusCode fix, inning parser
+e9c7916 feat: KBO API fallback + mobile widget-data SSOT consolidation
+8120fe2 fix: resolve all TypeScript errors (27→0)
+cc5cb3a fix: code review - KBO fallback score field, StickerModal capturing state
+50ee050 fix(server): shorten relay cache TTL to 1s on failure (was 5s)
+1443fe6 fix(server): exponential backoff for relay failures (1,1,3,5,5,10s)
+09061cc fix(server): exempt localhost from rate limiter
+e48513b fix(push): add inning change detection, remove BSO/base triggers
+8efeb6d fix(widget): add 4x2 cancelled view, add header to 2x2 cancelled
+7853019 feat(push): add 30min weather refresh push for scheduled games
+0796add fix(widget): fallback to DB for existing users without widget team
+
+master:
+3242381 fix(ios): port server/data fixes from test/stable-build for iOS 1.2.0
+8d5bb0e fix(ios): set runtimeVersion 1.2.0 for iOS OTA
+```
+
+**OTAs**: Android 1.3.1 (4회), iOS 1.2.0 (1회)
+
+---
+
 **FCM OFF 상태에서 실시간 갱신 흐름**:
 | 상태 | 갱신 방식 | 주기 |
 |------|-----------|------|
