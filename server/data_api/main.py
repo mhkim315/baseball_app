@@ -895,17 +895,20 @@ def _get_widget_data_cached() -> dict | None:
                 rd = game_relay(nid)
                 if not rd:
                     return None
-                home_entry = rd.get("homeEntry", []) or []
-                away_entry = rd.get("awayEntry", []) or []
+                td = rd.get("textRelayData", {}) or {}
+                home_entry = td.get("homeEntry", {}) or {}
+                away_entry = td.get("awayEntry", {}) or {}
                 p2n: dict[str, str] = {}
-                for e in home_entry + away_entry:
+                for e in (home_entry.get("batter") or []) + (home_entry.get("pitcher") or []) + (away_entry.get("batter") or []) + (away_entry.get("pitcher") or []):
                     if isinstance(e, dict) and e.get("pcode") and e.get("name"):
                         p2n[str(e["pcode"])] = str(e["name"])
 
-                cs = rd.get("currentGameState", {}) or {}
+                cs = td.get("currentGameState", {}) or {}
                 pid = str(cs.get("pitcher") or "0")
                 bid = str(cs.get("batter") or "0")
                 return {
+                    "inning": str(td.get("inn") or "0"),
+                    "isTop": "1" if str(td.get("homeOrAway", "")) == "0" else "0",
                     "strike": str(cs.get("strike") or "0"),
                     "ball": str(cs.get("ball") or "0"),
                     "out": str(cs.get("out") or "0"),
@@ -1269,18 +1272,21 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
             from scripts.naver_api import game_relay
             relay_data = game_relay(nid)
             if relay_data:
-                home_entry = relay_data.get("homeEntry", []) or []
-                away_entry = relay_data.get("awayEntry", []) or []
+                td = relay_data.get("textRelayData", {}) or {}
+                home_entry = td.get("homeEntry", {}) or {}
+                away_entry = td.get("awayEntry", {}) or {}
                 pcode_to_name = {}
-                for e in home_entry + away_entry:
+                for e in (home_entry.get("batter") or []) + (home_entry.get("pitcher") or []) + (away_entry.get("batter") or []) + (away_entry.get("pitcher") or []):
                     if isinstance(e, dict) and "pcode" in e and "name" in e:
                         pcode_to_name[e["pcode"]] = e["name"]
 
-                cs = relay_data.get("currentGameState", {}) or {}
+                cs = td.get("currentGameState", {}) or {}
                 pitcher_id = str(cs.get("pitcher") or "0")
                 batter_id = str(cs.get("batter") or "0")
 
                 relay_result = {
+                    "inning": str(td.get("inn") or "0"),
+                    "isTop": "1" if str(td.get("homeOrAway", "")) == "0" else "0",
                     "strike": str(cs.get("strike") or "0"),
                     "ball": str(cs.get("ball") or "0"),
                     "out": str(cs.get("out") or "0"),
