@@ -524,7 +524,7 @@ def get_today_games():
 
 @app.get("/refresh-data")
 def get_refresh_data():
-    today_str = date.today().isoformat()
+    today_str = datetime.now(tz=timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
     year = date.today().year
     today_games = load_json("today-games.json")
     standings_data = load_json("kbo_standings.json")
@@ -696,7 +696,7 @@ def _code_to_kr(code: str) -> str:
 
 def _get_widget_data_cached() -> dict | None:
     """Build widget data dict with in-memory caching. Returns None on failure."""
-    today_str = date.today().isoformat()
+    today_str = datetime.now(tz=timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
     now = time.time()
 
     if today_str in _WIDGET_CACHE:
