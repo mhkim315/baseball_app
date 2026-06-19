@@ -32,7 +32,7 @@ export async function getMyTeamForWidget(): Promise<string | null> {
   let team = await AsyncStorage.getItem(WIDGET_TEAM_KEY);
   // Fallback: 기존 사용자는 DB에만 팀 정보 있음
   if (!team) {
-    team = getMyTeam();
+    try { team = getMyTeam(); } catch { /* DB not available in widget process */ }
     if (team) await AsyncStorage.setItem(WIDGET_TEAM_KEY, team);
   }
   return team;
