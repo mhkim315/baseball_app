@@ -1289,7 +1289,7 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
                 _RELAY_CACHE[nid] = (now, relay_result)
                 result["relay"] = relay_result
             else:
-                _RELAY_CACHE[nid] = (now, None)
+                _RELAY_CACHE[nid] = (now - 4, None)  # short 1s TTL for failures
         except Exception as e:
             logger.warning("Failed to fetch relay for %s: %s", nid, e)
 
