@@ -80,6 +80,7 @@ async function updateAllWidgets(myTeam: string, data: WidgetGameData | null) {
             height={widgetInfo.height}
             data={data}
             myTeam={myTeam}
+            widgetName={widgetName}
           />
         );
       },

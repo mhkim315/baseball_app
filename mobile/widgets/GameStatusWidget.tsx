@@ -4,6 +4,7 @@ import { LOCAL_CHARACTERS } from "@/lib/characterAssets";
 import type { CharacterEmotion } from "@/lib/emotions";
 
 const WIDGET_BUILD = "OTA-v41-master-layouts";
+let _noBg = false;  // set by GameStatusWidget for Clear variants
 
 export interface WidgetGameData {
   homeTeam: string;
@@ -50,6 +51,10 @@ const OUT_FILL = require("../assets/widget-dots/out_fill.png");
 const OUT_EMPTY = require("../assets/widget-dots/out_empty.png");
 const BASE_FILL = require("../assets/widget-dots/base_fill.png");
 const BASE_EMPTY = require("../assets/widget-dots/base_empty.png");
+const BALL_EMPTY_CLR = require("../assets/widget-dots/ball_empty_clear.png");
+const STRIKE_EMPTY_CLR = require("../assets/widget-dots/strike_empty_clear.png");
+const OUT_EMPTY_CLR = require("../assets/widget-dots/out_empty_clear.png");
+const BASE_EMPTY_CLR = require("../assets/widget-dots/base_empty_clear.png");
 const DARK_FG = "#2a2a32";
 const FG_93 = "#303038";
 const FG_87 = "#3c3c44";
@@ -162,17 +167,28 @@ function getHeaderInfo(data: WidgetGameData) {
   return { isLive, statusText, bCnt, sCnt, oCnt };
 }
 
-function ColorBg({ children }: { children: any }) {
+function ColorBg({ children, noBg }: { children: any; noBg?: boolean }) {
   return (
-    <FlexWidget style={{ width: "match_parent", height: "match_parent", backgroundColor: "#f5f0eb", borderRadius: 16 }} clickAction="OPEN_APP">
+    <FlexWidget style={{
+      width: "match_parent", height: "match_parent",
+      backgroundColor: noBg ? "transparent" : "#f5f0eb",
+      borderRadius: noBg ? 0 : 16,
+    }} clickAction="OPEN_APP">
       {children}
     </FlexWidget>
   );
 }
 
+function transparentView() {
+  return (
+    <FlexWidget style={{ width: "match_parent", height: "match_parent", backgroundColor: "transparent" }} />
+  );
+}
+
 function BaseImg({ occ, size }: { occ?: string, size: number }) {
   const active = occ && String(occ) !== "0";
-  return <ImageWidget image={active ? BASE_FILL : BASE_EMPTY} imageWidth={size} imageHeight={size} />;
+  const emptyImg = _noBg ? BASE_EMPTY_CLR : BASE_EMPTY;
+  return <ImageWidget image={active ? BASE_FILL : emptyImg} imageWidth={size} imageHeight={size} />;
 }
 
 function BaseSituation({ b1, b2, b3, size }: { b1?: string, b2?: string, b3?: string, size: number }) {
@@ -188,48 +204,60 @@ function BaseSituation({ b1, b2, b3, size }: { b1?: string, b2?: string, b3?: st
   );
 }
 
-// BSO dot row (replaces unicode ●/○ with theme-proof PNGs)
 function BallDots({ count, size }: { count: number, size: number }) {
   const gap = Math.max(1, Math.round(size * 0.2));
+  const emptyImg = _noBg ? BALL_EMPTY_CLR : BALL_EMPTY;
   return (
     <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-      <ImageWidget image={count >= 1 ? BALL_FILL : BALL_EMPTY} imageWidth={size} imageHeight={size} />
+      <ImageWidget image={count >= 1 ? BALL_FILL : emptyImg} imageWidth={size} imageHeight={size} />
       <FlexWidget style={{ width: gap }} />
-      <ImageWidget image={count >= 2 ? BALL_FILL : BALL_EMPTY} imageWidth={size} imageHeight={size} />
+      <ImageWidget image={count >= 2 ? BALL_FILL : emptyImg} imageWidth={size} imageHeight={size} />
       <FlexWidget style={{ width: gap }} />
-      <ImageWidget image={count >= 3 ? BALL_FILL : BALL_EMPTY} imageWidth={size} imageHeight={size} />
+      <ImageWidget image={count >= 3 ? BALL_FILL : emptyImg} imageWidth={size} imageHeight={size} />
     </FlexWidget>
   );
 }
 function StrikeDots({ count, size }: { count: number, size: number }) {
   const gap = Math.max(1, Math.round(size * 0.2));
+  const emptyImg = _noBg ? STRIKE_EMPTY_CLR : STRIKE_EMPTY;
   return (
     <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-      <ImageWidget image={count >= 1 ? STRIKE_FILL : STRIKE_EMPTY} imageWidth={size} imageHeight={size} />
+      <ImageWidget image={count >= 1 ? STRIKE_FILL : emptyImg} imageWidth={size} imageHeight={size} />
       <FlexWidget style={{ width: gap }} />
-      <ImageWidget image={count >= 2 ? STRIKE_FILL : STRIKE_EMPTY} imageWidth={size} imageHeight={size} />
+      <ImageWidget image={count >= 2 ? STRIKE_FILL : emptyImg} imageWidth={size} imageHeight={size} />
     </FlexWidget>
   );
 }
 function OutDots({ count, size }: { count: number, size: number }) {
   const gap = Math.max(1, Math.round(size * 0.2));
+  const emptyImg = _noBg ? OUT_EMPTY_CLR : OUT_EMPTY;
   return (
     <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-      <ImageWidget image={count >= 1 ? OUT_FILL : OUT_EMPTY} imageWidth={size} imageHeight={size} />
+      <ImageWidget image={count >= 1 ? OUT_FILL : emptyImg} imageWidth={size} imageHeight={size} />
       <FlexWidget style={{ width: gap }} />
-      <ImageWidget image={count >= 2 ? OUT_FILL : OUT_EMPTY} imageWidth={size} imageHeight={size} />
+      <ImageWidget image={count >= 2 ? OUT_FILL : emptyImg} imageWidth={size} imageHeight={size} />
     </FlexWidget>
   );
 }
 
-interface WidgetProps { width: number; height: number; data: WidgetGameData | null; myTeam: string; }
+interface WidgetProps { width: number; height: number; data: WidgetGameData | null; myTeam: string; widgetName?: string; }
 
-export function GameStatusWidget({ width, height, data, myTeam }: WidgetProps) {
+export function GameStatusWidget({ width, height, data, myTeam, widgetName }: WidgetProps) {
+  const isLiveOnly = widgetName?.includes("LiveOnly");
+  const isLiveEnd = widgetName?.includes("Live") && !isLiveOnly;
+  const isClear = widgetName?.includes("Clear");
+  const noBg = isClear;
+  _noBg = isClear;
+
   try {
     if (!data) return noGameView();
+    // LiveOnly: transparent for non-live
+    if (isLiveOnly && data.status !== "live") return transparentView();
+    // LiveEnd: transparent for scheduled
+    if (isLiveEnd && data.status === "scheduled") return transparentView();
     if (width < 80) {
       return (
-        <ColorBg>
+        <ColorBg noBg={noBg}>
           <FlexWidget style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
             <TextWidget text="지원 안함" style={{ fontSize: 10, color: DARK_FG }} />
           </FlexWidget>
@@ -254,7 +282,7 @@ export function GameStatusWidget({ width, height, data, myTeam }: WidgetProps) {
 
 function noGameView() {
   return (
-    <ColorBg>
+    <ColorBg noBg={noBg}>
       <FlexWidget style={{ flexDirection: "row", width: "match_parent", padding: 12, justifyContent: "flex-end" }}>
         <FlexWidget clickAction="REFRESH" style={{ padding: 4 }}>
           <TextWidget text="↻" style={{ fontSize: 16, color: "#e07b3c", fontWeight: "700" }} />
@@ -280,7 +308,7 @@ function view2x1(data: WidgetGameData) {
 
   if (isScheduled) {
     return (
-      <ColorBg>
+      <ColorBg noBg={noBg}>
         <FlexWidget style={{ flex: 1, flexDirection: "column", justifyContent: "center", padding: 8, paddingHorizontal: 12 }}>
           <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "match_parent" }}>
             <TextWidget text={away.teamName} style={{ fontSize: 13, fontWeight: "700", color: away.nameColor }} />
@@ -298,7 +326,7 @@ function view2x1(data: WidgetGameData) {
 
   if (isFinished) {
     return (
-      <ColorBg>
+      <ColorBg noBg={noBg}>
         <FlexWidget style={{ flex: 1, flexDirection: "column", justifyContent: "center", padding: 8, paddingHorizontal: 12 }}>
           <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "match_parent" }}>
             <TextWidget text={away.teamName} style={{ fontSize: 13, fontWeight: "700", color: away.nameColor }} />
@@ -319,7 +347,7 @@ function view2x1(data: WidgetGameData) {
   }
 
   return (
-    <ColorBg>
+    <ColorBg noBg={noBg}>
       <FlexWidget style={{ flex: 1, flexDirection: "column", justifyContent: "space-between", padding: 8, paddingHorizontal: 12 }}>
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: "match_parent" }}>
           <TextWidget text={head.statusText} style={{ fontSize: 10, fontWeight: "700", color: head.isLive ? "#e07b3c" : FG_93 }} />
@@ -385,7 +413,7 @@ function view4x1(data: WidgetGameData) {
 
   if (isScheduled) {
     return (
-      <ColorBg>
+      <ColorBg noBg={noBg}>
         <FlexWidget style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 8, paddingHorizontal: 24, width: "match_parent" }}>
           <FlexWidget style={{ alignItems: "center" }}>
             <ImageWidget image={away.charImage} imageWidth={32} imageHeight={32} />
@@ -412,7 +440,7 @@ function view4x1(data: WidgetGameData) {
     const homeWon = parseInt(data.homeScore) > parseInt(data.awayScore);
 
     return (
-      <ColorBg>
+      <ColorBg noBg={noBg}>
         <FlexWidget style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 8, paddingHorizontal: 24, width: "match_parent" }}>
           <FlexWidget style={{ alignItems: "center" }}>
             <ImageWidget image={away.charImage} imageWidth={32} imageHeight={32} />
@@ -439,7 +467,7 @@ function view4x1(data: WidgetGameData) {
   }
 
   return (
-    <ColorBg>
+    <ColorBg noBg={noBg}>
       <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 8, paddingHorizontal: 12, width: "match_parent" }}>
         <FlexWidget style={{ flexDirection: "row", alignItems: "center", width: "match_parent" }}>
           <TextWidget text={head.isLive ? head.statusText : (`${data.stadium || "오늘 경기"} ${data.weather || ""}`.trim() || " ")} style={{ fontSize: 10, fontWeight: "700", color: head.isLive ? "#e07b3c" : FG_93 }} />
@@ -519,7 +547,7 @@ function view2x2Scheduled(data: WidgetGameData, away: ReturnType<typeof getTeamI
   const hasExtraInfo = hasRank || hasStreak;
 
   return (
-    <ColorBg>
+    <ColorBg noBg={noBg}>
       <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 10, width: "match_parent" }}>
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "match_parent" }}>
           <TextWidget text={headerText} style={{ fontSize: 11, fontWeight: "700", color: FG_87 }} />
@@ -580,7 +608,7 @@ function view2x2Finished(data: WidgetGameData, away: ReturnType<typeof getTeamIn
   const homeWon = parseInt(data.homeScore) > parseInt(data.awayScore);
 
   return (
-    <ColorBg>
+    <ColorBg noBg={noBg}>
       <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 10, width: "match_parent" }}>
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "match_parent" }}>
           <TextWidget text="경기 종료" style={{ fontSize: 11, fontWeight: "700", color: FG_87 }} />
@@ -640,7 +668,7 @@ function view2x2Cancelled(data: WidgetGameData, away: ReturnType<typeof getTeamI
   const headerText = data.stadium ? (weatherText ? `${data.stadium} ${weatherText}` : data.stadium) : "오늘 경기";
 
   return (
-    <ColorBg>
+    <ColorBg noBg={noBg}>
       <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 10, width: "match_parent" }}>
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "match_parent" }}>
           <TextWidget text={headerText} style={{ fontSize: 11, fontWeight: "700", color: FG_87 }} />
@@ -677,7 +705,7 @@ function view2x2Live(data: WidgetGameData, away: ReturnType<typeof getTeamInfo>,
   const locationText = data.stadium ? (weatherText ? `${data.stadium} ${weatherText}` : data.stadium) : "오늘 경기";
 
   return (
-    <ColorBg>
+    <ColorBg noBg={noBg}>
       <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 10, width: "match_parent" }}>
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "match_parent" }}>
           <TextWidget text={locationText} style={{ fontSize: 11, fontWeight: "700", color: FG_93 }} />
@@ -750,7 +778,7 @@ function view4x2(data: WidgetGameData) {
 
   if (isCancelled) {
     return (
-      <ColorBg>
+      <ColorBg noBg={noBg}>
         <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 16, paddingHorizontal: 24, width: "match_parent" }}>
           <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
             <TextWidget text={`${data.stadium || "오늘 경기"} ${data.weather || ""}`.trim() || " "} style={{ fontSize: 13, fontWeight: "700", color: FG_87 }} />
@@ -788,7 +816,7 @@ function view4x2(data: WidgetGameData) {
 
   if (isScheduled) {
     return (
-      <ColorBg>
+      <ColorBg noBg={noBg}>
         <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 16, paddingHorizontal: 24, width: "match_parent" }}>
           <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
             <TextWidget text={`${data.stadium || "오늘 경기"} ${data.weather || ""}`.trim() || " "} style={{ fontSize: 13, fontWeight: "700", color: FG_93 }} />
@@ -844,7 +872,7 @@ function view4x2(data: WidgetGameData) {
     const homeWon = parseInt(data.homeScore) > parseInt(data.awayScore);
 
     return (
-      <ColorBg>
+      <ColorBg noBg={noBg}>
         <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 16, paddingHorizontal: 24, width: "match_parent" }}>
           <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
             <TextWidget text={`${data.stadium || "오늘 경기"} ${data.weather || ""}`.trim() || " "} style={{ fontSize: 13, fontWeight: "700", color: FG_87 }} />
@@ -898,7 +926,7 @@ function view4x2(data: WidgetGameData) {
   const locationText = data.stadium ? (data.weather ? `${data.stadium} ${data.weather}` : data.stadium) : "오늘 경기";
 
   return (
-    <ColorBg>
+    <ColorBg noBg={noBg}>
       <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 12, paddingHorizontal: 20, width: "match_parent" }}>
         <FlexWidget style={{ flexDirection: "row", alignItems: "center", width: "match_parent", justifyContent: "space-between" }}>
           <TextWidget text={locationText} style={{ fontSize: 13, fontWeight: "700", color: FG_93 }} />
