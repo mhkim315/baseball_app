@@ -35,6 +35,7 @@ import AchievementToast from "@/components/AchievementToast";
 import HomeCoachMark from "@/components/HomeCoachMark";
 import CoachMark from "@/components/CoachMark";
 import { prefetchOnAppInit } from "@/lib/prefetch";
+import { updateWidgetPeriodic } from "@/widgets/updateWidget";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
@@ -525,6 +526,7 @@ export default function HomeScreen() {
         InteractionManager.runAfterInteractions(() => {
           prefetchOnAppInit();
           runBadgeCheck();
+          try { updateWidgetPeriodic(); } catch {}
           try {
             loadJikgwanData();
           } catch {}
