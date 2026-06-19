@@ -742,12 +742,8 @@ def _get_widget_data_cached() -> dict | None:
         starter_map[gid] = {"away": away_st, "home": home_st}
 
     try:
-        from scripts.naver_api import (
-            schedule_games,
-            game_relay,
-            parse_score_inning,
-            parse_rheb,
-        )
+        from scripts.naver_api import schedule_games, game_relay
+        from scripts.naver_adapter import normalize_game, normalize_relay, normalize_status, parse_score_inning, parse_rheb
         raw_games = schedule_games(today_str, today_str)
     except Exception as e:
         logger.warning("widget-data: Naver failed, using KBO fallback — %s", e)
@@ -807,11 +803,12 @@ def _get_widget_data_cached() -> dict | None:
         return TEAM_NAME_MAP.get(tid, code) if tid else code
 
     for g in kbo_games:
-        naver_id = str(g.get("gameId", ""))
+        ng = normalize_game(g)
+        naver_id = ng["naverGameId"]
         internal_id = _naver_to_internal_gid(naver_id)
-        status = _naver_status(g.get("statusCode", ""))
+        status = normalize_status(ng["statusCode"])
 
-        time_str = (g.get("gameDateTime") or g.get("startTime") or "")[11:16] if len(g.get("gameDateTime") or g.get("startTime") or "") >= 16 else ""
+        time_str = ng["gameDateTime"][11:16] if len(ng["gameDateTime"]) >= 16 else ""
 
         if time_str and status in ("live", "finished"):
             try:
@@ -825,8 +822,8 @@ def _get_widget_data_cached() -> dict | None:
             except Exception:
                 pass
 
-        home_code = str(g.get("homeTeamCode") or "")
-        away_code = str(g.get("awayTeamCode") or "")
+        home_code = ng["homeTeamCode"]
+        away_code = ng["awayTeamCode"]
         # Fallback: parse team codes from Naver gameId when API omits them (scheduled)
         if not home_code or not away_code:
             m = _NAVER_ID_RE.match(naver_id)
@@ -838,19 +835,16 @@ def _get_widget_data_cached() -> dict | None:
         home_kr = _code_to_kr(home_code)
         away_kr = _code_to_kr(away_code)
 
-        hs = g.get("homeTeamScore")
-        aws = g.get("awayTeamScore")
-
         starters = starter_map.get(internal_id, {})
-        home_starter = starters.get("home")
-        away_starter = starters.get("away")
+        home_starter = starters.get("home") or ng["homeStarter"]
+        away_starter = starters.get("away") or ng["awayStarter"]
 
         entry: dict = {
             "gameId": internal_id,
             "naverGameId": naver_id,
             "gameIdx": 0,
             "time": time_str,
-            "venue": _VENUE_SHORT.get(home_code, g.get("stadium") or g.get("venue") or ""),
+            "venue": _VENUE_SHORT.get(home_code, ng["stadium"] or ""),
             "status": status,
             "homeTeam": home_code,
             "awayTeam": away_code,
@@ -862,15 +856,15 @@ def _get_widget_data_cached() -> dict | None:
             "awayRank": rank_map.get(away_kr),
             "homeStreak": streak_map.get(home_kr),
             "awayStreak": streak_map.get(away_kr),
-            "score": {"home": hs, "away": aws} if hs is not None and aws is not None else None,
+            "score": {"home": ng["homeScore"], "away": ng["awayScore"]} if ng["homeScore"] is not None and ng["awayScore"] is not None else None,
             "scoreBoard": {
                 "rheb": {
-                    "home": parse_rheb(str(g.get("homeTeamRheb") or "")),
-                    "away": parse_rheb(str(g.get("awayTeamRheb") or "")),
+                    "home": parse_rheb(ng["homeTeamRheb"]),
+                    "away": parse_rheb(ng["awayTeamRheb"]),
                 },
                 "inn": {
-                    "home": parse_score_inning(str(g.get("homeTeamScoreByInning") or "")),
-                    "away": parse_score_inning(str(g.get("awayTeamScoreByInning") or "")),
+                    "home": parse_score_inning(ng["homeTeamScoreByInning"]),
+                    "away": parse_score_inning(ng["awayTeamScoreByInning"]),
                 },
             },
             "relay": None,
@@ -892,32 +886,7 @@ def _get_widget_data_cached() -> dict | None:
     if live_naver_ids:
         def _fetch_relay(nid: str) -> dict | None:
             try:
-                rd = game_relay(nid)
-                if not rd:
-                    return None
-                td = rd.get("textRelayData", {}) or {}
-                p2n: dict[str, str] = {}
-                for entry_key in ("homeEntry", "awayEntry", "homeLineup", "awayLineup"):
-                    entry = td.get(entry_key, {}) or {}
-                    for e in (entry.get("batter") or []) + (entry.get("pitcher") or []):
-                        if isinstance(e, dict) and e.get("pcode") and e.get("name"):
-                            p2n[str(e["pcode"])] = str(e["name"])
-
-                cs = td.get("currentGameState", {}) or {}
-                pid = str(cs.get("pitcher") or "0")
-                bid = str(cs.get("batter") or "0")
-                return {
-                    "inning": str(td.get("inn") or "0"),
-                    "isTop": "1" if str(td.get("homeOrAway", "")) == "0" else "0",
-                    "strike": str(cs.get("strike") or "0"),
-                    "ball": str(cs.get("ball") or "0"),
-                    "out": str(cs.get("out") or "0"),
-                    "base1": str(cs.get("base1") or "0"),
-                    "base2": str(cs.get("base2") or "0"),
-                    "base3": str(cs.get("base3") or "0"),
-                    "pitcher": {"id": pid, "name": p2n.get(pid, "")} if pid != "0" else None,
-                    "batter": {"id": bid, "name": p2n.get(bid, "")} if bid != "0" else None,
-                }
+                return normalize_relay(game_relay(nid))
             except Exception as e:
                 logger.warning("widget-data: relay failed for %s — %s", nid, e)
                 return None
