@@ -852,13 +852,13 @@ function view4x2(data: WidgetGameData) {
           <FlexWidget style={{ flex: 1 }} />
 
           <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
-            <FlexWidget style={{ alignItems: "center", width: 100 }}>
-              {awayWon ? <TextWidget text="WIN" style={{ fontSize: 13, fontWeight: "700", color: "#d32f2f" }} /> : <FlexWidget style={{ height: 18 }} />}
-              <ImageWidget image={away.charImage} imageWidth={52} imageHeight={52} />
-              <FlexWidget style={{ height: 6 }} />
-              <TextWidget text={away.teamName} style={{ fontSize: 15, fontWeight: "700", color: away.nameColor }} />
+            <FlexWidget style={{ alignItems: "center", width: 72 }}>
+              {awayWon ? <TextWidget text="WIN" style={{ fontSize: 11, fontWeight: "700", color: "#d32f2f" }} /> : <FlexWidget style={{ height: 15 }} />}
+              <ImageWidget image={away.charImage} imageWidth={44} imageHeight={44} />
               <FlexWidget style={{ height: 4 }} />
-              <TextWidget text={`${awayWon ? "승" : "패"}: ${data.awayPitcher || "-"}`} style={{ fontSize: 11, color: DARK_FG }} />
+              <TextWidget text={away.teamName} style={{ fontSize: 14, fontWeight: "700", color: away.nameColor }} />
+              <FlexWidget style={{ height: 2 }} />
+              <TextWidget text={`${awayWon ? "승" : "패"}: ${data.awayPitcher || "-"}`} style={{ fontSize: 10, color: DARK_FG }} />
             </FlexWidget>
 
             <FlexWidget style={{ flex: 1, alignItems: "center", justifyContent: "center", flexDirection: "row" }}>
@@ -869,13 +869,13 @@ function view4x2(data: WidgetGameData) {
                 <TextWidget text={home.scoreText} style={{ fontSize: 26, fontWeight: "700", color: homeWon ? home.scoreColor : alpha(home.scoreColor, "99") }} />
             </FlexWidget>
 
-            <FlexWidget style={{ alignItems: "center", width: 100 }}>
-              {homeWon ? <TextWidget text="WIN" style={{ fontSize: 13, fontWeight: "700", color: "#d32f2f" }} /> : <FlexWidget style={{ height: 18 }} />}
-              <ImageWidget image={home.charImage} imageWidth={52} imageHeight={52} />
-              <FlexWidget style={{ height: 6 }} />
-              <TextWidget text={home.teamName} style={{ fontSize: 15, fontWeight: "700", color: home.nameColor }} />
+            <FlexWidget style={{ alignItems: "center", width: 72 }}>
+              {homeWon ? <TextWidget text="WIN" style={{ fontSize: 11, fontWeight: "700", color: "#d32f2f" }} /> : <FlexWidget style={{ height: 15 }} />}
+              <ImageWidget image={home.charImage} imageWidth={44} imageHeight={44} />
               <FlexWidget style={{ height: 4 }} />
-              <TextWidget text={`${homeWon ? "승" : "패"}: ${data.homePitcher || "-"}`} style={{ fontSize: 11, color: DARK_FG }} />
+              <TextWidget text={home.teamName} style={{ fontSize: 14, fontWeight: "700", color: home.nameColor }} />
+              <FlexWidget style={{ height: 2 }} />
+              <TextWidget text={`${homeWon ? "승" : "패"}: ${data.homePitcher || "-"}`} style={{ fontSize: 10, color: DARK_FG }} />
             </FlexWidget>
           </FlexWidget>
 
