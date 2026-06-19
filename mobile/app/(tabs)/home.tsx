@@ -340,16 +340,18 @@ export default function HomeScreen() {
                 let liveInning = games[idx].liveInning;
                 let isTop = games[idx].isTop;
                 if (wg.status === "live" && liveInning == null) {
-                  const info = getInningInfo(wg.scoreBoard?.inn);
-                  if (info) {
-                    liveInning = info.inning;
-                    isTop = info.isTop;
-                  } else if (wg.relay?.inning && wg.relay.inning !== "0") {
+                  if (wg.relay?.inning && wg.relay.inning !== "0") {
                     liveInning = parseInt(wg.relay.inning, 10);
                     isTop = wg.relay.isTop === "1";
                   } else {
-                    liveInning = 1;
-                    isTop = true;
+                    const info = getInningInfo(wg.scoreBoard?.inn);
+                    if (info) {
+                      liveInning = info.inning;
+                      isTop = info.isTop;
+                    } else {
+                      liveInning = 1;
+                      isTop = true;
+                    }
                   }
                 }
 
