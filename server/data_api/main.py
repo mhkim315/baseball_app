@@ -101,6 +101,7 @@ _JSON_CACHE_TTL = 300  # seconds (matches collector cycle)
 
 _RELAY_CACHE: dict[str, tuple[float, dict | None]] = {}
 _RELAY_CACHE_TTL = 5  # seconds — prevent Naver IP block
+_RELAY_FAILURES: dict[str, int] = {}  # consecutive failure count per game
 
 _WEATHER_CACHE: dict[str, tuple[float, dict | None]] = {}
 _WEATHER_CACHE_TTL = 1800  # 30 minutes
@@ -1287,9 +1288,14 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
                     "batter": {"id": batter_id, "name": pcode_to_name.get(batter_id, "")} if batter_id != "0" else None,
                 }
                 _RELAY_CACHE[nid] = (now, relay_result)
+                _RELAY_FAILURES.pop(nid, None)
                 result["relay"] = relay_result
             else:
-                _RELAY_CACHE[nid] = (now - 4, None)  # short 1s TTL for failures
+                fails = _RELAY_FAILURES.get(nid, 0) + 1
+                _RELAY_FAILURES[nid] = fails
+                backoffs = [1, 1, 3, 5, 5, 10]
+                ttl = backoffs[min(fails - 1, len(backoffs) - 1)]
+                _RELAY_CACHE[nid] = (now - (_RELAY_CACHE_TTL - ttl), None)
         except Exception as e:
             logger.warning("Failed to fetch relay for %s: %s", nid, e)
 
