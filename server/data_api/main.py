@@ -746,12 +746,30 @@ def _get_widget_data_cached() -> dict | None:
                     home_st = s
         starter_map[gid] = {"away": away_st, "home": home_st}
 
+    global _NAVER_HEALTHY, _NAVER_LAST_CHECK
+
+    # Skip Naver if known unhealthy (probe every 5 min)
+    if not _NAVER_HEALTHY:
+        if time.time() - _NAVER_LAST_CHECK > _NAVER_RECHECK_INTERVAL:
+            _NAVER_LAST_CHECK = time.time()
+            logger.info("widget-data: probing Naver health...")
+        else:
+            daum_result = _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, starter_map)
+            if daum_result:
+                return daum_result
+
     try:
         from scripts.naver_api import schedule_games, game_relay
         from scripts.naver_adapter import normalize_game, normalize_relay, normalize_status, parse_score_inning, parse_rheb
         raw_games = schedule_games(today_str, today_str)
+        _NAVER_HEALTHY = True  # Naver responded successfully
     except Exception as e:
-        logger.warning("widget-data: Naver failed, using KBO fallback — %s", e)
+        logger.warning("widget-data: Naver failed — %s", e)
+        _NAVER_HEALTHY = False
+        _NAVER_LAST_CHECK = time.time()
+        daum_result = _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, starter_map)
+        if daum_result:
+            return daum_result
         raw_games = []
 
     kbo_games = [g for g in raw_games if g.get("categoryId") == "kbo"]
@@ -967,6 +985,9 @@ _DAUM_ID_CACHE_TTL = 1800  # 30 min
 _DAUM_COOLDOWN = 0
 _DAUM_COOLDOWN_SEC = 120
 _DAUM_FETCH_IN_FLIGHT = False
+_NAVER_HEALTHY = True
+_NAVER_LAST_CHECK = 0
+_NAVER_RECHECK_INTERVAL = 300  # 5 min between Naver health probes
 
 
 def _prefetch_daum_ids(today_str):
