@@ -938,6 +938,9 @@ def _get_widget_data_cached() -> dict | None:
         if daum_result:
             return daum_result
 
+    # Pre-fetch Daum game ID mapping while Naver is healthy
+    _prefetch_daum_ids(today_str)
+
     result: dict = {"games": games_data, "todayWeather": today_weather}
     _WIDGET_CACHE[today_str] = (time.time(), result)
     return result
@@ -957,9 +960,28 @@ def _validate_games(games_data):
     return True
 
 
+_DAUM_ID_CACHE = {}  # date_str -> {cpGameId: daumGameId}
+_DAUM_ID_CACHE_TIME = 0
+_DAUM_ID_CACHE_TTL = 1800  # 30 min
+
 _DAUM_COOLDOWN = 0
 _DAUM_COOLDOWN_SEC = 120
 _DAUM_FETCH_IN_FLIGHT = False
+
+
+def _prefetch_daum_ids(today_str):
+    """Pre-fetch Daum game ID mapping during Naver healthy period."""
+    global _DAUM_ID_CACHE, _DAUM_ID_CACHE_TIME
+    if today_str in _DAUM_ID_CACHE and time.time() - _DAUM_ID_CACHE_TIME < _DAUM_ID_CACHE_TTL:
+        return
+    try:
+        from scripts.daum_adapter import get_daum_game_ids
+        mapping = get_daum_game_ids(today_str)
+        if mapping:
+            _DAUM_ID_CACHE = {today_str: mapping}
+            _DAUM_ID_CACHE_TIME = time.time()
+    except Exception:
+        pass  # silent — pre-fetch failure is non-critical
 
 
 def _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, starter_map):
@@ -981,8 +1003,13 @@ def _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, sta
     _DAUM_FETCH_IN_FLIGHT = True
     _DAUM_COOLDOWN = time.time()
     try:
-        from scripts.daum_adapter import get_daum_game_ids, fetch_daum_game, normalize_game, normalize_relay, apply_relay_names
-        mapping = get_daum_game_ids(today_str)
+        from scripts.daum_adapter import fetch_daum_game, normalize_game, normalize_relay, apply_relay_names
+
+        # Use pre-fetched mapping if available, otherwise scan
+        mapping = _DAUM_ID_CACHE.get(today_str, {})
+        if not mapping:
+            from scripts.daum_adapter import get_daum_game_ids
+            mapping = get_daum_game_ids(today_str)
         if not mapping:
             logger.warning("daum: no games found for %s", today_str)
             return None
