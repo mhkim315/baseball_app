@@ -3341,13 +3341,31 @@ e48513b fix(push): add inning change detection, remove BSO/base triggers
 8efeb6d fix(widget): add 4x2 cancelled view, add header to 2x2 cancelled
 7853019 feat(push): add 30min weather refresh push for scheduled games
 0796add fix(widget): fallback to DB for existing users without widget team
+4e58e4e fix(server): parse_rheb handle list format like parse_score_inning
+5fb59f5 fix(server): use KST timezone for game time comparison (was UTC)
+deddbee fix(server): handle Naver relay API format change (textRelayData + homeEntry dict)
+98d3f40 fix(server): include homeLineup/awayLineup in relay p2n lookup
+f76eff1 fix: prioritize relay.inning over scoreBoard.inn (both home card + game detail)
 
 master:
 3242381 fix(ios): port server/data fixes from test/stable-build for iOS 1.2.0
 8d5bb0e fix(ios): set runtimeVersion 1.2.0 for iOS OTA
 ```
 
-**OTAs**: Android 1.3.1 (4회), iOS 1.2.0 (1회)
+#### 경기 시작 실시간 대응 (18:28~18:40 KST)
+
+Naver API가 경기 시작과 함께 응답 형식 변경. 5개 버그 발견 및 수정:
+
+| # | 버그 | 원인 | 커밋 |
+|---|------|------|------|
+| 1 | `parse_rheb` 크래시 | RHEB가 `[0,0,0,0]` 리스트 | 4e58e4e |
+| 2 | live→scheduled 역전 | `datetime.now()` UTC로 KST 비교 | 5fb59f5 |
+| 3 | relay 데이터 누락 | `textRelayData` 래퍼 추가 | deddbee |
+| 4 | `homeEntry` 구조 변경 | `[{...}]` → `{batter:[], pitcher:[]}` | deddbee |
+| 5 | 투수/타자명 누락 | `homeLineup`/`awayLineup` 누락 | 98d3f40 |
+| 6 | 앱 9회말 표시 | `getInningInfo(scoreBoard.inn)` 우선 | f76eff1 |
+
+**OTAs**: Android 1.3.1 (5회), iOS 1.2.0 (1회)
 
 ---
 
