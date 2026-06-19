@@ -765,6 +765,7 @@ def _get_widget_data_cached() -> dict | None:
         _NAVER_HEALTHY = True  # Naver responded successfully
     except Exception as e:
         logger.warning("widget-data: Naver failed — %s", e)
+        _save_crash_dump(today_str, "naver_exception", {"error": str(e)})
         _NAVER_HEALTHY = False
         _NAVER_LAST_CHECK = time.time()
         daum_result = _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, starter_map)
@@ -953,6 +954,7 @@ def _get_widget_data_cached() -> dict | None:
     if not _validate_games(games_data):
         logger.warning("widget-data: Naver data validation failed, trying Daum")
         _save_crash_dump(today_str, "validate_failed", games_data)
+        _save_crash_dump(today_str, "raw_naver", raw_games)  # unmodified Naver response
         daum_result = _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, starter_map)
         if daum_result:
             return daum_result
