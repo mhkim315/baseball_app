@@ -952,6 +952,7 @@ def _get_widget_data_cached() -> dict | None:
     # Validate Naver data; fall back to Daum if broken
     if not _validate_games(games_data):
         logger.warning("widget-data: Naver data validation failed, trying Daum")
+        _save_crash_dump(today_str, "validate_failed", games_data)
         daum_result = _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, starter_map)
         if daum_result:
             return daum_result
@@ -962,6 +963,21 @@ def _get_widget_data_cached() -> dict | None:
     result: dict = {"games": games_data, "todayWeather": today_weather}
     _WIDGET_CACHE[today_str] = (time.time(), result)
     return result
+
+
+def _save_crash_dump(today_str, reason, data):
+    """Save crash/debug data to disk for later analysis."""
+    try:
+        import os as _os
+        dump_dir = _os.path.join(DATA_DIR, "crash_dumps")
+        _os.makedirs(dump_dir, exist_ok=True)
+        ts = datetime.now().strftime("%H%M%S")
+        path = _os.path.join(dump_dir, "%s_%s_%s.json" % (today_str, ts, reason))
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2, default=str)
+        logger.info("crash dump saved: %s", path)
+    except Exception:
+        pass  # never let crash dump crash the main flow
 
 
 def _validate_games(games_data):
