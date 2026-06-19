@@ -40,6 +40,16 @@ const TEAM_NAME_COLOR: Record<string, string> = {
 };
 
 const MONDAY_IMAGE = require("../assets/monday.png");
+
+// BSO dot images (PNG, theme-proof — fills + colored ring empties)
+const BALL_FILL = require("../assets/widget-dots/ball_fill.png");
+const BALL_EMPTY = require("../assets/widget-dots/ball_empty.png");
+const STRIKE_FILL = require("../assets/widget-dots/strike_fill.png");
+const STRIKE_EMPTY = require("../assets/widget-dots/strike_empty.png");
+const OUT_FILL = require("../assets/widget-dots/out_fill.png");
+const OUT_EMPTY = require("../assets/widget-dots/out_empty.png");
+const BASE_FILL = require("../assets/widget-dots/base_fill.png");
+const BASE_EMPTY = require("../assets/widget-dots/base_empty.png");
 const DARK_FG = "#2a2a32";
 const FG_93 = "#303038";
 const FG_87 = "#3c3c44";
@@ -160,19 +170,54 @@ function ColorBg({ children }: { children: any }) {
   );
 }
 
+function BaseImg({ occ, size }: { occ?: string, size: number }) {
+  const active = occ && String(occ) !== "0";
+  return <ImageWidget image={active ? BASE_FILL : BASE_EMPTY} imageWidth={size} imageHeight={size} />;
+}
+
 function BaseSituation({ b1, b2, b3, size }: { b1?: string, b2?: string, b3?: string, size: number }) {
-  const activeColor = "#e07b3c";
-  const inactiveColor = "#000000";
-  const getBase = (occ?: string) => occ && occ !== "0" ? "◆" : "◇";
-  const getColor = (occ?: string) => (occ && String(occ) !== "0") ? activeColor : inactiveColor;
-  const diamondW = Math.round(size * 2.5);
+  const gap = Math.round(size * 0.8);
   return (
     <FlexWidget style={{ alignItems: "center" }}>
-      <TextWidget text={getBase(b2)} style={{ fontSize: size, color: getColor(b2), fontWeight: "700" }} />
-      <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: diamondW }}>
-        <TextWidget text={getBase(b3)} style={{ fontSize: size, color: getColor(b3), fontWeight: "700" }} />
-        <TextWidget text={getBase(b1)} style={{ fontSize: size, color: getColor(b1), fontWeight: "700" }} />
+      <BaseImg occ={b2} size={size} />
+      <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", width: size * 3 }}>
+        <BaseImg occ={b3} size={size} />
+        <BaseImg occ={b1} size={size} />
       </FlexWidget>
+    </FlexWidget>
+  );
+}
+
+// BSO dot row (replaces unicode ●/○ with theme-proof PNGs)
+function BallDots({ count, size }: { count: number, size: number }) {
+  const gap = Math.max(1, Math.round(size * 0.2));
+  return (
+    <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
+      <ImageWidget image={count >= 1 ? BALL_FILL : BALL_EMPTY} imageWidth={size} imageHeight={size} />
+      <FlexWidget style={{ width: gap }} />
+      <ImageWidget image={count >= 2 ? BALL_FILL : BALL_EMPTY} imageWidth={size} imageHeight={size} />
+      <FlexWidget style={{ width: gap }} />
+      <ImageWidget image={count >= 3 ? BALL_FILL : BALL_EMPTY} imageWidth={size} imageHeight={size} />
+    </FlexWidget>
+  );
+}
+function StrikeDots({ count, size }: { count: number, size: number }) {
+  const gap = Math.max(1, Math.round(size * 0.2));
+  return (
+    <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
+      <ImageWidget image={count >= 1 ? STRIKE_FILL : STRIKE_EMPTY} imageWidth={size} imageHeight={size} />
+      <FlexWidget style={{ width: gap }} />
+      <ImageWidget image={count >= 2 ? STRIKE_FILL : STRIKE_EMPTY} imageWidth={size} imageHeight={size} />
+    </FlexWidget>
+  );
+}
+function OutDots({ count, size }: { count: number, size: number }) {
+  const gap = Math.max(1, Math.round(size * 0.2));
+  return (
+    <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
+      <ImageWidget image={count >= 1 ? OUT_FILL : OUT_EMPTY} imageWidth={size} imageHeight={size} />
+      <FlexWidget style={{ width: gap }} />
+      <ImageWidget image={count >= 2 ? OUT_FILL : OUT_EMPTY} imageWidth={size} imageHeight={size} />
     </FlexWidget>
   );
 }
@@ -312,11 +357,11 @@ function view2x1(data: WidgetGameData) {
         <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", width: "match_parent", height: 12 }}>
           {head.isLive ? (
             <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-              <TextWidget text={"●".repeat(head.bCnt) + "○".repeat(3 - head.bCnt)} style={{ fontSize: 7, color: "#43a047" }} />
+              <BallDots count={head.bCnt} size={7} />
               <FlexWidget style={{ width: 3 }} />
-              <TextWidget text={"●".repeat(head.sCnt) + "○".repeat(2 - head.sCnt)} style={{ fontSize: 7, color: "#f9a825" }} />
+              <StrikeDots count={head.sCnt} size={7} />
               <FlexWidget style={{ width: 3 }} />
-              <TextWidget text={"●".repeat(head.oCnt) + "○".repeat(2 - head.oCnt)} style={{ fontSize: 7, color: "#e53935" }} />
+              <OutDots count={head.oCnt} size={7} />
             </FlexWidget>
           ) : <FlexWidget />}
           
@@ -400,11 +445,11 @@ function view4x1(data: WidgetGameData) {
           <TextWidget text={head.isLive ? head.statusText : (`${data.stadium || "오늘 경기"} ${data.weather || ""}`.trim() || " ")} style={{ fontSize: 10, fontWeight: "700", color: head.isLive ? "#e07b3c" : FG_93 }} />
           {head.isLive ? (
             <FlexWidget style={{ flexDirection: "row", alignItems: "center", marginLeft: 8 }}>
-              <TextWidget text={"●".repeat(head.bCnt) + "○".repeat(3 - head.bCnt)} style={{ fontSize: 8, color: "#43a047" }} />
+              <BallDots count={head.bCnt} size={8} />
               <FlexWidget style={{ width: 3 }} />
-              <TextWidget text={"●".repeat(head.sCnt) + "○".repeat(2 - head.sCnt)} style={{ fontSize: 8, color: "#f9a825" }} />
+              <StrikeDots count={head.sCnt} size={8} />
               <FlexWidget style={{ width: 3 }} />
-              <TextWidget text={"●".repeat(head.oCnt) + "○".repeat(2 - head.oCnt)} style={{ fontSize: 8, color: "#e53935" }} />
+              <OutDots count={head.oCnt} size={8} />
               <FlexWidget style={{ width: 10 }} />
               <BaseSituation b1={data.base1} b2={data.base2} b3={data.base3} size={9} />
             </FlexWidget>
@@ -640,11 +685,14 @@ function view2x2Live(data: WidgetGameData, away: ReturnType<typeof getTeamInfo>,
         </FlexWidget>
 
         <FlexWidget style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", width: "match_parent" }}>
-          <TextWidget text={"B:" + "●".repeat(head.bCnt) + "○".repeat(3 - head.bCnt)} style={{ fontSize: 11, color: "#43a047" }} />
+          <TextWidget text="B:" style={{ fontSize: 11, color: "#43a047", fontWeight: "700" }} />
+          <BallDots count={head.bCnt} size={10} />
           <FlexWidget style={{ width: 6 }} />
-          <TextWidget text={"S:" + "●".repeat(head.sCnt) + "○".repeat(2 - head.sCnt)} style={{ fontSize: 11, color: "#f9a825" }} />
+          <TextWidget text="S:" style={{ fontSize: 11, color: "#f9a825", fontWeight: "700" }} />
+          <StrikeDots count={head.sCnt} size={10} />
           <FlexWidget style={{ width: 6 }} />
-          <TextWidget text={"O:" + "●".repeat(head.oCnt) + "○".repeat(2 - head.oCnt)} style={{ fontSize: 11, color: "#e53935" }} />
+          <TextWidget text="O:" style={{ fontSize: 11, color: "#e53935", fontWeight: "700" }} />
+          <OutDots count={head.oCnt} size={10} />
         </FlexWidget>
         <FlexWidget style={{ alignItems: "center", justifyContent: "center", width: "match_parent" }}>
           <BaseSituation b1={data.base1} b2={data.base2} b3={data.base3} size={13} />
@@ -868,9 +916,18 @@ function view4x2(data: WidgetGameData) {
           {/* Center: BSO when fresh, spacer otherwise */}
           <FlexWidget style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
             <FlexWidget style={{ alignItems: "flex-start" }}>
-              <TextWidget text={"B:" + "●".repeat(head.bCnt) + "○".repeat(3 - head.bCnt)} style={{ fontSize: 12, color: "#43a047" }} />
-              <TextWidget text={"S:" + "●".repeat(head.sCnt) + "○".repeat(2 - head.sCnt)} style={{ fontSize: 12, color: "#f9a825" }} />
-              <TextWidget text={"O:" + "●".repeat(head.oCnt) + "○".repeat(2 - head.oCnt)} style={{ fontSize: 12, color: "#e53935" }} />
+              <FlexWidget style={{ flexDirection: "row", alignItems: "center", marginBottom: 2 }}>
+                <TextWidget text="B:" style={{ fontSize: 12, color: "#43a047", fontWeight: "700" }} />
+                <BallDots count={head.bCnt} size={11} />
+              </FlexWidget>
+              <FlexWidget style={{ flexDirection: "row", alignItems: "center", marginBottom: 2 }}>
+                <TextWidget text="S:" style={{ fontSize: 12, color: "#f9a825", fontWeight: "700" }} />
+                <StrikeDots count={head.sCnt} size={11} />
+              </FlexWidget>
+              <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
+                <TextWidget text="O:" style={{ fontSize: 12, color: "#e53935", fontWeight: "700" }} />
+                <OutDots count={head.oCnt} size={11} />
+              </FlexWidget>
             </FlexWidget>
             <FlexWidget style={{ width: 16 }} />
             <BaseSituation b1={data.base1} b2={data.base2} b3={data.base3} size={15} />
