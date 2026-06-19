@@ -675,11 +675,11 @@ def _naver_status(s: str) -> str:
     if not s:
         return "scheduled"
     su = s.upper()
-    if su in ("STARTED", "PLAYING", "LIVE"):
+    if su in ("STARTED", "PLAYING", "LIVE", "2"):
         return "live"
-    if su in ("RESULT", "ENDED", "FINISHED"):
+    if su in ("RESULT", "ENDED", "FINISHED", "3", "4"):
         return "finished"
-    if su in ("CANCEL", "CANCELLED"):
+    if su in ("CANCEL", "CANCELLED", "5", "6", "7", "8"):
         return "cancelled"
     return "scheduled"
 
@@ -761,7 +761,7 @@ def _get_widget_data_cached() -> dict | None:
     for g in kbo_games:
         naver_id = str(g.get("gameId", ""))
         internal_id = _naver_to_internal_gid(naver_id)
-        status = _naver_status(g.get("status", ""))
+        status = _naver_status(g.get("statusCode", ""))
 
         time_str = (g.get("gameDateTime") or g.get("startTime") or "")[11:16] if len(g.get("gameDateTime") or g.get("startTime") or "") >= 16 else ""
 
@@ -779,6 +779,14 @@ def _get_widget_data_cached() -> dict | None:
 
         home_code = str(g.get("homeTeamCode") or "")
         away_code = str(g.get("awayTeamCode") or "")
+        # Fallback: parse team codes from Naver gameId when API omits them (scheduled)
+        if not home_code or not away_code:
+            m = _NAVER_ID_RE.match(naver_id)
+            if m:
+                if not away_code:
+                    away_code = m.group(2)
+                if not home_code:
+                    home_code = m.group(3)
         home_kr = _code_to_kr(home_code)
         away_kr = _code_to_kr(away_code)
 

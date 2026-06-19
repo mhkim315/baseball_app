@@ -37,10 +37,18 @@ def game_lineup(game_id: str) -> dict[str, Any]:
 
 
 def parse_score_inning(inn_str: str) -> list[int]:
-    """Parse Naver comma-separated inning scores. "0,0,1,0,4" → [0, 0, 1, 0, 4]."""
+    """Parse Naver inning scores. Handles both "0,0,1,0,4" and "['-','-','0','1','-']"."""
     if not inn_str or not inn_str.strip():
         return []
-    return [int(x.strip()) for x in inn_str.split(",") if x.strip() != ""]
+    s = inn_str.strip()
+    if s.startswith("[") and s.endswith("]"):
+        import ast
+        try:
+            parts = ast.literal_eval(s)
+        except (ValueError, SyntaxError):
+            return []
+        return [int(x) if str(x).lstrip("-").isdigit() else 0 for x in parts]
+    return [int(x.strip()) for x in s.split(",") if x.strip() != ""]
 
 
 def parse_rheb(rheb_str: str) -> dict[str, int]:
