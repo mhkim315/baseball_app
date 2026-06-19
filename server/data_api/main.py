@@ -59,6 +59,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         forwarded = request.headers.get("x-forwarded-for", "")
         client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
+
+        if client_ip in ("127.0.0.1", "::1"):
+            return await call_next(request)
         
         timestamps = self.requests.get(client_ip, [])
         now = time.time()
