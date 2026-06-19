@@ -6,6 +6,7 @@ import sys
 import random
 import logging
 import time
+import threading
 from datetime import datetime, timedelta, date, time as dt_time, timezone
 from pathlib import Path
 from collections import defaultdict
@@ -1003,6 +1004,7 @@ _DAUM_ID_CACHE_TTL = 1800  # 30 min
 _DAUM_COOLDOWN = 0
 _DAUM_COOLDOWN_SEC = 120
 _DAUM_FETCH_IN_FLIGHT = False
+_DAUM_LOCK = threading.Lock()
 _NAVER_HEALTHY = True
 _NAVER_LAST_CHECK = 0
 _NAVER_RECHECK_INTERVAL = 300  # 5 min between Naver health probes
@@ -1027,79 +1029,84 @@ def _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, sta
     """Build widget data from Daum API when Naver is unavailable."""
     global _DAUM_COOLDOWN, _DAUM_FETCH_IN_FLIGHT
 
-    if _DAUM_FETCH_IN_FLIGHT:
+    if not _DAUM_LOCK.acquire(blocking=False):
         cached = _WIDGET_CACHE.get(today_str)
         if cached:
             return cached[1]
         return None
 
-    if time.time() - _DAUM_COOLDOWN < _DAUM_COOLDOWN_SEC:
-        cached = _WIDGET_CACHE.get(today_str)
-        if cached:
-            return cached[1]
-        return None
-
-    _DAUM_FETCH_IN_FLIGHT = True
-    _DAUM_COOLDOWN = time.time()
     try:
-        from scripts.daum_adapter import fetch_daum_game, normalize_game, normalize_relay, apply_relay_names
+        if _DAUM_FETCH_IN_FLIGHT:
+            cached = _WIDGET_CACHE.get(today_str)
+            return cached[1] if cached else None
 
-        # Use pre-fetched mapping if available, otherwise scan
-        mapping = _DAUM_ID_CACHE.get(today_str, {})
-        if not mapping:
-            from scripts.daum_adapter import get_daum_game_ids
-            mapping = get_daum_game_ids(today_str)
-        if not mapping:
-            logger.warning("daum: no games found for %s", today_str)
-            _save_crash_dump(today_str, "daum_no_games", {"date": today_str})
+        if time.time() - _DAUM_COOLDOWN < _DAUM_COOLDOWN_SEC:
+            cached = _WIDGET_CACHE.get(today_str)
+            return cached[1] if cached else None
+
+        _DAUM_FETCH_IN_FLIGHT = True
+        _DAUM_COOLDOWN = time.time()
+        try:
+            from scripts.daum_adapter import fetch_daum_game, normalize_game, normalize_relay, apply_relay_names
+
+            # Use pre-fetched mapping if available, otherwise scan
+            mapping = _DAUM_ID_CACHE.get(today_str, {})
+            if not mapping:
+                from scripts.daum_adapter import get_daum_game_ids
+                mapping = get_daum_game_ids(today_str)
+            if not mapping:
+                logger.warning("daum: no games found for %s", today_str)
+                _save_crash_dump(today_str, "daum_no_games", {"date": today_str})
+                return None
+
+            id_to_code = {v: k for k, v in TEAM_CODE_MAP.items()}
+            games_data = []
+
+            for cpid, daum_id in mapping.items():
+                doc = fetch_daum_game(daum_id)
+                if not doc:
+                    continue
+                game = normalize_game(doc)
+                relay = normalize_relay(doc)
+                relay = apply_relay_names(relay, game.pop("p2n", {}))
+
+                home_kr = _code_to_kr(game["homeTeam"])
+                away_kr = _code_to_kr(game["awayTeam"])
+
+                games_data.append({
+                    "gameId": _daum_cpid_to_gid(cpid),
+                    "naverGameId": "",
+                    "gameIdx": 0,
+                    "time": game["time"],
+                    "venue": game["venue"],
+                    "status": game["status"],
+                    "homeTeam": game["homeTeam"],
+                    "awayTeam": game["awayTeam"],
+                    "homeName": home_kr,
+                    "awayName": away_kr,
+                    "homeStarter": game.get("homeStarter"),
+                    "awayStarter": game.get("awayStarter"),
+                    "homeRank": rank_map.get(home_kr),
+                    "awayRank": rank_map.get(away_kr),
+                    "homeStreak": streak_map.get(home_kr),
+                    "awayStreak": streak_map.get(away_kr),
+                    "score": {"home": game["homeScore"], "away": game["awayScore"]} if game["homeScore"] is not None else None,
+                    "scoreBoard": game.get("scoreBoard", {"rheb": {"home":{"r":0,"h":0,"e":0},"away":{"r":0,"h":0,"e":0}}, "inn": {"home":[],"away":[]}}),
+                    "relay": relay,
+                })
+
+            result = {"games": games_data, "todayWeather": {}}
+            _WIDGET_CACHE[today_str] = (time.time(), result)
+            logger.info("daum: fallback success — %d games", len(games_data))
+            return result
+        except Exception as e:
+            logger.error("daum: fallback failed — %s", e)
+            _save_crash_dump(today_str, "daum_exception", {"error": str(e)})
             return None
-
-        id_to_code = {v: k for k, v in TEAM_CODE_MAP.items()}
-        games_data = []
-
-        for cpid, daum_id in mapping.items():
-            doc = fetch_daum_game(daum_id)
-            if not doc:
-                continue
-            game = normalize_game(doc)
-            relay = normalize_relay(doc)
-            relay = apply_relay_names(relay, game.pop("p2n", {}))
-
-            home_kr = _code_to_kr(game["homeTeam"])
-            away_kr = _code_to_kr(game["awayTeam"])
-
-            games_data.append({
-                "gameId": _daum_cpid_to_gid(cpid),
-                "naverGameId": "",
-                "gameIdx": 0,
-                "time": game["time"],
-                "venue": game["venue"],
-                "status": game["status"],
-                "homeTeam": game["homeTeam"],
-                "awayTeam": game["awayTeam"],
-                "homeName": home_kr,
-                "awayName": away_kr,
-                "homeStarter": game.get("homeStarter"),
-                "awayStarter": game.get("awayStarter"),
-                "homeRank": rank_map.get(home_kr),
-                "awayRank": rank_map.get(away_kr),
-                "homeStreak": streak_map.get(home_kr),
-                "awayStreak": streak_map.get(away_kr),
-                "score": {"home": game["homeScore"], "away": game["awayScore"]} if game["homeScore"] is not None else None,
-                "scoreBoard": game.get("scoreBoard", {"rheb": {"home":{"r":0,"h":0,"e":0},"away":{"r":0,"h":0,"e":0}}, "inn": {"home":[],"away":[]}}),
-                "relay": relay,
-            })
-
-        result = {"games": games_data, "todayWeather": {}}
-        _WIDGET_CACHE[today_str] = (time.time(), result)
-        logger.info("daum: fallback success — %d games", len(games_data))
-        return result
-    except Exception as e:
-        logger.error("daum: fallback failed — %s", e)
-        _save_crash_dump(today_str, "daum_exception", {"error": str(e)})
-        return None
+        finally:
+            _DAUM_FETCH_IN_FLIGHT = False
     finally:
-        _DAUM_FETCH_IN_FLIGHT = False
+        _DAUM_LOCK.release()
 
 
 def _daum_cpid_to_gid(cpid):
