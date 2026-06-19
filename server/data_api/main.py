@@ -6,7 +6,7 @@ import sys
 import random
 import logging
 import time
-from datetime import datetime, timedelta, date, time as dt_time
+from datetime import datetime, timedelta, date, time as dt_time, timezone
 from pathlib import Path
 from collections import defaultdict
 from typing import Optional
@@ -815,7 +815,7 @@ def _get_widget_data_cached() -> dict | None:
 
         if time_str and status in ("live", "finished"):
             try:
-                now_kst = datetime.now()
+                now_kst = datetime.now(tz=timezone(timedelta(hours=9)))
                 h, m = map(int, time_str.split(":"))
                 game_dt = now_kst.replace(hour=h, minute=m, second=0, microsecond=0)
                 if status == "finished" and now_kst < game_dt:
