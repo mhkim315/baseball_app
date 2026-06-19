@@ -586,10 +586,14 @@ function view2x2Finished(data: WidgetGameData, away: ReturnType<typeof getTeamIn
 }
 
 function view2x2Cancelled(data: WidgetGameData, away: ReturnType<typeof getTeamInfo>, home: ReturnType<typeof getTeamInfo>) {
+  const weatherText = data.weather ? data.weather.replace(/^[0-9.-]+°\s*/, "") : "";
+  const headerText = data.stadium ? (weatherText ? `${data.stadium} ${weatherText}` : data.stadium) : "오늘 경기";
+
   return (
     <ColorBg>
       <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 10, width: "match_parent" }}>
-        <FlexWidget style={{ flexDirection: "row", justifyContent: "flex-end", width: "match_parent" }}>
+        <FlexWidget style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "match_parent" }}>
+          <TextWidget text={headerText} style={{ fontSize: 11, fontWeight: "700", color: FG_87 }} />
           <FlexWidget clickAction="REFRESH" style={{ padding: 2 }}>
             <TextWidget text="↻" style={{ fontSize: 14, color: "#e07b3c", fontWeight: "700" }} />
           </FlexWidget>
@@ -690,6 +694,44 @@ function view4x2(data: WidgetGameData) {
   const isScheduled = data.status === "scheduled";
   const isCancelled = data.status === "cancelled";
   const isFinished = data.status === "finished";
+
+  if (isCancelled) {
+    return (
+      <ColorBg>
+        <FlexWidget style={{ flex: 1, flexDirection: "column", padding: 16, paddingHorizontal: 24, width: "match_parent" }}>
+          <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
+            <TextWidget text={`${data.stadium || "오늘 경기"} ${data.weather || ""}`.trim() || " "} style={{ fontSize: 13, fontWeight: "700", color: FG_87 }} />
+            <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
+              <TextWidget text="우천 취소" style={{ fontSize: 14, fontWeight: "700", color: FG_87 }} />
+              <FlexWidget clickAction="REFRESH" style={{ paddingLeft: 8, paddingVertical: 2 }}><TextWidget text="↻" style={{ fontSize: 18, color: "#e07b3c", fontWeight: "700" }} /></FlexWidget>
+            </FlexWidget>
+          </FlexWidget>
+
+          <FlexWidget style={{ flex: 1 }} />
+
+          <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "match_parent" }}>
+            <FlexWidget style={{ alignItems: "center", width: 100 }}>
+              <ImageWidget image={away.charImage} imageWidth={56} imageHeight={56} />
+              <FlexWidget style={{ height: 8 }} />
+              <TextWidget text={away.teamName} style={{ fontSize: 16, fontWeight: "700", color: away.nameColor }} />
+            </FlexWidget>
+
+            <FlexWidget style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+              <TextWidget text="취소" style={{ fontSize: 24, fontWeight: "700", color: FG_47 }} />
+            </FlexWidget>
+
+            <FlexWidget style={{ alignItems: "center", width: 100 }}>
+              <ImageWidget image={home.charImage} imageWidth={56} imageHeight={56} />
+              <FlexWidget style={{ height: 8 }} />
+              <TextWidget text={home.teamName} style={{ fontSize: 16, fontWeight: "700", color: home.nameColor }} />
+            </FlexWidget>
+          </FlexWidget>
+
+          <FlexWidget style={{ flex: 1 }} />
+        </FlexWidget>
+      </ColorBg>
+    );
+  }
 
   if (isScheduled) {
     return (
