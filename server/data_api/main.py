@@ -1051,6 +1051,7 @@ def _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, sta
             mapping = get_daum_game_ids(today_str)
         if not mapping:
             logger.warning("daum: no games found for %s", today_str)
+            _save_crash_dump(today_str, "daum_no_games", {"date": today_str})
             return None
 
         id_to_code = {v: k for k, v in TEAM_CODE_MAP.items()}
@@ -1095,6 +1096,7 @@ def _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, sta
         return result
     except Exception as e:
         logger.error("daum: fallback failed — %s", e)
+        _save_crash_dump(today_str, "daum_exception", {"error": str(e)})
         return None
     finally:
         _DAUM_FETCH_IN_FLIGHT = False
