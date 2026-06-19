@@ -146,7 +146,7 @@ def normalize_relay(doc):
         "out": str(ground.get("out", "0") or "0"),
         "base1": "1" if ground.get("base1") else "0",
         "base2": "1" if ground.get("base2") else "0",
-        "base3": "0",
+        "base3": "1" if ground.get("base3") else "0",
         "_pitcherId": ground.get("currentPitcher"),
         "_batterId": ground.get("currentBatter"),
     }
