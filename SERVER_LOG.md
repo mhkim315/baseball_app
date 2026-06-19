@@ -1,6 +1,24 @@
 # 서버 작업 로그
 
-## 2026-06-19: 위젯 1.3.1 출시 + Naver API 대응 + Daum 폴백
+## 2026-06-19: 위젯 1.3.2 출시 + Naver API 대응 + Daum 폴백
+
+### Naver API 필드 검증 결과
+
+**Naver가 바꾼 게 아니라 원래 그랬던 것:**
+- `homeScore`/`awayScore` → 항상 None. 실제 필드는 `homeTeamScore`/`awayTeamScore`
+- `status` → 항상 None. 실제 필드는 `statusCode`
+- relay 응답: 원래부터 `textRelayData` 래퍼 구조 (6/18까지는 relay를 안 써서 몰랐음)
+
+**진짜 변경된 것:** 어제→오늘 사이 `textRelayData` 래퍼 추가. `homeEntry` 구조 `[...]` → `{batter:[],pitcher:[]}`
+
+### Daum Sports API 발굴
+
+- `sports.daum.net/prx/hermes/api/game/{ID}` → cpGameId로 매칭 (Naver team code와 100% 일치)
+- `issue.daum.net/api/arms/SPORTS_GAME?gameId={ID}&detail=liveData` → liveData.ground에 BSO/주자/투수/타자
+- ID 체계: 날짜별 순차 증가 (5경기/일, 비경기일 스킵)
+- `daum_adapter.py`: `normalize_game` + `normalize_relay` + ID 스캔
+
+### 3중 폴백 체계
 
 ### 아키텍처 변경
 
