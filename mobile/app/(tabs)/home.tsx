@@ -545,14 +545,14 @@ export default function HomeScreen() {
     try { updateWidgetPeriodic(); } catch {}
     const wInterval = setInterval(() => {
       try { updateWidgetPeriodic(); } catch {}
-    }, 15_000);
+    }, 5_000);
     return () => clearInterval(wInterval);
   }, []));
 
   useFocusEffect(useCallback(() => {
     const interval = setInterval(() => {
       load();
-    }, 16_000);
+    }, 5_000);
     return () => clearInterval(interval);
   }, [load]));
 
