@@ -52,10 +52,20 @@ def parse_score_inning(inn_str: str) -> list[int]:
 
 
 def parse_rheb(rheb_str: str) -> dict[str, int]:
-    """Parse Naver comma-separated RHEB. "5,10,0,2" → {"r":5,"h":10,"e":0}. Drops BB (4th value)."""
+    """Parse Naver RHEB. Handles both "5,10,0,2" and "[0,0,0,0]"."""
     if not rheb_str or not rheb_str.strip():
         return {"r": 0, "h": 0, "e": 0}
-    parts = [x.strip() for x in rheb_str.split(",")]
+    s = rheb_str.strip()
+    if s.startswith("[") and s.endswith("]"):
+        import ast
+        try:
+            parts = ast.literal_eval(s)
+        except (ValueError, SyntaxError):
+            return {"r": 0, "h": 0, "e": 0}
+        return {"r": int(parts[0]) if len(parts) > 0 else 0,
+                "h": int(parts[1]) if len(parts) > 1 else 0,
+                "e": int(parts[2]) if len(parts) > 2 else 0}
+    parts = [x.strip() for x in s.split(",")]
     return {"r": int(parts[0]), "h": int(parts[1]), "e": int(parts[2])}
 
 
