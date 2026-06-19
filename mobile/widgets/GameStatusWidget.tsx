@@ -868,9 +868,9 @@ function view4x2(data: WidgetGameData) {
 
             <FlexWidget style={{ flex: 1, alignItems: "center", justifyContent: "center", flexDirection: "row" }}>
                 <TextWidget text={away.scoreText} style={{ fontSize: 30, fontWeight: "700", color: awayWon ? away.scoreColor : alpha(away.scoreColor, "99") }} />
-                <FlexWidget style={{width: (String(data.awayScore).length >= 2 || String(data.homeScore).length >= 2) ? 3 : 8}} />
+                <FlexWidget style={{width: (String(data.awayScore ?? "").length >= 2 || String(data.homeScore ?? "").length >= 2) ? 3 : 8}} />
                 <TextWidget text=":" style={{ fontSize: 20, fontWeight: "700", color: FG_73 }} />
-                <FlexWidget style={{width: (String(data.awayScore).length >= 2 || String(data.homeScore).length >= 2) ? 3 : 8}} />
+                <FlexWidget style={{width: (String(data.awayScore ?? "").length >= 2 || String(data.homeScore ?? "").length >= 2) ? 3 : 8}} />
                 <TextWidget text={home.scoreText} style={{ fontSize: 30, fontWeight: "700", color: homeWon ? home.scoreColor : alpha(home.scoreColor, "99") }} />
             </FlexWidget>
 
@@ -961,9 +961,9 @@ function view4x2(data: WidgetGameData) {
           <FlexWidget style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <FlexWidget style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
               <TextWidget text={away.scoreText} style={{ fontSize: 32, fontWeight: "700", color: away.scoreColor }} />
-              <FlexWidget style={{width: (String(data.awayScore).length >= 2 || String(data.homeScore).length >= 2) ? 3 : 8}} />
+              <FlexWidget style={{width: (String(data.awayScore ?? "").length >= 2 || String(data.homeScore ?? "").length >= 2) ? 3 : 8}} />
               <TextWidget text=":" style={{ fontSize: 20, fontWeight: "700", color: FG_73 }} />
-              <FlexWidget style={{width: (String(data.awayScore).length >= 2 || String(data.homeScore).length >= 2) ? 3 : 8}} />
+              <FlexWidget style={{width: (String(data.awayScore ?? "").length >= 2 || String(data.homeScore ?? "").length >= 2) ? 3 : 8}} />
               <TextWidget text={home.scoreText} style={{ fontSize: 32, fontWeight: "700", color: home.scoreColor }} />
             </FlexWidget>
           </FlexWidget>
