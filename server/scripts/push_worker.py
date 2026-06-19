@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from sqlalchemy import create_engine, text
@@ -15,6 +16,8 @@ DATABASE_URL = os.getenv("DATABASE_URL", "")
 DRY_RUN = os.getenv("DRY_RUN", "true").lower() in ("1", "true", "yes")
 
 _PREV_STATE: dict[str, dict] = {}
+_LAST_WEATHER_PUSH: float = 0
+_WEATHER_PUSH_INTERVAL = 1800  # 30 minutes
 
 
 def _game_key(game: dict) -> str:
@@ -63,6 +66,7 @@ def _build_payload(game: dict) -> dict:
 
 
 def run_push_worker(widget_data_func, db_engine=None):
+    global _LAST_WEATHER_PUSH
     if not ENABLED:
         return
 
@@ -75,7 +79,37 @@ def run_push_worker(widget_data_func, db_engine=None):
     games = data.get("games", []) if isinstance(data, dict) else []
     live_games = [g for g in games if g.get("status") == "live"]
 
+    scheduled_games = [g for g in games if g.get("status") == "scheduled"]
+
     if not live_games:
+        # Weather refresh push for scheduled games (every 30 min)
+        if scheduled_games and time.time() - _LAST_WEATHER_PUSH > _WEATHER_PUSH_INTERVAL:
+            _LAST_WEATHER_PUSH = time.time()
+            engine = db_engine or create_engine(DATABASE_URL)
+            for game in scheduled_games:
+                gid = _game_key(game)
+                home_team = game.get("homeTeam", "")
+                away_team = game.get("awayTeam", "")
+                payload = _build_payload(game)
+                android_tokens, ios_tokens = [], []
+                try:
+                    with engine.connect() as conn:
+                        rows = conn.execute(
+                            text("SELECT token FROM device_tokens WHERE platform = 'android' AND target_team_id IN (:h, :a)"),
+                            {"h": home_team, "a": away_team},
+                        ).fetchall()
+                        android_tokens = [r[0] for r in rows]
+                except Exception as e:
+                    logger.warning("push_worker: token query failed — %s", e)
+                    continue
+                if not android_tokens:
+                    continue
+                with ThreadPoolExecutor(max_workers=8) as ex:
+                    for tok in android_tokens:
+                        ex.submit(send_fcm, tok, payload, DRY_RUN)
+            if db_engine is None:
+                engine.dispose()
+            logger.info("push_worker: weather refresh — %d scheduled games dispatched", len(scheduled_games))
         return
 
     changed = []
