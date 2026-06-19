@@ -540,6 +540,15 @@ export default function HomeScreen() {
   // Auto-refresh: re-check data periodically while screen is focused,
   // so stale cache is detected and refreshed without user navigation.
   // useFocusEffect ensures the interval is paused when user switches tabs.
+  // Widget update polling — keep widget in sync while app is open
+  useFocusEffect(useCallback(() => {
+    try { updateWidgetPeriodic(); } catch {}
+    const wInterval = setInterval(() => {
+      try { updateWidgetPeriodic(); } catch {}
+    }, 15_000);
+    return () => clearInterval(wInterval);
+  }, []));
+
   useFocusEffect(useCallback(() => {
     const interval = setInterval(() => {
       load();
