@@ -33,9 +33,8 @@ def _has_changed(gid: str, game: dict) -> bool:
         return True
     prev_relay = prev.get("relay") or {}
     cur_relay = game.get("relay") or {}
-    for field in ("ball", "strike", "out", "base1", "base2", "base3"):
-        if prev_relay.get(field) != cur_relay.get(field):
-            return True
+    if prev_relay.get("inning") != cur_relay.get("inning") or prev_relay.get("isTop") != cur_relay.get("isTop"):
+        return True
     return False
 
 
