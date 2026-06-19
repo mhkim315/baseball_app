@@ -98,6 +98,7 @@ export default function DiaryEntryModal({ visible, onClose, onSaved, editRecord,
             <DiaryWriteStep
               selectedGame={form.selectedGame}
               editRecord={form.editRecord}
+              isFutureGame={form.isFutureGame}
               cheeredTeam={form.cheeredTeam}
               setCheeredTeam={form.setCheeredTeam}
               emotion={form.emotion}

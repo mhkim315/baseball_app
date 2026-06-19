@@ -91,7 +91,7 @@ const JIKGWAN_ALLOWED_COLUMNS = new Set([
 
 export function updateJikgwanRecord(
   id: number,
-  fields: Partial<Pick<JikgwanRecord, "memo" | "emotion" | "three_line_1" | "three_line_2" | "three_line_3" | "frame_style" | "is_win" | "photos" | "cheered_team" | "is_live" | "seat" | "score_away" | "score_home" | "stadium" | "game_id" | "game_type" | "game_status">>
+  fields: Partial<Pick<JikgwanRecord, "memo" | "emotion" | "three_line_1" | "three_line_2" | "three_line_3" | "frame_style" | "is_win" | "photos" | "cheered_team" | "is_live" | "seat" | "score_away" | "score_home" | "stadium" | "game_id" | "game_type" | "game_status" | "is_planned">>
 ): void {
   invalidateRecordsCache();
   const database = getDb();

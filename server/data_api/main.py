@@ -675,11 +675,11 @@ def _naver_status(s: str) -> str:
     if not s:
         return "scheduled"
     su = s.upper()
-    if su in ("STARTED", "PLAYING", "LIVE"):
+    if su in ("STARTED", "PLAYING", "LIVE", "2"):
         return "live"
-    if su in ("RESULT", "ENDED", "FINISHED"):
+    if su in ("RESULT", "ENDED", "FINISHED", "3", "4"):
         return "finished"
-    if su in ("CANCEL", "CANCELLED"):
+    if su in ("CANCEL", "CANCELLED", "5", "6", "7", "8"):
         return "cancelled"
     return "scheduled"
 
@@ -741,13 +741,57 @@ def _get_widget_data_cached() -> dict | None:
         )
         raw_games = schedule_games(today_str, today_str)
     except Exception as e:
-        logger.error("widget-data: schedule_games failed — %s", e)
-        return None
+        logger.warning("widget-data: Naver failed, using KBO fallback — %s", e)
+        raw_games = []
 
     kbo_games = [g for g in raw_games if g.get("categoryId") == "kbo"]
 
     games_data: list[dict] = []
     live_naver_ids: list[str] = []
+
+    # ── KBO fallback when Naver returns no games ──────────────────
+    if not kbo_games and today_games:
+        id_to_code = {v: k for k, v in TEAM_CODE_MAP.items()}
+        for g in today_games.get("games", []):
+            gid = g.get("id", "")
+            away = g.get("away", {}) or {}
+            home = g.get("home", {}) or {}
+            aws = g.get("score", {}).get("away") if isinstance(g.get("score"), dict) else None
+            hs = g.get("score", {}).get("home") if isinstance(g.get("score"), dict) else None
+            away_st = None
+            home_st = None
+            for side, key in ((away, "away"), (home, "home")):
+                s = side.get("starter") if isinstance(side, dict) else None
+                name = None
+                if isinstance(s, dict) and s.get("name"):
+                    name = s["name"]
+                elif isinstance(s, str) and s:
+                    name = s
+                if key == "away":
+                    away_st = name
+                else:
+                    home_st = name
+            games_data.append({
+                "gameId": gid,
+                "naverGameId": "",
+                "gameIdx": 0,
+                "time": g.get("time", ""),
+                "venue": g.get("venue", ""),
+                "status": _naver_status(g.get("status", "scheduled")),
+                "homeTeam": id_to_code.get(home.get("id", ""), home.get("id", "")),
+                "awayTeam": id_to_code.get(away.get("id", ""), away.get("id", "")),
+                "homeName": home.get("name", ""),
+                "awayName": away.get("name", ""),
+                "homeStarter": home_st,
+                "awayStarter": away_st,
+                "homeRank": home.get("rank"),
+                "awayRank": away.get("rank"),
+                "homeStreak": streak_map.get(home.get("name")),
+                "awayStreak": streak_map.get(away.get("name")),
+                "score": {"home": hs, "away": aws} if hs is not None and aws is not None else None,
+                "scoreBoard": {"rheb": {"home":{"r":0,"h":0,"e":0},"away":{"r":0,"h":0,"e":0}}, "inn": {"home":[], "away":[]}},
+                "relay": None,
+            })
 
     def _code_to_kr(code: str) -> str:
         tid = TEAM_CODE_MAP.get(code)
@@ -756,10 +800,18 @@ def _get_widget_data_cached() -> dict | None:
     for g in kbo_games:
         naver_id = str(g.get("gameId", ""))
         internal_id = _naver_to_internal_gid(naver_id)
-        status = _naver_status(g.get("status", ""))
+        status = _naver_status(g.get("statusCode", ""))
 
         home_code = str(g.get("homeTeamCode") or "")
         away_code = str(g.get("awayTeamCode") or "")
+        # Fallback: parse team codes from Naver gameId when API omits them (scheduled)
+        if not home_code or not away_code:
+            m = _NAVER_ID_RE.match(naver_id)
+            if m:
+                if not away_code:
+                    away_code = m.group(2)
+                if not home_code:
+                    home_code = m.group(3)
         home_kr = _code_to_kr(home_code)
         away_kr = _code_to_kr(away_code)
 

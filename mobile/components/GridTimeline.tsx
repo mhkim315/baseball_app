@@ -4,7 +4,9 @@ import ConfirmModal from "@/components/ConfirmModal";
 import { useTheme } from "@/lib/ThemeContext";
 import { deletePhoto, resolvePhotoUri } from "@/lib/camera";
 import { TEAM_COLORS, teamPrimaryColor } from "@shared/teamColors";
-import { parseGameTeamIds, parseDotDate } from "@shared/constants";
+import { parseGameTeamIds } from "@shared/constants";
+import { parseDotDate } from "@/lib/dateUtils";
+import type { JikgwanRecord } from "@/lib/db";
 
 interface GridTimelineProps {
   records: JikgwanRecord[];

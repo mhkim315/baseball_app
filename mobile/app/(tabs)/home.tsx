@@ -11,6 +11,7 @@ import {
   type ScoreEntry,
   type ScheduleGame,
 } from "@/lib/api";
+import type { WidgetGame } from "@shared/types";
 import {
   cachedScheduleByMonth,
   cachedDailyScores,
@@ -18,6 +19,7 @@ import {
   cachedTodayGames,
   cachedWidgetData,
 } from "@/lib/gameCache";
+import { SHORT_CODE_TO_TEAM_ID } from "@/lib/teamStorage";
 import { resolveGames, resolveGamesForSchedule, type ResolvedGame } from "@/lib/resolveGames";
 import { VENUE_TO_FULL_NAME } from "@/lib/stadiumData";
 import { formatDateForApi as formatDateStr } from "@shared/constants";
@@ -37,7 +39,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import { useTeam } from "@/lib/TeamContext";
 import { backfillLiveRecords, evaluateBadges, grantRandomCharacter } from "@/lib/achievements";
-import { type Badge, getTodayBackCoachSeen, setTodayBackCoachSeen, getHomeCoachSeen, setHomeCoachSeen, getHomeStickerCoachSeen, setHomeStickerCoachSeen, getVisitCount, getShortcut, setShortcut as saveShortcut, getJikgwanRecords } from "@/lib/db";
+import { type Badge, type JikgwanRecord, getTodayBackCoachSeen, setTodayBackCoachSeen, getHomeCoachSeen, setHomeCoachSeen, getHomeStickerCoachSeen, setHomeStickerCoachSeen, getVisitCount, getShortcut, setShortcut as saveShortcut, getJikgwanRecords } from "@/lib/db";
 import { findTargetDate, getGameOptionForDate, findRecentMyTeamGame, type ShortcutType } from "@/lib/shortcutHelper";
 import type { GameOption } from "@/components/diary/useDiaryForm";
 
@@ -271,14 +273,39 @@ export default function HomeScreen() {
 
     const scorePromises = dates.map((ds) => cachedDailyScores(ds).catch(() => null));
     const todayPromise = cachedTodayGames().catch(() => null);
+    const widgetPromise = cachedWidgetData().catch(() => null);
     const todayStr = formatDateStr(new Date());
 
-    Promise.all([schedulePromise, adjSchedulePromise, ...scorePromises, todayPromise])
+    Promise.all([schedulePromise, adjSchedulePromise, ...scorePromises, todayPromise, widgetPromise])
       .then(async ([scheduleGames, adjGames, ...rest]: [unknown, unknown, ...unknown[]]) => {
         if (cancelled) return;
         const scoresList = rest.slice(0, 3) as ({ games: ScoreEntry[] } | null)[];
         const todayData = rest[3] as { games: TodayGame[]; nextGames?: TodayGame[] } | null;
+        const widgetData = rest[4] as { games: WidgetGame[]; todayWeather?: Record<string, { temp: string; condition: string }> } | null;
         const schedule = [...(scheduleGames as ScheduleGame[]), ...(adjGames as ScheduleGame[])];
+
+        // Convert widget-data games to TodayGame format (widget-data is SSOT for today)
+        const widgetTodayGames: TodayGame[] | undefined = widgetData?.games?.map((wg) => ({
+          id: wg.gameId,
+          date: wg.gameId.slice(0, 4) + "-" + wg.gameId.slice(4, 6) + "-" + wg.gameId.slice(6, 8),
+          venue: wg.venue,
+          time: wg.time,
+          status: wg.status,
+          away: {
+            id: SHORT_CODE_TO_TEAM_ID[wg.awayTeam] || "",
+            name: wg.awayName,
+            starter: wg.awayStarter ? { name: wg.awayStarter } : undefined,
+            rank: wg.awayRank ?? undefined,
+          },
+          home: {
+            id: SHORT_CODE_TO_TEAM_ID[wg.homeTeam] || "",
+            name: wg.homeName,
+            starter: wg.homeStarter ? { name: wg.homeStarter } : undefined,
+            rank: wg.homeRank ?? undefined,
+          },
+          score: wg.score ? { away: wg.score.away, home: wg.score.home } : undefined,
+        }));
+        todayWeatherRef.current = widgetData?.todayWeather || {};
 
         const result: Record<string, ResolvedGame[]> = {};
         for (let i = 0; i < 3; i++) {
@@ -287,7 +314,8 @@ export default function HomeScreen() {
           const isFuture = ds > todayStr;
           const isToday = ds === todayStr;
 
-          const todayGamesForDate = isToday ? todayData?.games : undefined;
+          // Prefer widget-data for today; fall back to today-games if widget unavailable
+          const todayGamesForDate = isToday ? (widgetTodayGames ?? todayData?.games) : undefined;
           const nextGamesForDate = !isToday ? todayData?.nextGames : undefined;
           const resolved = resolveGames(schedule, scoreEntries, ds, {
             todayGames: todayGamesForDate,
@@ -298,15 +326,13 @@ export default function HomeScreen() {
           result[ds] = resolved;
         }
 
-        // Enrich live games via widget-data (single call for all games)
+        // Enrich live games via widget-data relay/scoreBoard overlay
         try {
-          const widgetData = await cachedWidgetData();
-          if (widgetData?.games) {
-            todayWeatherRef.current = widgetData.todayWeather || {};
-            for (const wg of widgetData.games) {
-              for (let i = 0; i < 3; i++) {
-                const ds = dates[i];
-                const games = result[ds];
+        if (widgetData?.games) {
+          for (const wg of widgetData.games) {
+            for (let i = 0; i < 3; i++) {
+              const ds = dates[i];
+              const games = result[ds];
                 if (!games) continue;
                 const idx = games.findIndex((g) => g.gameId === wg.gameId);
                 if (idx === -1) continue;

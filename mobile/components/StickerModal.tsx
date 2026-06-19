@@ -303,6 +303,7 @@ export default function StickerModal({
   const handleCopyClipboard = usePressOnce(useCallback(async () => {
     setCapturing(true);
     try {
+      if (!viewRef.current) { setCapturing(false); return; }
       const base64 = await captureRef(viewRef.current, { format: "png", result: "base64" });
       await Clipboard.setImageAsync(base64);
       setAlert({ visible: true, title: "완료", message: "클립보드에 복사되었습니다.\n인스타그램 스토리에 붙여넣기 하세요." });
@@ -316,6 +317,7 @@ export default function StickerModal({
   const handleShare = usePressOnce(useCallback(async () => {
     setCapturing(true);
     try {
+      if (!viewRef.current) { setCapturing(false); return; }
       const uri = await captureRef(viewRef.current, { format: "png", result: "tmpfile" });
       await Sharing.shareAsync(uri, { mimeType: "image/png" });
     } catch {
