@@ -896,12 +896,12 @@ def _get_widget_data_cached() -> dict | None:
                 if not rd:
                     return None
                 td = rd.get("textRelayData", {}) or {}
-                home_entry = td.get("homeEntry", {}) or {}
-                away_entry = td.get("awayEntry", {}) or {}
                 p2n: dict[str, str] = {}
-                for e in (home_entry.get("batter") or []) + (home_entry.get("pitcher") or []) + (away_entry.get("batter") or []) + (away_entry.get("pitcher") or []):
-                    if isinstance(e, dict) and e.get("pcode") and e.get("name"):
-                        p2n[str(e["pcode"])] = str(e["name"])
+                for entry_key in ("homeEntry", "awayEntry", "homeLineup", "awayLineup"):
+                    entry = td.get(entry_key, {}) or {}
+                    for e in (entry.get("batter") or []) + (entry.get("pitcher") or []):
+                        if isinstance(e, dict) and e.get("pcode") and e.get("name"):
+                            p2n[str(e["pcode"])] = str(e["name"])
 
                 cs = td.get("currentGameState", {}) or {}
                 pid = str(cs.get("pitcher") or "0")
@@ -1273,12 +1273,12 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
             relay_data = game_relay(nid)
             if relay_data:
                 td = relay_data.get("textRelayData", {}) or {}
-                home_entry = td.get("homeEntry", {}) or {}
-                away_entry = td.get("awayEntry", {}) or {}
                 pcode_to_name = {}
-                for e in (home_entry.get("batter") or []) + (home_entry.get("pitcher") or []) + (away_entry.get("batter") or []) + (away_entry.get("pitcher") or []):
-                    if isinstance(e, dict) and "pcode" in e and "name" in e:
-                        pcode_to_name[e["pcode"]] = e["name"]
+                for entry_key in ("homeEntry", "awayEntry", "homeLineup", "awayLineup"):
+                    entry = td.get(entry_key, {}) or {}
+                    for e in (entry.get("batter") or []) + (entry.get("pitcher") or []):
+                        if isinstance(e, dict) and "pcode" in e and "name" in e:
+                            pcode_to_name[e["pcode"]] = e["name"]
 
                 cs = td.get("currentGameState", {}) or {}
                 pitcher_id = str(cs.get("pitcher") or "0")
