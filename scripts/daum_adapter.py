@@ -36,12 +36,12 @@ def get_daum_game_ids(date_str):
     y, m, d = int(date_str[:4]), int(date_str[4:6]), int(date_str[6:8])
     target = date(y, m, d)
     days_diff = (target - _REF_DATE).days
-    # Start a few game-days before; non-game days don't consume IDs
-    gid = _REF_FIRST_ID + max(0, days_diff - 2) * _GAMES_PER_DAY
+    # Start several game-days before; non-game days (Mon, breaks) don't consume IDs
+    gid = _REF_FIRST_ID + max(0, days_diff - 7) * _GAMES_PER_DAY
 
     mapping = {}
     # Scan a window of IDs; non-game days shift the actual IDs forward
-    for _ in range(20):  # generous window to handle breaks
+    for _ in range(40):  # generous window to handle breaks + off-days
         url = "%s/%d" % (DAUM_GAME_API, gid)
         try:
             doc = _fetch_json(url)
