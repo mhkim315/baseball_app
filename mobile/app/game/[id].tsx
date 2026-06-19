@@ -704,7 +704,10 @@ export default function GameDetailScreen() {
   const showLineupStatus = isBeforeGame;
   const lineupConfirmed = isFuture ? false : (detail.lineupConfirmed ?? false);
   const statusLabel = isCancelled ? "취소" : isFinished ? "경기 종료" : isLive ? "경기 중" : "경기 전";
-  const inningInfo = getInningInfo(detail.scoreBoard?.inn) || (isLive ? { inning: 1, isTop: true as const } : null);
+  const relayInning = detail.relay?.inning ? parseInt(String(detail.relay.inning), 10) : null;
+  const inningInfo = (relayInning && relayInning > 0)
+    ? { inning: relayInning, isTop: String(detail.relay?.isTop) === "1" } as const
+    : getInningInfo(detail.scoreBoard?.inn) || (isLive ? { inning: 1, isTop: true as const } : null);
   const liveLabel = inningInfo ? `${inningInfo.inning}회${inningInfo.isTop ? "초" : "말"}` : "경기 중";
   const gs = gameScore;
   const awayWin = isFinished && gs ? gs.away > gs.home : null;
