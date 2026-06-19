@@ -2,7 +2,13 @@
   <string name="app_name">풀카운트</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
-  <string name="expo_runtime_version">1.3.2</string>
+  <string name="expo_runtime_version">1.3.3</string>
   <string name="widget_widget2x2_description" translatable="false">2x2 Widget</string>
+  <string name="widget_widget2x2live_description" translatable="false">2x2 Widget (Live + End only)</string>
+  <string name="widget_widget2x2liveonly_description" translatable="false">2x2 Widget (Live only)</string>
+  <string name="widget_widget2x2clear_description" translatable="false">2x2 Widget (No Background)</string>
   <string name="widget_widget4x2_description" translatable="false">4x2 Widget</string>
+  <string name="widget_widget4x2live_description" translatable="false">4x2 Widget (Live + End only)</string>
+  <string name="widget_widget4x2liveonly_description" translatable="false">4x2 Widget (Live only)</string>
+  <string name="widget_widget4x2clear_description" translatable="false">4x2 Widget (No Background)</string>
 </resources>
