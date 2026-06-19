@@ -835,7 +835,10 @@ def _get_widget_data_cached() -> dict | None:
             try:
                 now_kst = datetime.now(tz=timezone(timedelta(hours=9)))
                 h, m = map(int, time_str.split(":"))
-                game_dt = now_kst.replace(hour=h, minute=m, second=0, microsecond=0)
+                # Use game's actual date from gameDateTime, not today's date
+                gdt = ng["gameDateTime"]
+                game_date = date(int(gdt[:4]), int(gdt[5:7]), int(gdt[8:10])) if len(gdt) >= 10 else now_kst.date()
+                game_dt = datetime.combine(game_date, dt_time(h, m), tzinfo=timezone(timedelta(hours=9)))
                 if status == "finished" and now_kst < game_dt:
                     status = "scheduled"
                 elif status == "live" and now_kst < game_dt - timedelta(minutes=30):
