@@ -14,7 +14,7 @@ DAUM_GAME_API = "https://sports.daum.net/prx/hermes/api/game"
 DAUM_LIVE_API = "https://issue.daum.net/api/arms/SPORTS_GAME"
 UA = "Mozilla/5.0"
 
-# Daum game ID for the first KBO game on this reference date
+# Known starting point: first KBO game on this date
 _REF_DATE = date(2026, 6, 18)
 _REF_FIRST_ID = 80100867
 _GAMES_PER_DAY = 5
@@ -29,25 +29,42 @@ def _fetch_json(url):
 def get_daum_game_ids(date_str):
     """date_str = 'YYYYMMDD' → {cpGameId: daumGameId}
 
-    Daum game IDs are sequential. First game of the day:
-      first_id = _REF_FIRST_ID + (target_date - _REF_DATE).days * _GAMES_PER_DAY
+    Scans game IDs forward from the reference point until finding games
+    with the target date. Handles days without games (Mondays, breaks)
+    by skipping empty/unmatched IDs.
     """
     y, m, d = int(date_str[:4]), int(date_str[4:6]), int(date_str[6:8])
     target = date(y, m, d)
     days_diff = (target - _REF_DATE).days
-    first_id = _REF_FIRST_ID + days_diff * _GAMES_PER_DAY
+    # Start a few game-days before; non-game days don't consume IDs
+    gid = _REF_FIRST_ID + max(0, days_diff - 2) * _GAMES_PER_DAY
 
     mapping = {}
-    for i in range(_GAMES_PER_DAY):
-        gid = first_id + i
+    # Scan a window of IDs; non-game days shift the actual IDs forward
+    for _ in range(20):  # generous window to handle breaks
+        url = "%s/%d" % (DAUM_GAME_API, gid)
         try:
-            url = "%s/%d" % (DAUM_GAME_API, gid)
             doc = _fetch_json(url)
-            cpid = doc.get("cpGameId", "")
-            if cpid:
-                mapping[cpid] = gid
-        except Exception as e:
-            logger.warning("daum: failed to fetch game %d: %s", gid, e)
+        except Exception:
+            gid += 1
+            continue
+
+        cpid = doc.get("cpGameId", "")
+        sd = doc.get("startDate", "")
+        lc = doc.get("league", {}).get("leagueCode", "")
+
+        # Only collect KBO games from the target date
+        if lc == "KBO" and sd == date_str:
+            mapping[cpid] = gid
+        elif lc == "KBO" and mapping:
+            # Started seeing future KBO games → stop
+            break
+
+        gid += 1
+
+        # Safety: if we've collected enough games, stop
+        if len(mapping) >= _GAMES_PER_DAY:
+            break
 
     return mapping
 
