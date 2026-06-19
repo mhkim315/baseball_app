@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { setMyTeam as setMyTeamInDb } from "@/lib/db";
+import { setMyTeam as setMyTeamInDb, getMyTeam } from "@/lib/db";
 
 const WIDGET_TEAM_KEY = "@fullcount_widget_team";
 
@@ -29,7 +29,13 @@ export const SHORT_CODE_TO_NAME: Record<string, string> = {
 };
 
 export async function getMyTeamForWidget(): Promise<string | null> {
-  return AsyncStorage.getItem(WIDGET_TEAM_KEY);
+  let team = await AsyncStorage.getItem(WIDGET_TEAM_KEY);
+  // Fallback: 기존 사용자는 DB에만 팀 정보 있음
+  if (!team) {
+    team = getMyTeam();
+    if (team) await AsyncStorage.setItem(WIDGET_TEAM_KEY, team);
+  }
+  return team;
 }
 
 export async function setMyTeamWithSync(teamId: string | null): Promise<void> {
