@@ -181,7 +181,14 @@ function ColorBg({ children, noBg }: { children: any; noBg?: boolean }) {
 
 function transparentView() {
   return (
-    <FlexWidget style={{ width: "match_parent", height: "match_parent", backgroundColor: "#00000000" }} />
+    <FlexWidget style={{ width: "match_parent", height: "match_parent", backgroundColor: "#00000000" }}>
+      <FlexWidget style={{ flexDirection: "row", width: "match_parent", padding: 12, justifyContent: "flex-end" }}>
+        <FlexWidget clickAction="REFRESH" style={{ padding: 4 }}>
+          <TextWidget text="↻" style={{ fontSize: 14, color: "#e07b3c", fontWeight: "700" }} />
+        </FlexWidget>
+      </FlexWidget>
+      <FlexWidget style={{ flex: 1 }} clickAction="REFRESH" />
+    </FlexWidget>
   );
 }
 
