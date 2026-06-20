@@ -1,6 +1,5 @@
 import { requestWidgetUpdate } from "react-native-android-widget";
-import { getMyTeamForWidget, getAttendanceForWidget, SHORT_CODE_TO_TEAM_ID, SHORT_CODE_TO_NAME } from "@/lib/teamStorage";
-import type { AttendanceSummary } from "@/lib/teamStorage";
+import { getMyTeamForWidget, SHORT_CODE_TO_TEAM_ID, SHORT_CODE_TO_NAME } from "@/lib/teamStorage";
 import { GameStatusWidget } from "./GameStatusWidget";
 
 import { getInningInfo } from "@shared/gameStatus";
@@ -69,7 +68,7 @@ function buildWidgetProps(data: Record<string, string>): WidgetGameData {
   };
 }
 
-async function updateAllWidgets(myTeam: string, data: WidgetGameData | null, emptyReason?: string, attendance?: AttendanceSummary | null) {
+async function updateAllWidgets(myTeam: string, data: WidgetGameData | null, emptyReason?: string) {
   for (const widgetName of WIDGET_NAMES) {
     await requestWidgetUpdate({
       widgetName,
@@ -82,7 +81,6 @@ async function updateAllWidgets(myTeam: string, data: WidgetGameData | null, emp
             myTeam={myTeam}
             widgetName={widgetName}
             emptyReason={emptyReason}
-            attendance={attendance}
           />
         );
       },
@@ -117,7 +115,7 @@ let _lastWidgetGame: WidgetGameData | null = null;
 // 🔴 MOCK LIVE GAME — set to true for testing widget layouts
 const WIDGET_MOCK_LIVE = false;
 // 🔴 MOCK EMPTY STATE — "no_team" | "no_game" | "error" | false
-const WIDGET_MOCK_EMPTY: string | false = "no_game";
+const WIDGET_MOCK_EMPTY: string | false = false;
 
 export async function updateWidgetPeriodic(): Promise<void> {
   let myTeam: string | null = null;
@@ -297,14 +295,8 @@ export async function updateWidgetPeriodic(): Promise<void> {
     }
   }
 
-  // Fetch attendance stats for no-game view
-  let attendance: AttendanceSummary | null = null;
-  if (!data) {
-    attendance = await getAttendanceForWidget();
-  }
-
   // If there is still absolutely no data, we will render noGameView.
-  await updateAllWidgets(myTeam, data, data ? undefined : emptyReason, attendance);
+  await updateAllWidgets(myTeam, data, data ? undefined : emptyReason);
 
   // Auto-stop handled by taskHandler.tsx after refresh completes
   // (avoids require() in headless context that may fail in Hermes)
