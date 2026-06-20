@@ -718,10 +718,7 @@ def _merge_widget_results(naver, daum):
         if not n: merged.append(d)
         elif not d: merged.append(n)
         else:
-            best = _merge_game_freshness(n, d)
-            if best is d and n.get("naverGameId"):
-                d["naverGameId"] = n["naverGameId"]
-            merged.append(best)
+            merged.append(_merge_game_freshness(n, d))
     weather = naver.get("todayWeather", {}) or daum.get("todayWeather", {})
     return {"games": merged, "todayWeather": weather}
 
@@ -1226,9 +1223,11 @@ def _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, sta
                 home_kr = _code_to_kr(game["homeTeam"])
                 away_kr = _code_to_kr(game["awayTeam"])
 
+                gid = _daum_cpid_to_gid(doc.get("cpGameId", ""))
+                naver_id = _internal_to_naver_gid(gid)
                 games_data.append({
-                    "gameId": _daum_cpid_to_gid(doc.get("cpGameId", "")),
-                    "naverGameId": "",
+                    "gameId": gid,
+                    "naverGameId": naver_id,
                     "gameIdx": 0,
                     "time": game["time"],
                     "venue": game["venue"],
@@ -1259,6 +1258,14 @@ def _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, sta
             _DAUM_FETCH_IN_FLIGHT = False
     finally:
         _DAUM_LOCK.release()
+
+
+def _internal_to_naver_gid(internal_id: str) -> str:
+    """Convert internal gameId (20260620-HTKT-0) → Naver gameId (20260620HTKT02026)."""
+    m = re.match(r"(\d{8})-([A-Z]{2})([A-Z]{2})-(\d+)", internal_id)
+    if m:
+        return f"{m.group(1)}{m.group(2)}{m.group(3)}{m.group(4)}{m.group(1)[:4]}"
+    return ""
 
 
 def _daum_cpid_to_gid(cpid):
