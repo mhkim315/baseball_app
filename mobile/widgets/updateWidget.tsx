@@ -129,44 +129,43 @@ export async function updateWidgetPeriodic(): Promise<void> {
 
   // 🔴 MOCK: simulate live game for widget testing
   if (WIDGET_MOCK_LIVE) {
-    const mockMyTeam = myTeam || "lg";
-    const mockIsHome = mockMyTeam === "lg";
+    // 2026-06-19 KIA(11) : KT(3) 실제 데이터 기반 — 5회초 KIA 공격 중
+    const mockMyTeam = myTeam || "kia";
+    const mockIsHome = mockMyTeam === "kt";
     data = {
-      homeTeam: mockIsHome ? "LG" : "KIA",
-      awayTeam: mockIsHome ? "KIA" : "LG",
-      homeScore: mockIsHome ? "4" : "2",
-      awayScore: mockIsHome ? "2" : "4",
+      homeTeam: "KT",
+      awayTeam: "KIA",
+      homeScore: "2",
+      awayScore: "5",
       inning: "5",
       isTop: "1",
       status: "live",
       homeIsMyTeam: mockIsHome,
-      time: "18:30",
-      stadium: "잠실",
-      weather: "27° 맑음",
-      awayPitcher: "올러",
-      homePitcher: "장현식",
-      ball: "2",
-      strike: "1",
+      time: "18:47",
+      stadium: "수원",
+      weather: "23° 흐림",
+      awayPitcher: "네일",
+      homePitcher: "오원석",
+      ball: "1",
+      strike: "2",
       out: "1",
-      base1: "1",
-      base2: "0",
+      base1: "0",
+      base2: "1",
       base3: "1",
-      currentPitcher: "장현식",
-      currentBatter: "김현수",
+      currentPitcher: "오원석",
+      currentBatter: "김도영",
       scoreBoard: {
-        rheb: { home: { r: 4, h: 7, e: 0 }, away: { r: 2, h: 5, e: 1 } },
+        rheb: { home: { r: 2, h: 5, e: 1 }, away: { r: 5, h: 8, e: 0 } },
         inn: {
-          home: ["0", "1", "0", "2", "1"],
-          away: ["1", "0", "0", "1", "0"],
+          home: ["0", "0", "0", "2"],
+          away: ["0", "2", "3", "0"],
         },
       },
-      relay: { inning: 5, isTop: true, ball: 2, strike: 1, out: 1, base1: 1, base2: 0, base3: 1 },
-      rank: mockIsHome ? "1" : "4",
-      streak: mockIsHome ? "3승" : "2패",
-      homeRank: mockIsHome ? "1" : "4",
-      awayRank: mockIsHome ? "4" : "1",
-      homeStreak: mockIsHome ? "3승" : "2패",
-      awayStreak: mockIsHome ? "2패" : "3승",
+      relay: { inning: 5, isTop: true, ball: 1, strike: 2, out: 1, base1: 0, base2: 1, base3: 1 },
+      homeRank: "3",
+      awayRank: "4",
+      homeStreak: "1패",
+      awayStreak: "2승",
     };
     _lastWidgetGame = data;
     await updateAllWidgets(myTeam, data);
