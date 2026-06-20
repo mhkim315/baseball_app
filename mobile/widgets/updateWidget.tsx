@@ -24,6 +24,8 @@ export interface WidgetGameData {
   weather?: string;
   awayPitcher?: string;
   homePitcher?: string;
+  winPitcher?: string;
+  losePitcher?: string;
   ball?: string;
   strike?: string;
   out?: string;
@@ -261,6 +263,8 @@ export async function updateWidgetPeriodic(): Promise<void> {
         stadium: myGame.venue || "",
         awayPitcher: myGame.awayStarter || undefined,
         homePitcher: myGame.homeStarter || undefined,
+        winPitcher: myGame.winPitcher || undefined,
+        losePitcher: myGame.losePitcher || undefined,
         currentPitcher: myGame.relay?.pitcher?.name || undefined,
         currentBatter: myGame.relay?.batter?.name || undefined,
         weather: weatherData ? `${weatherData.temp}° ${weatherData.condition}` : undefined,

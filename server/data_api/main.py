@@ -726,14 +726,64 @@ def _merge_widget_results(naver, daum):
     return {"games": merged, "todayWeather": weather}
 
 
+def _get_active_ttl(games=None):
+    """Return appropriate cache TTL based on time, game status, and next game time."""
+    kst_now = datetime.now(tz=timezone(timedelta(hours=9)))
+    hour = kst_now.hour
+
+    # Night window (1 AM – noon): 30 min
+    if 1 <= hour < 12:
+        return 1800
+
+    # Check game statuses
+    if games:
+        statuses = {g.get("status") for g in games}
+        if "live" in statuses:
+            return _WIDGET_CACHE_TTL  # 6s — live games active
+        if statuses == {"finished"}:
+            return 300  # 5 min — all done, collector may still update
+
+    # Check next game time (from today-games.json or fallback schedule)
+    now_hm = kst_now.hour * 60 + kst_now.minute  # minutes since midnight KST
+    next_game_min = _get_next_game_minutes()
+    if next_game_min is not None:
+        if now_hm >= next_game_min - 30:
+            return _WIDGET_CACHE_TTL  # 6s — within 30 min of first game
+        if now_hm >= next_game_min - 60:
+            return 300  # 5 min — 1 hour before first game
+
+    return _WIDGET_CACHE_TTL
+
+
+def _get_next_game_minutes():
+    """Return minutes-since-midnight (KST) of today's first game, or None."""
+    try:
+        tg = load_json("today-games.json")
+        if not tg:
+            return None
+        games = tg.get("games") or tg.get("schedule") or []
+        earliest = None
+        for g in games:
+            t = g.get("time", "") or g.get("startTime", "")
+            if t and len(t) >= 5:
+                h, m = int(t[:2]), int(t[3:5])
+                mins = h * 60 + m
+                if earliest is None or mins < earliest:
+                    earliest = mins
+        return earliest
+    except Exception:
+        return None
+
+
 def _get_widget_data_cached() -> dict | None:
     """Build widget data dict with in-memory caching. Returns None on failure."""
     today_str = datetime.now(tz=timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
     now = time.time()
 
+    ttl = _get_active_ttl()
     if today_str in _WIDGET_CACHE:
         cached_time, cached_data = _WIDGET_CACHE[today_str]
-        if now - cached_time < _WIDGET_CACHE_TTL:
+        if now - cached_time < ttl:
             return cached_data
 
     # Memory-cached JSON lookups (no disk I/O inside 15 s window)
@@ -1026,17 +1076,32 @@ def _get_widget_data_cached() -> dict | None:
                 entry["losePitcher"] = s.get("losePitcher")
                 entry["savePitcher"] = s.get("savePitcher")
 
+    ttl = _get_active_ttl(result.get("games"))
     _WIDGET_CACHE[today_str] = (time.time(), result)
+    _WIDGET_CACHE_TTL = ttl  # update module-level for next cache check
     return result
 
 
 def _get_daum_widget_cached(today_str, today_games, streak_map, rank_map, starter_map):
     now = time.time()
+    kst_hour = datetime.now(tz=timezone(timedelta(hours=9))).hour
+    # Slow mode: 1AM-noon or all games finished for >30min
+    daum_ttl = _DAUM_WIDGET_CACHE_TTL
+    if 1 <= kst_hour < 12:
+        daum_ttl = 1800
+    elif today_str in _WIDGET_CACHE:
+        ct, cd = _WIDGET_CACHE[today_str]
+        statuses = {g.get("status") for g in cd.get("games", [])}
+        if statuses == {"finished"} and now - ct > 1800:
+            daum_ttl = 1800  # all finished for 30+ min, slow down Daum too
+
     cached = _DAUM_WIDGET_CACHE.get(today_str)
     if cached:
         ct, cd = cached
-        if now - ct < _DAUM_WIDGET_CACHE_TTL:
+        if now - ct < daum_ttl:
             return cd
+    if daum_ttl >= 1800 and cached:
+        return cached[1]
     result = _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, starter_map)
     if result:
         _DAUM_WIDGET_CACHE[today_str] = (now, result)
