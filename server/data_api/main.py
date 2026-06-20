@@ -998,6 +998,13 @@ def _get_widget_data_cached() -> dict | None:
 
     result: dict = {"games": games_data, "todayWeather": today_weather}
 
+    # Fill missing venue from today-games.json (static schedule data)
+    if today_games:
+        venue_map = {g.get("id", ""): g.get("venue", "") for g in (today_games.get("games") or [])}
+        for entry in result["games"]:
+            if not entry.get("venue") and entry["gameId"] in venue_map:
+                entry["venue"] = venue_map[entry["gameId"]]
+
     # Merge with Daum for fresher relay (staggered 3s offset)
     daum_data = _get_daum_widget_cached(today_str, today_games, streak_map, rank_map, starter_map)
     if daum_data:
