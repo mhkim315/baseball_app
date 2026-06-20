@@ -111,7 +111,7 @@ _WEATHER_CACHE: dict[str, tuple[float, dict | None]] = {}
 _WEATHER_CACHE_TTL = 1800  # 30 minutes
 
 _WIDGET_CACHE: dict[str, tuple[float, dict]] = {}
-_WIDGET_CACHE_TTL = 6  # seconds — Naver refresh (secondary)
+_WIDGET_CACHE_TTL = 3  # seconds — merged result refresh (matches Daum primary)
 _DAUM_WIDGET_CACHE: dict[str, tuple[float, dict]] = {}
 _DAUM_WIDGET_CACHE_TTL = 3  # seconds — Daum refresh (primary, 20 calls/min safe)
 
@@ -1078,7 +1078,7 @@ def _get_widget_data_cached() -> dict | None:
 
     ttl = _get_active_ttl(result.get("games"))
     _WIDGET_CACHE[today_str] = (time.time(), result)
-    _WIDGET_CACHE_TTL = ttl  # update module-level for next cache check
+    _WIDGET_CACHE_TTL = ttl
     return result
 
 
