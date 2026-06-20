@@ -111,9 +111,9 @@ _WEATHER_CACHE: dict[str, tuple[float, dict | None]] = {}
 _WEATHER_CACHE_TTL = 1800  # 30 minutes
 
 _WIDGET_CACHE: dict[str, tuple[float, dict]] = {}
-_WIDGET_CACHE_TTL = 3  # seconds — merged result refresh
+_WIDGET_CACHE_TTL = 6  # seconds — Naver refresh (secondary)
 _DAUM_WIDGET_CACHE: dict[str, tuple[float, dict]] = {}
-_DAUM_WIDGET_CACHE_TTL = 3  # seconds — Daum sub-cache (staggered with Naver)
+_DAUM_WIDGET_CACHE_TTL = 2  # seconds — Daum refresh (primary, faster)
 
 def load_json(filename):
     now = time.time()
@@ -1037,13 +1037,9 @@ def _get_daum_widget_cached(today_str, today_games, streak_map, rank_map, starte
         ct, cd = cached
         if now - ct < _DAUM_WIDGET_CACHE_TTL:
             return cd
-        # Stagger: only refresh in Daum's 3s window (offset from Naver)
-        if now % 6 < 3:
-            return cd
     result = _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, starter_map)
     if result:
         _DAUM_WIDGET_CACHE[today_str] = (now, result)
-    # If fetch failed, return stale cache if available
     return result if result else (cached[1] if cached else None)
 
 
