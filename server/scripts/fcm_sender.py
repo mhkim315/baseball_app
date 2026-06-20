@@ -46,5 +46,9 @@ def send_fcm(token: str, payload: dict, dry_run: bool = False) -> bool:
             logger.info("FCM sent (message_id=%s, token=%s...)", resp, token[:12])
         return True
     except Exception as e:
+        from firebase_admin import messaging as _msg
+        if isinstance(e, _msg.UnregisteredError):
+            logger.warning("FCM token unregistered — deleting %s...", token[:12])
+            return "unregistered"
         logger.error("FCM send failed for %s...: %s", token[:12], e)
         return False

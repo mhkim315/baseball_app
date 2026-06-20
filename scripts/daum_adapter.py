@@ -12,6 +12,7 @@ logger = logging.getLogger("fullcount.daum-adapter")
 
 DAUM_GAME_API = "https://sports.daum.net/prx/hermes/api/game"
 DAUM_LIVE_API = "https://issue.daum.net/api/arms/SPORTS_GAME"
+DAUM_LIST_API = "https://issue.daum.net/api/arms/SPORTS_GAME_LIST"
 UA = "Mozilla/5.0"
 
 # Known starting point: first KBO game on this date
@@ -196,3 +197,18 @@ def _parse_inn_str(inn_str):
         except ValueError:
             break
     return result
+
+
+def fetch_daum_games_batch(date_str, league="kbo", season="2026"):
+    """Fetch all games for a date with liveData in a single request.
+    Returns list of raw game docs compatible with normalize_game/normalize_relay.
+    """
+    url = "%s?leagueCode=%s&seasonKey=%s&fromDate=%s&toDate=%s&detail=true" % (
+        DAUM_LIST_API, league, season, date_str, date_str)
+    req = urllib.request.Request(url, headers={
+        "User-Agent": UA,
+        "Referer": "https://sports.daum.net/",
+    })
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        data = json.loads(resp.read())
+    return data.get("document", {}).get("list", [])

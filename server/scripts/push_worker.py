@@ -166,14 +166,31 @@ def run_push_worker(widget_data_func, db_engine=None):
             continue
 
         # Dispatch
+        invalid_tokens: list[str] = []
         with ThreadPoolExecutor(max_workers=8) as ex:
-            futs = []
+            futs = {}
             for tok in android_tokens:
-                futs.append(ex.submit(send_fcm, tok, payload, DRY_RUN))
+                futs[ex.submit(send_fcm, tok, payload, DRY_RUN)] = tok
             for tok in ios_tokens:
-                futs.append(ex.submit(send_apns, tok, payload, DRY_RUN))
+                futs[ex.submit(send_apns, tok, payload, DRY_RUN)] = tok
             for f in as_completed(futs):
-                pass  # errors already logged in senders
+                try:
+                    result = f.result()
+                    if result == "unregistered":
+                        invalid_tokens.append(futs[f])
+                except Exception:
+                    pass  # errors already logged in senders
+
+        # Clean up unregistered tokens
+        if invalid_tokens:
+            try:
+                with engine.connect() as conn:
+                    for tok in invalid_tokens:
+                        conn.execute(text("DELETE FROM device_tokens WHERE token = :t"), {"t": tok})
+                    conn.commit()
+                logger.info("push_worker: deleted %d unregistered tokens", len(invalid_tokens))
+            except Exception as e:
+                logger.warning("push_worker: token cleanup failed — %s", e)
 
     if db_engine is None:
         engine.dispose()

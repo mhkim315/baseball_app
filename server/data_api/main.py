@@ -111,7 +111,9 @@ _WEATHER_CACHE: dict[str, tuple[float, dict | None]] = {}
 _WEATHER_CACHE_TTL = 1800  # 30 minutes
 
 _WIDGET_CACHE: dict[str, tuple[float, dict]] = {}
-_WIDGET_CACHE_TTL = 7  # seconds — asymmetric with client 10s polling
+_WIDGET_CACHE_TTL = 6  # seconds — Naver refresh
+_DAUM_WIDGET_CACHE: dict[str, tuple[float, dict]] = {}
+_DAUM_WIDGET_CACHE_TTL = 6  # seconds — Daum refresh (staggered 3s offset)
 
 def load_json(filename):
     now = time.time()
@@ -694,6 +696,39 @@ def _code_to_kr(code: str) -> str:
     return TEAM_NAME_MAP.get(tid, code) if tid else code
 
 
+def _merge_game_freshness(a, b):
+    """Return the fresher of two game dicts based on inning > outs > strikes+balls."""
+    ra = a.get("relay") or {}; rb = b.get("relay") or {}
+    ia = int(ra.get("inning") or 0); ib = int(rb.get("inning") or 0)
+    if ia != ib: return a if ia > ib else b
+    oa = int(ra.get("out") or 0); ob = int(rb.get("out") or 0)
+    if oa != ob: return a if oa > ob else b
+    sa = int(ra.get("strike") or 0) + int(ra.get("ball") or 0)
+    sb = int(rb.get("strike") or 0) + int(rb.get("ball") or 0)
+    return a if sa >= sb else b
+
+
+def _merge_widget_results(naver, daum):
+    """Merge Naver and Daum widget results, picking the fresher relay per game."""
+    if not naver: return daum
+    if not daum: return naver
+    ng = {g["gameId"]: g for g in naver.get("games", [])}
+    dg = {g["gameId"]: g for g in daum.get("games", [])}
+    merged = []
+    for gid in set(list(ng.keys()) + list(dg.keys())):
+        n = ng.get(gid); d = dg.get(gid)
+        if not n: merged.append(d)
+        elif not d: merged.append(n)
+        else:
+            best = _merge_game_freshness(n, d)
+            # If Daum won on relay but Naver had it, keep Naver's naverGameId
+            if best is d and n.get("naverGameId"):
+                d["naverGameId"] = n["naverGameId"]
+            merged.append(best)
+    weather = naver.get("todayWeather", {}) or daum.get("todayWeather", {})
+    return {"games": merged, "todayWeather": weather}
+
+
 def _get_widget_data_cached() -> dict | None:
     """Build widget data dict with in-memory caching. Returns None on failure."""
     today_str = datetime.now(tz=timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
@@ -747,17 +782,15 @@ def _get_widget_data_cached() -> dict | None:
                     home_st = s
         starter_map[gid] = {"away": away_st, "home": home_st}
 
-    # Naver gate: progressive backoff if previous failures
+    # Naver-first (fast single-request); Daum as fallback
     if not _naver_can_call():
         logger.info("widget-data: Naver backoff active (failures=%d)", _NAVER_FAILURES)
         daum_result = _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, starter_map)
         if daum_result:
             return daum_result
-        # B1: Daum returned None — serve cached data instead of falling through to Naver
         cached = _WIDGET_CACHE.get(today_str)
         if cached:
             return cached[1]
-        # No cache at all — last resort: try Naver despite backoff
         logger.warning("widget-data: no cached data, forcing Naver call despite backoff")
 
     try:
@@ -964,11 +997,33 @@ def _get_widget_data_cached() -> dict | None:
         if daum_result:
             return daum_result
 
-    # Pre-fetch Daum game ID mapping while Naver is healthy
-    _prefetch_daum_ids(today_str)
-
     result: dict = {"games": games_data, "todayWeather": today_weather}
     _WIDGET_CACHE[today_str] = (time.time(), result)
+
+    # Merge with Daum for fresher relay data (staggered 3s offset cache)
+    daum_data = _get_daum_widget_cached(today_str, today_games, streak_map, rank_map, starter_map)
+    if daum_data:
+        result = _merge_widget_results(result, daum_data)
+
+    return result
+
+
+def _get_daum_widget_cached(today_str, today_games, streak_map, rank_map, starter_map):
+    """Fetch Daum data with staggered cache (3s offset vs Naver)."""
+    now = time.time()
+    if today_str in _DAUM_WIDGET_CACHE:
+        ct, cd = _DAUM_WIDGET_CACHE[today_str]
+        if now - ct < _DAUM_WIDGET_CACHE_TTL:
+            return cd
+    # Stagger: Daum only fetches in the 3s window offset from Naver (now%6 >= 3)
+    if now % 6 < 3:
+        cached = _DAUM_WIDGET_CACHE.get(today_str)
+        if cached:
+            return cached[1]
+        return None
+    result = _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, starter_map)
+    if result:
+        _DAUM_WIDGET_CACHE[today_str] = (now, result)
     return result
 
 
@@ -1076,14 +1131,10 @@ def _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, sta
         _DAUM_FETCH_IN_FLIGHT = True
         _DAUM_COOLDOWN = time.time()
         try:
-            from scripts.daum_adapter import fetch_daum_game, normalize_game, normalize_relay, apply_relay_names
+            from scripts.daum_adapter import fetch_daum_games_batch, normalize_game, normalize_relay, apply_relay_names
 
-            # Use pre-fetched mapping if available, otherwise scan
-            mapping = _DAUM_ID_CACHE.get(today_str, {})
-            if not mapping:
-                from scripts.daum_adapter import get_daum_game_ids
-                mapping = get_daum_game_ids(today_str)
-            if not mapping:
+            docs = fetch_daum_games_batch(today_str, "kbo", str(date.today().year))
+            if not docs:
                 logger.warning("daum: no games found for %s", today_str)
                 _save_crash_dump(today_str, "daum_no_games", {"date": today_str})
                 return None
@@ -1091,10 +1142,7 @@ def _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, sta
             id_to_code = {v: k for k, v in TEAM_CODE_MAP.items()}
             games_data = []
 
-            for cpid, daum_id in mapping.items():
-                doc = fetch_daum_game(daum_id)
-                if not doc:
-                    continue
+            for doc in docs:
                 game = normalize_game(doc)
                 relay = normalize_relay(doc)
                 relay = apply_relay_names(relay, game.pop("p2n", {}))
@@ -1103,7 +1151,7 @@ def _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, sta
                 away_kr = _code_to_kr(game["awayTeam"])
 
                 games_data.append({
-                    "gameId": _daum_cpid_to_gid(cpid),
+                    "gameId": _daum_cpid_to_gid(doc.get("cpGameId", "")),
                     "naverGameId": "",
                     "gameIdx": 0,
                     "time": game["time"],
