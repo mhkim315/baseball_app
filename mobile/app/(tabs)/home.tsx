@@ -19,7 +19,7 @@ import {
   cachedTodayGames,
   cachedWidgetData,
 } from "@/lib/gameCache";
-import { SHORT_CODE_TO_TEAM_ID } from "@/lib/teamStorage";
+import { SHORT_CODE_TO_TEAM_ID, setAttendanceForWidget } from "@/lib/teamStorage";
 import { resolveGames, resolveGamesForSchedule, type ResolvedGame } from "@/lib/resolveGames";
 import { VENUE_TO_FULL_NAME } from "@/lib/stadiumData";
 import { formatDateForApi as formatDateStr } from "@shared/constants";
@@ -413,6 +413,7 @@ export default function HomeScreen() {
       const records = getJikgwanRecords();
       const map: Record<string, number> = {};
       const planned: JikgwanRecord[] = [];
+      let totalW = 0, totalL = 0, totalT = 0;
       for (const r of records) {
         if (r.is_planned === 1) {
           planned.push(r);
@@ -421,9 +422,20 @@ export default function HomeScreen() {
         const key = r.date.replace(/\./g, "-"); // YYYY.MM.DD → YYYY-MM-DD
         // Multiple records can exist for same date; keep the last one's result
         map[key] = r.is_win;
+        if (r.is_win === 1) totalW++;
+        else if (r.is_win === 0) totalL++;
+        else totalT++;
       }
       setResultByDate(map);
       setPlannedRecords(planned);
+      // Sync attendance summary for widget
+      const total = totalW + totalL + totalT;
+      if (total > 0) {
+        setAttendanceForWidget({
+          total, wins: totalW, losses: totalL, ties: totalT,
+          winRate: Math.round((totalW / total) * 1000) / 10,
+        });
+      }
     } catch (e) { console.warn("home: load jikgwan records", e); }
   }, []);
 

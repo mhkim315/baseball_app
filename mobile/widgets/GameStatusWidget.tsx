@@ -2,6 +2,7 @@
 import { FlexWidget, TextWidget, ImageWidget } from "react-native-android-widget";
 import { LOCAL_CHARACTERS } from "@/lib/characterAssets";
 import type { CharacterEmotion } from "@/lib/emotions";
+import type { AttendanceSummary } from "@/lib/teamStorage";
 
 const WIDGET_BUILD = "OTA-v41-master-layouts";
 let _noBg = false;  // set by GameStatusWidget for Clear variants
@@ -240,9 +241,9 @@ function OutDots({ count, size }: { count: number, size: number }) {
   );
 }
 
-interface WidgetProps { width: number; height: number; data: WidgetGameData | null; myTeam: string; widgetName?: string; emptyReason?: string; }
+interface WidgetProps { width: number; height: number; data: WidgetGameData | null; myTeam: string; widgetName?: string; emptyReason?: string; attendance?: AttendanceSummary | null; }
 
-export function GameStatusWidget({ width, height, data, myTeam, widgetName, emptyReason }: WidgetProps) {
+export function GameStatusWidget({ width, height, data, myTeam, widgetName, emptyReason, attendance }: WidgetProps) {
   const isLiveOnly = widgetName?.includes("LiveOnly");
   const isLiveEnd = widgetName?.includes("Live") && !isLiveOnly;
   const isClear = widgetName?.includes("Clear");
@@ -252,7 +253,7 @@ export function GameStatusWidget({ width, height, data, myTeam, widgetName, empt
     if (!data) {
       if (emptyReason === "no_team") return noTeamView();
       if (emptyReason === "error") return errorView();
-      return noGameView();
+      return noGameView(width, height, attendance);
     }
     // LiveOnly: transparent for non-live
     if (isLiveOnly && data.status !== "live") return transparentView();
@@ -283,18 +284,97 @@ export function GameStatusWidget({ width, height, data, myTeam, widgetName, empt
   }
 }
 
-function noGameView() {
+function barSegment(filled: boolean, w: number, h: number) {
+  return (
+    <FlexWidget style={{
+      width: w, height: h, borderRadius: 2,
+      backgroundColor: filled ? "#e07b3c" : "#e0d8cf",
+      marginHorizontal: 1,
+    }} />
+  );
+}
+
+function noGameView(w: number, h: number, att: AttendanceSummary | null | undefined) {
+  const total = att?.total ?? 0;
+  const wins = att?.wins ?? 0;
+  const losses = att?.losses ?? 0;
+  const ties = att?.ties ?? 0;
+  const rate = att?.winRate ?? 0;
+
+  if (w < 230) return noGameView2x2(w, h, total, wins, losses, ties, rate);
+  return noGameView4x2(w, h, total, wins, losses, ties, rate);
+}
+
+function noGameView2x2(w: number, h: number, total: number, wins: number, losses: number, ties: number, rate: number) {
+  const hasData = total > 0;
   return (
     <ColorBg noBg={_noBg}>
       <FlexWidget style={{ flexDirection: "row", width: "match_parent", padding: 12, justifyContent: "flex-end" }}>
         <FlexWidget clickAction="REFRESH" style={{ padding: 4 }}>
-          <TextWidget text="↻" style={{ fontSize: 16, color: "#e07b3c", fontWeight: "700" }} />
+          <TextWidget text="↻" style={{ fontSize: 14, color: "#e07b3c", fontWeight: "700" }} />
         </FlexWidget>
       </FlexWidget>
       <FlexWidget style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ImageWidget image={MONDAY_IMAGE} imageWidth={44} imageHeight={44} />
-        <FlexWidget style={{ height: 6 }} />
-        <TextWidget text="오늘은 경기가 없어요" style={{ fontSize: 11, color: DARK_FG }} />
+        <TextWidget text="직관 승률" style={{ fontSize: 12, color: FG_73 }} />
+        <FlexWidget style={{ height: 4 }} />
+        {hasData ? (
+          <FlexWidget style={{ alignItems: "center" }}>
+            <TextWidget text={`${Math.round(rate)}%`} style={{ fontSize: 28, fontWeight: "700", color: DARK_FG }} />
+            <FlexWidget style={{ height: 4 }} />
+            <TextWidget text={`${wins}승 ${losses}패` + (ties > 0 ? ` ${ties}무` : "")} style={{ fontSize: 11, color: FG_73 }} />
+          </FlexWidget>
+        ) : (
+          <FlexWidget style={{ alignItems: "center" }}>
+            <ImageWidget image={MONDAY_IMAGE} imageWidth={48} imageHeight={32} />
+            <FlexWidget style={{ height: 4 }} />
+            <TextWidget text="오늘은 경기가 없어요" style={{ fontSize: 12, color: FG_73 }} />
+          </FlexWidget>
+        )}
+      </FlexWidget>
+    </ColorBg>
+  );
+}
+
+function noGameView4x2(w: number, h: number, total: number, wins: number, losses: number, ties: number, rate: number) {
+  const hasData = total > 0;
+  const barW = Math.round(w * 0.5);
+  const barH = 8;
+  const segCount = 20;
+  const segW = Math.round((barW - segCount * 2) / segCount);
+  const filled = Math.round(rate / 100 * segCount);
+
+  return (
+    <ColorBg noBg={_noBg}>
+      <FlexWidget style={{ flexDirection: "row", width: "match_parent", padding: 14, justifyContent: "flex-end" }}>
+        <FlexWidget clickAction="REFRESH" style={{ padding: 4 }}>
+          <TextWidget text="↻" style={{ fontSize: 16, color: "#e07b3c", fontWeight: "700" }} />
+        </FlexWidget>
+      </FlexWidget>
+      <FlexWidget style={{ flex: 1, justifyContent: "center", paddingHorizontal: 24 }}>
+        {hasData ? (
+          <FlexWidget style={{ flexDirection: "row", alignItems: "center", width: "match_parent" }}>
+            <FlexWidget style={{ alignItems: "flex-start", marginRight: 16 }}>
+              <TextWidget text="직관 승률" style={{ fontSize: 13, color: FG_73 }} />
+              <FlexWidget style={{ height: 2 }} />
+              <FlexWidget style={{ flexDirection: "row", alignItems: "baseline" }}>
+                <TextWidget text={`${Math.round(rate)}%`} style={{ fontSize: 26, fontWeight: "700", color: DARK_FG }} />
+              </FlexWidget>
+              <FlexWidget style={{ height: 2 }} />
+              <TextWidget text={`${wins}승 ${losses}패` + (ties > 0 ? ` ${ties}무` : "") + ` · ${total}경기`} style={{ fontSize: 11, color: FG_73 }} />
+            </FlexWidget>
+            <FlexWidget style={{ flex: 1, justifyContent: "center" }}>
+              <FlexWidget style={{ flexDirection: "row", alignItems: "center", width: barW }}>
+                {Array.from({ length: segCount }, (_, i) => barSegment(i < filled, segW, barH))}
+              </FlexWidget>
+            </FlexWidget>
+          </FlexWidget>
+        ) : (
+          <FlexWidget style={{ flexDirection: "row", alignItems: "center", width: "match_parent" }}>
+            <ImageWidget image={MONDAY_IMAGE} imageWidth={56} imageHeight={37} />
+            <FlexWidget style={{ width: 12 }} />
+            <TextWidget text="오늘은 경기가 없어요" style={{ fontSize: 14, color: FG_73 }} />
+          </FlexWidget>
+        )}
       </FlexWidget>
     </ColorBg>
   );
@@ -304,9 +384,7 @@ function noTeamView() {
   return (
     <ColorBg noBg={_noBg}>
       <FlexWidget style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 12 }}>
-        <ImageWidget image={MONDAY_IMAGE} imageWidth={44} imageHeight={44} />
-        <FlexWidget style={{ height: 6 }} />
-        <TextWidget text="응원팀을 선택해주세요" style={{ fontSize: 11, color: DARK_FG }} />
+        <TextWidget text="응원팀을 선택해주세요" style={{ fontSize: 13, color: DARK_FG }} />
       </FlexWidget>
     </ColorBg>
   );
@@ -316,7 +394,7 @@ function errorView() {
   return (
     <ColorBg noBg={_noBg}>
       <FlexWidget style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 12 }}>
-        <TextWidget text="앱을 한번 껐다 켜주세요" style={{ fontSize: 11, color: DARK_FG }} />
+        <TextWidget text="앱을 한번 껐다 켜주세요" style={{ fontSize: 13, color: DARK_FG }} />
       </FlexWidget>
     </ColorBg>
   );
@@ -864,7 +942,7 @@ function view4x2(data: WidgetGameData) {
               <ImageWidget image={away.charImage} imageWidth={56} imageHeight={56} />
               <FlexWidget style={{ height: 8 }} />
               <TextWidget text={away.teamName} style={{ fontSize: 16, fontWeight: "700", color: away.nameColor }} />
-              {away.pbText ? <FlexWidget style={{marginTop: 4}}><TextWidget text={away.pbText} style={{ fontSize: 12, color: DARK_FG }} /></FlexWidget> : <FlexWidget />}
+              {away.pbText ? <FlexWidget style={{marginTop: 4}}><TextWidget text={away.pbText} style={{ fontSize: 13, color: DARK_FG }} /></FlexWidget> : <FlexWidget />}
             </FlexWidget>
 
             <FlexWidget style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -882,7 +960,7 @@ function view4x2(data: WidgetGameData) {
               <ImageWidget image={home.charImage} imageWidth={56} imageHeight={56} />
               <FlexWidget style={{ height: 8 }} />
               <TextWidget text={home.teamName} style={{ fontSize: 16, fontWeight: "700", color: home.nameColor }} />
-              {home.pbText ? <FlexWidget style={{marginTop: 4}}><TextWidget text={home.pbText} style={{ fontSize: 12, color: DARK_FG }} /></FlexWidget> : <FlexWidget />}
+              {home.pbText ? <FlexWidget style={{marginTop: 4}}><TextWidget text={home.pbText} style={{ fontSize: 13, color: DARK_FG }} /></FlexWidget> : <FlexWidget />}
             </FlexWidget>
           </FlexWidget>
 

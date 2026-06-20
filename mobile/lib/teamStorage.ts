@@ -46,3 +46,25 @@ export async function setMyTeamWithSync(teamId: string | null): Promise<void> {
     await AsyncStorage.removeItem(WIDGET_TEAM_KEY);
   }
 }
+
+const WIDGET_ATTENDANCE_KEY = "@fullcount_widget_attendance";
+
+export interface AttendanceSummary {
+  total: number;
+  wins: number;
+  losses: number;
+  ties: number;
+  winRate: number; // 0-100
+}
+
+export async function getAttendanceForWidget(): Promise<AttendanceSummary | null> {
+  try {
+    const raw = await AsyncStorage.getItem(WIDGET_ATTENDANCE_KEY);
+    if (raw) return JSON.parse(raw) as AttendanceSummary;
+  } catch { /* ignore */ }
+  return null;
+}
+
+export async function setAttendanceForWidget(summary: AttendanceSummary): Promise<void> {
+  await AsyncStorage.setItem(WIDGET_ATTENDANCE_KEY, JSON.stringify(summary));
+}

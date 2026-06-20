@@ -1,5 +1,6 @@
 import { requestWidgetUpdate } from "react-native-android-widget";
-import { getMyTeamForWidget, SHORT_CODE_TO_TEAM_ID, SHORT_CODE_TO_NAME } from "@/lib/teamStorage";
+import { getMyTeamForWidget, getAttendanceForWidget, SHORT_CODE_TO_TEAM_ID, SHORT_CODE_TO_NAME } from "@/lib/teamStorage";
+import type { AttendanceSummary } from "@/lib/teamStorage";
 import { GameStatusWidget } from "./GameStatusWidget";
 
 import { getInningInfo } from "@shared/gameStatus";
@@ -68,7 +69,7 @@ function buildWidgetProps(data: Record<string, string>): WidgetGameData {
   };
 }
 
-async function updateAllWidgets(myTeam: string, data: WidgetGameData | null, emptyReason?: string) {
+async function updateAllWidgets(myTeam: string, data: WidgetGameData | null, emptyReason?: string, attendance?: AttendanceSummary | null) {
   for (const widgetName of WIDGET_NAMES) {
     await requestWidgetUpdate({
       widgetName,
@@ -81,6 +82,7 @@ async function updateAllWidgets(myTeam: string, data: WidgetGameData | null, emp
             myTeam={myTeam}
             widgetName={widgetName}
             emptyReason={emptyReason}
+            attendance={attendance}
           />
         );
       },
@@ -114,6 +116,8 @@ let _lastWidgetGame: WidgetGameData | null = null;
 
 // 🔴 MOCK LIVE GAME — set to true for testing widget layouts
 const WIDGET_MOCK_LIVE = false;
+// 🔴 MOCK EMPTY STATE — "no_team" | "no_game" | "error" | false
+const WIDGET_MOCK_EMPTY: string | false = "no_game";
 
 export async function updateWidgetPeriodic(): Promise<void> {
   let myTeam: string | null = null;
@@ -129,6 +133,16 @@ export async function updateWidgetPeriodic(): Promise<void> {
 
   let data: WidgetGameData | null = null;
   let emptyReason: string | undefined = "no_game";
+
+  // 🔴 MOCK EMPTY: short-circuit to test empty state views
+  if (WIDGET_MOCK_EMPTY) {
+    if (WIDGET_MOCK_EMPTY === "no_team") {
+      await updateAllWidgets("", null, "no_team");
+      return;
+    }
+    await updateAllWidgets(myTeam, null, WIDGET_MOCK_EMPTY);
+    return;
+  }
 
   // 🔴 MOCK: simulate live game for widget testing
   if (WIDGET_MOCK_LIVE) {
@@ -283,8 +297,14 @@ export async function updateWidgetPeriodic(): Promise<void> {
     }
   }
 
+  // Fetch attendance stats for no-game view
+  let attendance: AttendanceSummary | null = null;
+  if (!data) {
+    attendance = await getAttendanceForWidget();
+  }
+
   // If there is still absolutely no data, we will render noGameView.
-  await updateAllWidgets(myTeam, data, data ? undefined : emptyReason);
+  await updateAllWidgets(myTeam, data, data ? undefined : emptyReason, attendance);
 
   // Auto-stop handled by taskHandler.tsx after refresh completes
   // (avoids require() in headless context that may fail in Hermes)
