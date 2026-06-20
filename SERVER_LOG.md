@@ -1,5 +1,44 @@
 # 서버 작업 로그
 
+## 2026-06-20: Phase 24 — 듀얼소스 병합 + FCM 픽스 + 스마트 TTL
+
+### Daum API 분석
+- **Daum batch 발견**: `issue.daum.net/api/arms/SPORTS_GAME_LIST?detail=true` → 1회 요청으로 5경기+relay
+- `detail=liveData,spPitchData,lineup` 파라미터가 핵심
+- 기존 `/prx/hermes/api/game/{id}` → `liveData=None`으로 변경됨 (API 변경)
+- batch 응답 속도 30-50ms, Naver 40-80ms → 비슷한 수준
+- Daum relay가 Naver보다 종료 경기 보존 우수, 실시간 약간 더 빠름
+
+### 듀얼소스 병합 구조
+- Naver (schedule+relay) + Daum (SPORTS_GAME_LIST batch) → `_merge_widget_results()`
+- 경기별 `inning > out > ball+strike` 최신 판정 후 선택
+- Daum 3s TTL primary, Naver 3s TTL secondary → 3초 갱신
+- `_internal_to_naver_gid()` 변환으로 Daum 게임에도 naverGameId 채움
+
+### 스마트 TTL
+- live: 3초 | first game 30min 전~: 3초 | pre-game 1h~30min: 5분
+- 전부 finished (첫 30분): 5분 | finished (30분 후): 30분 | 야간 1~12시: 30분
+
+### FCM 픽스
+- `fcm_sender.py`: `AndroidConfig(priority="high")` 추가 → Doze 모드 즉시 전달
+- `push_worker.py`: `_SHORT_TO_TEAM` 팀 코드 매핑 (DB 소문자 ↔ 게임 대문자)
+- Unregistered 토큰 자동 정리: 208→176 (32개 dead)
+
+### 위젯 데이터 보강
+- `winPitcher`/`losePitcher` daily-scores.json에서 주입
+- 빈 venue today-games.json에서 정적 채움
+- merge 후 injection 순서 버그 수정 (merge가 result 교체)
+
+### 검증 완료
+- 경기 시작 live 전환 정상, FCM 142개 기기 발송 성공
+- Daum relay 종료 경기까지 보존, Naver는 종료 즉시 삭제
+- dual-source merge 3초 주기 안정적 동작
+- 샘플 데이터: server_backup/2026-06-20/samples/ (2시점)
+
+### 사용자 통계 (6/20)
+- Android 다운로드: 781 | iOS 다운로드: 386 | 푸시 토큰: 176
+- 팀 분포: 두산 40(22.7%) > 롯데 29(16.5%) > 삼성 27(15.3%) > KIA 27(15.3%)
+
 ## 2026-06-19: 위젯 1.3.2 출시 + Naver API 대응 + Daum 폴백
 
 ### Naver API 필드 검증 결과
