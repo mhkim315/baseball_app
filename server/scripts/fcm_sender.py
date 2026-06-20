@@ -37,6 +37,7 @@ def send_fcm(token: str, payload: dict, dry_run: bool = False) -> bool:
         msg = messaging.Message(
             data=data,
             token=token,
+            android=messaging.AndroidConfig(priority="high"),
         )
         resp = messaging.send(msg, dry_run=dry_run)
         if dry_run:

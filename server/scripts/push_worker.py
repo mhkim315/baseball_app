@@ -11,6 +11,13 @@ from scripts.apns_sender import send_apns
 
 logger = logging.getLogger("fullcount.push-worker")
 
+# Short code → lowercase team ID (DB stores lowercase)
+_SHORT_TO_TEAM = {
+    "OB": "doosan", "LG": "lg", "WO": "kiwoom", "SK": "ssg",
+    "KT": "kt", "HH": "hanwha", "SS": "samsung", "HT": "kia",
+    "LT": "lotte", "NC": "nc",
+}
+
 ENABLED = os.getenv("ENABLE_PUSH_NOTIFICATIONS", "").lower() in ("1", "true", "yes")
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 DRY_RUN = os.getenv("DRY_RUN", "true").lower() in ("1", "true", "yes")
@@ -88,8 +95,8 @@ def run_push_worker(widget_data_func, db_engine=None):
             engine = db_engine or create_engine(DATABASE_URL)
             for game in scheduled_games:
                 gid = _game_key(game)
-                home_team = game.get("homeTeam", "")
-                away_team = game.get("awayTeam", "")
+                home_team = _SHORT_TO_TEAM.get(game.get("homeTeam", ""), game.get("homeTeam", ""))
+                away_team = _SHORT_TO_TEAM.get(game.get("awayTeam", ""), game.get("awayTeam", ""))
                 payload = _build_payload(game)
                 android_tokens, ios_tokens = [], []
                 try:
@@ -128,9 +135,8 @@ def run_push_worker(widget_data_func, db_engine=None):
 
     for game in changed:
         gid = _game_key(game)
-        home_team = game.get("homeTeam", "")
-        away_team = game.get("awayTeam", "")
-        team_codes = [home_team, away_team]
+        home_team = _SHORT_TO_TEAM.get(game.get("homeTeam", ""), game.get("homeTeam", ""))
+        away_team = _SHORT_TO_TEAM.get(game.get("awayTeam", ""), game.get("awayTeam", ""))
 
         payload = _build_payload(game)
         logger.info("push_worker: change detected %s — %s vs %s (score %s:%s)",
