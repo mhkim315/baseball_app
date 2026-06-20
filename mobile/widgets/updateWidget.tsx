@@ -40,6 +40,7 @@ export interface WidgetGameData {
   awayRank?: string;
   homeStreak?: string;
   awayStreak?: string;
+  emptyReason?: string;  // "no_team" | "no_game" | "error"
 }
 
 function buildWidgetProps(data: Record<string, string>): WidgetGameData {
@@ -67,7 +68,7 @@ function buildWidgetProps(data: Record<string, string>): WidgetGameData {
   };
 }
 
-async function updateAllWidgets(myTeam: string, data: WidgetGameData | null) {
+async function updateAllWidgets(myTeam: string, data: WidgetGameData | null, emptyReason?: string) {
   for (const widgetName of WIDGET_NAMES) {
     await requestWidgetUpdate({
       widgetName,
@@ -79,6 +80,7 @@ async function updateAllWidgets(myTeam: string, data: WidgetGameData | null) {
             data={data}
             myTeam={myTeam}
             widgetName={widgetName}
+            emptyReason={emptyReason}
           />
         );
       },
@@ -121,51 +123,52 @@ export async function updateWidgetPeriodic(): Promise<void> {
     console.warn("updateWidget: team lookup failed", e);
   }
   if (!myTeam) {
-    await updateAllWidgets("", null);
+    await updateAllWidgets("", null, "no_team");
     return;
   }
 
   let data: WidgetGameData | null = null;
+  let emptyReason: string | undefined = "no_game";
 
   // 🔴 MOCK: simulate live game for widget testing
   if (WIDGET_MOCK_LIVE) {
-    // 2026-06-19 KIA(11) : KT(3) 실제 데이터 기반 — 5회초 KIA 공격 중
-    const mockMyTeam = myTeam || "kia";
-    const mockIsHome = mockMyTeam === "kt";
+    // 2026-06-20 롯데(2) : 키움(1) 실시간 relay — 9회말 어준서 3구째 (2B-1S-1O, 1·2루) → praying
+    const mockMyTeam = myTeam || "kiwoom";
+    const mockIsHome = mockMyTeam === "kiwoom";
     data = {
-      homeTeam: "KT",
-      awayTeam: "KIA",
-      homeScore: "2",
-      awayScore: "5",
-      inning: "5",
-      isTop: "1",
+      homeTeam: "키움",
+      awayTeam: "롯데",
+      homeScore: "1",
+      awayScore: "2",
+      inning: "9",
+      isTop: "0",
       status: "live",
       homeIsMyTeam: mockIsHome,
-      time: "18:47",
-      stadium: "수원",
-      weather: "23° 흐림",
-      awayPitcher: "네일",
-      homePitcher: "오원석",
-      ball: "1",
-      strike: "2",
+      time: "21:05",
+      stadium: "고척",
+      weather: "21° 흐림",
+      awayPitcher: "나균안",
+      homePitcher: "로젠버그",
+      ball: "2",
+      strike: "1",
       out: "1",
-      base1: "0",
+      base1: "1",
       base2: "1",
-      base3: "1",
-      currentPitcher: "오원석",
-      currentBatter: "김도영",
+      base3: "0",
+      currentPitcher: "원종현",
+      currentBatter: "어준서",
       scoreBoard: {
-        rheb: { home: { r: 2, h: 5, e: 1 }, away: { r: 5, h: 8, e: 0 } },
+        rheb: { home: { r: 1, h: 5, e: 0 }, away: { r: 2, h: 7, e: 0 } },
         inn: {
-          home: ["0", "0", "0", "2"],
-          away: ["0", "2", "3", "0"],
+          home: ["0", "0", "0", "0", "0", "0", "1", "0"],
+          away: ["0", "0", "1", "0", "0", "1", "0", "0"],
         },
       },
-      relay: { inning: 5, isTop: true, ball: 1, strike: 2, out: 1, base1: 0, base2: 1, base3: 1 },
-      homeRank: "3",
-      awayRank: "4",
-      homeStreak: "1패",
-      awayStreak: "2승",
+      relay: { inning: 9, isTop: false, ball: 2, strike: 1, out: 1, base1: 1, base2: 1, base3: 0 },
+      homeRank: "10",
+      awayRank: "8",
+      homeStreak: "5패",
+      awayStreak: "4승",
     };
     _lastWidgetGame = data;
     await updateAllWidgets(myTeam, data);
@@ -274,11 +277,14 @@ export async function updateWidgetPeriodic(): Promise<void> {
     // Network error -> retain last data
     if (_lastWidgetGame) {
       data = _lastWidgetGame;
+      emptyReason = undefined;
+    } else {
+      emptyReason = "error";
     }
   }
 
   // If there is still absolutely no data, we will render noGameView.
-  await updateAllWidgets(myTeam, data);
+  await updateAllWidgets(myTeam, data, data ? undefined : emptyReason);
 
   // Auto-stop handled by taskHandler.tsx after refresh completes
   // (avoids require() in headless context that may fail in Hermes)

@@ -240,16 +240,20 @@ function OutDots({ count, size }: { count: number, size: number }) {
   );
 }
 
-interface WidgetProps { width: number; height: number; data: WidgetGameData | null; myTeam: string; widgetName?: string; }
+interface WidgetProps { width: number; height: number; data: WidgetGameData | null; myTeam: string; widgetName?: string; emptyReason?: string; }
 
-export function GameStatusWidget({ width, height, data, myTeam, widgetName }: WidgetProps) {
+export function GameStatusWidget({ width, height, data, myTeam, widgetName, emptyReason }: WidgetProps) {
   const isLiveOnly = widgetName?.includes("LiveOnly");
   const isLiveEnd = widgetName?.includes("Live") && !isLiveOnly;
   const isClear = widgetName?.includes("Clear");
   _noBg = isClear;
 
   try {
-    if (!data) return noGameView();
+    if (!data) {
+      if (emptyReason === "no_team") return noTeamView();
+      if (emptyReason === "error") return errorView();
+      return noGameView();
+    }
     // LiveOnly: transparent for non-live
     if (isLiveOnly && data.status !== "live") return transparentView();
     // LiveEnd: transparent for scheduled
@@ -291,6 +295,28 @@ function noGameView() {
         <ImageWidget image={MONDAY_IMAGE} imageWidth={44} imageHeight={44} />
         <FlexWidget style={{ height: 6 }} />
         <TextWidget text="오늘은 경기가 없어요" style={{ fontSize: 11, color: DARK_FG }} />
+      </FlexWidget>
+    </ColorBg>
+  );
+}
+
+function noTeamView() {
+  return (
+    <ColorBg noBg={_noBg}>
+      <FlexWidget style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 12 }}>
+        <ImageWidget image={MONDAY_IMAGE} imageWidth={44} imageHeight={44} />
+        <FlexWidget style={{ height: 6 }} />
+        <TextWidget text="응원팀을 선택해주세요" style={{ fontSize: 11, color: DARK_FG }} />
+      </FlexWidget>
+    </ColorBg>
+  );
+}
+
+function errorView() {
+  return (
+    <ColorBg noBg={_noBg}>
+      <FlexWidget style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 12 }}>
+        <TextWidget text="앱을 한번 껐다 켜주세요" style={{ fontSize: 11, color: DARK_FG }} />
       </FlexWidget>
     </ColorBg>
   );
