@@ -747,28 +747,28 @@ def _get_widget_data_cached() -> dict | None:
                     home_st = s
         starter_map[gid] = {"away": away_st, "home": home_st}
 
-    global _NAVER_HEALTHY, _NAVER_LAST_CHECK
-
-    # Skip Naver if known unhealthy (probe every 5 min)
-    if not _NAVER_HEALTHY:
-        if time.time() - _NAVER_LAST_CHECK > _NAVER_RECHECK_INTERVAL:
-            _NAVER_LAST_CHECK = time.time()
-            logger.info("widget-data: probing Naver health...")
-        else:
-            daum_result = _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, starter_map)
-            if daum_result:
-                return daum_result
+    # Naver gate: progressive backoff if previous failures
+    if not _naver_can_call():
+        logger.info("widget-data: Naver backoff active (failures=%d)", _NAVER_FAILURES)
+        daum_result = _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, starter_map)
+        if daum_result:
+            return daum_result
+        # B1: Daum returned None — serve cached data instead of falling through to Naver
+        cached = _WIDGET_CACHE.get(today_str)
+        if cached:
+            return cached[1]
+        # No cache at all — last resort: try Naver despite backoff
+        logger.warning("widget-data: no cached data, forcing Naver call despite backoff")
 
     try:
         from scripts.naver_api import schedule_games, game_relay
         from scripts.naver_adapter import normalize_game, normalize_relay, normalize_status, parse_score_inning, parse_rheb
         raw_games = schedule_games(today_str, today_str)
-        _NAVER_HEALTHY = True  # Naver responded successfully
+        _naver_succeeded()
     except Exception as e:
         logger.warning("widget-data: Naver failed — %s", e)
         _save_crash_dump(today_str, "naver_exception", {"error": str(e)})
-        _NAVER_HEALTHY = False
-        _NAVER_LAST_CHECK = time.time()
+        _naver_failed()
         daum_result = _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, starter_map)
         if daum_result:
             return daum_result
@@ -957,6 +957,7 @@ def _get_widget_data_cached() -> dict | None:
     # Validate Naver data; fall back to Daum if broken
     if not _validate_games(games_data):
         logger.warning("widget-data: Naver data validation failed, trying Daum")
+        _naver_failed()
         _save_crash_dump(today_str, "validate_failed", games_data)
         _save_crash_dump(today_str, "raw_naver", raw_games)  # unmodified Naver response
         daum_result = _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, starter_map)
@@ -1008,9 +1009,34 @@ _DAUM_COOLDOWN = 0
 _DAUM_COOLDOWN_SEC = 120
 _DAUM_FETCH_IN_FLIGHT = False
 _DAUM_LOCK = threading.Lock()
-_NAVER_HEALTHY = True
-_NAVER_LAST_CHECK = 0
-_NAVER_RECHECK_INTERVAL = 300  # 5 min between Naver health probes
+_NAVER_FAILURES = 0
+_NAVER_BACKOFF = [5, 10, 20, 40, 80, 160, 300]  # progressive retry delays
+_NAVER_NEXT_RETRY = 0
+_NAVER_LOCK = threading.Lock()
+
+
+def _naver_can_call():
+    """Check whether Naver API may be called now. Thread-safe."""
+    with _NAVER_LOCK:
+        if _NAVER_FAILURES == 0:
+            return True
+        return time.time() >= _NAVER_NEXT_RETRY
+
+
+def _naver_succeeded():
+    """Reset failure counter after a successful Naver call."""
+    global _NAVER_FAILURES
+    with _NAVER_LOCK:
+        _NAVER_FAILURES = 0
+
+
+def _naver_failed():
+    """Register a Naver failure and compute next retry time."""
+    global _NAVER_FAILURES, _NAVER_NEXT_RETRY
+    with _NAVER_LOCK:
+        _NAVER_FAILURES += 1
+        idx = min(_NAVER_FAILURES - 1, len(_NAVER_BACKOFF) - 1)
+        _NAVER_NEXT_RETRY = time.time() + _NAVER_BACKOFF[idx]
 
 
 def _prefetch_daum_ids(today_str):
@@ -1448,6 +1474,9 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
                 return result
 
         try:
+            # Skip relay if Naver is in backoff (2+ failures — relay is less critical than schedule)
+            if not _naver_can_call() and _NAVER_FAILURES >= 2:
+                return result
             from scripts.naver_api import game_relay
             relay_data = game_relay(nid)
             if relay_data:
