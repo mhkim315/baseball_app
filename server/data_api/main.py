@@ -1120,6 +1120,31 @@ def _daum_cpid_to_gid(cpid):
     return cpid
 
 
+@app.get("/crash-dumps")
+def list_crash_dumps():
+    """List available crash dump files (admin/debug)."""
+    try:
+        dump_dir = DATA_DIR / "crash_dumps"
+        if not dump_dir.exists():
+            return JSONResponse({"files": []})
+        files = sorted([f.name for f in dump_dir.iterdir() if f.suffix == ".json"], reverse=True)
+        return JSONResponse({"files": files})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@app.get("/crash-dumps/{filename}")
+def get_crash_dump(filename: str):
+    """Download a specific crash dump file (admin/debug)."""
+    try:
+        dump_dir = DATA_DIR / "crash_dumps"
+        path = dump_dir / filename
+        if not path.exists():
+            return JSONResponse({"error": "Not found"}, status_code=404)
+        with open(path, "r", encoding="utf-8") as f:
+            return JSONResponse(json.load(f))
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
 @app.get("/widget-data")
 def get_widget_data():
     data = _get_widget_data_cached()
