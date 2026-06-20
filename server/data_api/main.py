@@ -113,7 +113,7 @@ _WEATHER_CACHE_TTL = 1800  # 30 minutes
 _WIDGET_CACHE: dict[str, tuple[float, dict]] = {}
 _WIDGET_CACHE_TTL = 6  # seconds — Naver refresh (secondary)
 _DAUM_WIDGET_CACHE: dict[str, tuple[float, dict]] = {}
-_DAUM_WIDGET_CACHE_TTL = 2  # seconds — Daum refresh (primary, faster)
+_DAUM_WIDGET_CACHE_TTL = 3  # seconds — Daum refresh (primary, 20 calls/min safe)
 
 def load_json(filename):
     now = time.time()
