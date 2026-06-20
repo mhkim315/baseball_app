@@ -998,6 +998,11 @@ def _get_widget_data_cached() -> dict | None:
 
     result: dict = {"games": games_data, "todayWeather": today_weather}
 
+    # Merge with Daum for fresher relay (staggered 3s offset)
+    daum_data = _get_daum_widget_cached(today_str, today_games, streak_map, rank_map, starter_map)
+    if daum_data:
+        result = _merge_widget_results(result, daum_data)
+
     # Fill missing venue from today-games.json (static schedule data)
     if today_games:
         venue_map = {g.get("id", ""): g.get("venue", "") for g in (today_games.get("games") or [])}
@@ -1005,10 +1010,21 @@ def _get_widget_data_cached() -> dict | None:
             if not entry.get("venue") and entry["gameId"] in venue_map:
                 entry["venue"] = venue_map[entry["gameId"]]
 
-    # Merge with Daum for fresher relay (staggered 3s offset)
-    daum_data = _get_daum_widget_cached(today_str, today_games, streak_map, rank_map, starter_map)
-    if daum_data:
-        result = _merge_widget_results(result, daum_data)
+    # Inject win/lose pitcher from daily-scores
+    daily = load_json("daily-scores.json")
+    if daily:
+        today_scores = daily.get("dates", {}).get(today_str, [])
+        score_by_teams = {}
+        for s in today_scores:
+            key = (s.get("away", ""), s.get("home", ""))
+            score_by_teams[key] = s
+        for entry in result["games"]:
+            ak = entry.get("awayName", ""); hk = entry.get("homeName", "")
+            s = score_by_teams.get((ak, hk))
+            if s:
+                entry["winPitcher"] = s.get("winPitcher")
+                entry["losePitcher"] = s.get("losePitcher")
+                entry["savePitcher"] = s.get("savePitcher")
 
     _WIDGET_CACHE[today_str] = (time.time(), result)
     return result
