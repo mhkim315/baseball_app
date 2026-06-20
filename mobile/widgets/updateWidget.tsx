@@ -5,11 +5,9 @@ import { GameStatusWidget } from "./GameStatusWidget";
 import { getInningInfo } from "@shared/gameStatus";
 
 const WIDGET_NAMES = [
-  "Widget1x1", "Widget1x2", "Widget1x3", "Widget1x4", "Widget1x5",
-  "Widget2x1", "Widget2x2", "Widget2x3", "Widget2x4", "Widget2x5",
-  "Widget3x1", "Widget3x2", "Widget3x3", "Widget3x4", "Widget3x5",
-  "Widget4x1", "Widget4x2", "Widget4x3", "Widget4x4", "Widget4x5",
-  "Widget5x1", "Widget5x2", "Widget5x3", "Widget5x4", "Widget5x5",
+  "Widget2x2", "Widget4x2",
+  "Widget2x2Clear", "Widget2x2Live", "Widget2x2LiveOnly",
+  "Widget4x2Clear", "Widget4x2Live", "Widget4x2LiveOnly",
 ];
 
 export interface WidgetGameData {
