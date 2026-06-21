@@ -348,10 +348,10 @@ export async function fetchGameDetailFresh(gameId: string): Promise<GameDetail |
   return withConcurrencyLimit(() => apiGameDetail(gameId));
 }
 
-// Widget data — 1s TTL (server refreshes every 3s via Naver+Daum merge)
+// Widget data — 3s TTL (matches server merge cache)
 export async function cachedWidgetData(): Promise<import("@shared/types").WidgetData | null> {
   const key = cacheKey("widget", "all");
-  const ttl = 1_000;
+  const ttl = 3_000;
   return fetchWithCache(key, ttl, () => apiWidgetData());
 }
 

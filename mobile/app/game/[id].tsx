@@ -443,7 +443,12 @@ export default function GameDetailScreen() {
             rheb: ok ? (wg.scoreBoard?.rheb ?? prev.scoreBoard?.rheb) : prev.scoreBoard?.rheb,
             inn: ok ? (wg.scoreBoard?.inn ?? prev.scoreBoard?.inn) : prev.scoreBoard?.inn,
           },
-          relay: ok ? (wg.relay ?? prev.relay) : prev.relay,
+          relay: ok ? (wg.relay ? {
+            ...wg.relay,
+            // Preserve pitcher/batter from previous relay when new data has null
+            pitcher: wg.relay.pitcher || prev.relay?.pitcher || null,
+            batter: wg.relay.batter || prev.relay?.batter || null,
+          } : prev.relay) : prev.relay,
           gameInfo: prev.gameInfo ? { ...prev.gameInfo, status: wg.status } : prev.gameInfo,
         };
       });

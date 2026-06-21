@@ -362,12 +362,13 @@ export default function HomeScreen() {
                   ? { homeScore: wg.score.home, awayScore: wg.score.away }
                   : {};
 
-                // Inject current pitcher name into relay (server p2n lookup broken)
-                if (wg.relay?.pitcher) {
-                  const currentIsTop = wg.relay.isTop === "1";
-                  const cpName = currentIsTop ? (wg as any).homeCurrentPitcher : (wg as any).awayCurrentPitcher;
-                  if (cpName) wg.relay.pitcher.name = cpName;
-                }
+                // Preserve pitcher/batter from previous relay when widget-data has null
+                const prevRelay = games[idx].relay;
+                const mergedRelay = wg.relay ? {
+                  ...wg.relay,
+                  pitcher: wg.relay.pitcher || prevRelay?.pitcher || null,
+                  batter: wg.relay.batter || prevRelay?.batter || null,
+                } : (prevRelay ?? null);
 
                 games[idx] = {
                   ...games[idx],
@@ -375,7 +376,7 @@ export default function HomeScreen() {
                   status: wg.status,
                   liveInning,
                   isTop,
-                  relay: wg.relay,
+                  relay: mergedRelay,
                   awayPitcher: games[idx].awayPitcher || wg.awayStarter || undefined,
                   homePitcher: games[idx].homePitcher || wg.homeStarter || undefined,
                 };
