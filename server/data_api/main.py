@@ -778,9 +778,17 @@ def _get_active_ttl(games=None):
     if games:
         statuses = {g.get("status") for g in games}
         if "live" in statuses:
-            return _WIDGET_CACHE_TTL  # 6s — live games active
+            return _WIDGET_CACHE_TTL  # 3s — live games active
         if statuses == {"finished"}:
-            return 300  # 5 min — all done, collector may still update
+            # Recently finished (≤30 min): 5 min for collector updates
+            # Long finished (>30 min): 30 min, no more updates expected
+            today_str = kst_now.strftime("%Y-%m-%d")
+            cached = _WIDGET_CACHE.get(today_str)
+            if cached:
+                ct, _ = cached
+                if time.time() - ct > 1800:
+                    return 1800
+            return 300
 
     # Check next game time (from today-games.json or fallback schedule)
     now_hm = kst_now.hour * 60 + kst_now.minute  # minutes since midnight KST
