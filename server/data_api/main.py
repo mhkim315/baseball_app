@@ -787,11 +787,12 @@ def _get_active_ttl(games=None):
     next_game_min = _get_next_game_minutes()
     if next_game_min is not None:
         if now_hm >= next_game_min - 30:
-            return _WIDGET_CACHE_TTL  # 6s — within 30 min of first game
+            return _WIDGET_CACHE_TTL  # 3s — within 30 min of first game
         if now_hm >= next_game_min - 60:
             return 300  # 5 min — 1 hour before first game
+        return 300  # game exists but >1h away — 5 min
 
-    return _WIDGET_CACHE_TTL
+    return 1800  # no games today — 30 min
 
 
 def _get_next_game_minutes():
