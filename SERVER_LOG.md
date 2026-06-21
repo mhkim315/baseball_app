@@ -1,5 +1,36 @@
 # 서버 작업 로그
 
+## 2026-06-21: Phase 25 — Daum 프리게임 버그 + 머지 우선순위 + 투타자 보존
+
+### Daum 프리게임 NoneType crash 수정
+- `scripts/daum_adapter.py`: `normalize_game` 5곳 + `fetch_daum_games_batch` 1곳 `or {}` 패턴 적용
+- 프리게임 때 Daum API가 `null`로 응답하는 필드( homeScore, awayScore, home, away, field, document) 대응
+- 오늘만 2597개 crash dump 쌓였던 것 정리
+
+### Merge 우선순위 5단계
+1. Status (live > scheduled > finished > cancelled)
+2. Relay presence (있는 쪽 > 없는 쪽)
+3. Inning freshness
+4. Out freshness
+5. Pitch count (B+S)
+
+### 투타자 3단계 보존
+- 1차: merge 승자에게 없으면 패자에게서 보존
+- 2차: `_LAST_PLAYERS` 캐시 — 둘 다 null일 때 이전 값 복원 (타자 교체 대응)
+- 3차: 앱 `_lastPlayerNames` 로컬 캐시
+
+### TTL 최종
+- Merge: 3초 | Daum batch: 3초 (primary) | Naver relay: 6초 (secondary)
+
+### 경기 시작 실시간 검증 (14:00 롯데@키움)
+- live 전환 + BSO 동시 진입 (지연 없음, 14:01:01)
+- FCM 푸시 3초만에 발송
+- 1회초 12분간 BSO/주자/득점 모두 실시간 추적 성공
+- Daum dual-source merge 3초 주기 안정적 동작
+
+### 커밋
+`8e87ab1` — Daum pre-game crash + merge priority + pitcher/batter preservation
+
 ## 2026-06-20: Phase 24 — 듀얼소스 병합 + FCM 픽스 + 스마트 TTL
 
 ### Daum API 분석
