@@ -80,11 +80,11 @@ def fetch_daum_game(daum_game_id):
 
 def normalize_game(doc):
     """Daum game document → 내부 표준 game dict (Naver 호환)."""
-    home = doc.get("home", {})
-    away = doc.get("away", {})
-    hs = doc.get("homeScore", {})
-    aws = doc.get("awayScore", {})
-    field = doc.get("field", {})
+    home = doc.get("home") or {}
+    away = doc.get("away") or {}
+    hs = doc.get("homeScore") or {}
+    aws = doc.get("awayScore") or {}
+    field = doc.get("field") or {}
 
     # Player name lookup from homePerson + awayPerson
     p2n = {}
@@ -103,10 +103,10 @@ def normalize_game(doc):
         "gameId": str(doc.get("gameId", "")),
         "cpGameId": doc.get("cpGameId", ""),
         "status": _normalize_status(doc.get("gameStatus", "")),
-        "homeTeam": home.get("team", {}).get("cpTeamId", ""),
-        "awayTeam": away.get("team", {}).get("cpTeamId", ""),
-        "homeName": home.get("team", {}).get("shortName", ""),
-        "awayName": away.get("team", {}).get("shortName", ""),
+        "homeTeam": (home.get("team") or {}).get("cpTeamId", ""),
+        "awayTeam": (away.get("team") or {}).get("cpTeamId", ""),
+        "homeName": (home.get("team") or {}).get("shortName", ""),
+        "awayName": (away.get("team") or {}).get("shortName", ""),
         "homeScore": int(home.get("result", 0) or 0),
         "awayScore": int(away.get("result", 0) or 0),
         "homeStarter": hsp.get("nameKo") or hsp.get("name"),
@@ -211,4 +211,4 @@ def fetch_daum_games_batch(date_str, league="kbo", season="2026"):
     })
     with urllib.request.urlopen(req, timeout=10) as resp:
         data = json.loads(resp.read())
-    return data.get("document", {}).get("list", [])
+    return (data.get("document") or {}).get("list", [])

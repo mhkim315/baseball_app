@@ -108,11 +108,20 @@ export async function updateWidgetFromFCM(data: Record<string, string>): Promise
     props.awayRank = _lastWidgetGame.awayRank;
     props.homeStreak = _lastWidgetGame.homeStreak;
     props.awayStreak = _lastWidgetGame.awayStreak;
+    // Preserve current pitcher/batter — FCM flat keys don't carry these
+    if (!props.currentPitcher) props.currentPitcher = _lastWidgetGame.currentPitcher;
+    if (!props.currentBatter) props.currentBatter = _lastWidgetGame.currentBatter;
+    // Last-resort fallback from name cache
+    const gameId = `${data.date || ""}-${data.home_team || ""}${data.away_team || ""}-0`;
+    const cached = _lastPlayerNames[gameId];
+    if (!props.currentPitcher && cached) props.currentPitcher = cached.split("|")[0] || undefined;
+    if (!props.currentBatter && cached) props.currentBatter = cached.split("|")[1] || undefined;
   }
   await updateAllWidgets(myTeam, props);
 }
 
 let _lastWidgetGame: WidgetGameData | null = null;
+let _lastPlayerNames: Record<string, string> = {};  // gameId -> "pitcherName|batterName" — survive null gaps
 
 // 🔴 MOCK LIVE GAME — set to true for testing widget layouts
 const WIDGET_MOCK_LIVE = false;
@@ -265,8 +274,8 @@ export async function updateWidgetPeriodic(): Promise<void> {
         homePitcher: myGame.homeStarter || undefined,
         winPitcher: myGame.winPitcher || undefined,
         losePitcher: myGame.losePitcher || undefined,
-        currentPitcher: myGame.relay?.pitcher?.name || undefined,
-        currentBatter: myGame.relay?.batter?.name || undefined,
+        currentPitcher: myGame.relay?.pitcher?.name || _lastPlayerNames[myGame.gameId]?.split("|")[0] || undefined,
+        currentBatter: myGame.relay?.batter?.name || _lastPlayerNames[myGame.gameId]?.split("|")[1] || undefined,
         weather: weatherData ? `${weatherData.temp}° ${weatherData.condition}` : undefined,
         ball: myGame.relay?.ball?.toString(),
         strike: myGame.relay?.strike?.toString(),
@@ -283,8 +292,12 @@ export async function updateWidgetPeriodic(): Promise<void> {
         homeStreak: String(myGame.homeStreak ?? ""),
         awayStreak: String(myGame.awayStreak ?? ""),
       };
-      
+
       _lastWidgetGame = data;
+      // Cache last known pitcher/batter to survive null gaps between at-bats
+      if (myGame.relay?.pitcher?.name || myGame.relay?.batter?.name) {
+        _lastPlayerNames[myGame.gameId] = `${myGame.relay?.pitcher?.name || ""}|${myGame.relay?.batter?.name || ""}`;
+      }
     }
 
 

@@ -104,7 +104,7 @@ _JSON_CACHE = {}
 _JSON_CACHE_TTL = 300  # seconds (matches collector cycle)
 
 _RELAY_CACHE: dict[str, tuple[float, dict | None]] = {}
-_RELAY_CACHE_TTL = 5  # seconds — prevent Naver IP block
+_RELAY_CACHE_TTL = 6  # seconds — Naver relay refresh (secondary)
 _RELAY_FAILURES: dict[str, int] = {}  # consecutive failure count per game
 
 _WEATHER_CACHE: dict[str, tuple[float, dict | None]] = {}
@@ -114,6 +114,7 @@ _WIDGET_CACHE: dict[str, tuple[float, dict]] = {}
 _WIDGET_CACHE_TTL = 3  # seconds — merged result refresh (matches Daum primary)
 _DAUM_WIDGET_CACHE: dict[str, tuple[float, dict]] = {}
 _DAUM_WIDGET_CACHE_TTL = 3  # seconds — Daum refresh (primary, 20 calls/min safe)
+_LAST_PLAYERS: dict[str, dict] = {}  # gameId -> {pitcher, batter} — fallback when both sources empty
 
 def load_json(filename):
     now = time.time()
@@ -696,12 +697,31 @@ def _code_to_kr(code: str) -> str:
     return TEAM_NAME_MAP.get(tid, code) if tid else code
 
 
+_STATUS_PRIORITY = {"live": 4, "scheduled": 3, "finished": 2, "cancelled": 1}
+
+
 def _merge_game_freshness(a, b):
-    ra = a.get("relay") or {}; rb = b.get("relay") or {}
+    # Priority 1: game status — live beats scheduled beats finished
+    pa = _STATUS_PRIORITY.get(a.get("status"), 0)
+    pb = _STATUS_PRIORITY.get(b.get("status"), 0)
+    if pa != pb:
+        return a if pa > pb else b
+
+    # Priority 2: relay presence — source with relay wins over source without
+    ra = a.get("relay"); rb = b.get("relay")
+    if (ra is not None) != (rb is not None):
+        return a if ra is not None else b
+
+    # Priority 3: inning freshness
+    ra = ra or {}; rb = rb or {}
     ia = int(ra.get("inning") or 0); ib = int(rb.get("inning") or 0)
     if ia != ib: return a if ia > ib else b
+
+    # Priority 4: out freshness
     oa = int(ra.get("out") or 0); ob = int(rb.get("out") or 0)
     if oa != ob: return a if oa > ob else b
+
+    # Priority 5: pitch count freshness
     sa = int(ra.get("strike") or 0) + int(ra.get("ball") or 0)
     sb = int(rb.get("strike") or 0) + int(rb.get("ball") or 0)
     return a if sa >= sb else b
@@ -718,7 +738,29 @@ def _merge_widget_results(naver, daum):
         if not n: merged.append(d)
         elif not d: merged.append(n)
         else:
-            merged.append(_merge_game_freshness(n, d))
+            winner = _merge_game_freshness(n, d)
+            loser = d if winner is n else n
+            # Preserve non-None relay fields from loser (pitcher/batter often missing in one source)
+            wr = winner.get("relay") or {}
+            lr = loser.get("relay") or {}
+            if wr and lr:
+                for k in ("pitcher", "batter"):
+                    if not wr.get(k) and lr.get(k):
+                        wr[k] = lr[k]
+                winner["relay"] = wr
+            # Fallback: if both sources lost pitcher/batter (batter change gap), use last known
+            wr = winner.get("relay") or {}
+            last = _LAST_PLAYERS.get(gid, {})
+            for k in ("pitcher", "batter"):
+                if not wr.get(k) and last.get(k):
+                    if wr:
+                        wr[k] = last[k]
+                    else:
+                        winner["relay"] = {k: last[k]}
+            # Update last known
+            if wr:
+                _LAST_PLAYERS[gid] = {"pitcher": wr.get("pitcher"), "batter": wr.get("batter")}
+            merged.append(winner)
     weather = naver.get("todayWeather", {}) or daum.get("todayWeather", {})
     return {"games": merged, "todayWeather": weather}
 
