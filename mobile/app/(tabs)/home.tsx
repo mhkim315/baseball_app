@@ -377,6 +377,7 @@ export default function HomeScreen() {
                   liveInning,
                   isTop,
                   relay: mergedRelay,
+                  scoreBoardInn: wg.scoreBoard?.inn,
                   awayPitcher: games[idx].awayPitcher || wg.awayStarter || undefined,
                   homePitcher: games[idx].homePitcher || wg.homeStarter || undefined,
                 };
@@ -782,6 +783,7 @@ export default function HomeScreen() {
         liveInning={item.liveInning}
         isTop={item.isTop}
         relay={item.relay}
+        scoreBoardInn={item.scoreBoardInn}
         highlighted={isMyTeamGame ? teamPrimaryColor(myTeam, isDark) : undefined}
         dense={!isMyTeamGame}
         onClick={() => {

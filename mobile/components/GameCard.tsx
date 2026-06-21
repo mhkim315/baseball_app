@@ -29,6 +29,7 @@ interface GameCardProps {
   liveInning?: number;
   isTop?: boolean;
   relay?: RelayState | null;
+  scoreBoardInn?: { away: (number | null)[]; home: (number | null)[] } | null;
   large?: boolean;
   awayDisplayName?: string;
   homeDisplayName?: string;
@@ -60,6 +61,7 @@ export default function GameCard({
   highlighted,
   dense,
   relay,
+  scoreBoardInn,
   onClick,
   large,
   awayDisplayName,
@@ -94,6 +96,8 @@ export default function GameCard({
     inning: liveInning ?? 0,
     isTop: isTop ?? true,
     isMyHome: false,
+    myInns: scoreBoardInn?.away,
+    oppInns: scoreBoardInn?.home,
     ...(relay ? { base1: relay.base1, base2: relay.base2, base3: relay.base3 } : {}),
   });
   const homeEmotion = computeGameEmotion({
@@ -103,6 +107,8 @@ export default function GameCard({
     inning: liveInning ?? 0,
     isTop: isTop ?? true,
     isMyHome: true,
+    myInns: scoreBoardInn?.home,
+    oppInns: scoreBoardInn?.away,
     ...(relay ? { base1: relay.base1, base2: relay.base2, base3: relay.base3 } : {}),
   });
 
