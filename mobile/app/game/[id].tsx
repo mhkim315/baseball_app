@@ -716,8 +716,8 @@ export default function GameDetailScreen() {
     isTop: inningInfo?.isTop ?? true,
     ...relayBase,
   };
-  const awayEmotion = computeGameEmotion({ ...emotionInput, myScore: gameScore?.away ?? 0, oppScore: gameScore?.home ?? 0, isMyHome: false });
-  const homeEmotion = computeGameEmotion({ ...emotionInput, myScore: gameScore?.home ?? 0, oppScore: gameScore?.away ?? 0, isMyHome: true });
+  const awayEmotion = computeGameEmotion({ ...emotionInput, myScore: gameScore?.away ?? 0, oppScore: gameScore?.home ?? 0, isMyHome: false, myInns: detail.scoreBoard?.inn?.away, oppInns: detail.scoreBoard?.inn?.home });
+  const homeEmotion = computeGameEmotion({ ...emotionInput, myScore: gameScore?.home ?? 0, oppScore: gameScore?.away ?? 0, isMyHome: true, myInns: detail.scoreBoard?.inn?.home, oppInns: detail.scoreBoard?.inn?.away });
 
   const scoreBoard = detail.scoreBoard;
   const innData = scoreBoard?.inn || (isLive ? { away: [0], home: [] } : null);

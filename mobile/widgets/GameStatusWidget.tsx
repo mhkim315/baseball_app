@@ -2,6 +2,7 @@
 import { FlexWidget, TextWidget, ImageWidget } from "react-native-android-widget";
 import { LOCAL_CHARACTERS } from "@/lib/characterAssets";
 import type { CharacterEmotion } from "@/lib/emotions";
+import { computeGameEmotion } from "@/lib/gameEmotion";
 
 const WIDGET_BUILD = "OTA-v41-master-layouts";
 
@@ -77,9 +78,14 @@ function computeWidgetEmotion(data: WidgetGameData, isMyHome: boolean): Characte
   const diff = myScore - oppScore;
 
   if (data.status === "finished") {
-    if (diff > 0) return "thumbs_up";
-    if (diff === 0) return "neutral";
-    return "crying";
+    return computeGameEmotion({
+      status: "finished",
+      myScore, oppScore,
+      inning: parseInt(data.inning || "9", 10),
+      isTop: false, isMyHome,
+      myInns: isMyHome ? data.scoreBoard?.inn?.home : data.scoreBoard?.inn?.away,
+      oppInns: isMyHome ? data.scoreBoard?.inn?.away : data.scoreBoard?.inn?.home,
+    });
   }
 
   // Live Game

@@ -32,6 +32,7 @@ export interface ResolvedGame {
   liveInning?: number;
   isTop?: boolean;
   relay?: RelayState | null;
+  scoreBoardInn?: { away: (number | null)[]; home: (number | null)[] } | null;
 
   /** Raw references for consumers that need deep access (e.g. game/[id]) */
   _raw: {
