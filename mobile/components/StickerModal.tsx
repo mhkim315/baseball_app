@@ -449,12 +449,12 @@ export default function StickerModal({
 
         <ScrollView ref={scrollRef} style={{ flexGrow: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 + keyboardHeight }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
 
-          {/* ── Score Control ── */}
-          {(isLive || isFinished) && localScoreBoard && (
+          {/* ── Live Score Control ── */}
+          {isLive && localScoreBoard && (
             <View style={{ marginBottom: 24, padding: 16, backgroundColor: theme.muted, borderRadius: 12 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                  <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground }}>스코어 조정</Text>
+                  <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground }}>라이브 스코어 조정</Text>
                   {(() => {
                     const info = getInningInfo(localScoreBoard);
                     if (!info) return null;
