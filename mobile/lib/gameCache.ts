@@ -123,18 +123,21 @@ export async function cachedDailyScores(date: string): Promise<{ games: ScoreEnt
     }
   }
 
-  // Check per-date cache (skip for current-year to always get server emotions)
-  if (!isCurrentYear) {
-    const perDateCached = db.getCache(key);
-    if (perDateCached && Date.now() - perDateCached.updatedAt < ttl) {
-      const parsed = safeParse(perDateCached.data) as { games: ScoreEntry[] } | null;
-      if (parsed?.games) return { games: parsed.games };
+  // Check per-date cache
+  const perDateCached = db.getCache(key);
+  if (perDateCached && Date.now() - perDateCached.updatedAt < ttl) {
+    const parsed = safeParse(perDateCached.data) as { games: ScoreEntry[] } | null;
+    if (parsed?.games) {
+      // For current-year: only use cache if emotions are present
+      if (!isCurrentYear || parsed.games[0]?.awayEmotion !== undefined) {
+        return { games: parsed.games };
+      }
     }
   }
 
   // For today's date: wait for fresh data when cache is stale (no stale-while-revalidate)
   // For past/future dates: use fetchWithCache (stale data is acceptable)
-  if (date === today || isCurrentYear || !perDateCached) {
+  if (date === today || !perDateCached) {
     const raw = await getWithStatus<{ date: string; games: ScoreEntry[] }>(`/daily-scores/${date}`);
     const { data, status } = raw;
     if (status === 404) {
