@@ -355,6 +355,7 @@ function GridOverlay() {
 export default function StickerContent(props: Props) {
   const {
     awayTeam, homeTeam, awayTeamColor, homeTeamColor,
+    awayTeamId, homeTeamId, awayEmotion, homeEmotion,
     awayScore, homeScore, awayRank, homeRank,
     date, scoreBoard, rheb,
     gameResult, background, stroke, showBadge, showScoreboard, textColor, strokeColor,
