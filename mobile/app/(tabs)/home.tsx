@@ -380,6 +380,8 @@ export default function HomeScreen() {
                   scoreBoardInn: wg.scoreBoard?.inn,
                   awayPitcher: games[idx].awayPitcher || wg.awayStarter || undefined,
                   homePitcher: games[idx].homePitcher || wg.homeStarter || undefined,
+                  awayEmotion: wg.awayEmotion ?? games[idx].awayEmotion,
+                  homeEmotion: wg.homeEmotion ?? games[idx].homeEmotion,
                 };
                 break;
               }
@@ -784,6 +786,8 @@ export default function HomeScreen() {
         isTop={item.isTop}
         relay={item.relay}
         scoreBoardInn={item.scoreBoardInn}
+        awayEmotion={item.awayEmotion}
+        homeEmotion={item.homeEmotion}
         highlighted={isMyTeamGame ? teamPrimaryColor(myTeam, isDark) : undefined}
         dense={!isMyTeamGame}
         onClick={() => {

@@ -33,6 +33,8 @@ export interface ResolvedGame {
   isTop?: boolean;
   relay?: RelayState | null;
   scoreBoardInn?: { away: (number | null)[]; home: (number | null)[] } | null;
+  awayEmotion?: string;
+  homeEmotion?: string;
 
   /** Raw references for consumers that need deep access (e.g. game/[id]) */
   _raw: {

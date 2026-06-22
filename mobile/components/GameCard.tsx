@@ -6,6 +6,7 @@ import { TeamBadge } from "@/components/TeamBadge";
 import { useTheme } from "@/lib/ThemeContext";
 import { teamPrimaryColor } from "@shared/teamColors";
 import type { RelayState } from "@shared/types";
+import type { CharacterEmotion } from "@/lib/emotions";
 import { computeGameEmotion } from "@/lib/gameEmotion";
 
 interface GameCardProps {
@@ -30,6 +31,8 @@ interface GameCardProps {
   isTop?: boolean;
   relay?: RelayState | null;
   scoreBoardInn?: { away: (number | null)[]; home: (number | null)[] } | null;
+  awayEmotion?: string;
+  homeEmotion?: string;
   large?: boolean;
   awayDisplayName?: string;
   homeDisplayName?: string;
@@ -62,6 +65,8 @@ export default function GameCard({
   dense,
   relay,
   scoreBoardInn,
+  awayEmotion: awayServerEmotion,
+  homeEmotion: homeServerEmotion,
   onClick,
   large,
   awayDisplayName,
@@ -89,28 +94,30 @@ export default function GameCard({
   const statusColor = cancelled ? "#888" : status === "live" ? "#ef4444" : "#888";
 
   const gameStatus = cancelled ? "cancelled" as const : status;
-  const awayEmotion = computeGameEmotion({
-    status: gameStatus,
-    myScore: awayScore ?? 0,
-    oppScore: homeScore ?? 0,
-    inning: liveInning ?? 0,
-    isTop: isTop ?? true,
-    isMyHome: false,
-    myInns: scoreBoardInn?.away,
-    oppInns: scoreBoardInn?.home,
-    ...(relay ? { base1: relay.base1, base2: relay.base2, base3: relay.base3 } : {}),
-  });
-  const homeEmotion = computeGameEmotion({
-    status: gameStatus,
-    myScore: homeScore ?? 0,
-    oppScore: awayScore ?? 0,
-    inning: liveInning ?? 0,
-    isTop: isTop ?? true,
-    isMyHome: true,
-    myInns: scoreBoardInn?.home,
-    oppInns: scoreBoardInn?.away,
-    ...(relay ? { base1: relay.base1, base2: relay.base2, base3: relay.base3 } : {}),
-  });
+  const awayEmotion = (awayServerEmotion as CharacterEmotion | undefined)
+    ?? computeGameEmotion({
+      status: gameStatus,
+      myScore: awayScore ?? 0,
+      oppScore: homeScore ?? 0,
+      inning: liveInning ?? 0,
+      isTop: isTop ?? true,
+      isMyHome: false,
+      myInns: scoreBoardInn?.away,
+      oppInns: scoreBoardInn?.home,
+      ...(relay ? { base1: relay.base1, base2: relay.base2, base3: relay.base3 } : {}),
+    });
+  const homeEmotion = (homeServerEmotion as CharacterEmotion | undefined)
+    ?? computeGameEmotion({
+      status: gameStatus,
+      myScore: homeScore ?? 0,
+      oppScore: awayScore ?? 0,
+      inning: liveInning ?? 0,
+      isTop: isTop ?? true,
+      isMyHome: true,
+      myInns: scoreBoardInn?.home,
+      oppInns: scoreBoardInn?.away,
+      ...(relay ? { base1: relay.base1, base2: relay.base2, base3: relay.base3 } : {}),
+    });
 
   const styles = useMemo(() => StyleSheet.create({
     // Main card

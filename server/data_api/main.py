@@ -25,6 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from shared.scoring_data import _HISTORICAL_SCORING
 
 from push_router import router as push_router
+from game_emotion import compute_game_emotion
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("fullcount")
@@ -1124,6 +1125,55 @@ def _get_widget_data_cached() -> dict | None:
                 entry["losePitcher"] = s.get("losePitcher")
                 entry["savePitcher"] = s.get("savePitcher")
 
+        # ── Inject per-team emotions (server-side event tracking) ──
+        for entry in result["games"]:
+            score = entry.get("score") or {}
+            relay = entry.get("relay") or {}
+            sb = entry.get("scoreBoard") or {}
+            sb_inn = sb.get("inn", {})
+            sb_rheb = sb.get("rheb", {})
+            gid = entry["gameId"]
+
+            def _safe_e(rheb, side):
+                if not rheb:
+                    return 0
+                side_data = rheb.get(side) or {}
+                val = side_data.get("e", 0)
+                return int(val) if val is not None else 0
+
+            entry["awayEmotion"] = compute_game_emotion(
+                status=entry["status"],
+                my_score=int(score.get("away", 0) or 0),
+                opp_score=int(score.get("home", 0) or 0),
+                inning=int(relay.get("inning", 0)) if relay.get("inning") else 0,
+                is_top=str(relay.get("isTop")) == "1" if relay.get("isTop") is not None else True,
+                is_my_home=False,
+                base1=str(relay.get("base1")) if relay.get("base1") is not None else None,
+                base2=str(relay.get("base2")) if relay.get("base2") is not None else None,
+                base3=str(relay.get("base3")) if relay.get("base3") is not None else None,
+                my_inns=sb_inn.get("away"),
+                opp_inns=sb_inn.get("home"),
+                game_id=gid,
+                my_errors=_safe_e(sb_rheb, "away"),
+                opp_errors=_safe_e(sb_rheb, "home"),
+            )
+            entry["homeEmotion"] = compute_game_emotion(
+                status=entry["status"],
+                my_score=int(score.get("home", 0) or 0),
+                opp_score=int(score.get("away", 0) or 0),
+                inning=int(relay.get("inning", 0)) if relay.get("inning") else 0,
+                is_top=str(relay.get("isTop")) == "1" if relay.get("isTop") is not None else True,
+                is_my_home=True,
+                base1=str(relay.get("base1")) if relay.get("base1") is not None else None,
+                base2=str(relay.get("base2")) if relay.get("base2") is not None else None,
+                base3=str(relay.get("base3")) if relay.get("base3") is not None else None,
+                my_inns=sb_inn.get("home"),
+                opp_inns=sb_inn.get("away"),
+                game_id=gid,
+                my_errors=_safe_e(sb_rheb, "home"),
+                opp_errors=_safe_e(sb_rheb, "away"),
+            )
+
     ttl = _get_active_ttl(result.get("games"))
     _WIDGET_CACHE[today_str] = (time.time(), result)
     _WIDGET_CACHE_TTL = ttl
@@ -1696,6 +1746,52 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
                 _RELAY_CACHE[nid] = (now - (_RELAY_CACHE_TTL - ttl), None)
         except Exception as e:
             logger.warning("Failed to fetch relay for %s: %s", nid, e)
+
+    # ── Inject per-team emotions ──
+    g_status = result.get("gameInfo", {}).get("status", "scheduled")
+    g_score = result.get("score") or {}
+    g_relay = result.get("relay") or {}
+    g_sb = result.get("scoreBoard") or {}
+    g_sb_inn = g_sb.get("inn", {}) if g_sb else {}
+    g_sb_rheb = g_sb.get("rheb", {}) if g_sb else {}
+
+    def _safe_e(rheb, side):
+        if not rheb:
+            return 0
+        side_data = rheb.get(side) or {}
+        val = side_data.get("e", 0)
+        return int(val) if val is not None else 0
+
+    result["awayEmotion"] = compute_game_emotion(
+        status=g_status,
+        my_score=int(g_score.get("away", 0) or 0),
+        opp_score=int(g_score.get("home", 0) or 0),
+        inning=int(g_relay.get("inning", 0)) if g_relay and g_relay.get("inning") else 0,
+        is_top=str(g_relay.get("isTop")) == "1" if g_relay and g_relay.get("isTop") is not None else True,
+        is_my_home=False,
+        base1=str(g_relay.get("base1")) if g_relay and g_relay.get("base1") is not None else None,
+        base2=str(g_relay.get("base2")) if g_relay and g_relay.get("base2") is not None else None,
+        base3=str(g_relay.get("base3")) if g_relay and g_relay.get("base3") is not None else None,
+        my_inns=g_sb_inn.get("away"),
+        opp_inns=g_sb_inn.get("home"),
+        my_errors=_safe_e(g_sb_rheb, "away"),
+        opp_errors=_safe_e(g_sb_rheb, "home"),
+    )
+    result["homeEmotion"] = compute_game_emotion(
+        status=g_status,
+        my_score=int(g_score.get("home", 0) or 0),
+        opp_score=int(g_score.get("away", 0) or 0),
+        inning=int(g_relay.get("inning", 0)) if g_relay and g_relay.get("inning") else 0,
+        is_top=str(g_relay.get("isTop")) == "1" if g_relay and g_relay.get("isTop") is not None else True,
+        is_my_home=True,
+        base1=str(g_relay.get("base1")) if g_relay and g_relay.get("base1") is not None else None,
+        base2=str(g_relay.get("base2")) if g_relay and g_relay.get("base2") is not None else None,
+        base3=str(g_relay.get("base3")) if g_relay and g_relay.get("base3") is not None else None,
+        my_inns=g_sb_inn.get("home"),
+        opp_inns=g_sb_inn.get("away"),
+        my_errors=_safe_e(g_sb_rheb, "home"),
+        opp_errors=_safe_e(g_sb_rheb, "away"),
+    )
 
     return result
 

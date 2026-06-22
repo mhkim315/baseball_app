@@ -43,6 +43,9 @@ export interface WidgetGameData {
   homeStreak?: string;
   awayStreak?: string;
   emptyReason?: string;  // "no_team" | "no_game" | "error"
+  gameId?: string;
+  awayEmotion?: string;
+  homeEmotion?: string;
 }
 
 function buildWidgetProps(data: Record<string, string>): WidgetGameData {
@@ -111,6 +114,9 @@ export async function updateWidgetFromFCM(data: Record<string, string>): Promise
     // Preserve current pitcher/batter — FCM flat keys don't carry these
     if (!props.currentPitcher) props.currentPitcher = _lastWidgetGame.currentPitcher;
     if (!props.currentBatter) props.currentBatter = _lastWidgetGame.currentBatter;
+    // Preserve emotions from last fetch (FCM doesn't carry these)
+    props.awayEmotion = _lastWidgetGame.awayEmotion;
+    props.homeEmotion = _lastWidgetGame.homeEmotion;
     // Last-resort fallback from name cache
     const gameId = `${data.date || ""}-${data.home_team || ""}${data.away_team || ""}-0`;
     const cached = _lastPlayerNames[gameId];
@@ -267,6 +273,7 @@ export async function updateWidgetPeriodic(): Promise<void> {
         inning,
         isTop,
           homeIsMyTeam: (SHORT_CODE_TO_TEAM_ID[myGame.homeTeam] || myGame.homeTeam) === myTeam,
+        gameId: myGame.gameId,
         status: myGame.status || "scheduled",
         time: myGame.time || "",
         stadium: myGame.venue || "",
@@ -291,6 +298,8 @@ export async function updateWidgetPeriodic(): Promise<void> {
         awayRank: myGame.awayRank?.toString(),
         homeStreak: String(myGame.homeStreak ?? ""),
         awayStreak: String(myGame.awayStreak ?? ""),
+        awayEmotion: myGame.awayEmotion,
+        homeEmotion: myGame.homeEmotion,
       };
 
       _lastWidgetGame = data;

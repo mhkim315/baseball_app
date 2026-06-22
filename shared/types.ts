@@ -168,9 +168,9 @@ export interface GameDetail {
   pitchingResult?: { name: string; wls: string; era?: string; ip?: string }[];
   etcRecords?: { how: string; result: string; desc?: string }[];
   relay?: RelayState | null;
+  awayEmotion?: string;
+  homeEmotion?: string;
 }
-
-// Domain-specific types
 export interface TeamColor {
   id: string;
   name: string;
@@ -263,6 +263,8 @@ export interface WidgetGame {
   score: { home: number; away: number } | null;
   scoreBoard: WidgetScoreBoard;
   relay: WidgetRelay | null;
+  awayEmotion?: string;
+  homeEmotion?: string;
 }
 
 export interface WidgetData {

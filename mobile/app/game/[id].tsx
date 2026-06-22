@@ -9,6 +9,7 @@ import {
 } from "@/lib/api";
 import { TeamBadge } from "@/components/TeamBadge";
 import GameCard from "@/components/GameCard";
+import type { CharacterEmotion } from "@/lib/emotions";
 import { computeGameEmotion } from "@/lib/gameEmotion";
 import { cachedDailyScores, cachedAllDailyScores, cachedScheduleByMonth, cachedGameDetail, cachedStandings, cachedWidgetData } from "@/lib/gameCache";
 import { resolveGames } from "@/lib/resolveGames";
@@ -727,8 +728,10 @@ export default function GameDetailScreen() {
     isTop: inningInfo?.isTop ?? true,
     ...relayBase,
   };
-  const awayEmotion = computeGameEmotion({ ...emotionInput, myScore: gameScore?.away ?? 0, oppScore: gameScore?.home ?? 0, isMyHome: false, myInns: detail.scoreBoard?.inn?.away, oppInns: detail.scoreBoard?.inn?.home });
-  const homeEmotion = computeGameEmotion({ ...emotionInput, myScore: gameScore?.home ?? 0, oppScore: gameScore?.away ?? 0, isMyHome: true, myInns: detail.scoreBoard?.inn?.home, oppInns: detail.scoreBoard?.inn?.away });
+  const awayEmotion = (detail.awayEmotion as CharacterEmotion | undefined)
+    ?? computeGameEmotion({ ...emotionInput, myScore: gameScore?.away ?? 0, oppScore: gameScore?.home ?? 0, isMyHome: false, myInns: detail.scoreBoard?.inn?.away, oppInns: detail.scoreBoard?.inn?.home });
+  const homeEmotion = (detail.homeEmotion as CharacterEmotion | undefined)
+    ?? computeGameEmotion({ ...emotionInput, myScore: gameScore?.home ?? 0, oppScore: gameScore?.away ?? 0, isMyHome: true, myInns: detail.scoreBoard?.inn?.home, oppInns: detail.scoreBoard?.inn?.away });
 
   const scoreBoard = detail.scoreBoard;
   const innData = scoreBoard?.inn || (isLive ? { away: [0], home: [] } : null);
@@ -773,6 +776,9 @@ export default function GameDetailScreen() {
           liveInning={inningInfo?.inning}
           isTop={inningInfo?.isTop}
           relay={detail.relay}
+          scoreBoardInn={detail.scoreBoard?.inn}
+          awayEmotion={awayEmotion}
+          homeEmotion={homeEmotion}
           large
           statusBadgeStyle={{
             badge: styles.statusBadge,

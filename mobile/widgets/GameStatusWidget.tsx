@@ -33,6 +33,11 @@ export interface WidgetGameData {
   base3?: string;
   currentPitcher?: string;
   currentBatter?: string;
+  gameId?: string;
+  scoreBoard?: {
+    rheb?: { home: { r: number; h: number; e: number }; away: { r: number; h: number; e: number } };
+    inn?: { home: number[]; away: number[] };
+  };
 }
 
 const TEAM_NAME_COLOR: Record<string, string> = {
@@ -85,47 +90,30 @@ function computeWidgetEmotion(data: WidgetGameData, isMyHome: boolean): Characte
   if (data.status === "cancelled") return "rain_cancellation";
   if (data.status === "scheduled") return "default";
 
+  // Server-computed emotion takes priority
+  const serverEmotion = isMyHome ? data.homeEmotion : data.awayEmotion;
+  if (serverEmotion) return serverEmotion as CharacterEmotion;
+
+  // Fallback: local computation
   const myScore = parseInt(isMyHome ? data.homeScore : data.awayScore, 10) || 0;
   const oppScore = parseInt(isMyHome ? data.awayScore : data.homeScore, 10) || 0;
-  const diff = myScore - oppScore;
+  const inningNum = parseInt(data.inning || "0", 10);
+  const isTop = data.isTop === "1";
+  const sb = data.scoreBoard;
 
-  if (data.status === "finished") {
-    return computeGameEmotion({
-      status: "finished",
-      myScore, oppScore,
-      inning: parseInt(data.inning || "9", 10),
-      isTop: false, isMyHome,
-      myInns: isMyHome ? data.scoreBoard?.inn?.home : data.scoreBoard?.inn?.away,
-      oppInns: isMyHome ? data.scoreBoard?.inn?.away : data.scoreBoard?.inn?.home,
-    });
-  }
-
-  // Live Game
-  const inningNum = parseInt(data.inning || "1", 10);
-  const oppHasChances = (isMyHome && data.isTop === "1") || (!isMyHome && data.isTop === "0");
-  const myChances = (isMyHome && data.isTop === "0") || (!isMyHome && data.isTop === "1");
-  const basesLoaded = data.base1 === "1" && data.base2 === "1" && data.base3 === "1";
-  const scoringPosition = data.base2 === "1" || data.base3 === "1";
-
-  if (diff === 0) {
-    if (inningNum >= 10) return "sleepy";
-    if (oppHasChances && basesLoaded) return "extream_shock";
-    if (myChances && basesLoaded) return "in_love";
-    if (inningNum >= 7) return "determined";
-    return "default";
-  }
-  if (diff >= 5) return "mocking";
-  if (diff >= 1 && diff <= 4) {
-    if (oppHasChances && scoringPosition && diff <= 2) return "flustered";
-    return "joyful";
-  }
-  if (diff <= -5) return "resigned_disgust";
-  if (diff >= -4 && diff <= -1) {
-    if (inningNum >= 9) return "praying";
-    if (myChances && scoringPosition && diff >= -2) return "determined";
-    return "sad";
-  }
-  return "default";
+  return computeGameEmotion({
+    status: data.status as "live" | "finished",
+    myScore,
+    oppScore,
+    inning: inningNum,
+    isTop,
+    isMyHome,
+    base1: data.base1,
+    base2: data.base2,
+    base3: data.base3,
+    myInns: isMyHome ? sb?.inn?.home : sb?.inn?.away,
+    oppInns: isMyHome ? sb?.inn?.away : sb?.inn?.home,
+  });
 }
 
 function getTeamInfo(data: WidgetGameData, isHome: boolean) {
