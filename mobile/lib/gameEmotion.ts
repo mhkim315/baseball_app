@@ -113,9 +113,9 @@ export function computeGameEmotion(input: GameEmotionInput): CharacterEmotion {
       if (blowout && shutout) return "mocking";
       if (blowout) return "mocking";
       if (shutout) return "tongue";
-      if (slug && close) return "hot_summer";
+      if (slug && close) return "shocked";
       if (duel && close) return "determined";
-      if (slug) return "hot_summer";
+      if (slug) return "shocked";
       if (duel) return "determined";
       if (close && extra) return "determined";
       if (close) return "thumbs_up";
@@ -138,9 +138,9 @@ export function computeGameEmotion(input: GameEmotionInput): CharacterEmotion {
       if (blowout && shutout) return "resigned_disgust";
       if (blowout) return "resigned_disgust";
       if (shutout) return "depressed";
-      if (slug && close) return "hot_summer";
+      if (slug && close) return "annoyed";
       if (duel && close) return "shocked";
-      if (slug) return "hot_summer";
+      if (slug) return "annoyed";
       if (duel) return "shocked";
       if (close && extra) return "crying";
       if (close) return "sad";

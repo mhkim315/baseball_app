@@ -227,11 +227,11 @@ def _finished_emotion(diff: int, my_score: int, opp_score: int, inning: int,
         if shutout:
             return "tongue"
         if slug and close:
-            return "hot_summer"         # 난타전 접전승
+            return "shocked"             # 난타전 접전승
         if duel and close:
             return "determined"         # 투수전 접전승
         if slug:
-            return "hot_summer"         # 난타전 승
+            return "shocked"            # 난타전 승
         if duel:
             return "determined"         # 투수전 승
         if close and extra:
@@ -265,11 +265,11 @@ def _finished_emotion(diff: int, my_score: int, opp_score: int, inning: int,
         if shutout:
             return "depressed"
         if slug and close:
-            return "hot_summer"         # 난타전 석패
+            return "annoyed"             # 난타전 석패
         if duel and close:
             return "shocked"            # 투수전 석패 (아까운 경기)
         if slug:
-            return "hot_summer"
+            return "annoyed"            # 난타전 패
         if duel:
             return "shocked"
         if close and extra:
