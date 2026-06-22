@@ -38,6 +38,8 @@ export interface ScoreEntry {
   winPitcher: string | null;
   losePitcher: string | null;
   gameIdx?: number;   // 0, 1, ... for DH games
+  awayEmotion?: string;
+  homeEmotion?: string;
 }
 
 export interface StadiumBrief {

@@ -162,6 +162,8 @@ export function resolveGames(
       outcome: score?.outcome ?? null,
       winPitcher: score?.winPitcher ?? null,
       losePitcher: score?.losePitcher ?? null,
+      awayEmotion: score?.awayEmotion,
+      homeEmotion: score?.homeEmotion,
       homePitcher,
       awayPitcher,
       dhGameNumber,
