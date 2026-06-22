@@ -58,6 +58,7 @@ import TicketReportModal from "@/components/TicketReportModal";
 import { useKeyboardHeight } from "@/lib/hooks/useKeyboardHeight";
 import { getMyCoachSeen, setMyCoachSeen, getVisitCount, getShortcut, setShortcut as saveShortcut } from "@/lib/db";
 import { SHORTCUT_LABELS, type ShortcutType } from "@/lib/shortcutHelper";
+import { updateWidgetPeriodic } from "@/widgets/updateWidget";
 
 export default function MyScreen() {
   const insets = useSafeAreaInsets();
@@ -344,7 +345,9 @@ export default function MyScreen() {
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [unlockedEmotions, setUnlockedEmotions] = useState<string[]>([]);
-  const [lockScreenEnabled, setLockScreenEnabled] = useState(false);
+  const [widgetShowPreGame, setWidgetShowPreGame] = useState(true);
+  const [widgetShowPostGame, setWidgetShowPostGame] = useState(true);
+  const [widgetShowBackground, setWidgetShowBackground] = useState(true);
 
   // Totem state
   const [totems, setTotems] = useState<TotemWithStats[]>([]);
@@ -434,8 +437,15 @@ export default function MyScreen() {
     } catch (e) {
       console.warn("getJikgwanRecords/getAllTotemStats failed", e);
     }
-    AsyncStorage.getItem('lock_screen_notification_enabled').then(val => {
-      setLockScreenEnabled(val === 'true');
+    AsyncStorage.getItem('widget_prefs').then(val => {
+      if (val) {
+        try {
+          const p = JSON.parse(val);
+          if (typeof p.showPreGame === 'boolean') setWidgetShowPreGame(p.showPreGame);
+          if (typeof p.showPostGame === 'boolean') setWidgetShowPostGame(p.showPostGame);
+          if (typeof p.showBackground === 'boolean') setWidgetShowBackground(p.showBackground);
+        } catch {}
+      }
     });
   }, []);
 
@@ -512,9 +522,18 @@ export default function MyScreen() {
     }
   };
 
-  const toggleLockScreen = async (value: boolean) => {
-    setLockScreenEnabled(value);
-    await AsyncStorage.setItem('lock_screen_notification_enabled', value ? 'true' : 'false');
+  const saveWidgetPrefs = async (key: string, value: boolean) => {
+    let current = { showPreGame: true, showPostGame: true, showBackground: true };
+    try {
+      const raw = await AsyncStorage.getItem('widget_prefs');
+      if (raw) current = JSON.parse(raw);
+    } catch {}
+    const next = { ...current, [key]: value };
+    if (key === 'showPreGame') setWidgetShowPreGame(value);
+    else if (key === 'showPostGame') setWidgetShowPostGame(value);
+    else if (key === 'showBackground') setWidgetShowBackground(value);
+    await AsyncStorage.setItem('widget_prefs', JSON.stringify(next));
+    try { updateWidgetPeriodic(); } catch {}
   };
 
   const keyboardHeight = useKeyboardHeight();
@@ -604,20 +623,43 @@ export default function MyScreen() {
             />
           </View>
         </View>
-        <View style={styles.settingRow}>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-            <View>
-              <Text style={styles.settingLabel}>잠금화면 전광판 알림</Text>
-              <Text style={{ fontSize: 11, color: theme.mutedForeground, marginTop: 4 }}>
-                실시간 야구 점수 알림창을 띄웁니다.
-              </Text>
+
+        <View style={{ marginTop: 16 }}>
+          <Text style={{ fontSize: 12, color: theme.mutedForeground, marginBottom: 8 }}>
+            위젯 · 경기중은 항상 표시됩니다
+          </Text>
+          <View style={styles.settingRow}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <Text style={styles.settingLabel}>경기전 표시</Text>
+              <Switch
+                value={widgetShowPreGame}
+                onValueChange={v => saveWidgetPrefs('showPreGame', v)}
+                trackColor={{ false: "#ddd", true: "#666" }}
+                thumbColor={widgetShowPreGame ? theme.foreground : "#f4f3f4"}
+              />
             </View>
-            <Switch
-              value={lockScreenEnabled}
-              onValueChange={toggleLockScreen}
-              trackColor={{ false: "#ddd", true: "#666" }}
-              thumbColor={lockScreenEnabled ? theme.foreground : "#f4f3f4"}
-            />
+          </View>
+          <View style={styles.settingRow}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <Text style={styles.settingLabel}>경기후 표시</Text>
+              <Switch
+                value={widgetShowPostGame}
+                onValueChange={v => saveWidgetPrefs('showPostGame', v)}
+                trackColor={{ false: "#ddd", true: "#666" }}
+                thumbColor={widgetShowPostGame ? theme.foreground : "#f4f3f4"}
+              />
+            </View>
+          </View>
+          <View style={styles.settingRow}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <Text style={styles.settingLabel}>배경 표시</Text>
+              <Switch
+                value={widgetShowBackground}
+                onValueChange={v => saveWidgetPrefs('showBackground', v)}
+                trackColor={{ false: "#ddd", true: "#666" }}
+                thumbColor={widgetShowBackground ? theme.foreground : "#f4f3f4"}
+              />
+            </View>
           </View>
         </View>
       </View>

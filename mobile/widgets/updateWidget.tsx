@@ -1,14 +1,11 @@
 import { requestWidgetUpdate } from "react-native-android-widget";
 import { getMyTeamForWidget, SHORT_CODE_TO_TEAM_ID, SHORT_CODE_TO_NAME } from "@/lib/teamStorage";
-import { GameStatusWidget } from "./GameStatusWidget";
+import { GameStatusWidget, setWidgetPrefs } from "./GameStatusWidget";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { getInningInfo } from "@shared/gameStatus";
 
-const WIDGET_NAMES = [
-  "Widget2x2", "Widget4x2",
-  "Widget2x2Clear", "Widget2x2Live", "Widget2x2LiveOnly",
-  "Widget4x2Clear", "Widget4x2Live", "Widget4x2LiveOnly",
-];
+const WIDGET_NAMES = ["Widget2x2", "Widget4x2"];
 
 export interface WidgetGameData {
   homeTeam: string;
@@ -74,6 +71,15 @@ function buildWidgetProps(data: Record<string, string>): WidgetGameData {
 }
 
 async function updateAllWidgets(myTeam: string, data: WidgetGameData | null, emptyReason?: string) {
+  try {
+    const prefsStr = await AsyncStorage.getItem("widget_prefs");
+    if (prefsStr) {
+      setWidgetPrefs(JSON.parse(prefsStr));
+    } else {
+      setWidgetPrefs({ showPreGame: true, showPostGame: true, showBackground: true });
+    }
+  } catch {}
+
   for (const widgetName of WIDGET_NAMES) {
     await requestWidgetUpdate({
       widgetName,
@@ -84,7 +90,6 @@ async function updateAllWidgets(myTeam: string, data: WidgetGameData | null, emp
             height={widgetInfo.height}
             data={data}
             myTeam={myTeam}
-            widgetName={widgetName}
             emptyReason={emptyReason}
           />
         );

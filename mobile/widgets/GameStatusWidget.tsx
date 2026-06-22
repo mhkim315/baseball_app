@@ -5,7 +5,22 @@ import type { CharacterEmotion } from "@/lib/emotions";
 import { computeGameEmotion } from "@/lib/gameEmotion";
 
 const WIDGET_BUILD = "OTA-v41-master-layouts";
-let _noBg = false;  // set by GameStatusWidget for Clear variants
+let _noBg = false;
+
+export interface WidgetPrefs {
+  showPreGame: boolean;
+  showPostGame: boolean;
+  showBackground: boolean;
+}
+let _prefs: WidgetPrefs = { showPreGame: true, showPostGame: true, showBackground: true };
+
+export function setWidgetPrefs(prefs: WidgetPrefs) {
+  _prefs = prefs;
+  _noBg = !prefs.showBackground;
+}
+export function getWidgetPrefs(): WidgetPrefs {
+  return { ..._prefs };
+}
 
 export interface WidgetGameData {
   homeTeam: string;
@@ -241,24 +256,18 @@ function OutDots({ count, size }: { count: number, size: number }) {
   );
 }
 
-interface WidgetProps { width: number; height: number; data: WidgetGameData | null; myTeam: string; widgetName?: string; emptyReason?: string; }
+interface WidgetProps { width: number; height: number; data: WidgetGameData | null; myTeam: string; emptyReason?: string; }
 
-export function GameStatusWidget({ width, height, data, myTeam, widgetName, emptyReason }: WidgetProps) {
-  const isLiveOnly = widgetName?.includes("LiveOnly");
-  const isLiveEnd = widgetName?.includes("Live") && !isLiveOnly;
-  const isClear = widgetName?.includes("Clear");
-  _noBg = isClear;
-
+export function GameStatusWidget({ width, height, data, myTeam, emptyReason }: WidgetProps) {
   try {
     if (!data) {
       if (emptyReason === "no_team") return noTeamView();
       if (emptyReason === "error") return errorView();
       return noGameView();
     }
-    // LiveOnly: transparent for non-live
-    if (isLiveOnly && data.status !== "live") return transparentView();
-    // LiveEnd: transparent for scheduled
-    if (isLiveEnd && data.status === "scheduled") return transparentView();
+    // Pref-based visibility: live always shows, pre/post game controlled by toggles
+    if (data.status === "scheduled" && !_prefs.showPreGame) return transparentView();
+    if (data.status === "finished" && !_prefs.showPostGame) return transparentView();
     if (width < 80) {
       return (
         <ColorBg noBg={_noBg}>
