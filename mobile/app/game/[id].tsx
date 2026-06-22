@@ -451,6 +451,8 @@ export default function GameDetailScreen() {
             batter: wg.relay.batter || prev.relay?.batter || null,
           } : prev.relay) : prev.relay,
           gameInfo: prev.gameInfo ? { ...prev.gameInfo, status: wg.status } : prev.gameInfo,
+          awayEmotion: wg.awayEmotion ?? prev.awayEmotion,
+          homeEmotion: wg.homeEmotion ?? prev.homeEmotion,
         };
       });
     }, 10_000);

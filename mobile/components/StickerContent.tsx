@@ -1,7 +1,8 @@
 import { View, Text, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 import type { BgKey } from "@/lib/backgrounds";
-import { TeamBadge } from "@/components/TeamBadge";
-import type { CharacterEmotion } from "@/lib/emotions";
+import { LOCAL_CHARACTERS } from "@/lib/characterAssets";
+import { TEAM_COLORS } from "@shared/teamColors";
 
 interface ScoreBoardInn {
   away: (number | null)[];
@@ -47,6 +48,7 @@ interface Props {
   stats: Stats | null;
   statsMode?: "live" | "broadcast";
   venue?: string;
+  showEmotion?: boolean;
 }
 
 const COLORS = {
@@ -360,6 +362,7 @@ export default function StickerContent(props: Props) {
     date, scoreBoard, rheb,
     gameResult, background, stroke, showBadge, showScoreboard, textColor, strokeColor,
     teamTag, myTag, customTag, stats, badgeBackgroundColor, statsMode, venue,
+    showEmotion,
   } = props;
 
   const tc = textColor || "#333";
@@ -373,8 +376,9 @@ export default function StickerContent(props: Props) {
   // When textColor is set, ALL text uses that color (no team-specific colors)
   const winColor = isCustomColor ? textColor : COLORS.win;
   const loseColor = isCustomColor ? textColor : COLORS.lose;
-  const homeScoreColor = gameResult === null ? winColor : (isHomeWin ? winColor : isAwayWin ? loseColor : winColor);
-  const awayScoreColor = gameResult === null ? winColor : (isAwayWin ? winColor : isHomeWin ? loseColor : winColor);
+  const finished = gameResult !== null && gameResult !== "draw" && homeScore !== awayScore;
+  const homeScoreColor = finished ? (isHomeWin ? winColor : loseColor) : winColor;
+  const awayScoreColor = finished ? (isAwayWin ? winColor : loseColor) : winColor;
   const awayTeamColor_ = isCustomColor ? textColor : awayTeamColor;
   const homeTeamColor_ = isCustomColor ? textColor : homeTeamColor;
   const tagColor = isCustomColor ? tc : "#dc2626";
@@ -446,15 +450,30 @@ export default function StickerContent(props: Props) {
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           {/* Away team */}
           <View style={{ flex: 1, alignItems: "center" }}>
-            <TeamBadge
-              teamId={awayTeamId || awayTeam}
-              emotion={(awayEmotion || "default") as CharacterEmotion}
-              size="lg"
-            />
-            <Text style={[{ fontSize: 11, fontWeight: "700", color: awayTeamColor_, marginTop: 4 }, strokeStyle]}>
-              {awayTeam}
-            </Text>
-            {awayRank && <Text style={[{ fontSize: 9, color: toRgba(tc, 0.5), fontWeight: "600" }, strokeStyle]}>{awayRank}위</Text>}
+            {showEmotion ? (
+              <>
+                {(() => {
+                  const tid = awayTeamId || awayTeam;
+                  const src = LOCAL_CHARACTERS[`${tid}_${awayEmotion || "default"}`] || LOCAL_CHARACTERS[`${tid}_default`];
+                  return src ? (
+                    <Image source={src} style={{ width: 48, height: 48 }} contentFit="contain" />
+                  ) : (
+                    <Text style={[{ fontSize: 14, fontWeight: "900", color: awayTeamColor_ }, strokeStyle]}>{awayTeam}</Text>
+                  );
+                })()}
+                <Text style={[{ fontSize: 11, fontWeight: "700", color: awayTeamColor_, marginTop: 2 }, strokeStyle]}>
+                  {awayTeam}
+                </Text>
+                {awayRank && <Text style={[{ fontSize: 9, color: toRgba(tc, 0.5), fontWeight: "600" }, strokeStyle]}>{awayRank}위</Text>}
+              </>
+            ) : (
+              <>
+                <Text style={[{ fontSize: 18, fontWeight: "900", color: awayTeamColor_, letterSpacing: -0.5 }, thickStroke]}>
+                  {awayTeam}
+                </Text>
+                {awayRank && <Text style={[{ fontSize: 10, color: toRgba(tc, 0.6), fontWeight: "700" }, strokeStyle]}>{awayRank}위</Text>}
+              </>
+            )}
           </View>
 
           {/* Score */}
@@ -476,15 +495,30 @@ export default function StickerContent(props: Props) {
 
           {/* Home team */}
           <View style={{ flex: 1, alignItems: "center" }}>
-            <TeamBadge
-              teamId={homeTeamId || homeTeam}
-              emotion={(homeEmotion || "default") as CharacterEmotion}
-              size="lg"
-            />
-            <Text style={[{ fontSize: 11, fontWeight: "700", color: homeTeamColor_, marginTop: 4 }, strokeStyle]}>
-              {homeTeam}
-            </Text>
-            {homeRank && <Text style={[{ fontSize: 9, color: toRgba(tc, 0.5), fontWeight: "600" }, strokeStyle]}>{homeRank}위</Text>}
+            {showEmotion ? (
+              <>
+                {(() => {
+                  const tid = homeTeamId || homeTeam;
+                  const src = LOCAL_CHARACTERS[`${tid}_${homeEmotion || "default"}`] || LOCAL_CHARACTERS[`${tid}_default`];
+                  return src ? (
+                    <Image source={src} style={{ width: 48, height: 48 }} contentFit="contain" />
+                  ) : (
+                    <Text style={[{ fontSize: 14, fontWeight: "900", color: homeTeamColor_ }, strokeStyle]}>{homeTeam}</Text>
+                  );
+                })()}
+                <Text style={[{ fontSize: 11, fontWeight: "700", color: homeTeamColor_, marginTop: 2 }, strokeStyle]}>
+                  {homeTeam}
+                </Text>
+                {homeRank && <Text style={[{ fontSize: 9, color: toRgba(tc, 0.5), fontWeight: "600" }, strokeStyle]}>{homeRank}위</Text>}
+              </>
+            ) : (
+              <>
+                <Text style={[{ fontSize: 18, fontWeight: "900", color: homeTeamColor_, letterSpacing: -0.5 }, thickStroke]}>
+                  {homeTeam}
+                </Text>
+                {homeRank && <Text style={[{ fontSize: 10, color: toRgba(tc, 0.6), fontWeight: "700" }, strokeStyle]}>{homeRank}위</Text>}
+              </>
+            )}
           </View>
         </View>
 

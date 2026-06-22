@@ -124,6 +124,7 @@ export default function StickerModal({
   const [strokeColor, setStrokeColor] = useState("#ffffff");
   const [showBadge, setShowBadge] = useState(true);
   const [showScoreboard, setShowScoreboard] = useState(true);
+  const [showEmotion, setShowEmotion] = useState(true);
   const [statsMode, setStatsMode] = useState<"live" | "broadcast">("live");
   const [capturing, setCapturing] = useState(false);
   const [textColor, setTextColor] = useState("");
@@ -410,6 +411,7 @@ export default function StickerModal({
                 statsMode={statsMode}
                 stats={stats}
                 venue={stadiumName}
+                showEmotion={showEmotion}
               />
             </View>
           )}
@@ -523,6 +525,16 @@ export default function StickerModal({
             <Pressable style={[s.toggle, showScoreboard && s.toggleActive]} onPress={() => setShowScoreboard(!showScoreboard)}>
               <Text style={[s.toggleText, showScoreboard && s.toggleTextActive]}>
                 {showScoreboard ? "ON" : "OFF"}
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Emotion toggle */}
+          <View style={[s.toggleRow]}>
+            <Text style={s.controlLabel}>감정표현</Text>
+            <Pressable style={[s.toggle, showEmotion && s.toggleActive]} onPress={() => setShowEmotion(!showEmotion)}>
+              <Text style={[s.toggleText, showEmotion && s.toggleTextActive]}>
+                {showEmotion ? "ON" : "OFF"}
               </Text>
             </Pressable>
           </View>
