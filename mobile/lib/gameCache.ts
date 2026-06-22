@@ -110,13 +110,16 @@ export async function cachedDailyScores(date: string): Promise<{ games: ScoreEnt
 
   // Before making an individual API call, check if the bulk aggregate is cached.
   // This prevents 100+ individual requests when cache is cold (e.g. calendar preload).
-  const bulkCached = db.getCache(cacheKey("scores:v2", "__all__"));
-  if (bulkCached) {
-    const bulkData = safeParse(bulkCached.data) as Record<string, ScoreEntry[]> | null;
-    if (bulkData?.[date]) {
-      // Write to per-date cache for future fast lookups
-      db.setCache(key, JSON.stringify({ games: bulkData[date] }));
-      return { games: bulkData[date] };
+  // Skip bulk cache for current-year dates so we get server-enriched emotions.
+  const isCurrentYear = date >= `${thisYear()}-01-01`;
+  if (!isCurrentYear) {
+    const bulkCached = db.getCache(cacheKey("scores:v2", "__all__"));
+    if (bulkCached) {
+      const bulkData = safeParse(bulkCached.data) as Record<string, ScoreEntry[]> | null;
+      if (bulkData?.[date]) {
+        db.setCache(key, JSON.stringify({ games: bulkData[date] }));
+        return { games: bulkData[date] };
+      }
     }
   }
 
