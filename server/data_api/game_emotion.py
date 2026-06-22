@@ -267,11 +267,11 @@ def _finished_emotion(diff: int, my_score: int, opp_score: int, inning: int,
         if slug and close:
             return "annoyed"             # 난타전 석패
         if duel and close:
-            return "shocked"            # 투수전 석패 (아까운 경기)
+            return "sad"                # 투수전 석패 (아까운 경기)
         if slug:
             return "annoyed"            # 난타전 패
         if duel:
-            return "shocked"
+            return "sad"                # 투수전 패
         if close and extra:
             return "crying"
         if close:

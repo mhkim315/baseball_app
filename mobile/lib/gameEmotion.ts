@@ -139,9 +139,9 @@ export function computeGameEmotion(input: GameEmotionInput): CharacterEmotion {
       if (blowout) return "resigned_disgust";
       if (shutout) return "depressed";
       if (slug && close) return "annoyed";
-      if (duel && close) return "shocked";
+      if (duel && close) return "sad";
       if (slug) return "annoyed";
-      if (duel) return "shocked";
+      if (duel) return "sad";
       if (close && extra) return "crying";
       if (close) return "sad";
       return "crying";
