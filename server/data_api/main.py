@@ -365,9 +365,12 @@ def get_all_daily_scores():
 
 def _enrich_games_with_emotions(date_str, games):
     """Add awayEmotion/homeEmotion to daily-scores games using game-records inning data."""
+    import json
     from game_emotion import compute_game_emotion
     kr_to_id = {v: k for k, v in TEAM_NAME_MAP.items()}
     for g in games:
+        # Determine actual status (finished vs cancelled)
+        status = "cancelled" if g.get("cancelled") else "finished"
         away_kr = g.get("away", "")
         home_kr = g.get("home", "")
         away_id = kr_to_id.get(away_kr, away_kr.lower())
@@ -377,25 +380,26 @@ def _enrich_games_with_emotions(date_str, games):
             gr_path = f"data/teams/{tid}/game-records/{date_str}.json"
             try:
                 with open(gr_path) as f:
-                    import json
                     gr = json.load(f)
                 inn_data = gr.get("scoreBoard", {}).get("inn", {})
                 if inn_data:
                     break
-            except Exception:
+            except FileNotFoundError:
                 pass
+            except (json.JSONDecodeError, OSError) as e:
+                logger.warning("Failed to read game-records %s: %s", gr_path, e)
         my_inns_away = inn_data.get("away") if inn_data else None
         my_inns_home = inn_data.get("home") if inn_data else None
         inning = max(len(my_inns_away or []), len(my_inns_home or [])) if inn_data else 9
         g["awayEmotion"] = compute_game_emotion(
-            status="finished",
+            status=status,
             my_score=int(g.get("awayScore", 0) or 0),
             opp_score=int(g.get("homeScore", 0) or 0),
             inning=inning, is_top=False, is_my_home=False,
             my_inns=my_inns_away, opp_inns=my_inns_home,
         )
         g["homeEmotion"] = compute_game_emotion(
-            status="finished",
+            status=status,
             my_score=int(g.get("homeScore", 0) or 0),
             opp_score=int(g.get("awayScore", 0) or 0),
             inning=inning, is_top=False, is_my_home=True,

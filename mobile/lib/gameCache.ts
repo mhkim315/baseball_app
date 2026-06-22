@@ -128,6 +128,8 @@ export async function cachedDailyScores(date: string): Promise<{ games: ScoreEnt
   if (perDateCached && Date.now() - perDateCached.updatedAt < ttl) {
     const parsed = safeParse(perDateCached.data) as { games: ScoreEntry[] } | null;
     if (parsed?.games) {
+      // Empty games array (off-day) — always valid cache
+      if (parsed.games.length === 0) return { games: parsed.games };
       // For current-year: only use cache if emotions are present
       if (!isCurrentYear || parsed.games[0]?.awayEmotion !== undefined) {
         return { games: parsed.games };

@@ -456,16 +456,23 @@ export default function StickerContent(props: Props) {
                 {(() => {
                   const tid = awayTeamId || awayTeam;
                   const src = LOCAL_CHARACTERS[`${tid}_${awayEmotion || "default"}`] || LOCAL_CHARACTERS[`${tid}_default`];
-                  return src ? (
-                    <Image source={src} style={{ width: 48, height: 48 }} contentFit="contain" />
-                  ) : (
-                    <Text style={[{ fontSize: 14, fontWeight: "900", color: awayTeamColor_ }, strokeStyle]}>{awayTeam}</Text>
+                  if (src) {
+                    return (
+                      <>
+                        <Image source={src} style={{ width: 48, height: 48 }} contentFit="contain" />
+                        <Text style={[{ fontSize: 11, fontWeight: "700", color: awayTeamColor_, marginTop: 2 }, strokeStyle]}>
+                          {awayTeam}
+                        </Text>
+                        {awayRank && <Text style={[{ fontSize: 9, color: toRgba(tc, 0.5), fontWeight: "600" }, strokeStyle]}>{awayRank}위</Text>}
+                      </>
+                    );
+                  }
+                  return (
+                    <Text style={[{ fontSize: 18, fontWeight: "900", color: awayTeamColor_, letterSpacing: -0.5 }, thickStroke]}>
+                      {awayTeam}
+                    </Text>
                   );
                 })()}
-                <Text style={[{ fontSize: 11, fontWeight: "700", color: awayTeamColor_, marginTop: 2 }, strokeStyle]}>
-                  {awayTeam}
-                </Text>
-                {awayRank && <Text style={[{ fontSize: 9, color: toRgba(tc, 0.5), fontWeight: "600" }, strokeStyle]}>{awayRank}위</Text>}
               </>
             ) : (
               <>
@@ -501,16 +508,23 @@ export default function StickerContent(props: Props) {
                 {(() => {
                   const tid = homeTeamId || homeTeam;
                   const src = LOCAL_CHARACTERS[`${tid}_${homeEmotion || "default"}`] || LOCAL_CHARACTERS[`${tid}_default`];
-                  return src ? (
-                    <Image source={src} style={{ width: 48, height: 48 }} contentFit="contain" />
-                  ) : (
-                    <Text style={[{ fontSize: 14, fontWeight: "900", color: homeTeamColor_ }, strokeStyle]}>{homeTeam}</Text>
+                  if (src) {
+                    return (
+                      <>
+                        <Image source={src} style={{ width: 48, height: 48 }} contentFit="contain" />
+                        <Text style={[{ fontSize: 11, fontWeight: "700", color: homeTeamColor_, marginTop: 2 }, strokeStyle]}>
+                          {homeTeam}
+                        </Text>
+                        {homeRank && <Text style={[{ fontSize: 9, color: toRgba(tc, 0.5), fontWeight: "600" }, strokeStyle]}>{homeRank}위</Text>}
+                      </>
+                    );
+                  }
+                  return (
+                    <Text style={[{ fontSize: 18, fontWeight: "900", color: homeTeamColor_, letterSpacing: -0.5 }, thickStroke]}>
+                      {homeTeam}
+                    </Text>
                   );
                 })()}
-                <Text style={[{ fontSize: 11, fontWeight: "700", color: homeTeamColor_, marginTop: 2 }, strokeStyle]}>
-                  {homeTeam}
-                </Text>
-                {homeRank && <Text style={[{ fontSize: 9, color: toRgba(tc, 0.5), fontWeight: "600" }, strokeStyle]}>{homeRank}위</Text>}
               </>
             ) : (
               <>

@@ -52,7 +52,7 @@ async function fetchRefreshDataAndCache(): Promise<boolean> {
 
     // todayScores → cache key "scores:{YYYY-MM-DD}"
     if (data.todayScores) {
-      await db.setCache(`scores:${today}`, JSON.stringify({ games: data.todayScores }));
+      await db.setCache(`scores:v2:${today}`, JSON.stringify({ games: data.todayScores }));
     }
 
     // standings → cache key "standings:current"
@@ -85,11 +85,11 @@ async function writeToCache(data: OnboardingData): Promise<void> {
 
   // recentScores → per-date cache keys "scores:{YYYY-MM-DD}"
   for (const [date, games] of Object.entries(data.recentScores)) {
-    await db.setCache(`scores:${date}`, JSON.stringify({ games }));
+    await db.setCache(`scores:v2:${date}`, JSON.stringify({ games }));
   }
 
   // Also write __all__ key so cachedAllDailyScores() hits cache in preloadAll()
-  await db.setCache("scores:__all__", JSON.stringify(data.recentScores));
+  await db.setCache(`scores:v2:__all__`, JSON.stringify(data.recentScores));
 
   // schedule → "schedule:{year}:{month}"
   if (data.schedule) {
