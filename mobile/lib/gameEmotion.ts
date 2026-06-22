@@ -46,6 +46,38 @@ function lastInningScored(myInns: (number | null)[], oppInns: (number | null)[],
   return lastIdx >= 0 && (myInns[lastIdx] ?? 0) > 0;
 }
 
+function wasBehindAfter(inning: number, myInns: (number | null)[], oppInns: (number | null)[]): boolean {
+  let mySum = 0, oppSum = 0;
+  for (let i = 0; i < Math.max(myInns.length, oppInns.length); i++) {
+    mySum += myInns[i] ?? 0;
+    oppSum += oppInns[i] ?? 0;
+    if (i >= inning - 1 && mySum < oppSum) return true;
+  }
+  return false;
+}
+
+function wasAheadAfter(inning: number, myInns: (number | null)[], oppInns: (number | null)[]): boolean {
+  let mySum = 0, oppSum = 0;
+  for (let i = 0; i < Math.max(myInns.length, oppInns.length); i++) {
+    mySum += myInns[i] ?? 0;
+    oppSum += oppInns[i] ?? 0;
+    if (i >= inning - 1 && mySum > oppSum) return true;
+  }
+  return false;
+}
+
+function leadChanges(myInns: (number | null)[], oppInns: (number | null)[]): number {
+  let changes = 0, prevLeader = 0, mySum = 0, oppSum = 0;
+  for (let i = 0; i < Math.max(myInns.length, oppInns.length); i++) {
+    mySum += myInns[i] ?? 0;
+    oppSum += oppInns[i] ?? 0;
+    const curr = mySum > oppSum ? 1 : mySum < oppSum ? -1 : 0;
+    if (curr !== 0 && curr !== prevLeader && prevLeader !== 0) changes++;
+    if (curr !== 0) prevLeader = curr;
+  }
+  return changes;
+}
+
 // ── Main emotion computation ──────────────────────────────────
 
 export function computeGameEmotion(input: GameEmotionInput): CharacterEmotion {
@@ -59,20 +91,32 @@ export function computeGameEmotion(input: GameEmotionInput): CharacterEmotion {
   if (status === "finished") {
     const extra = inning >= 10;
     const hasInnData = myInns && oppInns && myInns.length > 0 && oppInns.length > 0;
+    const combined = myScore + oppScore;
+    const duel = combined <= 6;   // pitcher's duel: ≤3 runs per team avg
+    const slug = combined >= 16;  // slugfest: ≥8 runs per team avg
 
     if (diff > 0) {
       const walkOff = hasInnData && isMyHome && lastInningScored(myInns!, oppInns!, true) && inning >= 9;
       const comeback = hasInnData ? maxDeficit(myInns!, oppInns!) : 0;
+      const lateBehind = hasInnData && wasBehindAfter(6, myInns!, oppInns!);
+      const changes = hasInnData ? leadChanges(myInns!, oppInns!) : 0;
       const blowout = diff >= 8;
       const shutout = oppScore === 0;
       const close = diff <= 2;
 
       if (walkOff && extra) return "in_love";
       if (walkOff) return "in_love";
+      if (comeback >= 5) return "in_love";
+      if (lateBehind && comeback >= 2) return "shocked";
+      if (changes >= 3) return "joyful";
       if (comeback >= 2) return "joyful";
       if (blowout && shutout) return "mocking";
       if (blowout) return "mocking";
       if (shutout) return "tongue";
+      if (slug && close) return "hot_summer";
+      if (duel && close) return "determined";
+      if (slug) return "hot_summer";
+      if (duel) return "determined";
       if (close && extra) return "determined";
       if (close) return "thumbs_up";
       return "joyful";
@@ -80,6 +124,7 @@ export function computeGameEmotion(input: GameEmotionInput): CharacterEmotion {
 
     if (diff < 0) {
       const blownLead = hasInnData ? maxLead(myInns!, oppInns!) : 0;
+      const lateAhead = hasInnData && wasAheadAfter(6, myInns!, oppInns!);
       const walkOffLoss = hasInnData && !isMyHome && lastInningScored(oppInns!, myInns!, true) && inning >= 9;
       const blowout = diff <= -8;
       const shutout = myScore === 0;
@@ -88,10 +133,15 @@ export function computeGameEmotion(input: GameEmotionInput): CharacterEmotion {
       if (walkOffLoss && extra) return "devastated";
       if (walkOffLoss) return "devastated";
       if (blownLead >= 5) return "furious";
+      if (lateAhead && blownLead >= 2) return "angry";
       if (blownLead >= 2) return "angry";
       if (blowout && shutout) return "resigned_disgust";
       if (blowout) return "resigned_disgust";
       if (shutout) return "depressed";
+      if (slug && close) return "hot_summer";
+      if (duel && close) return "shocked";
+      if (slug) return "hot_summer";
+      if (duel) return "shocked";
       if (close && extra) return "crying";
       if (close) return "sad";
       return "crying";

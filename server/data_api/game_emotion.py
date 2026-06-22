@@ -54,6 +54,52 @@ def _last_inning_scored(inns: list, is_home: bool) -> bool:
     return last_idx >= 0 and (int(inns[last_idx]) if inns[last_idx] is not None else 0) > 0
 
 
+def _was_behind_after(inning: int, my_inns: list, opp_inns: list) -> bool:
+    """Was my team trailing at any point from the given inning onward?"""
+    my_sum = 0
+    opp_sum = 0
+    for i in range(max(len(my_inns), len(opp_inns))):
+        my_sum += int(my_inns[i]) if i < len(my_inns) and my_inns[i] is not None else 0
+        opp_sum += int(opp_inns[i]) if i < len(opp_inns) and opp_inns[i] is not None else 0
+        if i >= inning - 1 and my_sum < opp_sum:
+            return True
+    return False
+
+
+def _was_ahead_after(inning: int, my_inns: list, opp_inns: list) -> bool:
+    """Was my team leading at any point from the given inning onward?"""
+    my_sum = 0
+    opp_sum = 0
+    for i in range(max(len(my_inns), len(opp_inns))):
+        my_sum += int(my_inns[i]) if i < len(my_inns) and my_inns[i] is not None else 0
+        opp_sum += int(opp_inns[i]) if i < len(opp_inns) and opp_inns[i] is not None else 0
+        if i >= inning - 1 and my_sum > opp_sum:
+            return True
+    return False
+
+
+def _lead_changes(my_inns: list, opp_inns: list) -> int:
+    """Count how many times the lead changed hands."""
+    changes = 0
+    prev_leader = 0  # 0=tie, 1=my leads, -1=opp leads
+    my_sum = 0
+    opp_sum = 0
+    for i in range(max(len(my_inns), len(opp_inns))):
+        my_sum += int(my_inns[i]) if i < len(my_inns) and my_inns[i] is not None else 0
+        opp_sum += int(opp_inns[i]) if i < len(opp_inns) and opp_inns[i] is not None else 0
+        if my_sum > opp_sum:
+            curr = 1
+        elif my_sum < opp_sum:
+            curr = -1
+        else:
+            curr = 0
+        if curr != 0 and curr != prev_leader and prev_leader != 0:
+            changes += 1
+        if curr != 0:
+            prev_leader = curr
+    return changes
+
+
 # ── Live-game helpers ───────────────────────────────────────────
 
 def _snap_key(game_id: str, is_my_home: bool) -> str:
@@ -149,26 +195,45 @@ def _finished_emotion(diff: int, my_score: int, opp_score: int, inning: int,
                       is_my_home: bool, my_inns: Optional[list], opp_inns: Optional[list]) -> str:
     extra = inning >= 10
     has_inn = my_inns and opp_inns and len(my_inns) > 0 and len(opp_inns) > 0
+    combined = my_score + opp_score
+    duel = combined <= 6    # pitcher's duel: ≤3 runs per team avg
+    slug = combined >= 16   # slugfest: ≥8 runs per team avg
 
     if diff > 0:
         walk_off = has_inn and is_my_home and _last_inning_scored(my_inns, True) and inning >= 9
         comeback = _max_deficit(my_inns or [], opp_inns or []) if has_inn else 0
+        late_behind = has_inn and _was_behind_after(6, my_inns or [], opp_inns or [])
+        changes = _lead_changes(my_inns or [], opp_inns or []) if has_inn else 0
         blowout = diff >= 8
         shutout = opp_score == 0
         close = diff <= 2
 
         if walk_off and extra:
-            return "in_love"
+            return "in_love"            # 연장 끝내기
         if walk_off:
-            return "in_love"
+            return "in_love"            # 끝내기 승리
+        if comeback >= 5:
+            return "in_love"            # 5점차+ 대역전승
+        if late_behind and comeback >= 2:
+            return "shocked"            # 6회 이후 뒤지다 역전승
+        if changes >= 3:
+            return "joyful"             # 리드 3번+ 바뀐 명승부
         if comeback >= 2:
-            return "joyful"
+            return "joyful"             # 2-4점차 역전승
         if blowout and shutout:
             return "mocking"
         if blowout:
             return "mocking"
         if shutout:
             return "tongue"
+        if slug and close:
+            return "hot_summer"         # 난타전 접전승
+        if duel and close:
+            return "determined"         # 투수전 접전승
+        if slug:
+            return "hot_summer"         # 난타전 승
+        if duel:
+            return "determined"         # 투수전 승
         if close and extra:
             return "determined"
         if close:
@@ -177,17 +242,20 @@ def _finished_emotion(diff: int, my_score: int, opp_score: int, inning: int,
 
     if diff < 0:
         blown_lead = _max_lead(my_inns or [], opp_inns or []) if has_inn else 0
+        late_ahead = has_inn and _was_ahead_after(6, my_inns or [], opp_inns or [])
         walk_off_loss = has_inn and not is_my_home and _last_inning_scored(opp_inns, True) and inning >= 9
         blowout = diff <= -8
         shutout = my_score == 0
         close = diff >= -2
 
         if walk_off_loss and extra:
-            return "devastated"
+            return "devastated"         # 연장 끝내기 패배
         if walk_off_loss:
-            return "devastated"
+            return "devastated"         # 끝내기 패배
         if blown_lead >= 5:
-            return "furious"
+            return "furious"            # 5점차+ 리드 날림
+        if late_ahead and blown_lead >= 2:
+            return "angry"              # 6회까지 앞서다 역전패
         if blown_lead >= 2:
             return "angry"
         if blowout and shutout:
@@ -196,6 +264,14 @@ def _finished_emotion(diff: int, my_score: int, opp_score: int, inning: int,
             return "resigned_disgust"
         if shutout:
             return "depressed"
+        if slug and close:
+            return "hot_summer"         # 난타전 석패
+        if duel and close:
+            return "shocked"            # 투수전 석패 (아까운 경기)
+        if slug:
+            return "hot_summer"
+        if duel:
+            return "shocked"
         if close and extra:
             return "crying"
         if close:
