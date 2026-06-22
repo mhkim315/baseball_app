@@ -106,11 +106,11 @@ export async function cachedDailyScores(date: string): Promise<{ games: ScoreEnt
 
   const today = todayStr();
   const ttl = ttlForDate(date);
-  const key = cacheKey("scores", date);
+  const key = cacheKey("scores:v2", date);
 
   // Before making an individual API call, check if the bulk aggregate is cached.
   // This prevents 100+ individual requests when cache is cold (e.g. calendar preload).
-  const bulkCached = db.getCache(cacheKey("scores", "__all__"));
+  const bulkCached = db.getCache(cacheKey("scores:v2", "__all__"));
   if (bulkCached) {
     const bulkData = safeParse(bulkCached.data) as Record<string, ScoreEntry[]> | null;
     if (bulkData?.[date]) {
@@ -164,7 +164,7 @@ export async function cachedDailyScores(date: string): Promise<{ games: ScoreEnt
 
 // Read cached all-scores without triggering any API call (cache hit only)
 export async function readCachedAllScores(): Promise<Record<string, ScoreEntry[]> | null> {
-  const cached = db.getCache(cacheKey("scores", "__all__"));
+  const cached = db.getCache(cacheKey("scores:v2", "__all__"));
   if (!cached) return null;
   const parsed = safeParse(cached.data) as Record<string, ScoreEntry[]> | null;
   return parsed ?? null;
@@ -217,7 +217,7 @@ export async function cachedAllDailyScores(year?: number): Promise<Record<string
   }
 
   const targetYear = year ?? thisYear();
-  const allScoresCacheKey = cacheKey("scores", "__all__");
+  const allScoresCacheKey = cacheKey("scores:v2", "__all__");
 
   // ─── Step 1: Try aggregate cache ───
   const cached = db.getCache(allScoresCacheKey);
@@ -234,7 +234,7 @@ export async function cachedAllDailyScores(year?: number): Promise<Record<string
 
   const perDateEntries = seasonDates.map((date) => ({
     date,
-    entry: db.getCache(cacheKey("scores", date)),
+    entry: db.getCache(cacheKey("scores:v2", date)),
   }));
   for (const { date, entry } of perDateEntries) {
     if (!entry) {
@@ -282,7 +282,7 @@ export async function cachedAllDailyScores(year?: number): Promise<Record<string
 
     // Populate per-date cache for newly fetched dates
     for (const [date, games] of Object.entries(data.dates)) {
-      const key = cacheKey("scores", date);
+      const key = cacheKey("scores:v2", date);
       db.setCache(key, JSON.stringify({ games }));
     }
 
