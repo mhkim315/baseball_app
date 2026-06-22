@@ -385,9 +385,16 @@ export default function StickerModal({
       {/* Header */}
       <View style={s.header}>
           <Text style={s.headerTitle}>스티커 만들기</Text>
-          <Pressable onPress={handleClose} hitSlop={12}>
-            <Text style={s.closeBtn}>✕</Text>
-          </Pressable>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Pressable onPress={handleRefresh} hitSlop={12} disabled={refreshing}>
+              <Text style={{ fontSize: 12, color: theme.mutedForeground, fontWeight: "600", opacity: refreshing ? 0.4 : 1 }}>
+                {refreshing ? "↻ 갱신 중" : "↻ 갱신"}
+              </Text>
+            </Pressable>
+            <Pressable onPress={handleClose} hitSlop={12}>
+              <Text style={s.closeBtn}>✕</Text>
+            </Pressable>
+          </View>
         </View>
 
         {/* ── Sticker Preview (fixed) ── */}
@@ -462,16 +469,9 @@ export default function StickerModal({
                     <Text style={{ fontSize: 10, color: theme.mutedForeground, marginLeft: 4 }}>{liveTimestamp}</Text>
                   ) : null}
                 </View>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <Pressable onPress={handleRefresh} hitSlop={12} disabled={refreshing}>
-                    <Text style={{ fontSize: 12, color: theme.mutedForeground, fontWeight: "600", opacity: refreshing ? 0.4 : 1 }}>
-                      {refreshing ? "↻ 갱신 중" : "↻ 갱신"}
-                    </Text>
-                  </Pressable>
-                  <Pressable onPress={handleResetScore} hitSlop={12}>
-                    <Text style={{ fontSize: 12, color: theme.mutedForeground, fontWeight: "600" }}>↺ 리셋</Text>
-                  </Pressable>
-                </View>
+                <Pressable onPress={handleResetScore} hitSlop={12}>
+                  <Text style={{ fontSize: 12, color: theme.mutedForeground, fontWeight: "600" }}>↺ 스코어 리셋</Text>
+                </Pressable>
               </View>
 
               <View style={{ flexDirection: "row", gap: 16 }}>
