@@ -118,6 +118,28 @@ export default function StickerModal({
     }
   }, [scoreBoard, awayScore, homeScore]);
 
+  const [refreshing, setRefreshing] = useState(false);
+  const handleRefresh = useCallback(async () => {
+    if (refreshing || !gameId) return;
+    setRefreshing(true);
+    try {
+      const { cachedGameDetail } = await import("@/lib/gameCache");
+      const detail = await cachedGameDetail(gameId);
+      if (detail?.scoreBoard?.inn) {
+        setLocalScoreBoard(JSON.parse(JSON.stringify(detail.scoreBoard.inn)));
+        setLocalAwayScore(detail.score?.away ?? awayScore);
+        setLocalHomeScore(detail.score?.home ?? homeScore);
+        const now = new Date();
+        const ts = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+        setLiveTimestamp(ts);
+      }
+    } catch (e) {
+      console.warn("StickerModal refresh failed", e);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshing, gameId, awayScore, homeScore]);
+
   // Editor controls
   const [background, setBackground] = useState<BgKey>("transparent");
   const [stroke, setStroke] = useState(true);
@@ -420,12 +442,12 @@ export default function StickerModal({
 
         <ScrollView ref={scrollRef} style={{ flexGrow: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 + keyboardHeight }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
 
-          {/* ── Live Score Control ── */}
-          {isLive && localScoreBoard && (
+          {/* ── Score Control ── */}
+          {(isLive || isFinished) && localScoreBoard && (
             <View style={{ marginBottom: 24, padding: 16, backgroundColor: theme.muted, borderRadius: 12 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                  <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground }}>라이브 스코어 조정</Text>
+                  <Text style={{ fontSize: 14, fontWeight: "700", color: theme.foreground }}>스코어 조정</Text>
                   {(() => {
                     const info = getInningInfo(localScoreBoard);
                     if (!info) return null;
@@ -436,10 +458,20 @@ export default function StickerModal({
                       </View>
                     );
                   })()}
+                  {liveTimestamp ? (
+                    <Text style={{ fontSize: 10, color: theme.mutedForeground, marginLeft: 4 }}>{liveTimestamp}</Text>
+                  ) : null}
                 </View>
-                <Pressable onPress={handleResetScore} hitSlop={12}>
-                  <Text style={{ fontSize: 12, color: theme.mutedForeground, fontWeight: "600" }}>↺ 리셋</Text>
-                </Pressable>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  <Pressable onPress={handleRefresh} hitSlop={12} disabled={refreshing}>
+                    <Text style={{ fontSize: 12, color: theme.mutedForeground, fontWeight: "600", opacity: refreshing ? 0.4 : 1 }}>
+                      {refreshing ? "↻ 갱신 중" : "↻ 갱신"}
+                    </Text>
+                  </Pressable>
+                  <Pressable onPress={handleResetScore} hitSlop={12}>
+                    <Text style={{ fontSize: 12, color: theme.mutedForeground, fontWeight: "600" }}>↺ 리셋</Text>
+                  </Pressable>
+                </View>
               </View>
 
               <View style={{ flexDirection: "row", gap: 16 }}>
