@@ -291,9 +291,14 @@ export async function cachedAllDailyScores(year?: number): Promise<Record<string
     }
 
     // Populate per-date cache for newly fetched dates
+    // Skip current-year dates — per-date endpoint has richer data (emotions)
+    const thisYear = new Date().getFullYear();
     for (const [date, games] of Object.entries(data.dates)) {
-      const key = cacheKey("scores:v2", date);
-      db.setCache(key, JSON.stringify({ games }));
+      const isCurrentYear = date >= `${thisYear}-01-01`;
+      if (!isCurrentYear) {
+        const key = cacheKey("scores:v2", date);
+        db.setCache(key, JSON.stringify({ games }));
+      }
     }
 
     db.setCache(allScoresCacheKey, JSON.stringify(dates));
