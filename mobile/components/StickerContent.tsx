@@ -49,6 +49,7 @@ interface Props {
   statsMode?: "live" | "broadcast";
   venue?: string;
   showEmotion?: boolean;
+  isFinished?: boolean;
 }
 
 const COLORS = {
@@ -362,7 +363,7 @@ export default function StickerContent(props: Props) {
     date, scoreBoard, rheb,
     gameResult, background, stroke, showBadge, showScoreboard, textColor, strokeColor,
     teamTag, myTag, customTag, stats, badgeBackgroundColor, statsMode, venue,
-    showEmotion,
+    showEmotion, isFinished,
   } = props;
 
   const tc = textColor || "#333";
@@ -376,7 +377,7 @@ export default function StickerContent(props: Props) {
   // When textColor is set, ALL text uses that color (no team-specific colors)
   const winColor = isCustomColor ? textColor : COLORS.win;
   const loseColor = isCustomColor ? textColor : COLORS.lose;
-  const finished = gameResult !== null && gameResult !== "draw" && homeScore !== awayScore;
+  const finished = isFinished && homeScore !== awayScore;
   const homeScoreColor = finished ? (isHomeWin ? winColor : loseColor) : winColor;
   const awayScoreColor = finished ? (isAwayWin ? winColor : loseColor) : winColor;
   const awayTeamColor_ = isCustomColor ? textColor : awayTeamColor;

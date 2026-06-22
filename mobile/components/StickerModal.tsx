@@ -412,6 +412,7 @@ export default function StickerModal({
                 stats={stats}
                 venue={stadiumName}
                 showEmotion={showEmotion}
+                isFinished={isFinished}
               />
             </View>
           )}
