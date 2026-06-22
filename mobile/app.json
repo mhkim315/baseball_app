@@ -168,7 +168,7 @@
         }
       ],
       "expo-router",
-      ["expo-build-properties", { "ios": { "useModularHeaders": true } }]
+      "expo-build-properties"
     ],
     "assetBundlePatterns": [
       "**/*"
