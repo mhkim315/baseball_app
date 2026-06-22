@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "kr.fullcount.app",
-      "buildNumber": "9",
+      "buildNumber": "10",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "직관일기 작성 시 사진을 첨부하기 위해 앨범 접근 권한이 필요합니다.",
         "ITSAppUsesNonExemptEncryption": false
