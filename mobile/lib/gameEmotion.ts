@@ -107,17 +107,17 @@ export function computeGameEmotion(input: GameEmotionInput): CharacterEmotion {
       if (walkOff && extra) return "in_love";
       if (walkOff) return "in_love";
       if (comeback >= 5) return "in_love";
-      if (lateBehind && comeback >= 2) return "shocked";
+      if (lateBehind && comeback >= 2) return "joyful";
       if (changes >= 3) return "joyful";
       if (comeback >= 2) return "joyful";
       if (blowout && shutout) return "mocking";
       if (blowout) return "mocking";
       if (shutout) return "tongue";
-      if (slug && close) return "shocked";
-      if (duel && close) return "determined";
-      if (slug) return "shocked";
-      if (duel) return "determined";
-      if (close && extra) return "determined";
+      if (slug && close) return "joyful";
+      if (duel && close) return "thumbs_up";
+      if (slug) return "joyful";
+      if (duel) return "joyful";
+      if (close && extra) return "thumbs_up";
       if (close) return "thumbs_up";
       return "joyful";
     }

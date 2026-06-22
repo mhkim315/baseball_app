@@ -215,7 +215,7 @@ def _finished_emotion(diff: int, my_score: int, opp_score: int, inning: int,
         if comeback >= 5:
             return "in_love"            # 5점차+ 대역전승
         if late_behind and comeback >= 2:
-            return "shocked"            # 6회 이후 뒤지다 역전승
+            return "joyful"             # 6회 이후 뒤지다 역전승
         if changes >= 3:
             return "joyful"             # 리드 3번+ 바뀐 명승부
         if comeback >= 2:
@@ -227,15 +227,15 @@ def _finished_emotion(diff: int, my_score: int, opp_score: int, inning: int,
         if shutout:
             return "tongue"
         if slug and close:
-            return "shocked"             # 난타전 접전승
+            return "joyful"              # 난타전 접전승
         if duel and close:
-            return "determined"         # 투수전 접전승
+            return "thumbs_up"           # 투수전 접전승
         if slug:
-            return "shocked"            # 난타전 승
+            return "joyful"              # 난타전 승
         if duel:
-            return "determined"         # 투수전 승
+            return "joyful"              # 투수전 승
         if close and extra:
-            return "determined"
+            return "thumbs_up"           # 연장 접전승
         if close:
             return "thumbs_up"
         return "joyful"
