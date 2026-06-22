@@ -45,8 +45,8 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      ["@react-native-firebase/app", { "platforms": ["android"] }],
-      ["@react-native-firebase/messaging", { "platforms": ["android"] }],
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
       "expo-notifications",
       [
         "react-native-android-widget",
@@ -168,7 +168,7 @@
         }
       ],
       "expo-router",
-      "expo-build-properties"
+      ["expo-build-properties", { "ios": { "useModularHeaders": true } }]
     ],
     "assetBundlePatterns": [
       "**/*"
