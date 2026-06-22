@@ -1141,11 +1141,18 @@ def _get_widget_data_cached() -> dict | None:
                 val = side_data.get("e", 0)
                 return int(val) if val is not None else 0
 
+            def _resolve_inning(relay, sb_inn):
+                if relay and relay.get("inning"):
+                    return int(relay.get("inning", 0))
+                if sb_inn:
+                    return max(len(sb_inn.get("away", []) or []), len(sb_inn.get("home", []) or []))
+                return 0
+
             entry["awayEmotion"] = compute_game_emotion(
                 status=entry["status"],
                 my_score=int(score.get("away", 0) or 0),
                 opp_score=int(score.get("home", 0) or 0),
-                inning=int(relay.get("inning", 0)) if relay.get("inning") else 0,
+                inning=_resolve_inning(relay, sb_inn),
                 is_top=str(relay.get("isTop")) == "1" if relay.get("isTop") is not None else True,
                 is_my_home=False,
                 base1=str(relay.get("base1")) if relay.get("base1") is not None else None,
@@ -1161,7 +1168,7 @@ def _get_widget_data_cached() -> dict | None:
                 status=entry["status"],
                 my_score=int(score.get("home", 0) or 0),
                 opp_score=int(score.get("away", 0) or 0),
-                inning=int(relay.get("inning", 0)) if relay.get("inning") else 0,
+                inning=_resolve_inning(relay, sb_inn),
                 is_top=str(relay.get("isTop")) == "1" if relay.get("isTop") is not None else True,
                 is_my_home=True,
                 base1=str(relay.get("base1")) if relay.get("base1") is not None else None,
@@ -1762,11 +1769,18 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
         val = side_data.get("e", 0)
         return int(val) if val is not None else 0
 
+    def _resolve_inning(relay, sb_inn):
+        if relay and relay.get("inning"):
+            return int(relay.get("inning", 0))
+        if sb_inn:
+            return max(len(sb_inn.get("away", []) or []), len(sb_inn.get("home", []) or []))
+        return 0
+
     result["awayEmotion"] = compute_game_emotion(
         status=g_status,
         my_score=int(g_score.get("away", 0) or 0),
         opp_score=int(g_score.get("home", 0) or 0),
-        inning=int(g_relay.get("inning", 0)) if g_relay and g_relay.get("inning") else 0,
+        inning=_resolve_inning(g_relay, g_sb_inn),
         is_top=str(g_relay.get("isTop")) == "1" if g_relay and g_relay.get("isTop") is not None else True,
         is_my_home=False,
         base1=str(g_relay.get("base1")) if g_relay and g_relay.get("base1") is not None else None,
@@ -1781,7 +1795,7 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
         status=g_status,
         my_score=int(g_score.get("home", 0) or 0),
         opp_score=int(g_score.get("away", 0) or 0),
-        inning=int(g_relay.get("inning", 0)) if g_relay and g_relay.get("inning") else 0,
+        inning=_resolve_inning(g_relay, g_sb_inn),
         is_top=str(g_relay.get("isTop")) == "1" if g_relay and g_relay.get("isTop") is not None else True,
         is_my_home=True,
         base1=str(g_relay.get("base1")) if g_relay and g_relay.get("base1") is not None else None,
