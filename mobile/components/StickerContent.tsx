@@ -1,5 +1,7 @@
 import { View, Text, StyleSheet } from "react-native";
 import type { BgKey } from "@/lib/backgrounds";
+import { TeamBadge } from "@/components/TeamBadge";
+import type { CharacterEmotion } from "@/lib/emotions";
 
 interface ScoreBoardInn {
   away: (number | null)[];
@@ -18,6 +20,10 @@ interface Props {
   homeTeam: string;
   awayTeamColor: string;
   homeTeamColor: string;
+  awayTeamId?: string;
+  homeTeamId?: string;
+  awayEmotion?: string;
+  homeEmotion?: string;
   awayScore: number;
   homeScore: number;
   awayRank?: string;
@@ -439,10 +445,15 @@ export default function StickerContent(props: Props) {
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           {/* Away team */}
           <View style={{ flex: 1, alignItems: "center" }}>
-            <Text style={[{ fontSize: 18, fontWeight: "900", color: awayTeamColor_, letterSpacing: -0.5 }, thickStroke]}>
+            <TeamBadge
+              teamId={awayTeamId || awayTeam}
+              emotion={(awayEmotion || "default") as CharacterEmotion}
+              size="lg"
+            />
+            <Text style={[{ fontSize: 11, fontWeight: "700", color: awayTeamColor_, marginTop: 4 }, strokeStyle]}>
               {awayTeam}
             </Text>
-            {awayRank && <Text style={[{ fontSize: 10, color: toRgba(tc, 0.6), fontWeight: "700" }, strokeStyle]}>{awayRank}위</Text>}
+            {awayRank && <Text style={[{ fontSize: 9, color: toRgba(tc, 0.5), fontWeight: "600" }, strokeStyle]}>{awayRank}위</Text>}
           </View>
 
           {/* Score */}
@@ -464,10 +475,15 @@ export default function StickerContent(props: Props) {
 
           {/* Home team */}
           <View style={{ flex: 1, alignItems: "center" }}>
-            <Text style={[{ fontSize: 18, fontWeight: "900", color: homeTeamColor_, letterSpacing: -0.5 }, thickStroke]}>
+            <TeamBadge
+              teamId={homeTeamId || homeTeam}
+              emotion={(homeEmotion || "default") as CharacterEmotion}
+              size="lg"
+            />
+            <Text style={[{ fontSize: 11, fontWeight: "700", color: homeTeamColor_, marginTop: 4 }, strokeStyle]}>
               {homeTeam}
             </Text>
-            {homeRank && <Text style={[{ fontSize: 10, color: toRgba(tc, 0.6), fontWeight: "700" }, strokeStyle]}>{homeRank}위</Text>}
+            {homeRank && <Text style={[{ fontSize: 9, color: toRgba(tc, 0.5), fontWeight: "600" }, strokeStyle]}>{homeRank}위</Text>}
           </View>
         </View>
 

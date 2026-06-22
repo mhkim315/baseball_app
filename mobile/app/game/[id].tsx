@@ -1067,6 +1067,8 @@ export default function GameDetailScreen() {
         liveInning={inningInfo ?? null}
         gameId={gid}
         venue={detail?.gameInfo?.venue}
+        awayEmotion={awayEmotion}
+        homeEmotion={homeEmotion}
       />
 
       <SimpleAlert

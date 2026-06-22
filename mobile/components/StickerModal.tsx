@@ -48,6 +48,8 @@ interface StickerModalProps {
   liveInning?: { inning: number; isTop: boolean } | null;
   gameId?: string;
   venue?: string;
+  awayEmotion?: string;
+  homeEmotion?: string;
 }
 
 
@@ -56,6 +58,7 @@ export default function StickerModal({
   visible, onClose, awayTeam, homeTeam, awayScore, homeScore,
   awayRank, homeRank, date, scoreBoard, rheb,
   isLive, isFinished, liveInning, gameId, venue,
+  awayEmotion, homeEmotion,
 }: StickerModalProps) {
   const { theme } = useTheme();
   const { myTeam } = useTeam();
@@ -377,6 +380,10 @@ export default function StickerModal({
                 homeTeam={homeDisplay}
                 awayTeamColor={awayColor}
                 homeTeamColor={homeColor}
+                awayTeamId={awayTeam}
+                homeTeamId={homeTeam}
+                awayEmotion={awayEmotion}
+                homeEmotion={homeEmotion}
                 awayScore={localAwayScore}
                 homeScore={localHomeScore}
                 awayRank={awayRank}
