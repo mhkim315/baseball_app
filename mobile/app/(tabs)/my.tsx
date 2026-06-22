@@ -624,7 +624,7 @@ export default function MyScreen() {
           </View>
         </View>
 
-        <View style={{ marginTop: 16 }}>
+        {Platform.OS === 'android' && (<View style={{ marginTop: 16 }}>
           <Text style={{ fontSize: 12, color: theme.mutedForeground, marginBottom: 8 }}>
             위젯 · 경기중은 항상 표시됩니다
           </Text>
@@ -661,7 +661,7 @@ export default function MyScreen() {
               />
             </View>
           </View>
-        </View>
+        </View>)}
       </View>
 
       {/* Year in Review */}
