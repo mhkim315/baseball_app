@@ -377,7 +377,7 @@ export default function StickerContent(props: Props) {
   // When textColor is set, ALL text uses that color (no team-specific colors)
   const winColor = isCustomColor ? textColor : COLORS.win;
   const loseColor = isCustomColor ? textColor : COLORS.lose;
-  const finished = isFinished && homeScore !== awayScore;
+  const finished = (isFinished ?? (gameResult !== null && gameResult !== "draw")) && homeScore !== awayScore;
   const homeScoreColor = finished ? (isHomeWin ? winColor : loseColor) : winColor;
   const awayScoreColor = finished ? (isAwayWin ? winColor : loseColor) : winColor;
   const awayTeamColor_ = isCustomColor ? textColor : awayTeamColor;
