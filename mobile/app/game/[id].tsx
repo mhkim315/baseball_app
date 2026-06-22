@@ -25,31 +25,9 @@ import { parseDashDate } from "@/lib/dateUtils";
 
 
 /** 스티커 생성 가능 여부 — sc=1 자동열기 + canMakeSticker 버튼 양쪽에서 사용 */
-function canMakeStickerForGame(detail: GameDetail, now: Date): boolean {
+function canMakeStickerForGame(detail: GameDetail, _now?: Date): boolean {
   const status = detail.gameInfo?.status;
   if (status === "cancelled") return false;
-
-  const dateStr = detail.date;
-  const todayStr = formatDateForApi(now);
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = formatDateForApi(yesterday);
-  const isToday = dateStr === todayStr;
-  const isYesterday = dateStr === yesterdayStr;
-
-  if (!isToday && !isYesterday) return false;
-  if (isYesterday && now.getHours() >= 14) return false;
-
-  // "finished" 상태이지만 경기 시작 전이면 오래된 캐시 데이터 → 거부
-  if (status === "finished") {
-    const dashParsed = parseDashDate(dateStr);
-    if (dashParsed) {
-      const [gy, gm, gd] = dashParsed;
-      const [gh, gmn] = (detail.gameInfo?.time || "18:30").split(":").map(Number);
-      const startTime = new Date(gy, gm - 1, gd, gh, gmn, 0, 0);
-      if (now < startTime) return false;
-    }
-  }
 
   // 게임 실제 진행 여부: 상태가 live/finished 이거나 이닝 데이터가 있을 때만
   const isGameActive = status === "finished" || status === "live"
