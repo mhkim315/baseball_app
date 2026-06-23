@@ -3431,4 +3431,221 @@ master:
 23942a7 fix(home): inject current pitcher name into relay for GameCard display
 0c0563a fix(GameCard): fall back to starter name when relay pitcher name is empty
 ```
+
+---
+
+## Phase 26: 서버 감정 계산 + finished 경기 세분화 + 스티커 감정표현 (2026-06-22)
+
+### 개요
+
+클라이언트에서 하던 게임 감정 계산(`computeGameEmotion`)을 서버로 이전.
+서버가 3초 주기로 폴링하는 단일 프로세스이므로 이벤트 트래킹(라이브 중 반이닝 추적)에 더 적합.
+Finished 경기 감정을 이닝별 데이터로 세분화(역전 시점, 리드 변경, 투수전/난타전).
+스티커에 감정표현 캐릭터 이미지 추가 + 감정표현 ON/OFF 토글.
+
+### 서버 변경
+
+**신규: `server/data_api/game_emotion.py`**
+- TypeScript `computeGameEmotion` 전체 Python 포팅
+- Finished: walk-off, comeback, blown lead, blowout, shutout, duel, slugfest 분석
+- Live: 이닝별 이벤트 트래킹(출루→curious, 득점권→joyful, 만루→provocative, 득점→in_love 등)
+- 반이닝 종료 시 만루/득점권 무득점 → furious/angry (다음 이닝까지 지속)
+- snapshot fallback (이벤트 없을 때 기존 점수차 기반)
+
+**수정: `server/data_api/main.py`**
+- `/widget-data`: 각 경기에 `awayEmotion`/`homeEmotion` 필드 추가
+- `/game-detail/{id}`: 동일하게 감정 필드 추가
+- `/daily-scores/{date}`: `_enrich_games_with_emotions()`로 game-records 이닝 데이터 기반 감정 계산
+- `_resolve_inning()`: relay 없을 때 scoreBoard.inn 길이로 inning 추론
+- 취소경기 `status="cancelled"` 처리, except 로깅 개선
+
+### Finished 경기 감정 세분화
+
+| 승리 | 감정 | 패배 | 감정 |
+|------|------|------|------|
+| 끝내기(연장) | `in_love` | 끝내기패(연장) | `devastated` |
+| 끝내기 | `in_love` | 끝내기패 | `devastated` |
+| 5점차+ 대역전승 | `in_love` | 5점차+ 리드 날림 | `furious` |
+| 6회이후 역전승 | `joyful` | 6회까지 앞서다 역전패 | `angry` |
+| 리드 3번+ 변경 | `joyful` | 2-4점차 역전패 | `angry` |
+| 2-4점차 역전승 | `joyful` | 대패+영봉 | `resigned_disgust` |
+| 대승+영봉 | `mocking` | 대패 | `resigned_disgust` |
+| 대승 | `mocking` | 영봉패 | `depressed` |
+| 영봉승 | `tongue` | 난타전 접전패 | `annoyed` |
+| 난타전 접전승 | `joyful` | 투수전 접전패 | `sad` |
+| 투수전 접전승 | `thumbs_up` | 난타전 패 | `annoyed` |
+| 난타전 승 | `joyful` | 투수전 패 | `sad` |
+| 투수전 승 | `joyful` | 연장 접전패 | `crying` |
+| 연장 접전승 | `thumbs_up` | 접전패 | `sad` |
+| 접전승 | `thumbs_up` | 일반 패 | `crying` |
+
+- **투수전**: 양팀 합계 6점 이하
+- **난타전**: 양팀 합계 16점 이상
+- 새 헬퍼: `_max_deficit`, `_max_lead`, `_was_behind_after`, `_was_ahead_after`, `_lead_changes`
+
+### 라이브 이벤트 트래킹 (서버)
+
+| 이벤트 | 우리 공격 | 우리 수비 |
+|--------|-----------|-----------|
+| 주자 출루 (8회 전) | `curious` | `annoyed` |
+| 득점권 진입 | `joyful` | `flustered` |
+| 만루 | `provocative` | `extream_shock` |
+| 득점 1-2점 | `in_love` | `angry` |
+| 대량득점 3점+ | `in_love` | `devastated` |
+| 상대 실책 | `tongue` | — |
+| 우리 실책 | — | `karen` |
+
+**반이닝 종료 시 (이닝+1까지 지속):**
+
+| 결과 | 우리 공격 | 우리 수비 |
+|------|-----------|-----------|
+| 만루 무득점 | `furious` | `in_love` |
+| 득점권 무득점 | `angry` | `joyful` |
+| 3점+ 리드 날림 | — | `extream_shock` |
+
+### 클라이언트 변경
+
+**gameEmotion.ts**: 이벤트 트래킹 제거, finished + snapshot fallback만 유지 (서버 폴백용)
+**gameCache.ts**: scores 캐시 키 `scores:v2`로 변경, 현재 연도 bulk/per-date 캐시 건너뛰기, 빈 경기 early return
+**prefetch.ts**: 구 `scores:` → `scores:v2:` 캐시 키 동기화
+**shared/types.ts**: `WidgetGame`, `GameDetail`, `ScoreEntry`에 `awayEmotion`/`homeEmotion` 추가
+**resolveGames.ts**: ScoreEntry → ResolvedGame 감정 전달
+
+**StickerContent.tsx**: 팀명+순위 → TeamBadge(감정표현 캐릭터) + 작은 팀명
+- `showEmotion` prop으로 ON/OFF 토글
+- asset 없으면 큰글씨 팀명 fallback (중복 표시 방지)
+- `isFinished` prop으로 점수 승패 색상 (fallback: `gameResult`)
+
+**StickerModal.tsx**: 
+- ↻ 갱신 버튼 (타이틀바) — `cachedGameDetail`로 최신 점수/스코어보드 fetch
+- ↺ 스코어 리셋 — 원래 점수로 초기화
+- 감정표현 ON/OFF 토글
+- 라이브 스코어 조정 (라이브 전용)
+
+**game/[id].tsx**: 
+- polling에서 `awayEmotion`/`homeEmotion` 동기화
+- `canMakeStickerForGame` 시간제한 (빌드: 적용, OTA 검증용: 해제)
+
+### 서버 배포 이슈
+
+실행 경로가 `/home/opc/fullcount_backend/main.py`인데 `repo/server/data_api/main.py`만 수정해서
+처음에 감정 필드가 API 응답에 안 나오는 문제 발생. `deploy.sh` 스크립트로 해결:
+```bash
+bash deploy.sh --restart  # repo → 실행 경로 복사 + 서비스 재시작
+```
+
+### 캐시 불일치 디버깅
+
+1. **prefetch.ts 구 캐시키**: `scores:`에 write, `scores:v2:`로 read → 캐시 미스
+2. **bulk 캐시 덮어쓰기**: `cachedAllDailyScores`가 감정 없는 bulk 데이터로 per-date 캐시 덮어씀
+3. **Infinity TTL**: 과거 날짜 캐시가 영구 보관되어 감정 추가 전 데이터 계속 사용
+4. **빈 경기 캐시 미스**: `games: []`에서 `games[0]?.awayEmotion`이 undefined → API 재요청
+
+해결: 현재 연도는 bulk 캐시 + per-date 캐시 모두 건너뛰고 항상 API 호출
+
+### 커밋 로그
+
+```
+0588488 chore: restore runtimeVersion 1.3.5 for build
+f8dfa94 feat: remove sticker time limit for OTA
+38a3f69 chore: restore runtimeVersion 1.3.5 for build
+741a389 fix: move refresh to title bar, rename reset to score reset
+e7aa575 fix: restore sticker time limit for build
+3cafc50 chore: bump runtimeVersion to 1.3.5 for build
+25d08e8 fix: keep runtimeVersion 1.3.4 until build, bump only version/versionCode
+6b5290c feat: remove sticker time limit + add refresh button to update scores
+0eae928 fix(sticker): fallback to gameResult when isFinished not provided
+90cf42b fix: cachedAllDailyScores should not overwrite current-year per-date caches
+938d768 fix: code review — prefetch cache keys, empty games cache, cancelled status
+722aa49 fix: use per-date cache for current year if emotions present
+34ca7b9 fix: also skip per-date cache for current year to prevent stale emotion-less data
+40e7c50 fix: skip bulk cache for current-year dates to get server emotions
+3c46958 fix: replace shocked with sad for pitcher's duel loss
+94e0e49 fix: bump scores cache key to v2 to invalidate stale cached data
+75ec11d fix(sticker): use isFinished for score colors
+493f47e feat(server): add emotion enrichment to daily-scores/{date} endpoint
+4c5204a feat: add emotions to daily-scores endpoint and carry through ResolvedGame
+cdfc7c0 fix(server): derive inning from scoreBoard.inn when relay is empty
+d8d3ba5 fix: emotion sync in polling, sticker score color, showEmotion toggle
+03753d5 fix: remove shocked/determined from finished-game wins
+9134a53 fix(sticker): destructure awayTeamId/homeTeamId/emotions in StickerContent
+819f8af feat(sticker): show emotion TeamBadge instead of team name text
+```
+
+### 빌드
+
+- **버전**: 1.3.5 (39)
+- **OTA 검증**: runtime 1.3.4 (시간제한 해제 버전)
+- **빌드**: AAB production (Play Store 제출용)
+
+---
+
+## Hotfix 1.3.5a: 위젯 설정 통합 + 선발투수 null 버그 수정 (2026-06-23)
+
+### 위젯 variant 8→2 통합
+
+**문제**: v1.3.5 빌드에서 Android 위젯이 8개 정의(app.json)되었으나 AndroidManifest에는 2개만 등록돼 6개 누락.
+
+**해결**: variant 기반(8개)에서 설정 기반(2개)으로 아키텍처 변경.
+
+| 파일 | 변경 |
+|------|------|
+| `app.json` | 위젯 정의 8→2 (Widget2x2, Widget4x2만) |
+| `GameStatusWidget.tsx` | `widgetName` 기반 variant 분기 제거 → `_prefs` 모듈 변수 기반. `setWidgetPrefs()` export |
+| `updateWidget.tsx` | WIDGET_NAMES 8→2, AsyncStorage에서 pref 읽어 `setWidgetPrefs()` 호출 |
+| `my.tsx` | "화면 설정" 내 위젯 토글 3개 추가 (경기전/경기후/배경) + 죽은 잠금화면 전광판 토글 제거. `Platform.OS === 'android'` 가드로 iOS에서는 숨김 |
+
+**저장**: AsyncStorage 키 `widget_prefs` — `{"showPreGame":true,"showPostGame":true,"showBackground":true}` (디폴트: 전부 ON)
+
+**위젯 갱신 흐름**:
+```
+MY탭 토글 → saveWidgetPrefs() → AsyncStorage 저장 + updateWidgetPeriodic() 호출
+→ updateAllWidgets() → AsyncStorage 읽기 → setWidgetPrefs() → _prefs 설정
+→ GameStatusWidget() → _prefs.showPreGame/showPostGame/showBackground 따라 렌더링
+```
+
+### 선발투수 null 버그
+
+**원인**: `/widget-data`가 nginx에서 widget-worker:8001로 라우팅. Daum merge 경로에서 `_get_widget_data_from_daum()`이 `starter_map` 파라미터를 받아놓고 `game.get("homeStarter")`를 직접 호출해 항상 null 반환. merge 시 Naver 결과를 덮어씀.
+
+**수정**: `main.py` 2줄 — Daum 함수에서 `starter_map` lookup 사용:
+```python
+"homeStarter": starter_map.get(gid, {}).get("home") or game.get("homeStarter"),
+"awayStarter": starter_map.get(gid, {}).get("away") or game.get("awayStarter"),
+```
+
+**경과**: 08:00~18:25 하루 종일 null 상태. 18:17 서버 수정 적용 후 정상화 확인.
+
+### OTA 배포
+
+| # | Platform | Update Group | 내용 |
+|---|----------|-------------|------|
+| 1 | Android | `1d646d8e` | 위젯 토글 + 잠금화면 제거 |
+| 2 | iOS | `422c31fc` | 잠금화면 제거 (위젯 숨김) |
+| 3 | Android | `5ba144f1` | 스티커 시간제한 해제 |
+| 4 | Android | `96e091ed` | 스티커 시간제한 복구 |
+
+### 스티커 시간제한 토글
+- `game/[id].tsx` `canMakeStickerForGame()` — OTA 검증용 시간제한 해제 후 복구
+- 날짜 체크(오늘/어제)와 14시 컷오프 제거/복원
+
+### 서버 백업
+- `server-backup/2026-06-23/`: 코드 6개 + 데이터 + DB 덤프
+
+### 커밋
+```
+47482ad fix(server): use starter_map in Daum widget data fallback
+f4f67eb Revert "feat: remove sticker time limit for OTA (Android)"
+e0e5881 feat: remove sticker time limit for OTA (Android)
+4bdef53 fix(ios): hide widget settings on iOS with Platform.OS guard
+ebf8231 fix(widget): collapse 8 variants to 2 widgets with MY tab prefs
+```
+
+### 실경기 모니터링 (18:25~)
+- 18:25 선발투수 10명 전원 표시 확인
+- 18:30 2경기 live 전환 시작, 3분 내 전 경기 live
+- BSO 기반 실시간 감정표현 정상 (출루→curious, 득점권→joyful/flustered, 득점→in_love, 실점→sad/angry)
+- Naver + Daum 병행 정상 작동
+- relay 데이터 3초 간격 실시간 갱신 확인
+```
 ```
