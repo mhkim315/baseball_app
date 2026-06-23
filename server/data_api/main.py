@@ -363,51 +363,6 @@ def get_all_daily_scores():
     return data
 
 
-def _enrich_games_with_emotions(date_str, games):
-    """Add awayEmotion/homeEmotion to daily-scores games using game-records inning data."""
-    import json
-    from game_emotion import compute_game_emotion
-    kr_to_id = {v: k for k, v in TEAM_NAME_MAP.items()}
-    for g in games:
-        # Determine actual status (finished vs cancelled)
-        status = "cancelled" if g.get("cancelled") else "finished"
-        away_kr = g.get("away", "")
-        home_kr = g.get("home", "")
-        away_id = kr_to_id.get(away_kr, away_kr.lower())
-        home_id = kr_to_id.get(home_kr, home_kr.lower())
-        inn_data = None
-        for tid in (home_id, away_id):
-            gr_path = f"data/teams/{tid}/game-records/{date_str}.json"
-            try:
-                with open(gr_path) as f:
-                    gr = json.load(f)
-                inn_data = gr.get("scoreBoard", {}).get("inn", {})
-                if inn_data:
-                    break
-            except FileNotFoundError:
-                pass
-            except (json.JSONDecodeError, OSError) as e:
-                logger.warning("Failed to read game-records %s: %s", gr_path, e)
-        my_inns_away = inn_data.get("away") if inn_data else None
-        my_inns_home = inn_data.get("home") if inn_data else None
-        inning = max(len(my_inns_away or []), len(my_inns_home or [])) if inn_data else 9
-        g["awayEmotion"] = compute_game_emotion(
-            status=status,
-            my_score=int(g.get("awayScore", 0) or 0),
-            opp_score=int(g.get("homeScore", 0) or 0),
-            inning=inning, is_top=False, is_my_home=False,
-            my_inns=my_inns_away, opp_inns=my_inns_home,
-        )
-        g["homeEmotion"] = compute_game_emotion(
-            status=status,
-            my_score=int(g.get("homeScore", 0) or 0),
-            opp_score=int(g.get("awayScore", 0) or 0),
-            inning=inning, is_top=False, is_my_home=True,
-            my_inns=my_inns_home, opp_inns=my_inns_away,
-        )
-    return games
-
-
 @app.get("/daily-scores/{date}")
 def get_daily_scores(date: str):
     if not validate_date(date):
@@ -418,9 +373,7 @@ def get_daily_scores(date: str):
     dates = data.get("dates", {})
     if date not in dates:
         return JSONResponse({"error": "Date not found"}, status_code=404)
-    games = dates[date]
-    games = _enrich_games_with_emotions(date, games)
-    return {"date": date, "games": games}
+    return {"date": date, "games": dates[date]}
 
 
 @app.get("/schedule")
@@ -1391,8 +1344,8 @@ def _get_widget_data_from_daum(today_str, today_games, streak_map, rank_map, sta
                     "awayTeam": game["awayTeam"],
                     "homeName": home_kr,
                     "awayName": away_kr,
-                    "homeStarter": game.get("homeStarter"),
-                    "awayStarter": game.get("awayStarter"),
+                    "homeStarter": starter_map.get(gid, {}).get("home") or game.get("homeStarter"),
+                    "awayStarter": starter_map.get(gid, {}).get("away") or game.get("awayStarter"),
                     "homeRank": rank_map.get(home_kr),
                     "awayRank": rank_map.get(away_kr),
                     "homeStreak": streak_map.get(home_kr),
