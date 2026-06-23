@@ -25,30 +25,9 @@ import { parseDashDate } from "@/lib/dateUtils";
 
 
 /** 스티커 생성 가능 여부 — sc=1 자동열기 + canMakeSticker 버튼 양쪽에서 사용 */
-function canMakeStickerForGame(detail: GameDetail, now: Date): boolean {
+function canMakeStickerForGame(detail: GameDetail, _now?: Date): boolean {
   const status = detail.gameInfo?.status;
   if (status === "cancelled") return false;
-
-  const dateStr = detail.date;
-  const todayStr = formatDateForApi(now);
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = formatDateForApi(yesterday);
-  const isToday = dateStr === todayStr;
-  const isYesterday = dateStr === yesterdayStr;
-
-  if (!isToday && !isYesterday) return false;
-  if (isYesterday && now.getHours() >= 14) return false;
-
-  if (status === "finished") {
-    const dashParsed = parseDashDate(dateStr);
-    if (dashParsed) {
-      const [gy, gm, gd] = dashParsed;
-      const [gh, gmn] = (detail.gameInfo?.time || "18:30").split(":").map(Number);
-      const startTime = new Date(gy, gm - 1, gd, gh, gmn, 0, 0);
-      if (now < startTime) return false;
-    }
-  }
 
   const isGameActive = status === "finished" || status === "live"
     || !!detail.scoreBoard?.inn?.home?.length;
