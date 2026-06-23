@@ -3647,5 +3647,23 @@ ebf8231 fix(widget): collapse 8 variants to 2 widgets with MY tab prefs
 - BSO 기반 실시간 감정표현 정상 (출루→curious, 득점권→joyful/flustered, 득점→in_love, 실점→sad/angry)
 - Naver + Daum 병행 정상 작동
 - relay 데이터 3초 간격 실시간 갱신 확인
+
+### TTL finished 감지 버그 수정 (22:40)
+
+**문제**: 경기 종료 후에도 widget-data 캐시 TTL이 3초로 유지. Daum API가 불필요하게 초당 호출됨.
+
+**원인**: `_get_active_ttl()` (line 832)가 `games` 파라미터 없이 호출돼 finished 상태 감지 불가. `_get_next_game_minutes()`가 종료된 경기의 18:30을 그대로 반환해 "경기 30분 전"으로 오판 → `_WIDGET_CACHE_TTL`(3) 반환.
+
+**수정**: line 832에서 `_WIDGET_CACHE`의 캐시된 games 데이터를 `_get_active_ttl()`에 전달:
+```python
+ttl = _get_active_ttl(
+    _WIDGET_CACHE.get(today_str, (0, {}))[1].get("games")
+    if today_str in _WIDGET_CACHE else None
+)
+```
+finished 감지 → TTL 300초(5분)로 정상 전환. Daum 호출 100배 감소 (3초→300초).
+
+### 서버 수정 파일
+- `main.py`: Daum starter_map 사용 (2줄) + TTL finished 감지 (1줄)
 ```
 ```

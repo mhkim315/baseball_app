@@ -829,7 +829,7 @@ def _get_widget_data_cached() -> dict | None:
     today_str = datetime.now(tz=timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
     now = time.time()
 
-    ttl = _get_active_ttl()
+    ttl = _get_active_ttl(_WIDGET_CACHE.get(today_str, (0, {}))[1].get("games") if today_str in _WIDGET_CACHE else None)
     if today_str in _WIDGET_CACHE:
         cached_time, cached_data = _WIDGET_CACHE[today_str]
         if now - cached_time < ttl:
