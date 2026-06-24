@@ -156,6 +156,50 @@ async def global_exception_handler(request: Request, exc: Exception):
 scheduler = BackgroundScheduler()
 
 
+def _earliest_uncollected_game_minutes():
+    """Return minutes-since-midnight (KST) of the earliest game still missing lineups, or None if all done."""
+    try:
+        tg = load_json("today-games.json")
+        if not tg:
+            return None
+        games = tg.get("games", [])
+        if not games:
+            return None
+        earliest = None
+        for g in games:
+            gid = g.get("id", "")
+            if len(gid) < 12:
+                continue
+            date_str = gid[:4] + "-" + gid[4:6] + "-" + gid[6:8]
+            away_team = (g.get("away") or {}).get("id")
+            home_team = (g.get("home") or {}).get("id")
+            collected = False
+            for team_id in (away_team, home_team):
+                if not team_id:
+                    continue
+                record_path = DATA_DIR / "teams" / team_id / "game-records" / f"{date_str}.json"
+                if record_path.exists():
+                    try:
+                        with open(record_path, "r", encoding="utf-8") as f:
+                            record = json.load(f)
+                        if len(record.get("homeLineup", [])) >= 9 and len(record.get("awayLineup", [])) >= 9:
+                            collected = True
+                            break
+                    except Exception:
+                        pass
+            if collected:
+                continue
+            t = g.get("time", "")
+            if t and len(t) >= 5:
+                h, m = int(t[:2]), int(t[3:5])
+                mins = h * 60 + m
+                if earliest is None or mins < earliest:
+                    earliest = mins
+        return earliest
+    except Exception:
+        return None
+
+
 def scheduled_collect():
     try:
         from collector import collect
@@ -166,7 +210,17 @@ def scheduled_collect():
     # Pre-warm cache with fresh data written by collector
     load_json("today-games.json")
     load_json("daily-scores.json")
-    next_interval = random.randint(180, 300)
+    # Speed up collection within 70 min of the earliest game still missing lineups
+    kst_now = datetime.now(tz=timezone(timedelta(hours=9)))
+    mins_until_uncollected = _earliest_uncollected_game_minutes()
+    if mins_until_uncollected is not None:
+        now_hm = kst_now.hour * 60 + kst_now.minute
+        if now_hm >= mins_until_uncollected - 70:
+            next_interval = random.randint(60, 120)  # 1-2 min during lineup window
+        else:
+            next_interval = random.randint(180, 300)  # 3-5 min normal (too early)
+    else:
+        next_interval = random.randint(180, 300)  # all collected or no games
     next_run_time = datetime.now() + timedelta(seconds=next_interval)
     scheduler.add_job(scheduled_collect, "date", run_date=next_run_time)
 
@@ -373,7 +427,63 @@ def get_daily_scores(date: str):
     dates = data.get("dates", {})
     if date not in dates:
         return JSONResponse({"error": "Date not found"}, status_code=404)
-    return {"date": date, "games": dates[date]}
+    games = dates[date]
+    # ── Inject per-team emotions for finished games ──
+    name_to_id = {v: k for k, v in TEAM_NAME_MAP.items()}
+    id_to_code = {v: k for k, v in TEAM_CODE_MAP.items()}
+    for g in games:
+        if g.get("cancelled"):
+            g["awayEmotion"] = "rain_cancellation"
+            g["homeEmotion"] = "rain_cancellation"
+            continue
+        outcome = g.get("outcome")
+        if outcome is None:
+            continue  # live/scheduled — skip, client handles snapshot
+        away_kr = g.get("away", "")
+        home_kr = g.get("home", "")
+        away_id = name_to_id.get(away_kr)
+        home_id = name_to_id.get(home_kr)
+        if not away_id or not home_id:
+            continue
+        away_code = id_to_code.get(away_id, "")
+        home_code = id_to_code.get(home_id, "")
+        date_compact = date.replace("-", "")
+        gi = g.get("gameIdx", 0)
+        gid = f"{date_compact}-{away_code}{home_code}-{gi}"
+        # Load inning data from game-records
+        my_inns_away = None
+        my_inns_home = None
+        for tid in (home_id, away_id):
+            gr_path = DATA_DIR / "teams" / tid / "game-records" / f"{date}.json"
+            if gr_path.exists():
+                try:
+                    with open(gr_path, "r", encoding="utf-8") as f_gr:
+                        gr = json.load(f_gr)
+                    inn = gr.get("scoreBoard", {}).get("inn", {})
+                    if inn:
+                        my_inns_away = inn.get("away")
+                        my_inns_home = inn.get("home")
+                        break
+                except Exception:
+                    pass
+        inning = max(len(my_inns_away or []), len(my_inns_home or [])) if (my_inns_away or my_inns_home) else 9
+        g["awayEmotion"] = compute_game_emotion(
+            status="finished",
+            my_score=int(g.get("awayScore", 0) or 0),
+            opp_score=int(g.get("homeScore", 0) or 0),
+            inning=inning, is_top=False, is_my_home=False,
+            my_inns=my_inns_away, opp_inns=my_inns_home,
+            game_id=gid,
+        )
+        g["homeEmotion"] = compute_game_emotion(
+            status="finished",
+            my_score=int(g.get("homeScore", 0) or 0),
+            opp_score=int(g.get("awayScore", 0) or 0),
+            inning=inning, is_top=False, is_my_home=True,
+            my_inns=my_inns_home, opp_inns=my_inns_away,
+            game_id=gid,
+        )
+    return {"date": date, "games": games}
 
 
 @app.get("/schedule")
@@ -1788,6 +1898,7 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
         base3=str(g_relay.get("base3")) if g_relay and g_relay.get("base3") is not None else None,
         my_inns=g_sb_inn.get("away"),
         opp_inns=g_sb_inn.get("home"),
+        game_id=game_id,
         my_errors=_safe_e(g_sb_rheb, "away"),
         opp_errors=_safe_e(g_sb_rheb, "home"),
     )
@@ -1803,6 +1914,7 @@ def _build_game_detail(game_id: str) -> Optional[dict]:
         base3=str(g_relay.get("base3")) if g_relay and g_relay.get("base3") is not None else None,
         my_inns=g_sb_inn.get("home"),
         opp_inns=g_sb_inn.get("away"),
+        game_id=game_id,
         my_errors=_safe_e(g_sb_rheb, "home"),
         opp_errors=_safe_e(g_sb_rheb, "away"),
     )
