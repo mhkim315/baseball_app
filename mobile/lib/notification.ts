@@ -40,8 +40,9 @@ export async function updateLockScreenScore(data: Record<string, string>) {
   let body: string;
 
   if (event === "score") {
-    title = `⚾ 득점! ${awayName} ${data.away_score} : ${data.home_score} ${homeName}`;
-    body = data.score_desc || `${inningStr} | 투수 ${pitcher || '?'} | 타자 ${batter || '?'}`;
+    const who = data.scoring_team ? `${data.scoring_team} ` : "";
+    title = `⚾ ${who}득점! ${awayName} ${data.away_score} : ${data.home_score} ${homeName}`;
+    body = `${inningStr} | 투수 ${pitcher || '?'} | 타자 ${batter || '?'}`;
   } else {
     title = `⚾ ${inningStr} 시작 | ${awayName} ${data.away_score} : ${data.home_score} ${homeName}`;
     body = `투수 ${pitcher || '?'} | 타자 ${batter || '?'}`;

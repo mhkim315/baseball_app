@@ -40,7 +40,11 @@ def _has_changed(gid: str, game: dict) -> list[str]:
     prev_score = prev.get("score") or {}
     cur_score = game.get("score") or {}
     if prev_score.get("home") != cur_score.get("home") or prev_score.get("away") != cur_score.get("away"):
-        events.append("score")
+        # Ignore score decreases (Daum/Naver merge race condition)
+        cur_h, cur_a = int(cur_score.get("home", 0) or 0), int(cur_score.get("away", 0) or 0)
+        prev_h, prev_a = int(prev_score.get("home", 0) or 0), int(prev_score.get("away", 0) or 0)
+        if cur_h >= prev_h and cur_a >= prev_a:
+            events.append("score")
     prev_relay = prev.get("relay") or {}
     cur_relay = game.get("relay") or {}
     if prev_relay.get("inning") != cur_relay.get("inning") or prev_relay.get("isTop") != cur_relay.get("isTop"):
@@ -60,13 +64,24 @@ def _parse_score_event(texts: list[dict]) -> str:
         if "홈인" in txt and " : " in txt:
             inn = t.get("inn", "0") if isinstance(t, dict) else "0"
             inn_counts[inn] = inn_counts.get(inn, 0) + 1
+    # No 홈인 found — use the most recent inning as fallback
     if not inn_counts:
-        return ""
-    score_inn = max(inn_counts, key=inn_counts.get)
+        last_inn = "0"
+        for t in reversed(texts):
+            inn = t.get("inn", "0") if isinstance(t, dict) else "0"
+            txt = t.get("text", "") if isinstance(t, dict) else str(t)
+            if inn != "0" and " : " in txt and "루주자" not in txt.split(" : ")[0]:
+                last_inn = inn
+                break
+        if last_inn == "0":
+            return ""
+        score_inn = last_inn
+    else:
+        score_inn = max(inn_counts, key=inn_counts.get)
 
+    # Collect all 홈인 runners and the most recent hit from the scoring inning
     runners: list[str] = []
     hitter: str = ""
-    found_homein = False
     for t in reversed(texts):
         txt = t.get("text", "") if isinstance(t, dict) else str(t)
         inn = t.get("inn", "0") if isinstance(t, dict) else "0"
@@ -74,22 +89,20 @@ def _parse_score_event(texts: list[dict]) -> str:
             continue
         left, right = txt.split(" : ", 1)
         if "홈인" in right:
-            found_homein = True
             name = left.rsplit(" ", 1)[-1] if " " in left else left
             if name not in runners:
                 runners.append(name)
-        elif found_homein and not hitter:
-            # Skip base running entries (도루, 진루 etc.) — only batting results
-            if "루주자" not in left:
-                hitter = f"{left.strip()} {right.strip()}"
-                break
+        elif not hitter and "루주자" not in left:
+            # Most recent non-루주자 batting result (may or may not be the scoring hit)
+            hitter = f"{left.strip()} {right.strip()}"
     if not hitter and not runners:
         return ""
     parts: list[str] = []
     if hitter:
         parts.append(hitter)
     if runners:
-        parts.append("→ " + "·".join(reversed(runners)) + " 홈인")
+        runners.reverse()
+        parts.append("→ " + "·".join(runners) + " 홈인")
     return " ".join(parts)
 
 
@@ -102,10 +115,21 @@ def _build_payload(game: dict, event: str = "") -> dict:
     pitcher = (relay.get("pitcher") or {}).get("name", "")
     batter = (relay.get("batter") or {}).get("name", "")
 
-    # Score description from textRelays
-    score_desc = ""
+    # Determine which team scored (compare with previous state)
+    scoring_team = ""
     if event == "score":
-        score_desc = _parse_score_event(relay.get("textRelays", []))
+        gid = game.get("gameId", "")
+        prev_game = _PREV_STATE.get(gid)
+        if prev_game:
+            prev_s = prev_game.get("score") or {}
+            cur_s = game.get("score") or {}
+            if cur_s.get("home", 0) > prev_s.get("home", 0):
+                scoring_team = game.get("homeName") or game.get("homeTeam", "")
+            elif cur_s.get("away", 0) > prev_s.get("away", 0):
+                scoring_team = game.get("awayName") or game.get("awayTeam", "")
+
+    # Score description — parsed from textRelays (experimental, currently unused)
+    score_desc = ""
 
     return {
         "type": "game_update",
@@ -127,6 +151,7 @@ def _build_payload(game: dict, event: str = "") -> dict:
         "base3": relay.get("base3", "0"),
         "current_pitcher": pitcher,
         "current_batter": batter,
+        "scoring_team": scoring_team,
         "score_desc": score_desc,
         "status": game.get("status", ""),
         "timestamp": datetime.now(timezone.utc).isoformat(),
