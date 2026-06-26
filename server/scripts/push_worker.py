@@ -31,32 +31,73 @@ def _game_key(game: dict) -> str:
     return str(game.get("gameId", ""))
 
 
-def _has_changed(gid: str, game: dict) -> bool:
+def _has_changed(gid: str, game: dict) -> str | None:
     prev = _PREV_STATE.get(gid)
     if prev is None:
-        return True  # new game
+        return None  # new game — init state silently
     if prev.get("status") != game.get("status"):
-        return True
+        return "status"
     prev_score = prev.get("score") or {}
     cur_score = game.get("score") or {}
     if prev_score.get("home") != cur_score.get("home") or prev_score.get("away") != cur_score.get("away"):
-        return True
+        return "score"
     prev_relay = prev.get("relay") or {}
     cur_relay = game.get("relay") or {}
     if prev_relay.get("inning") != cur_relay.get("inning") or prev_relay.get("isTop") != cur_relay.get("isTop"):
-        return True
-    return False
+        return "inning"
+    return None
 
 
-def _build_payload(game: dict) -> dict:
+def _parse_score_event(texts: list[str]) -> str:
+    """Extract batter + hit type and scoring runners from text relay entries."""
+    if not texts:
+        return ""
+    hitters: list[str] = []  # "name description" pairs
+    runners: list[str] = []  # runner names
+    for text in reversed(texts):
+        if " : " not in text:
+            continue
+        left, right = text.split(" : ", 1)
+        if "홈인" in right:
+            # "1루주자 김상준 : 홈인" → extract name after last space
+            name = left.rsplit(" ", 1)[-1] if " " in left else left
+            if name not in runners:
+                runners.append(name)
+        elif not hitters:
+            # First non-홈인 batting entry before the scoring sequence
+            hitters.append(f"{left.strip()} {right.strip()}")
+    if not hitters and not runners:
+        return ""
+    parts: list[str] = []
+    if hitters:
+        parts.append(hitters[0])
+    if runners:
+        parts.append("→ " + "·".join(reversed(runners)) + " 홈인")
+    return " ".join(parts)
+
+
+def _build_payload(game: dict, event: str = "") -> dict:
     score = game.get("score") or {}
     relay = game.get("relay") or {}
     from datetime import datetime, timezone
+
+    # Pitcher/batter names
+    pitcher = (relay.get("pitcher") or {}).get("name", "")
+    batter = (relay.get("batter") or {}).get("name", "")
+
+    # Score description from textRelays
+    score_desc = ""
+    if event == "score":
+        score_desc = _parse_score_event(relay.get("textRelays", []))
+
     return {
         "type": "game_update",
+        "event": event,
         "game_id": game.get("gameId", ""),
         "home_team": game.get("homeTeam", ""),
         "away_team": game.get("awayTeam", ""),
+        "home_name": game.get("homeName") or game.get("homeTeam", ""),
+        "away_name": game.get("awayName") or game.get("awayTeam", ""),
         "home_score": score.get("home", 0),
         "away_score": score.get("away", 0),
         "inning": relay.get("inning", 0),
@@ -67,6 +108,9 @@ def _build_payload(game: dict) -> dict:
         "base1": relay.get("base1", "0"),
         "base2": relay.get("base2", "0"),
         "base3": relay.get("base3", "0"),
+        "current_pitcher": pitcher,
+        "current_batter": batter,
+        "score_desc": score_desc,
         "status": game.get("status", ""),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
@@ -122,9 +166,10 @@ def run_push_worker(widget_data_func, db_engine=None):
     changed = []
     for game in live_games:
         gid = _game_key(game)
-        if _has_changed(gid, game):
-            changed.append(game)
-            _PREV_STATE[gid] = game
+        event = _has_changed(gid, game)
+        if event:
+            changed.append((game, event))
+        _PREV_STATE[gid] = game  # 첫 감지 시에도 반드시 상태 저장
 
     if not changed:
         return
@@ -133,14 +178,14 @@ def run_push_worker(widget_data_func, db_engine=None):
 
     engine = db_engine or create_engine(DATABASE_URL)
 
-    for game in changed:
+    for game, event in changed:
         gid = _game_key(game)
         home_team = _SHORT_TO_TEAM.get(game.get("homeTeam", ""), game.get("homeTeam", ""))
         away_team = _SHORT_TO_TEAM.get(game.get("awayTeam", ""), game.get("awayTeam", ""))
 
-        payload = _build_payload(game)
-        logger.info("push_worker: change detected %s — %s vs %s (score %s:%s)",
-                     gid, away_team, home_team,
+        payload = _build_payload(game, event)
+        logger.info("push_worker: change detected %s (%s) — %s vs %s (score %s:%s)",
+                     gid, event, away_team, home_team,
                      payload["away_score"], payload["home_score"])
 
         # Fetch subscribed tokens

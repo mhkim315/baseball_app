@@ -348,6 +348,7 @@ export default function MyScreen() {
   const [widgetShowPreGame, setWidgetShowPreGame] = useState(true);
   const [widgetShowPostGame, setWidgetShowPostGame] = useState(true);
   const [widgetShowBackground, setWidgetShowBackground] = useState(true);
+  const [lockScreenEnabled, setLockScreenEnabled] = useState(false);
 
   // Totem state
   const [totems, setTotems] = useState<TotemWithStats[]>([]);
@@ -447,6 +448,9 @@ export default function MyScreen() {
         } catch {}
       }
     });
+    AsyncStorage.getItem('lock_screen_notification_enabled').then(val => {
+      setLockScreenEnabled(val === 'true');
+    });
   }, []);
 
   const [shortcut, setShortcut] = useState<ShortcutType | null>(null);
@@ -536,6 +540,11 @@ export default function MyScreen() {
     try { updateWidgetPeriodic(); } catch {}
   };
 
+  const toggleLockScreenNotification = async (val: boolean) => {
+    setLockScreenEnabled(val);
+    await AsyncStorage.setItem('lock_screen_notification_enabled', val ? 'true' : 'false');
+  };
+
   const keyboardHeight = useKeyboardHeight();
   const myTeamColor = myTeam ? teamPrimaryColor(myTeam, isDark) : "#888";
 
@@ -611,7 +620,7 @@ export default function MyScreen() {
 
       {/* Display Settings */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>화면 설정</Text>
+        <Text style={styles.sectionTitle}>설정</Text>
         <View style={styles.settingRow}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             <Text style={styles.settingLabel}>다크 모드</Text>
@@ -620,6 +629,22 @@ export default function MyScreen() {
               onValueChange={toggleTheme}
               trackColor={{ false: "#ddd", true: "#666" }}
               thumbColor={isDark ? theme.foreground : "#f4f3f4"}
+            />
+          </View>
+        </View>
+        <View style={styles.settingRow}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingLabel}>실시간 점수 알림</Text>
+              <Text style={{ fontSize: 11, color: theme.mutedForeground, marginTop: 2 }}>
+                득점, 이닝 변경시
+              </Text>
+            </View>
+            <Switch
+              value={lockScreenEnabled}
+              onValueChange={toggleLockScreenNotification}
+              trackColor={{ false: "#ddd", true: "#666" }}
+              thumbColor={lockScreenEnabled ? theme.foreground : "#f4f3f4"}
             />
           </View>
         </View>

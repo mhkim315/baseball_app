@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SHORT_CODE_TO_NAME } from '@/lib/teamStorage';
 
 // 앱이 포그라운드에 있을 때도 알림을 보여줄지 결정
 Notifications.setNotificationHandler({
@@ -28,28 +29,23 @@ export async function setupNotificationChannel() {
 export async function updateLockScreenScore(data: Record<string, string>) {
   if (!data || data.type !== 'game_update' || data.status !== 'live') return;
 
-  // 제목 구성: [7회초] LG 5 : 3 OB
-  const inningStr = data.inning ? `${data.inning}회${data.is_top === 'true' ? '초' : '말'}` : '';
-  const title = `[${inningStr}] ${data.away_team} ${data.away_score} : ${data.home_score} ${data.home_team}`;
-  
-  // 본문 구성: 🟢🟢🟡 (2B 1S 2O) | 1,3루 주자 있음
-  const b = parseInt(data.ball || '0', 10);
-  const s = parseInt(data.strike || '0', 10);
-  const o = parseInt(data.out || '0', 10);
+  const awayName = data.away_name || SHORT_CODE_TO_NAME[data.away_team || ""] || data.away_team || "";
+  const homeName = data.home_name || SHORT_CODE_TO_NAME[data.home_team || ""] || data.home_team || "";
+  const event = data.event || "";
+  const inningStr = data.inning ? `${data.inning}회${data.is_top === '1' ? '초' : '말'}` : '';
+  const pitcher = data.current_pitcher || "";
+  const batter = data.current_batter || "";
 
-  const ballStr = '🟢'.repeat(b);
-  const strikeStr = '🟡'.repeat(s);
-  const outStr = '🔴'.repeat(o);
-  
-  const bso = `${ballStr}${strikeStr}${outStr}` || '카운트 없음';
+  let title: string;
+  let body: string;
 
-  const bases = [];
-  if (data.base1 === '1') bases.push('1');
-  if (data.base2 === '1') bases.push('2');
-  if (data.base3 === '1') bases.push('3');
-  const baseStr = bases.length > 0 ? `${bases.join(',')}루 주자 있음` : '주자 없음';
-
-  const body = `${bso} (${b}B ${s}S ${o}O) | ${baseStr}`;
+  if (event === "score") {
+    title = `⚾ 득점! ${awayName} ${data.away_score} : ${data.home_score} ${homeName}`;
+    body = data.score_desc || `${inningStr} | 투수 ${pitcher || '?'} | 타자 ${batter || '?'}`;
+  } else {
+    title = `⚾ ${inningStr} 시작 | ${awayName} ${data.away_score} : ${data.home_score} ${homeName}`;
+    body = `투수 ${pitcher || '?'} | 타자 ${batter || '?'}`;
+  }
 
   const enabledStr = await AsyncStorage.getItem('lock_screen_notification_enabled');
   // Default to false if not set
