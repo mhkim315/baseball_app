@@ -318,7 +318,7 @@ export async function cachedTodayGames(): Promise<{ games: TodayGame[]; nextGame
   const cached = db.getCache(key);
 
   // Fresh cache → return immediately
-  if (cached && Date.now() - cached.updatedAt < 120_000) {
+  if (cached && Date.now() - cached.updatedAt < 5_000) {
     const parsed = safeParse(cached.data);
     if (parsed) return parsed as { games: TodayGame[]; nextGames?: TodayGame[] };
   }

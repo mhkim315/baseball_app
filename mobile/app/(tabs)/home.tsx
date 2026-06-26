@@ -57,6 +57,7 @@ function isToday(date: Date): boolean {
 }
 
 export default function HomeScreen() {
+  const relayCache = useRef<Map<string, any>>(new Map());
   const { theme, isDark } = useTheme();
   const styles = useMemo(() => StyleSheet.create({
     container: {
@@ -362,13 +363,15 @@ export default function HomeScreen() {
                   ? { homeScore: wg.score.home, awayScore: wg.score.away }
                   : {};
 
-                // Preserve pitcher/batter from previous relay when widget-data has null
+                // Preserve relay from cache when widget-data has null relay
                 const prevRelay = games[idx].relay;
+                const cachedRelay = relayCache.current.get(wg.gameId);
                 const mergedRelay = wg.relay ? {
                   ...wg.relay,
-                  pitcher: wg.relay.pitcher || prevRelay?.pitcher || null,
-                  batter: wg.relay.batter || prevRelay?.batter || null,
-                } : (prevRelay ?? null);
+                  pitcher: wg.relay.pitcher || prevRelay?.pitcher || cachedRelay?.pitcher || null,
+                  batter: wg.relay.batter || prevRelay?.batter || cachedRelay?.batter || null,
+                } : (prevRelay ?? cachedRelay);
+                if (mergedRelay) relayCache.current.set(wg.gameId, mergedRelay);
 
                 games[idx] = {
                   ...games[idx],

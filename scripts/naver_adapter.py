@@ -63,15 +63,16 @@ def normalize_relay(raw):  # -> dict | None
     pid = str(cs.get("pitcher") or "0")
     bid = str(cs.get("batter") or "0")
 
-    # Extract last 15 text relay entries for score description
+    # Extract last 30 text relay entries with inning context
     _texts = []
     for t in td.get("textRelays", []):
         if not isinstance(t, dict):
             continue
+        t_inn = t.get("inn", "0")
         for o in t.get("textOptions", []):
             text = o.get("text", "").strip()
             if text and not text.startswith("==="):
-                _texts.append(text)
+                _texts.append({"text": text, "inn": t_inn})
 
     return {
         "inning": str(td.get("inn") or "0"),
@@ -84,7 +85,7 @@ def normalize_relay(raw):  # -> dict | None
         "base3": str(cs.get("base3") or "0"),
         "pitcher": {"id": pid, "name": p2n.get(pid, "")} if pid != "0" else None,
         "batter": {"id": bid, "name": p2n.get(bid, "")} if bid != "0" else None,
-        "textRelays": _texts[-15:],
+        "textRelays": _texts[-30:],
     }
 
 

@@ -3,7 +3,6 @@ import json
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
 from sqlalchemy import create_engine, text
 
 from scripts.fcm_sender import send_fcm
@@ -31,46 +30,64 @@ def _game_key(game: dict) -> str:
     return str(game.get("gameId", ""))
 
 
-def _has_changed(gid: str, game: dict) -> str | None:
+def _has_changed(gid: str, game: dict) -> list[str]:
     prev = _PREV_STATE.get(gid)
     if prev is None:
-        return None  # new game — init state silently
+        return []  # new game — init state silently
+    events = []
     if prev.get("status") != game.get("status"):
-        return "status"
+        events.append("status")
     prev_score = prev.get("score") or {}
     cur_score = game.get("score") or {}
     if prev_score.get("home") != cur_score.get("home") or prev_score.get("away") != cur_score.get("away"):
-        return "score"
+        events.append("score")
     prev_relay = prev.get("relay") or {}
     cur_relay = game.get("relay") or {}
     if prev_relay.get("inning") != cur_relay.get("inning") or prev_relay.get("isTop") != cur_relay.get("isTop"):
-        return "inning"
-    return None
+        events.append("inning")
+    return events
 
 
-def _parse_score_event(texts: list[str]) -> str:
-    """Extract batter + hit type and scoring runners from text relay entries."""
+def _parse_score_event(texts: list[dict]) -> str:
+    """Extract batter + hit type and scoring runners from text relay entries.
+    Only uses entries from the majority inning to avoid mixing innings."""
     if not texts:
         return ""
-    hitters: list[str] = []  # "name description" pairs
-    runners: list[str] = []  # runner names
-    for text in reversed(texts):
-        if " : " not in text:
+    # Find the inning where scoring happened (most 홈인 entries are here)
+    inn_counts: dict[str, int] = {}
+    for t in texts:
+        txt = t.get("text", "") if isinstance(t, dict) else str(t)
+        if "홈인" in txt and " : " in txt:
+            inn = t.get("inn", "0") if isinstance(t, dict) else "0"
+            inn_counts[inn] = inn_counts.get(inn, 0) + 1
+    if not inn_counts:
+        return ""
+    score_inn = max(inn_counts, key=inn_counts.get)
+
+    runners: list[str] = []
+    hitter: str = ""
+    found_homein = False
+    for t in reversed(texts):
+        txt = t.get("text", "") if isinstance(t, dict) else str(t)
+        inn = t.get("inn", "0") if isinstance(t, dict) else "0"
+        if inn != score_inn or " : " not in txt:
             continue
-        left, right = text.split(" : ", 1)
+        left, right = txt.split(" : ", 1)
         if "홈인" in right:
-            # "1루주자 김상준 : 홈인" → extract name after last space
+            found_homein = True
             name = left.rsplit(" ", 1)[-1] if " " in left else left
             if name not in runners:
                 runners.append(name)
-        elif not hitters:
-            # First non-홈인 batting entry before the scoring sequence
-            hitters.append(f"{left.strip()} {right.strip()}")
-    if not hitters and not runners:
+        elif found_homein and not hitter:
+            # Skip base running entries (도루, 진루 etc.) — only batting results
+            if "루주자" not in left:
+                hitter = f"{left.strip()} {right.strip()}"
+                break
+    if not hitter and not runners:
         return ""
     parts: list[str] = []
-    if hitters:
-        parts.append(hitters[0])
+    if hitter:
+        parts.append(hitter)
     if runners:
         parts.append("→ " + "·".join(reversed(runners)) + " 홈인")
     return " ".join(parts)
@@ -166,9 +183,10 @@ def run_push_worker(widget_data_func, db_engine=None):
     changed = []
     for game in live_games:
         gid = _game_key(game)
-        event = _has_changed(gid, game)
-        if event:
-            changed.append((game, event))
+        events = _has_changed(gid, game)
+        if events:
+            for event in events:
+                changed.append((game, event))
         _PREV_STATE[gid] = game  # 첫 감지 시에도 반드시 상태 저장
 
     if not changed:

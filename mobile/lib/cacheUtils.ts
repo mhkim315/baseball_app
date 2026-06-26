@@ -82,7 +82,7 @@ const todayStr = () => new Date().toISOString().slice(0, 10);
 export function ttlForDate(dateStr: string): number {
   const today = todayStr();
   if (dateStr < today) return Infinity;
-  if (dateStr === today) return 120_000;
+  if (dateStr === today) return 5_000;
   return 3600_000;
 }
 
