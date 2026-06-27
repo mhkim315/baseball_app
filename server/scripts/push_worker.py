@@ -24,6 +24,7 @@ DRY_RUN = os.getenv("DRY_RUN", "true").lower() in ("1", "true", "yes")
 _PREV_STATE: dict[str, dict] = {}
 _TEAM_INNING_LAST: dict[str, dict[str, str]] = {}  # gid -> {"home": pcode, "away": pcode}
 _DETECTED_SCORING: dict[str, str] = {}  # gid -> scoring_team (saved before _PREV_STATE overwrite)
+_LAST_PB: dict[str, dict[str, str]] = {}  # gid -> {"pitcher": name, "batter": name} — fallback when relay missing
 _LAST_WEATHER_PUSH: float = 0
 _WEATHER_PUSH_INTERVAL = 1800  # 30 minutes
 
@@ -151,12 +152,22 @@ def _build_payload(game: dict, event: str = "") -> dict:
     from datetime import datetime, timezone
 
     # Pitcher/batter — for inning-start, compute next batter from lineup
+    gid = game.get("gameId", "")
     pitcher = (relay.get("pitcher") or {}).get("name", "")
     batter = (relay.get("batter") or {}).get("name", "")
     if event == "inning":
         next_batter = _get_next_batter(game)
         if next_batter:
             batter = next_batter
+
+    # Fallback to last known pitcher/batter when relay is missing them
+    last_pb = _LAST_PB.get(gid, {})
+    if not pitcher:
+        pitcher = last_pb.get("pitcher", "")
+    if not batter:
+        batter = last_pb.get("batter", "")
+    if pitcher or batter:
+        _LAST_PB[gid] = {"pitcher": pitcher, "batter": batter}
 
     # Scoring team — pre-computed during detection (before _PREV_STATE overwrite)
     scoring_team = ""
