@@ -12,6 +12,7 @@ logger = logging.getLogger("fullcount.push-worker")
 
 # ── Relay log: captures every poll cycle's relay data for timing analysis ──
 _RELAY_LOG_ENABLED = os.getenv("RELAY_LOG_ENABLED", "").lower() in ("1", "true", "yes")
+_PUSH_LOG_ENABLED = os.getenv("PUSH_LOG_ENABLED", "").lower() in ("1", "true", "yes")
 _RELAY_LOG_DIR = os.getenv("RELAY_LOG_DIR", "/home/opc/fullcount_backend/logs")
 
 from datetime import datetime, timezone
@@ -44,6 +45,34 @@ def _log_relay_snapshots(games: list):
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
     except Exception as e:
         logger.warning("relay_log: write failed — %s", e)
+
+
+def _log_push_dispatch(game: dict, event: str, payload: dict, subscriber_count: int):
+    """Log dispatched push notification for cross-referencing with relay log."""
+    if not _PUSH_LOG_ENABLED:
+        return
+    try:
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        os.makedirs(_RELAY_LOG_DIR, exist_ok=True)
+        path = os.path.join(_RELAY_LOG_DIR, f"push_log_{today}.jsonl")
+        entry = {
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "game_id": game.get("gameId", ""),
+            "event": event,
+            "subscribers": subscriber_count,
+            "payload": {
+                k: payload.get(k) for k in (
+                    "home_score", "away_score", "home_name", "away_name",
+                    "inning", "is_top", "current_pitcher", "current_batter",
+                    "scoring_team", "score_desc",
+                )
+            },
+        }
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception as e:
+        logger.warning("push_log: write failed — %s", e)
+
 
 # Short code → lowercase team ID (DB stores lowercase)
 _SHORT_TO_TEAM = {
@@ -342,6 +371,9 @@ def run_push_worker(widget_data_func, db_engine=None):
         except Exception as e:
             logger.warning("push_worker: token query failed — %s", e)
             continue
+
+        subscriber_count = len(android_tokens) + len(ios_tokens)
+        _log_push_dispatch(game, event, payload, subscriber_count)
 
         if not android_tokens and not ios_tokens:
             logger.info("push_worker: no subscribers for %s", gid)
