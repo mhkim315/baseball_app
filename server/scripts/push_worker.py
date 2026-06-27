@@ -228,12 +228,14 @@ def _build_payload(game: dict, event: str = "") -> dict:
         next_batter = _get_next_batter(game)
         if next_batter:
             batter = next_batter
+        else:
+            batter = ""  # cold-start: don't show batter rather than guessing wrong
 
     # Fallback to last known pitcher/batter when relay is missing them
     last_pb = _LAST_PB.get(gid, {})
     if not pitcher:
         pitcher = last_pb.get("pitcher", "")
-    if not batter:
+    if not batter and event != "inning":
         batter = last_pb.get("batter", "")
     if pitcher or batter:
         _LAST_PB[gid] = {"pitcher": pitcher, "batter": batter}
