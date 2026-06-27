@@ -89,6 +89,7 @@ _PREV_STATE: dict[str, dict] = {}
 _TEAM_INNING_LAST: dict[str, dict[str, str]] = {}  # gid -> {"home": pcode, "away": pcode}
 _DETECTED_SCORING: dict[str, str] = {}  # gid -> scoring_team (saved before _PREV_STATE overwrite)
 _LAST_PB: dict[str, dict[str, str]] = {}  # gid -> {"pitcher": name, "batter": name} — fallback when relay missing
+_PENDING_INNING: dict[str, dict] = {}  # gid -> {state: (inning, isTop)} — debounce transient relay flips
 _LAST_WEATHER_PUSH: float = 0
 _WEATHER_PUSH_INTERVAL = 1800  # 30 minutes
 
@@ -115,7 +116,16 @@ def _has_changed(gid: str, game: dict) -> list[str]:
     prev_relay = prev.get("relay") or {}
     cur_relay = game.get("relay") or {}
     if prev_relay.get("inning") != cur_relay.get("inning") or prev_relay.get("isTop") != cur_relay.get("isTop"):
-        events.append("inning")
+        # Require 2 consecutive polls with same state to filter relay noise
+        new_state = (cur_relay.get("inning"), cur_relay.get("isTop"))
+        pending = _PENDING_INNING.get(gid)
+        if pending is not None and pending["state"] == new_state:
+            events.append("inning")
+            _PENDING_INNING.pop(gid, None)
+        else:
+            _PENDING_INNING[gid] = {"state": new_state}
+    else:
+        _PENDING_INNING.pop(gid, None)  # state reverted — clear pending
     return events
 
 
