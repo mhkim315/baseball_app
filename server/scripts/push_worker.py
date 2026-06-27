@@ -10,6 +10,41 @@ from scripts.apns_sender import send_apns
 
 logger = logging.getLogger("fullcount.push-worker")
 
+# ── Relay log: captures every poll cycle's relay data for timing analysis ──
+_RELAY_LOG_ENABLED = os.getenv("RELAY_LOG_ENABLED", "").lower() in ("1", "true", "yes")
+_RELAY_LOG_DIR = os.getenv("RELAY_LOG_DIR", "/home/opc/fullcount_backend/logs")
+
+from datetime import datetime, timezone
+
+def _log_relay_snapshots(games: list):
+    """Write relay snapshot for each game to a JSONL file (one per day)."""
+    if not _RELAY_LOG_ENABLED:
+        return
+    try:
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        os.makedirs(_RELAY_LOG_DIR, exist_ok=True)
+        path = os.path.join(_RELAY_LOG_DIR, f"relay_log_{today}.jsonl")
+        ts = datetime.now(timezone.utc).isoformat()
+        for g in games:
+            relay = g.get("relay") or {}
+            text_relays = relay.get("textRelays", [])
+            entry = {
+                "ts": ts,
+                "game_id": g.get("gameId", ""),
+                "status": g.get("status", ""),
+                "home_score": (g.get("score") or {}).get("home", 0),
+                "away_score": (g.get("score") or {}).get("away", 0),
+                "inning": relay.get("inning", "0"),
+                "is_top": relay.get("isTop", "0"),
+                "pitcher": (relay.get("pitcher") or {}).get("name", ""),
+                "batter": (relay.get("batter") or {}).get("name", ""),
+                "textRelays": text_relays[-5:] if len(text_relays) > 5 else text_relays,
+            }
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception as e:
+        logger.warning("relay_log: write failed — %s", e)
+
 # Short code → lowercase team ID (DB stores lowercase)
 _SHORT_TO_TEAM = {
     "OB": "doosan", "LG": "lg", "WO": "kiwoom", "SK": "ssg",
@@ -149,7 +184,6 @@ def _get_next_batter(game: dict) -> str:
 def _build_payload(game: dict, event: str = "") -> dict:
     score = game.get("score") or {}
     relay = game.get("relay") or {}
-    from datetime import datetime, timezone
 
     # Pitcher/batter — for inning-start, compute next batter from lineup
     gid = game.get("gameId", "")
@@ -218,6 +252,9 @@ def run_push_worker(widget_data_func, db_engine=None):
 
     games = data.get("games", []) if isinstance(data, dict) else []
     live_games = [g for g in games if g.get("status") == "live"]
+
+    # Log relay snapshots every poll cycle for timing analysis
+    _log_relay_snapshots(live_games)
 
     scheduled_games = [g for g in games if g.get("status") == "scheduled"]
 
