@@ -68,8 +68,9 @@ def normalize_relay(raw):  # -> dict | None
                 batters.append({"pcode": str(e["pcode"]), "name": str(e["name"])})
         return batters
 
-    home_batters = _extract_batters(td.get("homeEntry")) or _extract_batters(td.get("homeLineup"))
-    away_batters = _extract_batters(td.get("awayEntry")) or _extract_batters(td.get("awayLineup"))
+    # Prefer homeLineup/awayLineup (full 9-batter lineup) over homeEntry/awayEntry (partial: only batters who have appeared)
+    home_batters = _extract_batters(td.get("homeLineup")) or _extract_batters(td.get("homeEntry"))
+    away_batters = _extract_batters(td.get("awayLineup")) or _extract_batters(td.get("awayEntry"))
 
     pid = str(cs.get("pitcher") or "0")
     bid = str(cs.get("batter") or "0")
