@@ -22,6 +22,8 @@ DATABASE_URL = os.getenv("DATABASE_URL", "")
 DRY_RUN = os.getenv("DRY_RUN", "true").lower() in ("1", "true", "yes")
 
 _PREV_STATE: dict[str, dict] = {}
+_TEAM_INNING_LAST: dict[str, dict[str, str]] = {}  # gid -> {"home": pcode, "away": pcode}
+_DETECTED_SCORING: dict[str, str] = {}  # gid -> scoring_team (saved before _PREV_STATE overwrite)
 _LAST_WEATHER_PUSH: float = 0
 _WEATHER_PUSH_INTERVAL = 1800  # 30 minutes
 
@@ -106,27 +108,61 @@ def _parse_score_event(texts: list[dict]) -> str:
     return " ".join(parts)
 
 
+def _track_inning_last_batter(gid: str, prev_game: dict):
+    """Save the last batter for the team that just finished batting (before _PREV_STATE overwrite)."""
+    prev_relay = prev_game.get("relay") or {}
+    prev_batter = prev_relay.get("batter") or {}
+    prev_pcode = prev_batter.get("id", "")
+    prev_is_top = prev_relay.get("isTop", "0")
+    if not prev_pcode:
+        return
+    team_key = "away" if prev_is_top == "1" else "home"
+    _TEAM_INNING_LAST.setdefault(gid, {})[team_key] = prev_pcode
+
+
+def _get_next_batter(game: dict) -> str:
+    """For inning-start events, determine the next batter from the batting order."""
+    relay = game.get("relay") or {}
+    is_top = relay.get("isTop", "0")
+    gid = game.get("gameId", "")
+
+    team_key = "away" if is_top == "1" else "home"
+    batters_key = "awayBatters" if is_top == "1" else "homeBatters"
+    batters = relay.get(batters_key, [])
+
+    if not batters:
+        return ""
+
+    last_pcode = _TEAM_INNING_LAST.get(gid, {}).get(team_key, "")
+    if not last_pcode:
+        return batters[0].get("name", "")  # no history → leadoff
+
+    for i, b in enumerate(batters):
+        if b.get("pcode") == last_pcode:
+            next_idx = (i + 1) % len(batters)
+            return batters[next_idx].get("name", "")
+
+    return batters[0].get("name", "")  # pcode not in lineup (substitution) → leadoff
+
+
 def _build_payload(game: dict, event: str = "") -> dict:
     score = game.get("score") or {}
     relay = game.get("relay") or {}
     from datetime import datetime, timezone
 
-    # Pitcher/batter names
+    # Pitcher/batter — for inning-start, compute next batter from lineup
     pitcher = (relay.get("pitcher") or {}).get("name", "")
     batter = (relay.get("batter") or {}).get("name", "")
+    if event == "inning":
+        next_batter = _get_next_batter(game)
+        if next_batter:
+            batter = next_batter
 
-    # Determine which team scored (compare with previous state)
+    # Scoring team — pre-computed during detection (before _PREV_STATE overwrite)
     scoring_team = ""
     if event == "score":
         gid = game.get("gameId", "")
-        prev_game = _PREV_STATE.get(gid)
-        if prev_game:
-            prev_s = prev_game.get("score") or {}
-            cur_s = game.get("score") or {}
-            if cur_s.get("home", 0) > prev_s.get("home", 0):
-                scoring_team = game.get("homeName") or game.get("homeTeam", "")
-            elif cur_s.get("away", 0) > prev_s.get("away", 0):
-                scoring_team = game.get("awayName") or game.get("awayTeam", "")
+        scoring_team = _DETECTED_SCORING.pop(gid, "")
 
     # Score description — parsed from textRelays (experimental, currently unused)
     score_desc = ""
@@ -210,7 +246,17 @@ def run_push_worker(widget_data_func, db_engine=None):
         gid = _game_key(game)
         events = _has_changed(gid, game)
         if events:
+            prev_game = _PREV_STATE.get(gid)
             for event in events:
+                if event == "inning" and prev_game:
+                    _track_inning_last_batter(gid, prev_game)
+                elif event == "score" and prev_game:
+                    prev_s = prev_game.get("score") or {}
+                    cur_s = game.get("score") or {}
+                    if cur_s.get("home", 0) > prev_s.get("home", 0):
+                        _DETECTED_SCORING[gid] = game.get("homeName") or game.get("homeTeam", "")
+                    elif cur_s.get("away", 0) > prev_s.get("away", 0):
+                        _DETECTED_SCORING[gid] = game.get("awayName") or game.get("awayTeam", "")
                 changed.append((game, event))
         _PREV_STATE[gid] = game  # 첫 감지 시에도 반드시 상태 저장
 

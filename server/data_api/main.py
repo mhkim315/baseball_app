@@ -855,7 +855,7 @@ def _merge_widget_results(naver, daum):
             wr = winner.get("relay") or {}
             lr = loser.get("relay") or {}
             if wr and lr:
-                for k in ("pitcher", "batter"):
+                for k in ("pitcher", "batter", "homeBatters", "awayBatters"):
                     if not wr.get(k) and lr.get(k):
                         wr[k] = lr[k]
                 winner["relay"] = wr

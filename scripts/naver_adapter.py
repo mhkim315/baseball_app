@@ -60,6 +60,17 @@ def normalize_relay(raw):  # -> dict | None
             if isinstance(e, dict) and e.get("pcode") and e.get("name"):
                 p2n[str(e["pcode"])] = str(e["name"])
 
+    # Preserve batting orders (array index = batting order position)
+    def _extract_batters(entry):
+        batters = []
+        for e in (entry or {}).get("batter", []):
+            if isinstance(e, dict) and e.get("pcode") and e.get("name"):
+                batters.append({"pcode": str(e["pcode"]), "name": str(e["name"])})
+        return batters
+
+    home_batters = _extract_batters(td.get("homeEntry")) or _extract_batters(td.get("homeLineup"))
+    away_batters = _extract_batters(td.get("awayEntry")) or _extract_batters(td.get("awayLineup"))
+
     pid = str(cs.get("pitcher") or "0")
     bid = str(cs.get("batter") or "0")
 
@@ -86,6 +97,8 @@ def normalize_relay(raw):  # -> dict | None
         "pitcher": {"id": pid, "name": p2n.get(pid, "")} if pid != "0" else None,
         "batter": {"id": bid, "name": p2n.get(bid, "")} if bid != "0" else None,
         "textRelays": _texts[-30:],
+        "homeBatters": home_batters,
+        "awayBatters": away_batters,
     }
 
 
