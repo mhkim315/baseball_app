@@ -200,7 +200,13 @@ def _get_next_batter(game: dict) -> str:
 
     last_pcode = _TEAM_INNING_LAST.get(gid, {}).get(team_key, "")
     if not last_pcode:
-        return batters[0].get("name", "")  # no history → leadoff
+        # Cold start: try relay batter if it belongs to the batting team's lineup
+        relay_batter_id = (relay.get("batter") or {}).get("id", "")
+        for i, b in enumerate(batters):
+            if b.get("pcode") == relay_batter_id:
+                _TEAM_INNING_LAST.setdefault(gid, {})[team_key] = relay_batter_id
+                return b.get("name", "")
+        return ""  # relay batter belongs to other team → keep as-is
 
     for i, b in enumerate(batters):
         if b.get("pcode") == last_pcode:
