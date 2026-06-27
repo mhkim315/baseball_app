@@ -187,7 +187,8 @@ def _track_inning_last_batter(gid: str, prev_game: dict):
 
 
 def _get_next_batter(game: dict) -> str:
-    """For inning-start events, determine the next batter from the batting order."""
+    """For inning-start events, determine the next batter from the batting order.
+    Prefers relay batter (ground truth) over tracker computation (fallback)."""
     relay = game.get("relay") or {}
     is_top = relay.get("isTop", "0")
     gid = game.get("gameId", "")
@@ -199,22 +200,26 @@ def _get_next_batter(game: dict) -> str:
     if not batters:
         return ""
 
-    last_pcode = _TEAM_INNING_LAST.get(gid, {}).get(team_key, "")
-    if not last_pcode:
-        # Cold start: try relay batter if it belongs to the batting team's lineup
-        relay_batter_id = (relay.get("batter") or {}).get("id", "")
-        for i, b in enumerate(batters):
+    # Prefer relay batter if it belongs to the batting team (Naver already updated)
+    relay_batter_id = (relay.get("batter") or {}).get("id", "")
+    if relay_batter_id:
+        for b in batters:
             if b.get("pcode") == relay_batter_id:
+                # Relay is current → seed tracker for next time and use it
                 _TEAM_INNING_LAST.setdefault(gid, {})[team_key] = relay_batter_id
                 return b.get("name", "")
-        return ""  # relay batter belongs to other team → keep as-is
+
+    # Relay batter is stale (from previous team) → compute from tracker
+    last_pcode = _TEAM_INNING_LAST.get(gid, {}).get(team_key, "")
+    if not last_pcode:
+        return ""  # cold start with no info → hide batter
 
     for i, b in enumerate(batters):
         if b.get("pcode") == last_pcode:
             next_idx = (i + 1) % len(batters)
             return batters[next_idx].get("name", "")
 
-    return batters[0].get("name", "")  # pcode not in lineup (substitution) → leadoff
+    return ""  # pcode not found (substitution) → hide batter
 
 
 def _build_payload(game: dict, event: str = "") -> dict:
