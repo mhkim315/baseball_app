@@ -2,7 +2,7 @@
   "expo": {
     "name": "풀카운트",
     "slug": "fullcount-kr",
-    "version": "1.3.5",
+    "version": "1.3.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "kr.fullcount.app",
-      "buildNumber": "10",
+      "buildNumber": "11",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "직관일기 작성 시 사진을 첨부하기 위해 앨범 접근 권한이 필요합니다.",
@@ -97,7 +97,7 @@
       }
     },
     "owner": "duboo82",
-    "runtimeVersion": "1.3.5",
+    "runtimeVersion": "1.3.6",
     "updates": {
       "url": "https://u.expo.dev/61b58472-e18f-48c4-8471-fa6fa4294c42"
     }
