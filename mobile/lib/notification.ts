@@ -27,7 +27,7 @@ export async function setupNotificationChannel() {
 
 // 실시간 점수 덮어쓰기 (다이나믹 아일랜드 효과)
 export async function updateLockScreenScore(data: Record<string, string>) {
-  if (!data || data.type !== 'game_update' || data.status !== 'live') return;
+  if (!data || data.type !== 'game_update') return;
 
   const awayName = data.away_name || SHORT_CODE_TO_NAME[data.away_team || ""] || data.away_team || "";
   const homeName = data.home_name || SHORT_CODE_TO_NAME[data.home_team || ""] || data.home_team || "";
@@ -35,16 +35,30 @@ export async function updateLockScreenScore(data: Record<string, string>) {
   const inningStr = data.inning ? `${data.inning}회${data.is_top === '1' ? '초' : '말'}` : '';
   const pitcher = data.current_pitcher || "";
   const batter = data.current_batter || "";
+  const awayScore = parseInt(data.away_score || "0", 10);
+  const homeScore = parseInt(data.home_score || "0", 10);
 
   let title: string;
   let body: string;
 
-  if (event === "score") {
+  // Game finished — show final result
+  if (event === "status" && data.status === "finished") {
+    const winner = homeScore > awayScore ? homeName : awayScore > homeScore ? awayName : "";
+    if (winner) {
+      title = `⚾ 경기 종료! ${awayName} ${awayScore} : ${homeScore} ${homeName}`;
+      body = `${winner} 승리`;
+    } else {
+      title = `⚾ 경기 종료 | ${awayName} ${awayScore} : ${homeScore} ${homeName}`;
+      body = `무승부`;
+    }
+  } else if (data.status !== 'live') {
+    return;  // scheduled/cancelled — don't show
+  } else if (event === "score") {
     const who = data.scoring_team ? `${data.scoring_team} ` : "";
-    title = `⚾ ${who}득점! ${awayName} ${data.away_score} : ${data.home_score} ${homeName}`;
+    title = `⚾ ${who}득점! ${awayName} ${awayScore} : ${homeScore} ${homeName}`;
     body = `${inningStr} | 투수 ${pitcher || '?'} | 타자 ${batter || '?'}`;
   } else {
-    title = `⚾ ${inningStr} 시작 | ${awayName} ${data.away_score} : ${data.home_score} ${homeName}`;
+    title = `⚾ ${inningStr} 시작 | ${awayName} ${awayScore} : ${homeScore} ${homeName}`;
     body = `투수 ${pitcher || '?'} | 타자 ${batter || '?'}`;
   }
 
