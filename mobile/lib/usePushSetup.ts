@@ -22,33 +22,37 @@ export function usePushSetup() {
     let mounted = true;
 
     async function setup() {
-      // 1. 알림 채널 생성 (무음 점수판 채널)
-      await setupNotificationChannel();
+      try {
+        // 1. 알림 채널 생성 (무음 점수판 채널)
+        await setupNotificationChannel();
 
-      const granted = await requestUserPermission();
-      if (!granted) return;
+        const granted = await requestUserPermission();
+        if (!granted) return;
 
-      const token = await getFCMToken();
-      if (!token || !mounted) return;
-      currentTokenRef.current = token;
+        const token = await getFCMToken();
+        if (!token || !mounted) return;
+        currentTokenRef.current = token;
 
-      const platform = Platform.OS as "android" | "ios";
-      const team = myTeam;
-      await registerToken(token, platform, team);
-      if (team) registeredTeamRef.current = team;
+        const platform = Platform.OS as "android" | "ios";
+        const team = myTeam;
+        await registerToken(token, platform, team);
+        if (team) registeredTeamRef.current = team;
 
-      // Foreground message → widget update only (lock screen notification deferred)
-      unsubForeground = onForegroundMessage(async (data) => {
-        if (data.type === "game_update") {
-          await updateWidgetFromFCM(data);
-        }
-      });
+        // Foreground message → widget update only (lock screen notification deferred)
+        unsubForeground = onForegroundMessage(async (data) => {
+          if (data.type === "game_update") {
+            await updateWidgetFromFCM(data);
+          }
+        });
 
-      // Token refresh → re-register
-      unsubToken = onTokenRefresh(async (newToken) => {
-        currentTokenRef.current = newToken;
-        await registerToken(newToken, platform, myTeam);
-      });
+        // Token refresh → re-register
+        unsubToken = onTokenRefresh(async (newToken) => {
+          currentTokenRef.current = newToken;
+          await registerToken(newToken, platform, myTeam);
+        });
+      } catch (e) {
+        console.warn("[Push] FCM not available (expected on simulators):", e);
+      }
     }
 
     setup();
